@@ -22,6 +22,11 @@ class BispectraPAC:
         resolution is based on `sfreq`.
     """
 
+    _pac_bispec_standard = None
+    _pac_bispec_antisym = None
+    _pac_bicoh_standard = None
+    _pac_bicoh_antisym = None
+
     def __init__(
         self, data: np.ndarray, sfreq: float, freq_res: float | None = None
     ) -> None:
@@ -64,9 +69,10 @@ class BispectraPAC:
         high_freqs: list[float],
         seeds: list[int] | None = None,
         targets: list[int] | None = None,
-        normalise: bool = True,
-    ) -> None:
-        """Compute PAC on the data.
+        compute_antisym: bool = True,
+        compute_bicoh: bool = True,
+    ) -> np.ndarray | tuple[np.ndarray]:
+        """Compute PAC from the bispectra and/or bicoherence.
 
         PARAMETERS
         ----------
@@ -82,18 +88,44 @@ class BispectraPAC:
         targets : list of int | None; default None
         -   Indices of channels in the data to treat as targets.
 
-        normalise : bool; default True
-        -   Whether or not to normalise the bispectrum to bicoherence using the
-            threenorm.
+        compute_antisym : bool; default True
+        -   Whether or not to compute the antisymmetrised results.
+
+        compute_bicoh : bool; default True
+        -   Whether or not to compute the bicoherence (bispectrum normalised
+            with the threenorm).
+
+        RETURNS
+        -------
+        results : numpy ndarray | tuple of numpy ndarray
+        -   The computed PAC results derived from the: standard bispectra;
+            antisymmetrised bispectra (if `compute_antisym` = True); standard
+            bicoherence (if `compute_bicoh` = True); and antisymmetrised
+            bicoherence (if `compute_antisym` and `compute_bicoh` = True),
+            respectively.
         """
+        self._reset_results()
+
+        self._bicoh = copy.copy(compute_bicoh)
+        self._antisym = copy.copy(compute_antisym)
         self._sort_freq_inputs(low_freqs, high_freqs)
         self._sort_indices_inputs(seeds, targets)
 
         self._compute_fft()
         self._compute_bispectra()
-        if normalise:
-            self._normalise_bispectra()
-        self._compute_pac()
+        self._compute_bispectra_pac()
+        if self._bicoh:
+            self._compute_bicoherence()
+            self._compute_bicoherence_pac()
+
+        return self.results
+
+    def _reset_results(self) -> None:
+        """Reset result attrs. to None."""
+        self._pac_bispec_standard = None
+        self._pac_bispec_antisym = None
+        self._pac_bicoh_standard = None
+        self._pac_bicoh_antisym = None
 
     def _sort_freq_inputs(
         self, low_freqs: list[float], high_freqs: list[float]
@@ -159,29 +191,12 @@ class BispectraPAC:
 
     def _compute_bispectra(self) -> None:
         """Compute the bispectra for multiple seeds and targets."""
-        fft_coeffs_lfreqs = self._get_fft_coeffs(self._low_freq_idcs)
-        fft_coeffs_hfreqs = self._get_fft_coeffs(self._high_freq_idcs)
-
-        self._bispectra_lfreqs = np.zeros(
-            (self._n_seeds, self._n_targets, 2, 2, 2, self._n_freq_pairs, 2),
-            dtype=np.complex128,
+        self._bispectra_lfreqs = self._compute_bispectra_from_fft(
+            self._get_fft_coeffs(self._low_freq_idcs)
         )
-        self._bispectra_hfreqs = np.zeros(
-            (self._n_seeds, self._n_targets, 2, 2, 2, self._n_freq_pairs, 2),
-            dtype=np.complex128,
+        self._bispectra_hfreqs = self._compute_bispectra_from_fft(
+            self._get_fft_coeffs(self._high_freq_idcs)
         )
-        for seed_i, seed in enumerate(self._seeds):
-            for target_i, target in enumerate(self._targets):
-                self._bispectra_lfreqs[
-                    seed_i, target_i
-                ] = self._compute_seed_target_bispectra(
-                    fft_coeffs_lfreqs, seed, target
-                )
-                self._bispectra_hfreqs[
-                    seed_i, target_i
-                ] = self._compute_seed_target_bispectra(
-                    fft_coeffs_hfreqs, seed, target
-                )
 
     def _get_fft_coeffs(self, freqs: np.ndarray) -> np.ndarray:
         """Get FFT coefficients for multiple channels.
@@ -218,37 +233,39 @@ class BispectraPAC:
 
         return fft_coeffs
 
-    def _compute_seed_target_bispectra(
-        self, fft_coeffs: np.ndarray, seed: int, target: int
+    def _compute_bispectra_from_fft(
+        self, fft_coeffs: np.ndarray
     ) -> np.ndarray:
-        """Compute bispectra for single seed and target channels.
+        """Compute bispectra from FFT coeffs. averaged across epochs.
 
         PARAMETERS
         ----------
-        ...
-        seed : int
-        -   Index of the seed channel.
-
-        target : int
-        -   Index of the target channel.
+        fft_coeffs : numpy ndarray
 
         RETURNS
         -------
         bispectra : numpy ndarray
         -   Bispectra array with shape [channels x channels x channels x freq.
-            pairs x 2], where the channels are always 2 (i.e. one seed and one
-            target) and the final dimension corresponds to the 'f1, f2-f1, f2'
-            and 'f1, f2, f1+f2' bispectra, respectively.
+            pairs x 2], where the channels are the seed and target channels and
+            the final dimension corresponds to the 'f1, f2-f1, f2' and
+            'f1, f2, f1+f2' bispectra, respectively.
         """
         bispectra = np.zeros(
-            (self._n_epochs, 2, 2, 2, self._n_freq_pairs, 2),
+            (
+                self._n_epochs,
+                self._n_chans,
+                self._n_chans,
+                self._n_chans,
+                self._n_freq_pairs,
+                2,
+            ),
             dtype=np.complex128,
         )
 
         for freq_i in range(self._n_freq_pairs):
             for epoch_i in range(self._n_epochs):
-                epoch_coeffs = fft_coeffs[:, epoch_i, (seed, target), freq_i]
-                for chan_i, chan in enumerate((seed, target)):
+                epoch_coeffs = fft_coeffs[:, epoch_i, :, freq_i]
+                for chan_i, chan in enumerate(self._use_chans):
                     bispectra[epoch_i, :, :, chan_i, freq_i, 0] = (
                         epoch_coeffs[0][np.newaxis, :].T
                         @ epoch_coeffs[1][np.newaxis, :]
@@ -262,14 +279,106 @@ class BispectraPAC:
 
         return bispectra.mean(axis=0)
 
+    def _compute_bispectra_pac(self) -> None:
+        """"""
+        pac_standard = np.zeros(
+            (self._n_seeds, self._n_targets, self._n_freq_pairs)
+        )
+        for seed in self._seeds:
+            for target in self._targets:
+                standard_lfreqs = np.abs(
+                    [
+                        self._bispectra_lfreqs[seed, target, target, :, 0],
+                        self._bispectra_lfreqs[target, seed, seed, :, 0],
+                    ]
+                )
+                standard_hfreqs = np.abs(
+                    [
+                        self._bispectra_hfreqs[seed, target, target, :, 0],
+                        self._bispectra_hfreqs[target, seed, seed, :, 0],
+                    ]
+                )
+
+                pac_standard[seed, target] = np.mean(
+                    [standard_lfreqs[0], standard_hfreqs[0]]
+                )
+                pac_standard[target, seed] = np.mean(
+                    [standard_lfreqs[1], standard_hfreqs[1]]
+                )
+
     @property
     def indices(self) -> tuple[list[int]]:
         """Return indices of the seeds and targets."""
         return (self._original_seeds, self._original_targets)
 
     @property
-    def results(self) -> np.ndarray:
-        """Return PAC results."""
-        if self._normalise:
-            return self._bicoherence
-        return self._bispectra
+    def results(
+        self, get_types: str | list[str] | None = None
+    ) -> np.ndarray | None | tuple[np.ndarray | None]:
+        """Return PAC results.
+
+        PARAMETERS
+        ----------
+        get_types : str | list of str | None; default None
+        -   The type of PAC results to return. Recognised values are:
+            "bispec_standard" for the standard bispectra results;
+            "bispec_antisym" for the antisymmetrised bispectra results;
+            "bicoh_standard" for the standard bicoherence results; and
+            "bicoh_antisym" for the antisymmetrised bicoherence results. If
+            None, all computed results are returned.
+
+        RETURNS
+        -------
+        results : numpy ndarray | None | tuple of numpy ndarray or None
+        -   The requested results. If `get_types` is None, only those results
+            which have been computedare returned, whereas if a result is
+            requested which has not been computed, None is returned in its
+            place.
+
+        RAISES
+        ------
+        KeyError
+        -   Raised if key(s) of `get_types` is(are) invalid.
+        """
+        results = {
+            "bispec_standard": self._pac_bispec_standard,
+            "bispec_antisym": self._pac_bispec_antisym,
+            "bicoh_standard": self._pac_bicoh_standard,
+            "bicoh_antisym": self._pac_bicoh_antisym,
+        }
+        possible_types = results.keys()
+
+        if get_types is None:
+            return (
+                results[this_type]
+                for this_type in possible_types
+                if results[this_type] is not None
+            )
+
+        if isinstance(get_types, str):
+            get_types = [get_types]
+
+        try:
+            return (results[this_type] for this_type in get_types)
+        except KeyError as error:
+            print("The requested results type is not recognised.", error)
+
+    @property
+    def pac_bispec_standard(self) -> np.ndarray | None:
+        """Return PAC results from the standard bispectra."""
+        return self._pac_bispec_standard
+
+    @property
+    def pac_bispec_antisym(self) -> np.ndarray | None:
+        """Return PAC results from the antisymmetrised bispectra."""
+        return self._pac_bispec_antisym
+
+    @property
+    def pac_bicoh_standard(self) -> np.ndarray | None:
+        """Return PAC results from the standard bicoherence."""
+        return self._pac_bicoh_standard
+
+    @property
+    def pac_bicoh_antisym(self) -> np.ndarray | None:
+        """Return PAC results from the antisymmetrised bispectra."""
+        return self._pac_bicoh_antisym
