@@ -1,10 +1,16 @@
 import numpy as np
-from pac import BispectraPAC
+from init import PPC, compute_fft
 
-np.random.RandomState(44)
+if __name__ == "__main__":
+    np.random.RandomState(44)
+    data = np.random.rand(30, 10, 1000)
+    sfreq = 500
 
-data = np.random.rand(10, 3, 200)
-sfreq = 100
+    fft, freqs = compute_fft(data, sfreq)
 
-bs_pac = BispectraPAC(data, sfreq)
-bs_pac.compute_pac([10, 20], [15, 30])
+    ppc = PPC(fft, freqs)
+    ppc.compute(n_jobs=3)
+    raveled_results = ppc.get_results("raveled")
+    compact_results, compact_indices = ppc.get_results("compact")
+
+    print("jeff")

@@ -1,8 +1,11 @@
 """Class for computing PAC from the bispectra."""
 
 import copy
+
 import numpy as np
 import scipy as sp
+
+from classes import Process, Result
 
 
 class BispectraPAC:
@@ -22,10 +25,10 @@ class BispectraPAC:
         resolution is based on `sfreq`.
     """
 
-    _pac_bispec_standard = None
-    _pac_bispec_antisym = None
-    _pac_bicoh_standard = None
-    _pac_bicoh_antisym = None
+    _pac_bispec_standard = Result
+    _pac_bispec_antisym = Result
+    _pac_bicoh_standard = Result
+    _pac_bicoh_antisym = Result
 
     def __init__(
         self, data: np.ndarray, sfreq: float, freq_res: float | None = None
@@ -65,22 +68,22 @@ class BispectraPAC:
 
     def compute_pac(
         self,
-        low_freqs: list[float],
-        high_freqs: list[float],
+        low_freqs: list[list[float]],
+        high_freqs: list[list[float]],
         seeds: list[int] | None = None,
         targets: list[int] | None = None,
-        compute_antisym: bool = True,
-        compute_bicoh: bool = True,
+        symmetrisation: list[str] = ["none", "antisym"],
+        normalisation: list[str] = ["none", "threenorm"]
     ) -> np.ndarray | tuple[np.ndarray]:
         """Compute PAC from the bispectra and/or bicoherence.
 
         PARAMETERS
         ----------
-        low_freqs : list of float
-        -   The low frequencies for PAC.
+        low_freqs : list of list of float
+        -   The low frequencies of each band for PAC.
 
-        high_freqs : list of float
-        -   The high frequencies for PAC.
+        high_freqs : list of list of float
+        -   The high frequencies of each band for PAC.
 
         seeds : list of int | None; default None
         -   Indices of channels in the data to treat as seeds.
@@ -88,69 +91,71 @@ class BispectraPAC:
         targets : list of int | None; default None
         -   Indices of channels in the data to treat as targets.
 
-        compute_antisym : bool; default True
-        -   Whether or not to compute the antisymmetrised results.
+        symmetrisation : list[str]; default ["none", "antisymmetrised"]
+        -   The symmetrisation to perform when computing PAC.
 
-        compute_bicoh : bool; default True
-        -   Whether or not to compute the bicoherence (bispectrum normalised
-            with the threenorm).
+        normalisation : list[str]; default ["none", "threenorm"]
+        -   The normalisation to perform when computing PAC.
 
         RETURNS
         -------
-        results : numpy ndarray | tuple of numpy ndarray
-        -   The computed PAC results derived from the: standard bispectra;
-            antisymmetrised bispectra (if `compute_antisym` = True); standard
-            bicoherence (if `compute_bicoh` = True); and antisymmetrised
-            bicoherence (if `compute_antisym` and `compute_bicoh` = True),
-            respectively.
+        results : Results | list[Results]
+        -   Object or list of objects containing the PAC results.
         """
         self._reset_results()
 
         self._bicoh = copy.copy(compute_bicoh)
         self._antisym = copy.copy(compute_antisym)
-        self._sort_freq_inputs(low_freqs, high_freqs)
+        self._low_freqs = copy.deepcopy(low_freqs)
+        self._high_freqs = copy.deepcopy(high_freqs)
+
+        self._sort_freq_inputs()
         self._sort_indices_inputs(seeds, targets)
 
+        self._sort_results_containers()
+
         self._compute_fft()
+
         self._compute_bispectra()
-        self._compute_bispectra_pac()
+        self._compute_bivariance()
         if self._bicoh:
             self._compute_bicoherence()
-            self._compute_bicoherence_pac()
+        
+        self._pac_bivar_standard = 
 
         return self.results
 
     def _reset_results(self) -> None:
         """Reset result attrs. to None."""
-        self._pac_bispec_standard = None
+        self._pac_bispec_standard = 
         self._pac_bispec_antisym = None
         self._pac_bicoh_standard = None
         self._pac_bicoh_antisym = None
 
-    def _sort_freq_inputs(
-        self, low_freqs: list[float], high_freqs: list[float]
-    ) -> None:
+    def _sort_freq_inputs(self) -> None:
         """Sort low and high freq. inputs."""
-        if len(low_freqs) != len(high_freqs):
+        if len(self._low_freqs) != len(self._high_freqs):
             raise ValueError(
                 "`low_freqs` and `high_freqs` must have equal length."
             )
-        self._n_freq_pairs = len(low_freqs)
+        self._n_bands = len(self._low_freqs)
 
-        low_freq_idcs = np.zeros((2, self._n_freq_pairs), dtype=int)
-        high_freq_idcs = np.zeros((2, self._n_freq_pairs), dtype=int)
+        freq_inds_down = []
+        freq_inds_up = []
+        for low_band, high_band in zip(self._low_freqs, self._high_freqs):
+            down_idcs = [[], []]
+            up_idcs = [[], []]
+            for lfreq in low_band:
+                for hfreq in high_band:
+                    down_idcs[0].append(self._freqs.index(lfreq))
+                    down_idcs[1].append(self._freqs.index(hfreq - lfreq))
+                    up_idcs[0].append(self._freqs.index(lfreq))
+                    up_idcs[1].append(self._freqs.index(hfreq))
+            freq_inds_down.append(down_idcs)
+            freq_inds_up.append(up_idcs)
 
-        freq_i = 0
-        for lfreq, hfreq in zip(low_freqs, high_freqs):
-            low_freq_idcs[0, freq_i] = self._freqs.index(lfreq)
-            low_freq_idcs[1, freq_i] = self._freqs.index(hfreq - lfreq)
-            high_freq_idcs[0, freq_i] = self._freqs.index(lfreq)
-            high_freq_idcs[1, freq_i] = self._freqs.index(hfreq)
-
-            freq_i += 1
-
-        self._low_freq_idcs = low_freq_idcs
-        self._high_freq_idcs = high_freq_idcs
+        self._freq_inds_down = freq_inds_down
+        self._freq_inds_up = freq_inds_up
 
     def _sort_indices_inputs(
         self, seeds: list[int], targets: list[int]
@@ -176,11 +181,35 @@ class BispectraPAC:
 
         self._seeds = np.searchsorted(self._use_chans, seeds).tolist()
         self._targets = np.searchsorted(self._use_chans, targets).tolist()
-        self._n_seeds = len(self._seeds)
-        self._n_targets = len(self._targets)
 
         self._original_seeds = seeds
         self._original_targets = targets
+
+    def _sort_results_containers(self) -> None:
+        """"""
+        n_result_types = 1
+        if self._antisym or self._bicoh:
+            n_result_types *= 2
+            if self._antisym and self._bicoh:
+                n_result_types *= 2
+
+        results = []
+        for low_band, high_band in zip(self._low_freqs, self._high_freqs):
+            results.append(
+                [
+                    np.zeros(
+                        (
+                            len(self._seeds),
+                            len(self._targets),
+                            len(low_band),
+                            len(high_band),
+                        )
+                    )
+                    for _ in range(n_result_types)
+                ]
+            )
+
+        self._results = results
 
     def _compute_fft(self) -> None:
         """Compute FFT of the data."""
@@ -191,11 +220,11 @@ class BispectraPAC:
 
     def _compute_bispectra(self) -> None:
         """Compute the bispectra for multiple seeds and targets."""
-        self._bispectra_lfreqs = self._compute_bispectra_from_fft(
-            self._get_fft_coeffs(self._low_freq_idcs)
+        self._bispectra_down = self._compute_bispectra_from_fft(
+            self._get_fft_coeffs(self._freq_inds_down)
         )
-        self._bispectra_hfreqs = self._compute_bispectra_from_fft(
-            self._get_fft_coeffs(self._high_freq_idcs)
+        self._bispectra_up = self._compute_bispectra_from_fft(
+            self._get_fft_coeffs(self._freq_inds_up)
         )
 
     def _get_fft_coeffs(self, freqs: np.ndarray) -> np.ndarray:
@@ -217,19 +246,34 @@ class BispectraPAC:
             the low freq., high freq. - low freq., high freq., and high freq. +
             low freq., respectively.
         """
-        fft_coeffs = np.zeros(
-            (4, self._n_epochs, self._n_chans, self._n_freq_pairs),
-            dtype=np.complex128,
-        )
+        fft_coeffs = []
+        for fband in freqs:
+            coeffs = np.zeros(
+                (
+                    4,
+                    self._n_epochs,
+                    self._n_chans,
+                    len(fband[0]),
+                    len(fband[1]),
+                ),
+                dtype=np.complex128,
+            )
+            for lfreq_i, lfreq in enumerate(fband[0]):
+                for hfreq_i, hfreq in enumerate(fband[1]):
+                    coeffs[0, :, :, lfreq_i, hfreq_i] = self._fft_data[
+                        ..., lfreq
+                    ]
+                    coeffs[1, :, :, lfreq_i, hfreq_i] = self._fft_data[
+                        ..., hfreq - lfreq
+                    ]
+                    coeffs[2, :, :, lfreq_i, hfreq_i] = self._fft_data[
+                        ..., hfreq
+                    ]
+                    coeffs[3, :, :, lfreq_i, hfreq_i] = self._fft_data[
+                        ..., hfreq + lfreq
+                    ]
 
-        freq_i = 0
-        for lfreq, hfreq in zip(freqs[0], freqs[1]):
-            fft_coeffs[0, :, :, freq_i] = self._fft_data[..., lfreq]
-            fft_coeffs[1, :, :, freq_i] = self._fft_data[..., hfreq - lfreq]
-            fft_coeffs[2, :, :, freq_i] = self._fft_data[..., hfreq]
-            fft_coeffs[3, :, :, freq_i] = self._fft_data[..., hfreq + lfreq]
-
-            freq_i += 1
+            fft_coeffs.append(coeffs)
 
         return fft_coeffs
 
@@ -250,61 +294,107 @@ class BispectraPAC:
             the final dimension corresponds to the 'f1, f2-f1, f2' and
             'f1, f2, f1+f2' bispectra, respectively.
         """
-        bispectra = np.zeros(
-            (
-                self._n_epochs,
-                self._n_chans,
-                self._n_chans,
-                self._n_chans,
-                self._n_freq_pairs,
-                2,
-            ),
-            dtype=np.complex128,
-        )
+        bispectra = []
+        for fband_coeffs in fft_coeffs:
+            n_lfreqs = fband_coeffs.shape[3]
+            n_hfreqs = fband_coeffs.shape[4]
+            fband_bispectra = np.zeros(
+                (
+                    self._n_epochs,
+                    2,  # left and right flanking peaks
+                    self._n_chans,
+                    self._n_chans,
+                    self._n_chans,
+                    n_lfreqs,
+                    n_hfreqs,
+                ),
+                dtype=np.complex128,
+            )
+            for lfreq_i in range(n_lfreqs):
+                for hfreq_i in range(n_hfreqs):
+                    for chan_i, chan in enumerate(self._use_chans):
+                        fband_bispectra[
+                            :, 0, :, :, chan_i, lfreq_i, hfreq_i
+                        ] = (
+                            fband_coeffs[0, :, :, lfreq_i, hfreq_i].T
+                            @ (
+                                fband_coeffs[1, :, :, lfreq_i, hfreq_i].T
+                                * fband_coeffs[
+                                    2, :, chan, lfreq_i, hfreq_i
+                                ].conj()
+                            ).T
+                        )
+                        fband_bispectra[
+                            :, 1, :, :, chan_i, lfreq_i, hfreq_i
+                        ] = (
+                            fband_coeffs[0, :, :, lfreq_i, hfreq_i].T
+                            @ (
+                                fband_coeffs[2, :, :, lfreq_i, hfreq_i].T
+                                * fband_coeffs[
+                                    3, :, chan, lfreq_i, hfreq_i
+                                ].conj()
+                            ).T
+                        )
 
-        for freq_i in range(self._n_freq_pairs):
-            for epoch_i in range(self._n_epochs):
-                epoch_coeffs = fft_coeffs[:, epoch_i, :, freq_i]
-                for chan_i, chan in enumerate(self._use_chans):
-                    bispectra[epoch_i, :, :, chan_i, freq_i, 0] = (
-                        epoch_coeffs[0][np.newaxis, :].T
-                        @ epoch_coeffs[1][np.newaxis, :]
-                        * epoch_coeffs[2, chan].conj()
-                    )
-                    bispectra[epoch_i, :, :, chan_i, freq_i, 1] = (
-                        epoch_coeffs[0][np.newaxis, :].T
-                        @ epoch_coeffs[2][np.newaxis, :]
-                        * epoch_coeffs[3, chan].conj()
-                    )
+            bispectra.append(fband_bispectra.mean(axis=0))
 
-        return bispectra.mean(axis=0)
+        return bispectra
 
-    def _compute_bispectra_pac(self) -> None:
+    def _compute_bivariance(self) -> None:
         """"""
-        pac_standard = np.zeros(
-            (self._n_seeds, self._n_targets, self._n_freq_pairs)
+        self._bivariance_down = self._compute_bivariance_from_bispectra(
+            self._bispectra_down
         )
-        for seed in self._seeds:
-            for target in self._targets:
-                standard_lfreqs = np.abs(
-                    [
-                        self._bispectra_lfreqs[seed, target, target, :, 0],
-                        self._bispectra_lfreqs[target, seed, seed, :, 0],
-                    ]
-                )
-                standard_hfreqs = np.abs(
-                    [
-                        self._bispectra_hfreqs[seed, target, target, :, 0],
-                        self._bispectra_hfreqs[target, seed, seed, :, 0],
-                    ]
-                )
+        self._bivariance_up = self._compute_bivariance_from_bispectra(
+            self._bispectra_up
+        )
 
-                pac_standard[seed, target] = np.mean(
-                    [standard_lfreqs[0], standard_hfreqs[0]]
-                )
-                pac_standard[target, seed] = np.mean(
-                    [standard_lfreqs[1], standard_hfreqs[1]]
-                )
+    def _compute_bivariance_from_bispectra(self, bispectra) -> None:
+        """"""
+        bivariance = []
+        for fband_bispectra in bispectra:
+            n_lfreqs = fband_bispectra.shape[4]
+            n_hfreqs = fband_bispectra.shape[5]
+            fband_bivariance = np.zeros(
+                (len(self._seeds), len(self._n_targets), n_lfreqs, n_hfreqs)
+            )
+            for lfreq_i in range(n_lfreqs):
+                for hfreq_i in range(n_hfreqs):
+                    for seed_i, seed in enumerate(self._seeds):
+                        for target_i, target in enumerate(self._targets):
+                            fband_bivariance[
+                                seed_i, target_i, lfreq_i, hfreq_i
+                            ] = fband_bispectra[
+                                0, seed, target, target, lfreq_i, hfreq_i
+                            ]
+            bivariance.append(fband_bivariance)
+
+        return bivariance
+
+    def _compute_pac(self, down, up) -> None:
+        """"""
+        pac = []
+        for fband_down, fband_up in zip(down, up):
+            n_lfreqs = fband_down.shape[2]
+            n_hfreqs = fband_down.shape[3]
+            fband_pac = np.zeros(
+                len(self._seeds), len(self._targets), n_lfreqs, n_hfreqs
+            )
+            for seed_i, seed in enumerate(self._seeds):
+                for target_i, target in enumerate(self._targets):
+                    for lfreq_i in range(n_lfreqs):
+                        for hfreq_i in range(n_hfreqs):
+                            fband_pac[
+                                seed_i, target_i, lfreq_i, hfreq_i
+                            ] = np.mean(
+                                [
+                                    fband_down[seed, target, lfreq_i, hfreq_i],
+                                    fband_up[seed, target, lfreq_i, hfreq_i],
+                                ]
+                            )
+            pac.append(fband_pac)
+
+        return pac
 
     @property
     def indices(self) -> tuple[list[int]]:
