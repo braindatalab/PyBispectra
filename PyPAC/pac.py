@@ -1,474 +1,493 @@
-"""Class for computing PAC from the bispectra."""
+"""Tools for handling PAC analysis."""
 
 import copy
+from warnings import warn
 
 import numpy as np
-import scipy as sp
+from numba import njit
+from pqdm.processes import pqdm
 
-from classes import Process, Result
+from process import Process
+from utils import fast_find_first
 
 
-class BispectraPAC:
-    """Compute phase amplitude coupling (PAC) using the bispectra.
+np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
+
+
+class PAC(Process):
+    """Class for computing phase-amplitude (PAC) coupling using bispectra.
 
     PARAMETERS
     ----------
-    data : numpy ndarray
-    -   Array of data to compute PAC on, with shape [epochs x channels x
-        times].
+    data : NumPy ndarray
+    -   3D array of FFT coefficients with shape [epochs x channels x
+        frequencies].
 
-    sfreq : float
-    -   Sampling frequency of the data in Hz.
+    freqs : NumPy ndarray
+    -   1D array of the frequencies in `data`.
 
-    freq_res : float | None; default None
-    -   Desired frequency resolution of the results in Hz. If None, the
-        resolution is based on `sfreq`.
+    verbose : bool; default True
+    -   Whether or not to report the progress of the processing.
+
+    METHODS
+    -------
+    compute
+    -   Compute PAC, averaged over epochs.
+
+    get_results
+    -   Return a copy of the results.
+
+    copy
+    -   Return a copy of the object.
+
+    ATTRIBUTES
+    ----------
+    data : NumPy ndarray
+    -   FFT coefficients with shape [epochs x channels x frequencies].
+
+    freqs : NumPy ndarray
+    -   1D array of the frequencies in `data`.
+
+    indices : tuple of NumPy ndarray
+    -   2 arrays containing the seed and target indices (respectively) most
+        recently used with `compute`.
+
+    f1 : NumPy ndarray
+    -   1D array of low frequencies most recently used with `compute`.
+
+    f2 : NumPy ndarray
+    -   1D array of high frequencies most recently used with `compute`.
+
+    verbose : bool
+    -   Whether or not to report the progress of the processing.
     """
 
-    _pac_bispec_standard = Result
-    _pac_bispec_antisym = Result
-    _pac_bicoh_standard = Result
-    _pac_bicoh_antisym = Result
+    _return_nosym = False
+    _return_antisym = False
+    _return_nonorm = False
+    _return_threenorm = False
 
-    def __init__(
-        self, data: np.ndarray, sfreq: float, freq_res: float | None = None
-    ) -> None:
-        self._data = data.copy()
-        self._sfreq = copy.copy(sfreq)
-        self._freq_res = copy.copy(freq_res)
+    _bispectra = None
+    _bicoherence = None
 
-        self._sort_init_inputs()
-        self._init_attrs()
+    _pac_nosym_nonorm = None
+    _pac_nosym_threenorm = None
+    _pac_antisym_nonorm = None
+    _pac_antisym_threenorm = None
 
-    def _sort_init_inputs(self) -> None:
-        """Check init. inputs are appropriate."""
-        if not isinstance(self._data, np.ndarray) or self._data.ndim != 3:
-            raise ValueError("`data` must be a 3D NumPy array.")
-
-        if self._sfreq <= 0:
-            raise ValueError("`sfreq` must be > 0.")
-
-        if self._freq_res is not None and self._freq_res <= 0:
-            raise ValueError("`freq_res` must be > 0.")
-
-    def _init_attrs(self) -> None:
-        """Initialise attrs. from the data."""
-        if self._freq_res is None:
-            self._freqs = np.linspace(
-                0, self._sfreq / 2, self._sfreq + 1
-            ).tolist()
-        else:
-            self._freqs = np.arange(
-                0, self._sfreq / 2 + self._freq_res, self._freq_res
-            ).tolist()
-
-        self._n_freqs = len(self._freqs)
-
-        self._n_epochs, self._n_chans, self._n_times = self._data.shape
-
-    def compute_pac(
+    def compute(
         self,
-        low_freqs: list[list[float]],
-        high_freqs: list[list[float]],
-        seeds: list[int] | None = None,
-        targets: list[int] | None = None,
-        symmetrisation: list[str] = ["none", "antisym"],
-        normalisation: list[str] = ["none", "threenorm"]
-    ) -> np.ndarray | tuple[np.ndarray]:
-        """Compute PAC from the bispectra and/or bicoherence.
+        indices: tuple[np.ndarray] | None = None,
+        f1: np.ndarray | None = None,
+        f2: np.ndarray | None = None,
+        symmetrise: str | list[str] = ["none", "antisym"],
+        normalise: str | list[str] = ["none", "threenorm"],
+        n_jobs: int = 1,
+    ) -> None:
+        """Compute PAC, averaged over epochs.
 
         PARAMETERS
         ----------
-        low_freqs : list of list of float
-        -   The low frequencies of each band for PAC.
+        indices: tuple of NumPy ndarray of int | None; default None
+        -   Indices of the channels to compute PAC between. Should contain 2
+            1D arrays of equal length for the seed and target indices,
+            respectively. If None, coupling between all channels is computed.
 
-        high_freqs : list of list of float
-        -   The high frequencies of each band for PAC.
+        f1 : numpy ndarray | None; default None
+        -   A 1D array of the lower frequencies to compute PAC on. If None, all
+            frequencies are used.
 
-        seeds : list of int | None; default None
-        -   Indices of channels in the data to treat as seeds.
+        f2 : numpy ndarray | None; default None
+        -   A 1D array of the higher frequencies to compute PAC on. If None,
+            all frequencies are used.
 
-        targets : list of int | None; default None
-        -   Indices of channels in the data to treat as targets.
+        symmetrise : str | list of str; default ["none", "antisym"]
+        -   Symmetrisation to perform when computing PAC. If "none", no
+            symmetrisation is performed. If "antisym", antisymmetrisation is
+            performed.
 
-        symmetrisation : list[str]; default ["none", "antisymmetrised"]
-        -   The symmetrisation to perform when computing PAC.
+        normalise : str | list of str; default ["none", "threenorm"]
+        -   Normalisation to perform when computing PAC. If "none", no
+            normalisation is performed. If "threenorm", the bispectra is
+            normalised to the bicoherence using a threenorm.
 
-        normalisation : list[str]; default ["none", "threenorm"]
-        -   The normalisation to perform when computing PAC.
+        n_jobs : int; default 1
+        -   The number of jobs to run in parallel.
 
-        RETURNS
-        -------
-        results : Results | list[Results]
-        -   Object or list of objects containing the PAC results.
+        NOTES
+        -----
+        -   PAC is computed between all values of `f1` and `f2`. If any value
+            of `f1` is higher than `f2`, a NaN value is returned.
         """
-        self._reset_results()
+        self._reset_attrs()
 
-        self._bicoh = copy.copy(compute_bicoh)
-        self._antisym = copy.copy(compute_antisym)
-        self._low_freqs = copy.deepcopy(low_freqs)
-        self._high_freqs = copy.deepcopy(high_freqs)
+        self._sort_metrics(symmetrise, normalise)
+        self._sort_indices(indices)
+        self._sort_freqs(f1, f2)
+        self._sort_parallelisation(n_jobs)
 
-        self._sort_freq_inputs()
-        self._sort_indices_inputs(seeds, targets)
-
-        self._sort_results_containers()
-
-        self._compute_fft()
+        if self.verbose:
+            print("Computing PAC...\n")
 
         self._compute_bispectra()
-        self._compute_bivariance()
-        if self._bicoh:
+        if self._return_threenorm:
             self._compute_bicoherence()
-        
-        self._pac_bivar_standard = 
+        self._compute_pac()
 
-        return self.results
+        if self.verbose:
+            print("    [PAC computation finished]\n")
 
-    def _reset_results(self) -> None:
-        """Reset result attrs. to None."""
-        self._pac_bispec_standard = 
-        self._pac_bispec_antisym = None
-        self._pac_bicoh_standard = None
-        self._pac_bicoh_antisym = None
+    def _reset_attrs(self) -> None:
+        """Reset attrs. of the object to prevent interference."""
+        super()._reset_attrs()
 
-    def _sort_freq_inputs(self) -> None:
-        """Sort low and high freq. inputs."""
-        if len(self._low_freqs) != len(self._high_freqs):
-            raise ValueError(
-                "`low_freqs` and `high_freqs` must have equal length."
+        self._return_nosym = False
+        self._return_antisym = False
+        self._return_nonorm = False
+        self._return_threenorm = False
+
+        self._bispectra = None
+        self._bicoherence = None
+
+        self._pac_nosym_nonorm = None
+        self._pac_nosym_threenorm = None
+        self._pac_antisym_nonorm = None
+        self._pac_antisym_threenorm = None
+
+    def _sort_indices(self, indices: np.ndarray) -> None:
+        """Sort seed-target indices inputs."""
+        super()._sort_indices(indices)
+
+        if (
+            any(
+                seed == target
+                for seed, target in zip(self._seeds, self._targets)
             )
-        self._n_bands = len(self._low_freqs)
-
-        freq_inds_down = []
-        freq_inds_up = []
-        for low_band, high_band in zip(self._low_freqs, self._high_freqs):
-            down_idcs = [[], []]
-            up_idcs = [[], []]
-            for lfreq in low_band:
-                for hfreq in high_band:
-                    down_idcs[0].append(self._freqs.index(lfreq))
-                    down_idcs[1].append(self._freqs.index(hfreq - lfreq))
-                    up_idcs[0].append(self._freqs.index(lfreq))
-                    up_idcs[1].append(self._freqs.index(hfreq))
-            freq_inds_down.append(down_idcs)
-            freq_inds_up.append(up_idcs)
-
-        self._freq_inds_down = freq_inds_down
-        self._freq_inds_up = freq_inds_up
-
-    def _sort_indices_inputs(
-        self, seeds: list[int], targets: list[int]
-    ) -> None:
-        """Sort seed and target inputs."""
-        seeds = copy.deepcopy(seeds)
-        targets = copy.deepcopy(targets)
-
-        if seeds is None:
-            seeds = np.arange(self._n_chans, dtype=int).tolist()
-        if targets is None:
-            targets = np.arange(self._n_chans, dtype=int).tolist()
-
-        if any(0 > seed >= self._n_chans for seed in seeds) or any(
-            0 > target >= self._n_chans for target in targets
+            and self._return_antisym
         ):
-            raise ValueError(
-                "`seeds` and/or `targets` contain channels not in the data."
+            warn(
+                "The seed and target for at least one connection is the same "
+                "channel. The corresponding antisymmetrised result(s) will be "
+                "zero.",
+                UserWarning,
             )
 
-        self._use_chans = np.unique([*seeds, *targets]).tolist()
-        self._n_chans = len(self._use_chans)
+    def _sort_freqs(self, f1: np.ndarray, f2: np.ndarray) -> None:
+        """Sort frequency inputs."""
+        super()._sort_freqs(f1, f2)
 
-        self._seeds = np.searchsorted(self._use_chans, seeds).tolist()
-        self._targets = np.searchsorted(self._use_chans, targets).tolist()
+        if self.verbose:
+            if any(
+                hfreq + lfreq not in self.freqs
+                for hfreq in self.f2
+                for lfreq in self.f1
+            ):
+                warn(
+                    "At least one value of `f2` + `f1` is not present in the "
+                    "frequencies. The corresponding result(s) will have a "
+                    "value of NaN.",
+                    UserWarning,
+                )
 
-        self._original_seeds = seeds
-        self._original_targets = targets
-
-    def _sort_results_containers(self) -> None:
-        """"""
-        n_result_types = 1
-        if self._antisym or self._bicoh:
-            n_result_types *= 2
-            if self._antisym and self._bicoh:
-                n_result_types *= 2
-
-        results = []
-        for low_band, high_band in zip(self._low_freqs, self._high_freqs):
-            results.append(
-                [
-                    np.zeros(
-                        (
-                            len(self._seeds),
-                            len(self._targets),
-                            len(low_band),
-                            len(high_band),
-                        )
-                    )
-                    for _ in range(n_result_types)
-                ]
+    def _sort_metrics(
+        self, symmetrise: str | list[str], normalise: str | list[str]
+    ) -> None:
+        """Sort inputs for the form of results being requested."""
+        if not isinstance(symmetrise, str) and not isinstance(
+            symmetrise, list
+        ):
+            raise TypeError(
+                "`symmetrise` must be a list of strings or a string."
+            )
+        if not isinstance(normalise, str) and not isinstance(normalise, list):
+            raise TypeError(
+                "`normalise` must be a list of strings or a string."
             )
 
-        self._results = results
+        if isinstance(symmetrise, str):
+            symmetrise = [copy.copy(symmetrise)]
+        if isinstance(normalise, str):
+            normalise = [copy.copy(normalise)]
 
-    def _compute_fft(self) -> None:
-        """Compute FFT of the data."""
-        self._fft_data = np.fft.fft(
-            sp.signal.detrend(self._data[:, self._use_chans])
-            * np.hanning(self._n_times)
-        )
+        supported_sym = ["none", "antisym"]
+        if any(entry not in supported_sym for entry in symmetrise):
+            raise ValueError("The value of `symmetrise` is not recognised.")
+        supported_norm = ["none", "threenorm"]
+        if any(entry not in supported_norm for entry in normalise):
+            raise ValueError("The value of `normalise` is not recognised.")
+
+        if "none" in symmetrise:
+            self._return_nosym = True
+        if "antisym" in symmetrise:
+            self._return_antisym = True
+
+        if "none" in normalise:
+            self._return_nonorm = True
+        if "threenorm" in normalise:
+            self._return_threenorm = True
 
     def _compute_bispectra(self) -> None:
-        """Compute the bispectra for multiple seeds and targets."""
-        self._bispectra_down = self._compute_bispectra_from_fft(
-            self._get_fft_coeffs(self._freq_inds_down)
-        )
-        self._bispectra_up = self._compute_bispectra_from_fft(
-            self._get_fft_coeffs(self._freq_inds_up)
+        """Compute bispectra between f1s and f2s of channels in `indices`."""
+        if self.verbose:
+            print("    Computing bispectra...")
+
+        args = [
+            {
+                "data": self.data[:, (seed, target)],
+                "freqs": self.freqs,
+                "f1s": self.f1,
+                "f2s": self.f2,
+            }
+            for seed, target in zip(self._seeds, self._targets)
+        ]
+
+        # have to average complex value outside of Numba-compiled function
+        self._bispectra = (
+            np.array(
+                pqdm(
+                    args,
+                    _compute_bispectra,
+                    self._n_jobs,
+                    argument_type="kwargs",
+                    desc="Processing connections...",
+                    disable=not self.verbose,
+                )
+            )
+            .mean(axis=2)
+            .transpose(1, 0, 2, 3)
         )
 
-    def _get_fft_coeffs(self, freqs: np.ndarray) -> np.ndarray:
-        """Get FFT coefficients for multiple channels.
+        if self.verbose:
+            print("        [Bispectra computation finished]\n")
+
+    def _compute_bicoherence(self) -> None:
+        """Compute bicoherence from the bispectra using the threenorm."""
+        if self.verbose:
+            print("    Computing bicoherence...")
+
+        args = [
+            {
+                "data": self.data[:, (seed, target)],
+                "freqs": self.freqs,
+                "f1s": self.f1,
+                "f2s": self.f2,
+            }
+            for seed, target in zip(self._seeds, self._targets)
+        ]
+
+        threenorm = np.array(
+            pqdm(
+                args,
+                _compute_threenorm,
+                self._n_jobs,
+                argument_type="kwargs",
+                desc="Processing connections...",
+                disable=not self.verbose,
+            )
+        )
+
+        self._bicoherence = self._bispectra / threenorm
+
+        if self.verbose:
+            print("        [Bicoherence computation finished]\n")
+
+    def _compute_pac(self) -> None:
+        """Compute PAC results from bispectra/bicoherence."""
+        if self._return_nonorm:
+            if self._return_nosym:
+                self._pac_nosym_nonorm = np.abs(self._bispectra[0])
+            if self._return_antisym:
+                self._pac_antisym_nonorm = np.abs(
+                    self._bispectra[0] - self._bispectra[1]
+                )
+
+        if self._return_threenorm:
+            if self._return_nosym:
+                self._pac_nosym_threenorm = np.abs(self._bicoherence[0])
+            if self._return_antisym:
+                self._pac_antisym_threenorm = np.abs(
+                    self._bicoherence[0] - self._bicoherence[1]
+                )
+
+    def get_results(
+        self, form: str = "raveled"
+    ) -> tuple[np.ndarray, str] | tuple[tuple[np.ndarray], tuple[str]] | tuple[
+        np.ndarray, str, tuple[np.ndarray]
+    ] | tuple[tuple[np.ndarray], tuple[str], tuple[np.ndarray]]:
+        """Return a copy of the results.
 
         PARAMETERS
         ----------
-        freqs : numpy ndarray
-        -   Array of frequencies to get the FFT coefficients for with shape [2
-            x N], where the first and second rows correspond to a set of lower
-            and higher frequencies, respectively, and N corresponds to the
-            number of frequency pairs.
+        form : str; default "raveled"
+        -   How the results should be returned: "raveled" - results have shape
+            [connections x f2 x f1]; "compact" - results have shape [seeds x
+            targets x f2 x f1].
 
         RETURNS
         -------
-        fft_coeffs : numpy ndarray
-        -   Array of FFT coefficients with shape [4 x epochs x channels x freq.
-            pairs]. The first dimension corresponds to (for each freq. pair)
-            the low freq., high freq. - low freq., high freq., and high freq. +
-            low freq., respectively.
+        results : NumPy ndarray | tuple of NumPy ndarray
+        -   PAC results. If multiple types of PAC computed, `results` is a
+            tuple of arrays.
+
+        result_types : str | tuple of str
+        -   Types of PAC results according to the entries of `results`. If
+            multiple types of PAC computed, `result_types` if a tuple of
+            strings.
+
+        indices : tuple of NumPy ndarray
+        -   Channel indices of the seeds and targets. Only returned if `form`
+            is "compact".
         """
-        fft_coeffs = []
-        for fband in freqs:
-            coeffs = np.zeros(
-                (
-                    4,
-                    self._n_epochs,
-                    self._n_chans,
-                    len(fband[0]),
-                    len(fband[1]),
-                ),
-                dtype=np.complex128,
-            )
-            for lfreq_i, lfreq in enumerate(fband[0]):
-                for hfreq_i, hfreq in enumerate(fband[1]):
-                    coeffs[0, :, :, lfreq_i, hfreq_i] = self._fft_data[
-                        ..., lfreq
-                    ]
-                    coeffs[1, :, :, lfreq_i, hfreq_i] = self._fft_data[
-                        ..., hfreq - lfreq
-                    ]
-                    coeffs[2, :, :, lfreq_i, hfreq_i] = self._fft_data[
-                        ..., hfreq
-                    ]
-                    coeffs[3, :, :, lfreq_i, hfreq_i] = self._fft_data[
-                        ..., hfreq + lfreq
-                    ]
+        accepted_forms = ["raveled", "compact"]
+        if form not in accepted_forms:
+            raise ValueError("`form` is not recognised.")
 
-            fft_coeffs.append(coeffs)
+        results, result_types = self._get_results()
 
-        return fft_coeffs
+        if form == "compact":
+            results = [self._get_compact_results(result) for result in results]
+            indices = results[0][1]
+            results = tuple(result[0] for result in results)
+            if len(results) == 1:
+                results = results[0]
+                result_types = result_types[0]
+            return results, result_types, indices
 
-    def _compute_bispectra_from_fft(
-        self, fft_coeffs: np.ndarray
-    ) -> np.ndarray:
-        """Compute bispectra from FFT coeffs. averaged across epochs.
+        # raveled results
+        if len(results) == 1:
+            results = results[0]
+            result_types = result_types[0]
+        return results, result_types
 
-        PARAMETERS
-        ----------
-        fft_coeffs : numpy ndarray
+    def _get_results(self) -> tuple[tuple[np.ndarray], tuple[str]]:
+        """Return a copy of the PAC results and their types."""
+        results = []
+        result_types = []
+        if self._pac_nosym_nonorm is not None:
+            results.append(self._pac_nosym_nonorm.copy())
+            result_types.append("standard_bispectra_pac")
 
-        RETURNS
-        -------
-        bispectra : numpy ndarray
-        -   Bispectra array with shape [channels x channels x channels x freq.
-            pairs x 2], where the channels are the seed and target channels and
-            the final dimension corresponds to the 'f1, f2-f1, f2' and
-            'f1, f2, f1+f2' bispectra, respectively.
-        """
-        bispectra = []
-        for fband_coeffs in fft_coeffs:
-            n_lfreqs = fband_coeffs.shape[3]
-            n_hfreqs = fband_coeffs.shape[4]
-            fband_bispectra = np.zeros(
-                (
-                    self._n_epochs,
-                    2,  # left and right flanking peaks
-                    self._n_chans,
-                    self._n_chans,
-                    self._n_chans,
-                    n_lfreqs,
-                    n_hfreqs,
-                ),
-                dtype=np.complex128,
-            )
-            for lfreq_i in range(n_lfreqs):
-                for hfreq_i in range(n_hfreqs):
-                    for chan_i, chan in enumerate(self._use_chans):
-                        fband_bispectra[
-                            :, 0, :, :, chan_i, lfreq_i, hfreq_i
-                        ] = (
-                            fband_coeffs[0, :, :, lfreq_i, hfreq_i].T
-                            @ (
-                                fband_coeffs[1, :, :, lfreq_i, hfreq_i].T
-                                * fband_coeffs[
-                                    2, :, chan, lfreq_i, hfreq_i
-                                ].conj()
-                            ).T
-                        )
-                        fband_bispectra[
-                            :, 1, :, :, chan_i, lfreq_i, hfreq_i
-                        ] = (
-                            fband_coeffs[0, :, :, lfreq_i, hfreq_i].T
-                            @ (
-                                fband_coeffs[2, :, :, lfreq_i, hfreq_i].T
-                                * fband_coeffs[
-                                    3, :, chan, lfreq_i, hfreq_i
-                                ].conj()
-                            ).T
-                        )
+        if self._pac_nosym_threenorm is not None:
+            results.append(self._pac_nosym_threenorm.copy())
+            result_types.append("standard_bicoherence_pac")
 
-            bispectra.append(fband_bispectra.mean(axis=0))
+        if self._pac_antisym_nonorm is not None:
+            results.append(self._pac_antisym_nonorm.copy())
+            result_types.append("antisymmetrised_bispectra_pac")
 
-        return bispectra
+        if self._pac_antisym_threenorm is not None:
+            results.append(self._pac_antisym_threenorm.copy())
+            result_types.append("antisymmetrised_bicoherence_pac")
 
-    def _compute_bivariance(self) -> None:
-        """"""
-        self._bivariance_down = self._compute_bivariance_from_bispectra(
-            self._bispectra_down
-        )
-        self._bivariance_up = self._compute_bivariance_from_bispectra(
-            self._bispectra_up
-        )
+        return tuple(results), tuple(result_types)
 
-    def _compute_bivariance_from_bispectra(self, bispectra) -> None:
-        """"""
-        bivariance = []
-        for fband_bispectra in bispectra:
-            n_lfreqs = fband_bispectra.shape[4]
-            n_hfreqs = fband_bispectra.shape[5]
-            fband_bivariance = np.zeros(
-                (len(self._seeds), len(self._n_targets), n_lfreqs, n_hfreqs)
-            )
-            for lfreq_i in range(n_lfreqs):
-                for hfreq_i in range(n_hfreqs):
-                    for seed_i, seed in enumerate(self._seeds):
-                        for target_i, target in enumerate(self._targets):
-                            fband_bivariance[
-                                seed_i, target_i, lfreq_i, hfreq_i
-                            ] = fband_bispectra[
-                                0, seed, target, target, lfreq_i, hfreq_i
-                            ]
-            bivariance.append(fband_bivariance)
 
-        return bivariance
+@njit
+def _compute_bispectra(
+    data: np.ndarray, freqs: np.ndarray, f1s: np.ndarray, f2s: np.ndarray
+) -> np.ndarray:
+    """Compute bispectra for a single connection.
 
-    def _compute_pac(self, down, up) -> None:
-        """"""
-        pac = []
-        for fband_down, fband_up in zip(down, up):
-            n_lfreqs = fband_down.shape[2]
-            n_hfreqs = fband_down.shape[3]
-            fband_pac = np.zeros(
-                len(self._seeds), len(self._targets), n_lfreqs, n_hfreqs
-            )
-            for seed_i, seed in enumerate(self._seeds):
-                for target_i, target in enumerate(self._targets):
-                    for lfreq_i in range(n_lfreqs):
-                        for hfreq_i in range(n_hfreqs):
-                            fband_pac[
-                                seed_i, target_i, lfreq_i, hfreq_i
-                            ] = np.mean(
-                                [
-                                    fband_down[seed, target, lfreq_i, hfreq_i],
-                                    fband_up[seed, target, lfreq_i, hfreq_i],
-                                ]
-                            )
-            pac.append(fband_pac)
+    PARAMETERS
+    ----------
+    data : NumPy ndarray
+    -   3D array of FFT coefficients with shape [epochs x 2 x frequencies],
+        where the second dimension contains the data for the seed and target
+        channel of a single connection, respectively.
 
-        return pac
+    freqs : NumPy ndarray
+    -   1D array of frequencies in `data`.
 
-    @property
-    def indices(self) -> tuple[list[int]]:
-        """Return indices of the seeds and targets."""
-        return (self._original_seeds, self._original_targets)
+    f1s : NumPy ndarray
+    -   1D array of low frequencies to compute bispectra for.
 
-    @property
-    def results(
-        self, get_types: str | list[str] | None = None
-    ) -> np.ndarray | None | tuple[np.ndarray | None]:
-        """Return PAC results.
+    f2s : NumPy ndarray
+    -   1D array of high frequencies to compute bispectra for.
 
-        PARAMETERS
-        ----------
-        get_types : str | list of str | None; default None
-        -   The type of PAC results to return. Recognised values are:
-            "bispec_standard" for the standard bispectra results;
-            "bispec_antisym" for the antisymmetrised bispectra results;
-            "bicoh_standard" for the standard bicoherence results; and
-            "bicoh_antisym" for the antisymmetrised bicoherence results. If
-            None, all computed results are returned.
+    RETURNS
+    -------
+    results : NumPy ndarray
+    -   4D array containing the bispectra of a single connection with shape [2
+        x epochs x f2 x f1], where the first dimension corresponds to the
+        standard bispectra (B_kmm) and symmetric bispectra (B_mkm),
+        respectively (where k is the seed and m is the target).
 
-        RETURNS
-        -------
-        results : numpy ndarray | None | tuple of numpy ndarray or None
-        -   The requested results. If `get_types` is None, only those results
-            which have been computedare returned, whereas if a result is
-            requested which has not been computed, None is returned in its
-            place.
+    NOTES
+    -----
+    -   Averaging across epochs is not performed here as `np.mean` of complex
+        numbers if not supported when compiling using Numba.
+    """
+    results = np.full(
+        (2, data.shape[0], f2s.shape[0], f1s.shape[0]),
+        fill_value=np.nan,
+        dtype=np.complex128,
+    )
+    for f1_i, f1 in enumerate(f1s):
+        for f2_i, f2 in enumerate(f2s):
+            if f1 < f2 and (f2 + f1) in freqs:
+                for epoch_i, epoch_data in enumerate(data):
+                    f1_loc = fast_find_first(freqs, f1)
+                    f2_loc = fast_find_first(freqs, f1)
 
-        RAISES
-        ------
-        KeyError
-        -   Raised if key(s) of `get_types` is(are) invalid.
-        """
-        results = {
-            "bispec_standard": self._pac_bispec_standard,
-            "bispec_antisym": self._pac_bispec_antisym,
-            "bicoh_standard": self._pac_bicoh_standard,
-            "bicoh_antisym": self._pac_bicoh_antisym,
-        }
-        possible_types = results.keys()
+                    # B_kmm
+                    fft_f1 = epoch_data[0, f1_loc]
+                    fft_f2 = epoch_data[1, f2_loc]
+                    fft_fdiff = epoch_data[1, fast_find_first(freqs, f2 + f1)]
+                    results[0, epoch_i, f2_i, f1_i] = fft_f1 * (
+                        fft_fdiff * np.conjugate(fft_f2)
+                    )
 
-        if get_types is None:
-            return (
-                results[this_type]
-                for this_type in possible_types
-                if results[this_type] is not None
-            )
+                    # B_mkm
+                    fft_f1 = epoch_data[1, f1_loc]
+                    fft_f2 = epoch_data[0, f2_loc]
+                    results[1, epoch_i, f2_i, f1_i] = fft_f1 * (
+                        fft_fdiff * np.conjugate(fft_f2)
+                    )
 
-        if isinstance(get_types, str):
-            get_types = [get_types]
+    return results
 
-        try:
-            return (results[this_type] for this_type in get_types)
-        except KeyError as error:
-            print("The requested results type is not recognised.", error)
 
-    @property
-    def pac_bispec_standard(self) -> np.ndarray | None:
-        """Return PAC results from the standard bispectra."""
-        return self._pac_bispec_standard
+@njit
+def _compute_threenorm(
+    data: np.ndarray, freqs: np.ndarray, f1s: np.ndarray, f2s: np.ndarray
+) -> np.ndarray:
+    """Compute threenorm for a single connection across epochs.
 
-    @property
-    def pac_bispec_antisym(self) -> np.ndarray | None:
-        """Return PAC results from the antisymmetrised bispectra."""
-        return self._pac_bispec_antisym
+    PARAMETERS
+    ----------
+    data : NumPy ndarray
+    -   3D array of FFT coefficients with shape [epochs x 2 x frequencies],
+        where the second dimension contains the data for the seed and target
+        channel of a single connection, respectively.
 
-    @property
-    def pac_bicoh_standard(self) -> np.ndarray | None:
-        """Return PAC results from the standard bicoherence."""
-        return self._pac_bicoh_standard
+    freqs : NumPy ndarray
+    -   1D array of frequencies in `data`.
 
-    @property
-    def pac_bicoh_antisym(self) -> np.ndarray | None:
-        """Return PAC results from the antisymmetrised bispectra."""
-        return self._pac_bicoh_antisym
+    f1s : NumPy ndarray
+    -   1D array of low frequencies to compute threenorm for.
+
+    f2s : NumPy ndarray
+    -   1D array of high frequencies to compute threenorm for.
+
+    RETURNS
+    -------
+    results : NumPy ndarray
+    -   2D array containing the threenorm of a single connection averaged
+        across epochs, with shape [f2 x f1].
+    """
+    results = np.full(
+        (f2s.shape[0], f1s.shape[0]), fill_value=np.nan, dtype=np.float64
+    )
+    for f1_i, f1 in enumerate(f1s):
+        for f2_i, f2 in enumerate(f2s):
+            if f1 < f2 and (f2 + f1) in freqs:
+                fft_f1 = data[:, 0, fast_find_first(freqs, f1)]
+                fft_f2 = data[:, 1, fast_find_first(freqs, f2)]
+                fft_fdiff = data[:, 1, fast_find_first(freqs, f2 + f1)]
+                results[f2_i, f1_i] = (
+                    (np.abs(fft_f1) ** 3).mean()
+                    * (np.abs(fft_f2) ** 3).mean()
+                    * (np.abs(fft_fdiff) ** 3).mean()
+                ) ** 1 / 3
+
+    return results
