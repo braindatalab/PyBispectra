@@ -6,6 +6,7 @@ from warnings import warn
 
 import numpy as np
 import scipy as sp
+from pqdm.processes import pqdm
 
 
 class Process(ABC):
@@ -36,7 +37,8 @@ class Process(ABC):
     ATTRIBUTES
     ----------
     data : NumPy ndarray
-    -   FFT coefficients with shape [epochs x channels x frequencies].
+    -   3D array of FFT coefficients with shape [epochs x channels x
+        frequencies].
 
     freqs : NumPy ndarray
     -   1D array of the frequencies in `data`.
@@ -54,6 +56,18 @@ class Process(ABC):
     verbose : bool; default True
     -   Whether or not to report the progress of the processing.
     """
+
+    indices = None
+    _seeds = None
+    _targets = None
+    _n_cons = None
+
+    f1 = None
+    f2 = None
+
+    _n_jobs = None
+
+    _results = None
 
     def __init__(
         self, data: np.ndarray, freqs: np.ndarray, verbose: bool = True
@@ -137,23 +151,48 @@ class Process(ABC):
             freq not in self.freqs for freq in f2
         ):
             raise ValueError(
-                "All frequencies in `f1` and `f2` must be present in the data."
+                "All frequencies in `f1` and `f2` must be present in the "
+                "data."
             )
 
         if self.verbose:
             if any(lfreq >= hfreq for hfreq in f2 for lfreq in f1):
                 warn(
                     "At least one value in `f1` is >= a value in `f2`. The "
-                    "corresponding result(s) will have a value of NaN.\n",
+                    "corresponding result(s) will have a value of NaN.",
                     UserWarning,
                 )
 
         self.f1 = f1.copy()
         self.f2 = f2.copy()
 
+    def _sort_parallelisation(self, n_jobs: int) -> None:
+        """Sort parallelisation inputs."""
+        if not isinstance(n_jobs, int):
+            raise TypeError("`n_jobs` must be an integer.")
+
+        if n_jobs < 1:
+            raise ValueError("`n_jobs` must be >= 1.")
+
+        self._n_jobs = copy.copy(n_jobs)
+
     @abstractmethod
     def compute(self):
         """Compute results."""
+
+    def _reset_attrs(self) -> None:
+        """Reset attrs. of the object to prevent interference."""
+        self.indices = None
+        self._seeds = None
+        self._targets = None
+        self._n_cons = None
+
+        self.f1 = None
+        self.f2 = None
+
+        self._n_jobs = None
+
+        self._results = None
 
     @abstractmethod
     def get_results(self):
@@ -191,18 +230,15 @@ class Process(ABC):
         # remove empty rows and cols
         filled_rows = []
         for row_i, row in enumerate(compact_results):
-            if not np.all(row == fill):
+            if not all(np.isnan(entry).all() for entry in row):
                 filled_rows.append(row_i)
         filled_cols = []
         for col_i, col in enumerate(compact_results.transpose(1, 0, 2, 3)):
-            if not np.all(col == fill):
+            if not all(np.isnan(entry).all() for entry in col):
                 filled_cols.append(col_i)
         compact_results = compact_results[np.ix_(filled_rows, filled_cols)]
 
-        indices = (
-            np.unique(self._seeds),
-            np.unique(self._targets),
-        )
+        indices = (np.unique(self._seeds), np.unique(self._targets))
 
         return compact_results.copy(), indices
 
@@ -212,7 +248,7 @@ class Process(ABC):
 
 
 def compute_fft(
-    data: np.ndarray, sfreq: float, verbose: bool = True
+    data: np.ndarray, sfreq: float, n_jobs: int = 1, verbose: bool = True
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute the FFT on real-valued data.
 
@@ -221,40 +257,66 @@ def compute_fft(
 
     PARAMETERS
     ----------
-    data : numpy ndarray
-    -   Array of real-valued data to compute the FFT on, with shape [epochs x
-        channels x times].
+    data : NumPy ndarray
+    -   3D array of real-valued data to compute the FFT on, with shape [epochs
+        x channels x times].
 
     sfreq : float
     -   Sampling frequency of the data in Hz.
 
+    n_jobs : int; default 1
+    -   Number of jobs to run in parallel
+
+    verbose : bool; default True
+    -   Whether or not to report the status of the processing.
+
     RETURNS
     -------
     fft : NumPy ndarray
-    -   FFT of the data with shape [epochs x channels x positive frequencies].
+    -   3D array of FFT coefficients of the data with shape [epochs x channels
+        x positive frequencies].
 
     freqs : NumPy ndarray
-    -   Frequencies of `fft`.
-
-    verbose : bool; default True
-    -   Whether or not to report the status of the computation.
+    -   1D array of the frequencies in `fft`.
 
     RAISES
     ------
     ValueError
-    -   Raised if `data` is not a numpy ndarray or does not have 3 dimensions.
+    -   Raised if `data` is not a NumPy ndarray or does not have 3 dimensions.
     """
     if not isinstance(data, np.ndarray) or data.ndim != 3:
         raise ValueError("`data` must be a 3D NumPy array.")
 
+    if not isinstance(n_jobs, int):
+        raise TypeError("`n_jobs` must be an integer.")
+    if n_jobs < 1:
+        raise ValueError("`n_jobs` must be >= 1.")
+
     if not np.isreal(data).all():
-        warn("`data` is expected to be real-valued.\n", UserWarning)
+        warn("`data` is expected to be real-valued.", UserWarning)
 
     if verbose:
         print("Computing FFT on the data...")
 
     freqs = np.linspace(0, sfreq / 2, sfreq + 1)
-    fft = np.fft.fft(sp.signal.detrend(data) * np.hanning(data.shape[2]))
+
+    window = np.hanning(data.shape[2])
+
+    args = [
+        {"a": sp.signal.detrend(chan_data) * window}
+        for chan_data in data.transpose(1, 0, 2)
+    ]
+
+    fft = np.array(
+        pqdm(
+            args,
+            np.fft.fft,
+            n_jobs,
+            argument_type="kwargs",
+            desc="Processing channels...",
+            disable=not verbose,
+        )
+    ).transpose(1, 0, 2)
 
     if verbose:
         print("    [FFT computation finished]\n")
