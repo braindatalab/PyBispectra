@@ -5,6 +5,7 @@ from numba import njit
 from pqdm.processes import pqdm
 
 from process import Process
+from utils import fast_find_first
 
 
 class PPC(Process):
@@ -13,7 +14,8 @@ class PPC(Process):
     PARAMETERS
     ----------
     data : NumPy ndarray
-    -   FFT coefficients with shape [epochs x channels x frequencies].
+    -   3D array of FFT coefficients with shape [epochs x channels x
+        frequencies].
 
     freqs : NumPy ndarray
     -   1D array of the frequencies in `data`.
@@ -24,7 +26,7 @@ class PPC(Process):
     METHODS
     -------
     compute
-    -   Compute PPC, averagee over epochs.
+    -   Compute PPC, averaged over epochs.
 
     get_results
     -   Return a copy of the results.
@@ -50,7 +52,7 @@ class PPC(Process):
     f2 : NumPy ndarray
     -   1D array of high frequencies most recently used with `compute`.
 
-    verbose : bool; default True
+    verbose : bool
     -   Whether or not to report the progress of the processing.
     """
 
@@ -79,47 +81,44 @@ class PPC(Process):
             all frequencies are used.
 
         n_jobs : int; default 1
-        -   The number of jobs to run in parallel.
+        -   Number of jobs to run in parallel.
 
         NOTES
         -----
         -   PPC is computed between all values of `f1` and `f2`. If any value
             of `f1` is higher than `f2`, a NaN value is returned.
         """
+        self._reset_attrs()
+
         self._sort_indices(indices)
         self._sort_freqs(f1, f2)
+        self._sort_parallelisation(n_jobs)
 
         if self.verbose:
-            print("Computing PPC on the data...")
+            print("Computing PPC...")
 
-        self._compute_ppc_multi(n_jobs)
+        self._compute_ppc()
 
         if self.verbose:
             print("    [PPC computation finished]\n")
 
-    def _compute_ppc_multi(self, n_jobs: int) -> None:
+    def _compute_ppc(self) -> None:
         """Compute PPC between f1s of seeds and f2s of targets."""
         args = [
             {
-                "data": self.data[
-                    :, (self._seeds[con_i], self._targets[con_i])
-                ],
+                "data": self.data[:, (seed, target)],
                 "freqs": self.freqs,
                 "f1s": self.f1,
                 "f2s": self.f2,
-                "results": np.full(
-                    (self.f2.shape[0], self.f1.shape[0]),
-                    fill_value=np.nan,
-                ),
             }
-            for con_i in range(self._n_cons)
+            for seed, target in zip(self._seeds, self._targets)
         ]
 
         self._results = np.array(
             pqdm(
                 args,
                 _compute_ppc,
-                n_jobs,
+                self._n_jobs,
                 argument_type="kwargs",
                 desc="Processing connections...",
                 disable=not self.verbose,
@@ -153,8 +152,7 @@ class PPC(Process):
 
         if form == "raveled":
             return self._results.copy()
-        else:
-            return self._get_compact_results(self._results)
+        return self._get_compact_results(self._results)
 
 
 @njit
@@ -163,34 +161,38 @@ def _compute_ppc(
     freqs: np.ndarray,
     f1s: np.ndarray,
     f2s: np.ndarray,
-    results: np.ndarray,
 ) -> np.ndarray:
     """Compute PPC for a single connection across epochs.
 
     PARAMETERS
     ----------
     data : NumPy ndarray
-    -   FFT coefficients with shape [epochs x 2 x frequencies], where the
-        second dimension contains the data for the seed and target channel of
-        a single connection, respectively.
+    -   3D array of FFT coefficients with shape [epochs x 2 x frequencies],
+        where the second dimension contains the data for the seed and target
+        channel of a single connection, respectively.
 
     freqs : NumPy ndarray
-    -   Frequencies of `data`.
+    -   1D array of frequencies in `data`.
 
     f1s : NumPy ndarray
-    -   Low frequency values in Hz.
+    -   1D array of low frequencies to compute coupling for.
 
     f2s : NumPy ndarray
-    -   High frequency values in Hz.
+    -   1D array of high frequencies to compute coupling for.
 
+    RETURNS
+    -------
     results : NumPy ndarray
-    -   Array of shape [f2 x f1] to store the results in.
+    -   2D array of PPC for a single connection with shape [f2 x f1].
     """
+    results = np.full(
+        (f2s.shape[0], f1s.shape[0]), fill_value=np.nan, dtype=np.float64
+    )
     for f1_i, f1 in enumerate(f1s):
         for f2_i, f2 in enumerate(f2s):
             if f1 < f2:
-                fft_f1 = data[:, 0, np.where(freqs == f1)[0][0]]  # seed f1
-                fft_f2 = data[:, 1, np.where(freqs == f2)[0][0]]  # target f2
+                fft_f1 = data[:, 0, fast_find_first(freqs, f1)]  # seed f1
+                fft_f2 = data[:, 1, fast_find_first(freqs, f2)]  # target f2
                 numerator = np.abs(
                     (
                         np.abs(fft_f1)
