@@ -8,7 +8,7 @@ from numba import njit
 from pqdm.processes import pqdm
 
 from process import Process
-from utils import fast_find_first
+from pybispectra import Results, fast_find_first
 
 
 np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
@@ -133,6 +133,7 @@ class PAC(Process):
         if self._return_threenorm:
             self._compute_bicoherence()
         self._compute_pac()
+        self._store_results()
 
         if self.verbose:
             print("    [PAC computation finished]\n")
@@ -309,77 +310,58 @@ class PAC(Process):
                     self._bicoherence[0] - self._bicoherence[1]
                 )
 
-    def get_results(
-        self, form: str = "raveled"
-    ) -> tuple[np.ndarray, str] | tuple[tuple[np.ndarray], tuple[str]] | tuple[
-        np.ndarray, str, tuple[np.ndarray]
-    ] | tuple[tuple[np.ndarray], tuple[str], tuple[np.ndarray]]:
-        """Return a copy of the results.
-
-        PARAMETERS
-        ----------
-        form : str; default "raveled"
-        -   How the results should be returned: "raveled" - results have shape
-            [connections x f2 x f1]; "compact" - results have shape [seeds x
-            targets x f2 x f1].
-
-        RETURNS
-        -------
-        results : NumPy ndarray | tuple of NumPy ndarray
-        -   PAC results. If multiple types of PAC computed, `results` is a
-            tuple of arrays.
-
-        result_types : str | tuple of str
-        -   Types of PAC results according to the entries of `results`. If
-            multiple types of PAC computed, `result_types` if a tuple of
-            strings.
-
-        indices : tuple of NumPy ndarray
-        -   Channel indices of the seeds and targets. Only returned if `form`
-            is "compact".
-        """
-        accepted_forms = ["raveled", "compact"]
-        if form not in accepted_forms:
-            raise ValueError("`form` is not recognised.")
-
-        results, result_types = self._get_results()
-
-        if form == "compact":
-            results = [self._get_compact_results(result) for result in results]
-            indices = results[0][1]
-            results = tuple(result[0] for result in results)
-            if len(results) == 1:
-                results = results[0]
-                result_types = result_types[0]
-            return results, result_types, indices
-
-        # raveled results
-        if len(results) == 1:
-            results = results[0]
-            result_types = result_types[0]
-        return results, result_types
-
-    def _get_results(self) -> tuple[tuple[np.ndarray], tuple[str]]:
-        """Return a copy of the PAC results and their types."""
+    def _store_results(self) -> None:
+        """Store computed results in objects."""
         results = []
-        result_types = []
+
         if self._pac_nosym_nonorm is not None:
-            results.append(self._pac_nosym_nonorm.copy())
-            result_types.append("standard_bispectra_pac")
+            results.append(
+                Results(
+                    self._pac_nosym_nonorm,
+                    self.indices,
+                    self.f1,
+                    self.f2,
+                    "PAC - Unsymmetrised Bispectra",
+                )
+            )
 
         if self._pac_nosym_threenorm is not None:
-            results.append(self._pac_nosym_threenorm.copy())
-            result_types.append("standard_bicoherence_pac")
+            results.append(
+                Results(
+                    self._pac_nosym_threenorm,
+                    self.indices,
+                    self.f1,
+                    self.f2,
+                    "PAC - Unsymmetrised Bicoherence",
+                )
+            )
 
         if self._pac_antisym_nonorm is not None:
-            results.append(self._pac_antisym_nonorm.copy())
-            result_types.append("antisymmetrised_bispectra_pac")
+            results.append(
+                Results(
+                    self._pac_antisym_nonorm,
+                    self.indices,
+                    self.f1,
+                    self.f2,
+                    "PAC - Antisymmetrised Bispectra",
+                )
+            )
 
         if self._pac_antisym_threenorm is not None:
-            results.append(self._pac_antisym_threenorm.copy())
-            result_types.append("antisymmetrised_bicoherence_pac")
+            results.append(
+                Results(
+                    self._pac_antisym_threenorm,
+                    self.indices,
+                    self.f1,
+                    self.f2,
+                    "PAC - Antisymmetrised Bicoherence",
+                )
+            )
 
-        return tuple(results), tuple(result_types)
+        if len(results) == 1:
+            self._results = results[0]
+        else:
+            self._results = tuple(results)
 
 
 @njit

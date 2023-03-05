@@ -5,7 +5,7 @@ from numba import njit
 from pqdm.processes import pqdm
 
 from process import Process
-from utils import fast_find_first
+from pybispectra import Results, fast_find_first
 
 
 class PPC(Process):
@@ -56,6 +56,8 @@ class PPC(Process):
     -   Whether or not to report the progress of the processing.
     """
 
+    _ppc = None
+
     def compute(
         self,
         indices: tuple[np.ndarray] | None = None,
@@ -98,9 +100,15 @@ class PPC(Process):
             print("Computing PPC...")
 
         self._compute_ppc()
+        self._store_results()
 
         if self.verbose:
             print("    [PPC computation finished]\n")
+
+    def _reset_attrs(self) -> None:
+        """Reset attrs. of the object to prevent interference."""
+        super()._reset_attrs()
+        self._ppc = None
 
     def _compute_ppc(self) -> None:
         """Compute PPC between f1s of seeds and f2s of targets."""
@@ -114,7 +122,7 @@ class PPC(Process):
             for seed, target in zip(self._seeds, self._targets)
         ]
 
-        self._results = np.array(
+        self._ppc = np.array(
             pqdm(
                 args,
                 _compute_ppc,
@@ -125,34 +133,11 @@ class PPC(Process):
             )
         )
 
-    def get_results(
-        self, form: str = "raveled"
-    ) -> np.ndarray | tuple[np.ndarray, tuple[np.ndarray]]:
-        """Return a copy of the results.
-
-        PARAMETERS
-        ----------
-        form : str; default "raveled"
-        -   How the results should be returned: "raveled" - results have shape
-            [connections x f2 x f1]; "compact" - results have shape [seeds x
-            targets x f2 x f1].
-
-        RETURNS
-        -------
-        results : NumPy ndarray
-        -   Spectral coupling results.
-
-        indices : tuple of NumPy ndarray
-        -   Channel indices of the seeds and targets. Only returned if `form`
-            is "compact".
-        """
-        accepted_forms = ["raveled", "compact"]
-        if form not in accepted_forms:
-            raise ValueError("`form` is not recognised.")
-
-        if form == "raveled":
-            return self._results.copy()
-        return self._get_compact_results(self._results)
+    def _store_results(self) -> None:
+        """Store computed results in an object."""
+        self._results = Results(
+            self._ppc, self.indices, self.f2, self.f1, "PPC"
+        )
 
 
 @njit

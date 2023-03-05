@@ -5,8 +5,8 @@ from abc import ABC, abstractmethod
 from warnings import warn
 
 import numpy as np
-import scipy as sp
-from pqdm.processes import pqdm
+
+from pybispectra import Results
 
 
 class Process(ABC):
@@ -195,130 +195,14 @@ class Process(ABC):
         self._results = None
 
     @abstractmethod
-    def get_results(self):
+    def _store_results(self) -> None:
+        """Store computed results in an object."""
+
+    @property
+    def results(self) -> Results | tuple[Results]:
         """Return a copy of the results."""
-
-    def _get_compact_results(
-        self, results: np.ndarray
-    ) -> tuple[np.ndarray, tuple[np.ndarray]]:
-        """Return a compacted form of the results.
-
-        PARAMETERS
-        ----------
-        results : NumPy ndarray
-        -   Results with shape [connections x f2 x f1].
-
-        RETURNS
-        -------
-        compact_results : NumPy ndarray
-        -   Results with shape [seeds x targets x f2 x f1].
-
-        indices : tuple[NumPy ndarray]
-        -   Channel indices of `compact_results`, for the seeds and targets,
-            respectively.
-        """
-        fill = np.full((results.shape[1], results.shape[2]), fill_value=np.nan)
-        compact_results = np.full(
-            (self._n_chans, self._n_chans, results.shape[1], results.shape[2]),
-            fill_value=fill,
-        )
-        for con_result, seed, target in zip(
-            results, self._seeds, self._targets
-        ):
-            compact_results[seed, target] = con_result
-
-        # remove empty rows and cols
-        filled_rows = []
-        for row_i, row in enumerate(compact_results):
-            if not all(np.isnan(entry).all() for entry in row):
-                filled_rows.append(row_i)
-        filled_cols = []
-        for col_i, col in enumerate(compact_results.transpose(1, 0, 2, 3)):
-            if not all(np.isnan(entry).all() for entry in col):
-                filled_cols.append(col_i)
-        compact_results = compact_results[np.ix_(filled_rows, filled_cols)]
-
-        indices = (np.unique(self._seeds), np.unique(self._targets))
-
-        return compact_results.copy(), indices
+        return self._results
 
     def copy(self):
         """Return a copy of the object."""
         return copy.deepcopy(self)
-
-
-def compute_fft(
-    data: np.ndarray, sfreq: float, n_jobs: int = 1, verbose: bool = True
-) -> tuple[np.ndarray, np.ndarray]:
-    """Compute the FFT on real-valued data.
-
-    As the data is assumed to be real-valued, only those values corresponding
-    to the positive frequencies are returned.
-
-    PARAMETERS
-    ----------
-    data : NumPy ndarray
-    -   3D array of real-valued data to compute the FFT on, with shape [epochs
-        x channels x times].
-
-    sfreq : float
-    -   Sampling frequency of the data in Hz.
-
-    n_jobs : int; default 1
-    -   Number of jobs to run in parallel
-
-    verbose : bool; default True
-    -   Whether or not to report the status of the processing.
-
-    RETURNS
-    -------
-    fft : NumPy ndarray
-    -   3D array of FFT coefficients of the data with shape [epochs x channels
-        x positive frequencies].
-
-    freqs : NumPy ndarray
-    -   1D array of the frequencies in `fft`.
-
-    RAISES
-    ------
-    ValueError
-    -   Raised if `data` is not a NumPy ndarray or does not have 3 dimensions.
-    """
-    if not isinstance(data, np.ndarray) or data.ndim != 3:
-        raise ValueError("`data` must be a 3D NumPy array.")
-
-    if not isinstance(n_jobs, int):
-        raise TypeError("`n_jobs` must be an integer.")
-    if n_jobs < 1:
-        raise ValueError("`n_jobs` must be >= 1.")
-
-    if not np.isreal(data).all():
-        warn("`data` is expected to be real-valued.", UserWarning)
-
-    if verbose:
-        print("Computing FFT on the data...")
-
-    freqs = np.linspace(0, sfreq / 2, sfreq + 1)
-
-    window = np.hanning(data.shape[2])
-
-    args = [
-        {"a": sp.signal.detrend(chan_data) * window}
-        for chan_data in data.transpose(1, 0, 2)
-    ]
-
-    fft = np.array(
-        pqdm(
-            args,
-            np.fft.fft,
-            n_jobs,
-            argument_type="kwargs",
-            desc="Processing channels...",
-            disable=not verbose,
-        )
-    ).transpose(1, 0, 2)
-
-    if verbose:
-        print("    [FFT computation finished]\n")
-
-    return fft[..., 1 : len(freqs)], freqs[1:]  # ignore zero freq.
