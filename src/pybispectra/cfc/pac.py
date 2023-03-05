@@ -7,14 +7,14 @@ import numpy as np
 from numba import njit
 from pqdm.processes import pqdm
 
-from process import Process
-from pybispectra import Results, fast_find_first
+from pybispectra.utils import Results, fast_find_first
+from .process import _Process
 
 
 np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
 
 
-class PAC(Process):
+class PAC(_Process):
     """Class for computing phase-amplitude (PAC) coupling using bispectra.
 
     PARAMETERS

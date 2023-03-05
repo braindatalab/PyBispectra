@@ -74,6 +74,13 @@ class Results:
 
     name = None
 
+    def __repr__(self) -> str:
+        """Return printable represenation of the object."""
+        return repr(
+            f"<Result: {self.name} | [{self.n_cons} connections x "
+            f"{len(self.f2)} f2 x {len(self.f1)} f1]>"
+        )
+
     def __init__(
         self,
         data: np.ndarray,
@@ -517,7 +524,7 @@ def fast_find_first(vector: np.ndarray, value: float) -> int:
     raise ValueError("`value` is not present in `vector`.")
 
 
-def generate_data(
+def _generate_data(
     n_epochs: int, n_chans: int, n_times: int, seed: int = 44
 ) -> np.ndarray:
     """Generate random data of the specified shape."""

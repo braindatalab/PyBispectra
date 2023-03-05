@@ -1,5 +1,6 @@
 python=3.10
 numpy
+scipy
 numba
 pqdm
 matplotlib

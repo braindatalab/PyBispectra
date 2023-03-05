@@ -4,11 +4,11 @@ import numpy as np
 from numba import njit
 from pqdm.processes import pqdm
 
-from process import Process
-from pybispectra import Results, fast_find_first
+from pybispectra.utils import Results, fast_find_first
+from .process import _Process
 
 
-class PPC(Process):
+class PPC(_Process):
     """Class for computing phase-phase coupling (PPC).
 
     PARAMETERS

@@ -6,10 +6,10 @@ from warnings import warn
 
 import numpy as np
 
-from pybispectra import Results
+from pybispectra.utils import Results
 
 
-class Process(ABC):
+class _Process(ABC):
     """Base class for processing results.
 
     PARAMETERS

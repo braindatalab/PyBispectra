@@ -1,5 +1,6 @@
 import numpy as np
-from init import PAC, PPC, compute_fft
+from pybispectra.cfc import PAC, PPC
+from pybispectra.utils import compute_fft
 
 if __name__ == "__main__":
     np.random.RandomState(44)
@@ -11,12 +12,10 @@ if __name__ == "__main__":
 
     ppc = PPC(fft, freqs)
     ppc.compute(n_jobs=n_jobs)
-    raveled_results = ppc.get_results("raveled")
-    compact_results, compact_indices = ppc.get_results("compact")
+    ppc_results = ppc.results
 
     pac = PAC(fft, freqs)
     pac.compute(n_jobs=n_jobs)
-    raveled_pac, raveled_pac_types = pac.get_results("raveled")
-    compact_pac, compact_pac_types, pac_indices = pac.get_results("compact")
+    pac_results = pac.results
 
     print("jeff")

@@ -5,7 +5,8 @@ import warnings
 import pytest
 import numpy as np
 
-from pybisectra import PAC, PPC, compute_fft, _generate_data
+from pybispectra.cfc import PAC, PPC
+from pybispectra.utils import compute_fft, _generate_data
 
 
 def test_ppc() -> None:
