@@ -159,29 +159,33 @@ class PAC(_Process):
         """Sort seed-target indices inputs."""
         super()._sort_indices(indices)
 
-        if (
-            any(
-                seed == target
-                for seed, target in zip(self._seeds, self._targets)
-            )
-            and self._return_antisym
-        ):
-            warn(
-                "The seed and target for at least one connection is the same "
-                "channel. The corresponding antisymmetrised result(s) will be "
-                "zero.",
-                UserWarning,
-            )
+        if self.verbose:
+            if (self._return_antisym
+                and (
+                    any(
+                        seed == target
+                        for seed, target in zip(self._seeds, self._targets)
+                    )
+                )
+            ):
+                warn(
+                    "The seed and target for at least one connection is the "
+                    "same channel. The corresponding antisymmetrised "
+                    "result(s) will be zero.",
+                    UserWarning,
+                )
 
     def _sort_freqs(self, f1: np.ndarray, f2: np.ndarray) -> None:
         """Sort frequency inputs."""
         super()._sort_freqs(f1, f2)
 
         if self.verbose:
-            if any(
-                hfreq + lfreq not in self.freqs
-                for hfreq in self.f2
-                for lfreq in self.f1
+            if (
+                any(
+                    hfreq + lfreq not in self.freqs
+                    for hfreq in self.f2
+                    for lfreq in self.f1
+                )
             ):
                 warn(
                     "At least one value of `f2` + `f1` is not present in the "
@@ -390,7 +394,7 @@ def _compute_bispectra(
     -------
     results : NumPy ndarray
     -   4D array containing the bispectra of a single connection with shape [2
-        x epochs x f2 x f1], where the first dimension corresponds to the
+        x epochs x f1 x f2], where the first dimension corresponds to the
         standard bispectra (B_kmm) and symmetric bispectra (B_mkm),
         respectively (where k is the seed and m is the target).
 
@@ -400,7 +404,7 @@ def _compute_bispectra(
         numbers if not supported when compiling using Numba.
     """
     results = np.full(
-        (2, data.shape[0], f2s.shape[0], f1s.shape[0]),
+        (2, data.shape[0], f1s.shape[0], f2s.shape[0]),
         fill_value=np.nan,
         dtype=np.complex128,
     )
@@ -415,14 +419,14 @@ def _compute_bispectra(
                     fft_f1 = epoch_data[0, f1_loc]
                     fft_f2 = epoch_data[1, f2_loc]
                     fft_fdiff = epoch_data[1, fast_find_first(freqs, f2 + f1)]
-                    results[0, epoch_i, f2_i, f1_i] = fft_f1 * (
+                    results[0, epoch_i, f1_i, f2_i] = fft_f1 * (
                         fft_fdiff * np.conjugate(fft_f2)
                     )
 
                     # B_mkm
                     fft_f1 = epoch_data[1, f1_loc]
                     fft_f2 = epoch_data[0, f2_loc]
-                    results[1, epoch_i, f2_i, f1_i] = fft_f1 * (
+                    results[1, epoch_i, f1_i, f2_i] = fft_f1 * (
                         fft_fdiff * np.conjugate(fft_f2)
                     )
 
@@ -455,10 +459,10 @@ def _compute_threenorm(
     -------
     results : NumPy ndarray
     -   2D array containing the threenorm of a single connection averaged
-        across epochs, with shape [f2 x f1].
+        across epochs, with shape [f1 x f2].
     """
     results = np.full(
-        (f2s.shape[0], f1s.shape[0]), fill_value=np.nan, dtype=np.float64
+        (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
     )
     for f1_i, f1 in enumerate(f1s):
         for f2_i, f2 in enumerate(f2s):
@@ -466,7 +470,7 @@ def _compute_threenorm(
                 fft_f1 = data[:, 0, fast_find_first(freqs, f1)]
                 fft_f2 = data[:, 1, fast_find_first(freqs, f2)]
                 fft_fdiff = data[:, 1, fast_find_first(freqs, f2 + f1)]
-                results[f2_i, f1_i] = (
+                results[f1_i, f2_i] = (
                     (np.abs(fft_f1) ** 3).mean()
                     * (np.abs(fft_f2) ** 3).mean()
                     * (np.abs(fft_fdiff) ** 3).mean()

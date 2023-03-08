@@ -119,7 +119,7 @@ class _Process(ABC):
         for group_idcs in (seeds, targets):
             if not isinstance(group_idcs, np.ndarray):
                 raise TypeError("Entries of `indices` should be NumPy arrays.")
-            if any(idx >= self._n_chans for idx in group_idcs):
+            if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
                 raise ValueError(
                     "`indices` contains indices for channels not present in "
                     "the data."

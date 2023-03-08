@@ -7,6 +7,7 @@ import numpy as np
 import scipy as sp
 from matplotlib.figure import Figure
 from matplotlib import pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pqdm.processes import pqdm
 from numba import njit
 
@@ -17,7 +18,7 @@ class Results:
     PARAMETERS
     ----------
     data : NumPy ndarray
-    -   3D array of results to store with shape [connections x f2 x f1].
+    -   3D array of results to store with shape [connections x f1 x f2].
 
     indices : tuple of NumPy ndarray
     -   Indices of the channels for each connection of `data`. Should contain 2
@@ -78,7 +79,7 @@ class Results:
         """Return printable represenation of the object."""
         return repr(
             f"<Result: {self.name} | [{self.n_cons} connections x "
-            f"{len(self.f2)} f2 x {len(self.f1)} f1]>"
+            f"{len(self.f1)} f1 x {len(self.f2)} f2]>"
         )
 
     def __init__(
@@ -122,17 +123,17 @@ class Results:
         self._seeds = indices[0].copy()
         self._targets = indices[1].copy()
         self.n_cons = len(indices[0])
-        self._n_chans = np.unique([*self._seeds, *self._targets])
+        self._n_chans = len(np.unique([*self._seeds, *self._targets]))
 
         if not isinstance(f1, np.ndarray) or not isinstance(f2, np.ndarray):
             raise TypeError("`f1` and `f2` must be NumPy arrays.")
         if f1.ndim != 1 or f2.ndim != 1:
-            raise TypeError("`f1` and `f2` must be 1D arrays.")
+            raise ValueError("`f1` and `f2` must be 1D arrays.")
         self.f1 = f1.copy()
         self.f2 = f2.copy()
 
-        if data.shape != (len(indices[0]), len(f2), len(f1)):
-            raise ValueError("`data` must have shape [connections x f2 x f1].")
+        if data.shape != (len(indices[0]), len(f1), len(f2)):
+            raise ValueError("`data` must have shape [connections x f1 x f2].")
 
         if not isinstance(name, str):
             raise TypeError("`name` must be a string.")
@@ -147,8 +148,8 @@ class Results:
         ----------
         form : str; default "raveled"
         -   How the results should be returned: "raveled" - results have shape
-            [connections x f2 x f1]; "compact" - results have shape [seeds x
-            targets x f2 x f1].
+            [connections x f1 x f2]; "compact" - results have shape [seeds x
+            targets x f1 x f2].
 
         RETURNS
         -------
@@ -173,15 +174,15 @@ class Results:
         RETURNS
         -------
         compact_results : NumPy ndarray
-        -   Results with shape [seeds x targets x f2 x f1].
+        -   Results with shape [seeds x targets x f1 x f2].
 
         indices : tuple[NumPy ndarray]
         -   Channel indices of `compact_results`, for the seeds and targets,
             respectively.
         """
-        fill = np.full((len(self.f2), len(self.f1)), fill_value=np.nan)
+        fill = np.full((len(self.f1), len(self.f2)), fill_value=np.nan)
         compact_results = np.full(
-            (self._n_chans, self._n_chans, len(self.f2), len(self.f1)),
+            (self._n_chans, self._n_chans, len(self.f1), len(self.f2)),
             fill_value=fill,
         )
         for con_result, seed, target in zip(
@@ -211,6 +212,8 @@ class Results:
         f2: np.ndarray | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
+        major_tick_intervals: float = 5.0,
+        minor_tick_intervals: float = 1.0,
         show: bool = True,
     ) -> None:
         """Plot the results.
@@ -234,6 +237,14 @@ class Results:
         n_cols : int; default 1
         -   Number of columns of subplots per figure.
 
+        major_tick_intervals : float; default 5.0
+        -   Intervals (in Hz) at which the major ticks of the x- and y-axes
+            should occur.
+
+        minor_tick_intervals : float; default 1.0
+        -   Intervals (in Hz) at which the minor ticks of the x- and y-axes
+            should occur.
+
         show : bool; default True
         -   Whether or not to show the plotted results.
 
@@ -254,7 +265,13 @@ class Results:
             connection on a new figure.
         """
         connections, f1, f2, f1_idcs, f2_idcs = self._sort_plot_inputs(
-            connections, f1, f2, n_rows, n_cols
+            connections,
+            f1,
+            f2,
+            n_rows,
+            n_cols,
+            major_tick_intervals,
+            minor_tick_intervals,
         )
         figures, axes = self._create_plots(connections, n_rows, n_cols)
         self._plot_results(
@@ -267,6 +284,8 @@ class Results:
             f2_idcs,
             n_rows,
             n_cols,
+            major_tick_intervals,
+            minor_tick_intervals,
         )
 
         if show:
@@ -281,6 +300,8 @@ class Results:
         f2: np.ndarray | None,
         n_rows: int,
         n_cols: int,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
     ) -> tuple[list[int], np.ndarray, np.ndarray, list[int], list[int]]:
         """Sort the plotting inputs.
 
@@ -316,6 +337,8 @@ class Results:
 
         if f1 is None:
             f1 = self.f1.copy()
+            half_f2_max = self.f2[-1] / 2
+            f1 = np.array([freq for freq in f1 if freq <= half_f2_max])
         if f2 is None:
             f2 = self.f2.copy()
         if not isinstance(f1, np.ndarray) or not isinstance(f2, np.ndarray):
@@ -336,11 +359,19 @@ class Results:
         if n_rows < 1 or n_cols < 1:
             raise ValueError("`n_rows` and `n_cols` must be >= 1.")
 
+        if not isinstance(major_tick_intervals, float) or not isinstance(
+            minor_tick_intervals, float
+        ):
+            raise TypeError(
+                "`major_tick_intervals` and `minor_tick_intervals` should be "
+                "floats."
+            )
+
         return connections, f1, f2, f1_idcs, f2_idcs
 
     def _create_plots(
         self, connections: list[int], n_rows: int, n_cols: int
-    ) -> tuple[list[Figure], list[plt.Axes]]:
+    ) -> tuple[list[Figure], list[np.ndarray[plt.Axes]]]:
         """Create figures and subplots to fill with results.
 
         RETURNS
@@ -362,7 +393,11 @@ class Results:
             if con_i == plot_n:
                 fig, axs = plt.subplots(n_rows, n_cols)
                 figures.append(fig)
-                axes.append(np.flatten(axs))
+                if n_rows * n_cols > 1:
+                    axs = np.ravel(axs)
+                else:
+                    axs = np.array([axs])
+                axes.append(axs)
                 plot_n += n_rows * n_cols
             if plot_n >= len(connections):
                 break
@@ -380,29 +415,39 @@ class Results:
         f2_idcs: list[int],
         n_rows: int,
         n_cols: int,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
     ) -> None:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0
         plot_n = 0
         fig_plot_n = 0
-        for row_i in range(n_rows):
-            for col_i in range(n_cols):
+        for _ in range(n_rows):
+            for _ in range(n_cols):
                 con_i = connections[plot_n]
-                axis = axes[fig_i][row_i + col_i]
+                axis = axes[fig_i][fig_plot_n]
 
-                axis.imshow(self._data[np.ix_(con_i, f2_idcs, f1_idcs)])
+                mesh = axis.pcolormesh(
+                    f1, f2, self._data[con_i][np.ix_(f1_idcs, f2_idcs)].T
+                )
 
+                divider = make_axes_locatable(axis)
+                cax = divider.append_axes("right", size="5%", pad=0.1)
+                plt.colorbar(mesh, ax=axis, cax=cax, label="Coupling (A.U.)")
+
+                axis.set_aspect("equal")
+                self._set_axis_ticks(
+                    axis, f1, f2, major_tick_intervals, minor_tick_intervals
+                )
                 axis.grid(
                     which="major",
                     axis="both",
-                    linestyle="-",
-                    color=[0.3, 0.3, 0.3],
-                    alpha=0.3,
+                    linestyle="--",
+                    color=[0.7, 0.7, 0.7],
+                    alpha=0.7,
                 )
-                axis.set_xlabel("$F_2$ (Hz)")
-                axis.set_xticklabels(f2)
-                axis.set_ylabel("$F_1$ (Hz)")
-                axis.set_yticklabels(f1)
+                axis.set_xlabel("$F_1$ (Hz)")
+                axis.set_ylabel("$F_2$ (Hz)")
 
                 axis.set_title(
                     f"Seed: {self._seeds[con_i]} | Target: "
@@ -411,10 +456,37 @@ class Results:
 
                 plot_n += 1
                 fig_plot_n += 1
-                if fig_plot_n > n_rows * n_cols:
-                    figures[fig_i].title(self.name)
+                if fig_plot_n >= n_rows * n_cols:
+                    figures[fig_i].suptitle(self.name)
                     fig_plot_n = 0
                     fig_i += 1
+
+    def _set_axis_ticks(
+        self,
+        axis: plt.Axes,
+        f1: np.ndarray,
+        f2: np.ndarray,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
+    ) -> None:
+        """Set major and minor tick intervals of x- and y-axes."""
+        n_major_xticks = len(np.arange(f1[0], f1[-1], major_tick_intervals))
+        n_major_yticks = len(np.arange(f2[0], f2[-1], major_tick_intervals))
+
+        # MaxNLocator only cares about tens (e.g. 10 and 19 have same result)
+        n_minor_xticks = (
+            np.ceil(len(np.arange(f1[0], f1[-1], minor_tick_intervals)) / 10)
+            * 10
+        )
+        n_minor_yticks = (
+            np.ceil(len(np.arange(f2[0], f2[-1], minor_tick_intervals)) / 10)
+            * 10
+        )
+
+        axis.xaxis.set_major_locator(plt.MaxNLocator(n_major_xticks))
+        axis.xaxis.set_minor_locator(plt.MaxNLocator(n_minor_xticks))
+        axis.yaxis.set_major_locator(plt.MaxNLocator(n_major_yticks))
+        axis.yaxis.set_minor_locator(plt.MaxNLocator(n_minor_yticks))
 
 
 def compute_fft(
@@ -464,7 +536,7 @@ def compute_fft(
     if n_jobs < 1:
         raise ValueError("`n_jobs` must be >= 1.")
 
-    if not np.isreal(data).all():
+    if verbose and not np.isreal(data).all():
         warn("`data` is expected to be real-valued.", UserWarning)
 
     if verbose:
@@ -529,4 +601,4 @@ def _generate_data(
 ) -> np.ndarray:
     """Generate random data of the specified shape."""
     random = np.random.RandomState(seed)
-    return random.rand((n_epochs, n_chans, n_times))
+    return random.rand(n_epochs, n_chans, n_times)

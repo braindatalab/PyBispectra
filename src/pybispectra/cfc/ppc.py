@@ -136,7 +136,7 @@ class PPC(_Process):
     def _store_results(self) -> None:
         """Store computed results in an object."""
         self._results = Results(
-            self._ppc, self.indices, self.f2, self.f1, "PPC"
+            self._ppc, self.indices, self.f1, self.f2, "PPC"
         )
 
 
@@ -168,10 +168,10 @@ def _compute_ppc(
     RETURNS
     -------
     results : NumPy ndarray
-    -   2D array of PPC for a single connection with shape [f2 x f1].
+    -   2D array of PPC for a single connection with shape [f1 x f2].
     """
     results = np.full(
-        (f2s.shape[0], f1s.shape[0]), fill_value=np.nan, dtype=np.float64
+        (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
     )
     for f1_i, f1 in enumerate(f1s):
         for f2_i, f2 in enumerate(f2s):
@@ -192,6 +192,6 @@ def _compute_ppc(
                     ).mean()
                 )
                 denominator = (np.abs(fft_f1) * np.abs(fft_f2)).mean()
-                results[f2_i, f1_i] = numerator / denominator
+                results[f1_i, f2_i] = numerator / denominator
 
     return results
