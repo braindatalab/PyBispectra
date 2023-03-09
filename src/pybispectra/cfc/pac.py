@@ -160,12 +160,10 @@ class PAC(_Process):
         super()._sort_indices(indices)
 
         if self.verbose:
-            if (self._return_antisym
-                and (
-                    any(
-                        seed == target
-                        for seed, target in zip(self._seeds, self._targets)
-                    )
+            if self._return_antisym and (
+                any(
+                    seed == target
+                    for seed, target in zip(self._seeds, self._targets)
                 )
             ):
                 warn(
@@ -180,12 +178,10 @@ class PAC(_Process):
         super()._sort_freqs(f1, f2)
 
         if self.verbose:
-            if (
-                any(
-                    hfreq + lfreq not in self.freqs
-                    for hfreq in self.f2
-                    for lfreq in self.f1
-                )
+            if any(
+                hfreq + lfreq not in self.freqs
+                for hfreq in self.f2
+                for lfreq in self.f1
             ):
                 warn(
                     "At least one value of `f2` + `f1` is not present in the "
@@ -411,23 +407,23 @@ def _compute_bispectra(
     for f1_i, f1 in enumerate(f1s):
         for f2_i, f2 in enumerate(f2s):
             if f1 < f2 and (f2 + f1) in freqs:
+                f1_loc = fast_find_first(freqs, f1)
+                f2_loc = fast_find_first(freqs, f2)
+                fdiff_loc = fast_find_first(freqs, f2 + f1)
                 for epoch_i, epoch_data in enumerate(data):
-                    f1_loc = fast_find_first(freqs, f1)
-                    f2_loc = fast_find_first(freqs, f1)
-
                     # B_kmm
                     fft_f1 = epoch_data[0, f1_loc]
                     fft_f2 = epoch_data[1, f2_loc]
-                    fft_fdiff = epoch_data[1, fast_find_first(freqs, f2 + f1)]
-                    results[0, epoch_i, f1_i, f2_i] = fft_f1 * (
-                        fft_fdiff * np.conjugate(fft_f2)
+                    fft_fdiff = epoch_data[1, fdiff_loc]
+                    results[0, epoch_i, f1_i, f2_i] = (
+                        fft_f1 * fft_f2 * np.conjugate(fft_fdiff)
                     )
 
                     # B_mkm
                     fft_f1 = epoch_data[1, f1_loc]
                     fft_f2 = epoch_data[0, f2_loc]
-                    results[1, epoch_i, f1_i, f2_i] = fft_f1 * (
-                        fft_fdiff * np.conjugate(fft_f2)
+                    results[1, epoch_i, f1_i, f2_i] = (
+                        fft_f1 * fft_f2 * np.conjugate(fft_fdiff)
                     )
 
     return results
