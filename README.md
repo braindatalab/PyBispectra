@@ -1,4 +1,4 @@
-![](https://github.com/braindatalab/pybispectra/blob/main/docs/logo.gif)
+![](https://tsbinns.com/assets/pybispectra/logo.gif)
 
 A Python signal processing package for computing spectral-domain interactions using bispectra.
 
