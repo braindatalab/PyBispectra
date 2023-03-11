@@ -1,5 +1,5 @@
-Usage
-=====
+Installation & Examples
+=======================
 
 Installation & requirements
 ---------------------------

@@ -6,7 +6,6 @@ from warnings import warn
 
 from numba import njit
 import numpy as np
-from numpy.typing import NDArray
 import scipy as sp
 from matplotlib.figure import Figure
 from matplotlib import pyplot as plt
@@ -90,20 +89,20 @@ class ResultsCFC(_ResultsBase):
 
     def __init__(
         self,
-        data: NDArray[np.float64],
-        indices: tuple[NDArray[np.int64]],
-        f1: NDArray[np.float64],
-        f2: NDArray[np.float64],
+        data: np.ndarray,
+        indices: tuple[np.ndarray],
+        f1: np.ndarray,
+        f2: np.ndarray,
         name: str,
     ) -> None:
         self._sort_init_inputs(data, indices, f1, f2, name)
 
     def _sort_init_inputs(
         self,
-        data: NDArray[np.float64],
-        indices: tuple[NDArray[np.int64]],
-        f1: NDArray[np.float64],
-        f2: NDArray[np.float64],
+        data: np.ndarray,
+        indices: tuple[np.ndarray],
+        f1: np.ndarray,
+        f2: np.ndarray,
         name: str,
     ) -> None:
         """Sort inputs to the object."""
@@ -147,10 +146,7 @@ class ResultsCFC(_ResultsBase):
 
     def get_results(
         self, form: str = "raveled"
-    ) -> (
-        NDArray[np.float64]
-        | tuple[NDArray[np.float64], tuple[NDArray[np.int64]]]
-    ):
+    ) -> np.ndarray | tuple[np.ndarray, tuple[np.ndarray]]:
         """Return a copy of the results as arrays.
 
         PARAMETERS
@@ -179,7 +175,7 @@ class ResultsCFC(_ResultsBase):
 
     def _get_compact_results(
         self,
-    ) -> tuple[NDArray[np.float64], tuple[NDArray[np.int64]]]:
+    ) -> tuple[np.ndarray, tuple[np.ndarray]]:
         """Return a compacted form of the results.
 
         RETURNS
@@ -219,14 +215,14 @@ class ResultsCFC(_ResultsBase):
     def plot(
         self,
         connections: list[int] | None = None,
-        f1: NDArray[np.float64] | None = None,
-        f2: NDArray[np.float64] | None = None,
+        f1: np.ndarray | None = None,
+        f2: np.ndarray | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: float = 5.0,
         minor_tick_intervals: float = 1.0,
         show: bool = True,
-    ) -> tuple[list[Figure], list[NDArray]]:
+    ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
 
         PARAMETERS
@@ -307,19 +303,13 @@ class ResultsCFC(_ResultsBase):
     def _sort_plot_inputs(
         self,
         connections: list[int] | None,
-        f1: NDArray[np.float64] | None,
-        f2: NDArray[np.float64] | None,
+        f1: np.ndarray | None,
+        f2: np.ndarray | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,
         minor_tick_intervals: float,
-    ) -> tuple[
-        list[int],
-        NDArray[np.float64],
-        NDArray[np.float64],
-        list[int],
-        list[int],
-    ]:
+    ) -> tuple[list[int], np.ndarray, np.ndarray, list[int], list[int],]:
         """Sort the plotting inputs.
 
         RETURNS
@@ -388,7 +378,7 @@ class ResultsCFC(_ResultsBase):
 
     def _create_plots(
         self, connections: list[int], n_rows: int, n_cols: int
-    ) -> tuple[list[Figure], list[NDArray]]:
+    ) -> tuple[list[Figure], list[np.ndarray]]:
         """Create figures and subplots to fill with results.
 
         RETURNS
@@ -424,10 +414,10 @@ class ResultsCFC(_ResultsBase):
     def _plot_results(
         self,
         figures: list[Figure],
-        axes: list[NDArray],
+        axes: list[np.ndarray],
         connections: list[int],
-        f1: NDArray[np.float64],
-        f2: NDArray[np.float64],
+        f1: np.ndarray,
+        f2: np.ndarray,
         f1_idcs: list[int],
         f2_idcs: list[int],
         n_rows: int,
@@ -481,8 +471,8 @@ class ResultsCFC(_ResultsBase):
     def _set_axis_ticks(
         self,
         axis: plt.Axes,
-        f1: NDArray[np.float64],
-        f2: NDArray[np.float64],
+        f1: np.ndarray,
+        f2: np.ndarray,
         major_tick_intervals: float,
         minor_tick_intervals: float,
     ) -> None:
@@ -564,18 +554,18 @@ class ResultsTDE(_ResultsBase):
 
     def __init__(
         self,
-        data: NDArray[np.float64],
-        indices: tuple[NDArray[np.int64]],
-        times: NDArray[np.float64],
+        data: np.ndarray,
+        indices: tuple[np.ndarray],
+        times: np.ndarray,
         name: str,
     ) -> None:
         self._sort_init_inputs(data, indices, times, name)
 
     def _sort_init_inputs(
         self,
-        data: NDArray[np.float64],
-        indices: tuple[NDArray[np.int64]],
-        times: NDArray[np.float64],
+        data: np.ndarray,
+        indices: tuple[np.ndarray],
+        times: np.ndarray,
         name: str,
     ) -> None:
         """Sort inputs to the object."""
@@ -625,11 +615,11 @@ class ResultsTDE(_ResultsBase):
 
 
 def compute_fft(
-    data: NDArray[np.float64],
+    data: np.ndarray,
     sfreq: int,
     n_jobs: int = 1,
     verbose: bool = True,
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Compute the FFT on real-valued data.
 
     As the data is assumed to be real-valued, only those values corresponding
@@ -716,9 +706,7 @@ def compute_fft(
 
 
 @njit
-def fast_find_first(
-    vector: NDArray[np.float64 | np.int64], value: float | int
-) -> int:
+def fast_find_first(vector: np.ndarray, value: float | int) -> int:
     """Quickly find the first index of a value in a 1D array using Numba.
 
     PARAMETERS
@@ -747,7 +735,7 @@ def fast_find_first(
 
 def _generate_data(
     n_epochs: int, n_chans: int, n_times: int, seed: int = 44
-) -> NDArray[np.float64]:
+) -> np.ndarray:
     """Generate random data of the specified shape."""
     random = np.random.RandomState(seed)
     return random.rand(n_epochs, n_chans, n_times)

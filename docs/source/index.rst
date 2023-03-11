@@ -26,8 +26,9 @@ coefficients of data are also provided.
 
 .. toctree::
    :maxdepth: 3
+   :titlesonly:
    :caption: Contents:
 
+   motivation
    usage
    api
-   motivation
