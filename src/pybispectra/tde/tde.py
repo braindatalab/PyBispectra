@@ -4,7 +4,6 @@ import copy
 from typing import Callable
 
 import numpy as np
-from numpy.typing import NDArray
 from numba import njit
 from pqdm.processes import pqdm
 
@@ -15,57 +14,46 @@ from pybispectra.utils import (
 )
 
 
-np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
-
-
 class TDE(_ProcessBispectra):
     """Class for computing time delay estimation (TDE) using bispectra.
 
-    PARAMETERS
+    Parameters
     ----------
-    data : NumPy NDArray of float
-    -   3D array of FFT coefficients with shape [epochs x channels x
-        frequencies].
+    data : numpy.ndarray of float
+        3D array of FFT coefficients with shape `[epochs x channels x
+        frequencies]`.
 
-    freqs : NumPy NDArray of float
-    -   1D array of the frequencies in `data`.
+    freqs : numpy.ndarray of float
+        1D array of the frequencies in :attr:`data`.
 
-    verbose : bool; default True
-    -   Whether or not to report the progress of the processing.
+    verbose : bool (default True)
+        Whether or not to report the progress of the processing.
 
-    METHODS
-    -------
-    compute
-    -   Compute TDE, averaged over epochs.
-
-    get_results
-    -   Return a copy of the results.
-
-    copy
-    -   Return a copy of the object.
-
-    ATTRIBUTES
+    Attributes
     ----------
-    data : NumPy NDArray of float
-    -   FFT coefficients with shape [epochs x channels x frequencies].
+    results : tuple of ResultsTDE
+        TDE results for each of the computed metrics.
 
-    freqs : NumPy NDArray of float
-    -   1D array of the frequencies in `data`.
+    data : numpy.ndarray of float
+        FFT coefficients with shape `[epochs x channels x frequencies]`.
 
-    indices : tuple of NumPy NDArray of int
-    -   2 arrays containing the seed and target indices (respectively) most
-        recently used with `compute`.
+    freqs : numpy.ndarray of float
+        1D array of the frequencies in :attr:`data`.
 
-    f1 : NumPy NDArray of float
-    -   1D array of low frequencies most recently used with `compute`.
+    indices : tuple of numpy.ndarray of int
+        Two arrays containing the seed and target indices (respectively) most
+        recently used with :meth:`compute`.
 
-    f2 : NumPy NDArray of float
-    -   1D array of high frequencies most recently used with `compute`.
+    f1 : numpy.ndarray of float
+        1D array of low frequencies most recently used with :meth:`compute`.
+
+    f2 : numpy.ndarray of float
+        1D array of high frequencies most recently used with :meth:`compute`.
 
     verbose : bool
-    -   Whether or not to report the progress of the processing.
+        Whether or not to report the progress of the processing.
 
-    REFERENCES
+    References
     ----------
     [1] Nikias & Pan (1988). Time Delay Estimation in Unknown Gaussian
         Spatially Correlated Noise. IEEE Transactions on Acoustics, Speech, and
@@ -104,47 +92,49 @@ class TDE(_ProcessBispectra):
 
     def compute(
         self,
-        indices: tuple[NDArray[np.int64]] | None = None,
-        f1: NDArray[np.float64] | None = None,
-        f2: NDArray[np.float64] | None = None,
+        indices: tuple[np.ndarray] | None = None,
+        f1: np.ndarray | None = None,
+        f2: np.ndarray | None = None,
         symmetrise: str | list[str] = ["none", "antisym"],
         method: int | list[int] = [1, 2, 3, 4],
         n_jobs: int = 1,
     ) -> None:
         """Compute TDE, averaged over epochs.
 
-        PARAMETERS
+        Parameters
         ----------
-        indices: tuple of NumPy NDArray of int | None; default None
-        -   Indices of the channels to compute TDE between. Should contain 2
+        indices: tuple of numpy.ndarray of int | None (default None)
+            Indices of the channels to compute TDE between. Should contain two
             1D arrays of equal length for the seed and target indices,
-            respectively. If None, coupling between all channels is computed.
+            respectively. If ``None``, coupling between all channels is
+            computed.
 
-        f1 : numpy NDArray of float | None; default None
-        -   A 1D array of the lower frequencies to compute TDE on. If None, all
-            frequencies are used.
-
-        f2 : numpy NDArray of float | None; default None
-        -   A 1D array of the higher frequencies to compute TDE on. If None,
+        f1 : numpy.ndarray of float | None (default None)
+            1D array of the lower frequencies to compute TDE on. If ``None``,
             all frequencies are used.
 
-        symmetrise : str | list of str; default ["none", "antisym"]
-        -   Symmetrisation to perform when computing TDE. If "none", no
+        f2 : numpy.ndarray of float | None (default None)
+            1D array of the higher frequencies to compute TDE on. If None,
+            all frequencies are used.
+
+        symmetrise : str | list of str (default ``["none", "antisym"]``)
+            Symmetrisation to perform when computing TDE. If "none", no
             symmetrisation is performed. If "antisym", antisymmetrisation is
             performed.
 
-        method : int | list of int; default [1, 2, 3, 4]
-        -   The method to use to compute TDE, as in [1].
+        method : int | list of int (default ``[1, 2, 3, 4]``)
+            The method to use to compute TDE, as in [1].
 
-        n_jobs : int; default 1
-        -   The number of jobs to run in parallel.
+        n_jobs : int (default ``1``)
+            The number of jobs to run in parallel.
 
-        NOTES
+        Notes
         -----
         -   If the seed and target for a given connection is the same channel,
-            NaN values are returned.
-        -   TDE is computed between all values of `f1` and `f2`. If any value
-            of `f1` is higher than `f2`, a NaN value is returned.
+            ``numpy.nan`` values are returned.
+        -   TDE is computed between all values of :attr:`f1` and :attr:`f2`. If
+            any value of :attr:`f1` is higher than :attr:`f2`, a ``numpy.nan``
+            value is returned.
         """
         self._reset_attrs()
 
@@ -227,7 +217,8 @@ class TDE(_ProcessBispectra):
             self._return_method_iv = True
 
     def _compute_bispectra(self) -> None:
-        """Compute bispectra between f1s and f2s of channels in `indices`."""
+        """Compute bispectra between f1s and f2s of channels in
+        :attr:`indices`."""
         if self.verbose:
             print("    Computing bispectra...")
 
@@ -345,21 +336,21 @@ class TDE(_ProcessBispectra):
 
     def _compute_tde_form_parallel(
         self, func: Callable, kwargs: dict
-    ) -> NDArray[np.float64]:
+    ) -> np.ndarray:
         """Compute TDE in parallel across connections for a single form.
 
-        PAREMETERS
+        Parameters
         ----------
         func : Callable
-        -   TDE computation function to parallelise.
+            TDE computation function to parallelise.
 
         kwargs : dict
-        -   Arguments to pass to `func`.
+            Arguments to pass to ``func``.
 
-        RETURNS
+        Returns
         -------
-        tde : NumPy NDArray of float
-        -   2D array of shape [connections x f2 * 2 - 1] containing the time
+        tde : numpy.ndarray of float
+        -   2D array of shape `[connections x f2 * 2 - 1]` containing the time
             delay estimates.
         """
         assert isinstance(kwargs, dict), (
@@ -456,51 +447,50 @@ class TDE(_ProcessBispectra):
                 )
             )
 
-        if len(results) == 1:
-            self._results = results[0]
-        else:
-            self._results = tuple(results)
+        self._results = tuple(results)
+
+    @property
+    def results(self) -> tuple[ResultsTDE]:
+        """Return the results."""
+        return self._results
 
 
-def _compute_shift_ifft_I(I: NDArray[np.complex128]) -> NDArray[np.float64]:
-    """Compute the zero-freq. center-shifted iFFT on the I matrix.
+def _compute_shift_ifft_I(I: np.ndarray) -> np.ndarray:
+    """Compute the zero-freq. center-shifted iFFT on the ``I`` matrix.
 
     PARAMETERS
     ----------
-    I : NumPy NDArray of complex float
-    -   Complex-valued 1D array of shape [f2 * 2 - 1] containing the bispectrum
-        phase information for computing TDE, summed over the lower frequencies.
+    I : numpy.ndarray of complex float
+        1D array of shape `[f2 * 2 - 1]` containing the bispectrum phase
+        information for computing TDE, summed over the lower frequencies.
 
     RETURNS
     -------
-    TDE : NumPy NDArray of float
-    -   Real-valued 1D array of shape [f2 * 2 - 1] containing the time delay
-        estimates.
+    TDE : numpy.ndarray of float
+        1D array of shape `[f2 * 2 - 1]` containing the time delay estimates.
     """
     return np.abs(np.fft.fftshift(np.fft.ifft(I)))
 
 
-def _compute_tde_i(
-    B_xyx: NDArray[np.complex128], B_xxx: NDArray[np.complex128]
-) -> NDArray[np.float64]:
+def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     """Compute TDE from bispectra with method I for a single connection.
 
-    PARAMETERS
+    Parameters
     ----------
-    B_xyx : NumPy NDArray of complex float
-    -   2D array of shape [f1 x f2] containing the bispectrum for channel
-        combination xyx.
+    B_xyx : numpy.ndarray of complex float
+        2D array of shape `[f1 x f2]` containing the bispectrum for channel
+        combination `xyx`.
 
-    B_xxx : NumPy NDArray of complex float
-    -   2D array of shape [f1 x f2] containing the bispectrum for channel
-        combination xxx.
+    B_xxx : numpy.ndarray of complex float
+        2D array of shape `[f1 x f2]` containing the bispectrum for channel
+        combination `xxx`.
 
-    RETURNS
+    Returns
     -------
-    tde : NumPy NDArray of float
-    -   1D array of shape [f2 * 2 - 1] containing the time delay estimates.
+    tde : numpy.ndarray of float
+        1D array of shape `[f2 * 2 - 1]` containing the time delay estimates.
 
-    NOTES
+    Notes
     -----
     -   No checks on the input data are performed for speed.
     """
@@ -512,32 +502,32 @@ def _compute_tde_i(
 
 
 def _compute_tde_ii(
-    B_xyx: NDArray[np.complex128],
-    B_xxx: NDArray[np.complex128],
-    B_yyy: NDArray[np.complex128],
-) -> NDArray[np.float64]:
+    B_xyx: np.ndarray,
+    B_xxx: np.ndarray,
+    B_yyy: np.ndarray,
+) -> np.ndarray:
     """Compute TDE from bispectra with method II for a single connection.
 
-    PARAMETERS
+    Parameters
     ----------
-    B_xyx : NumPy NDArray of complex float
-    -   2D array of shape [f1 x f2] containing the bispectrum for channel
-        combination xyx.
+    B_xyx : numpy.ndarray of complex float
+        2D array of shape `[f1 x f2]` containing the bispectrum for channel
+        combination `xyx`.
 
-    B_xxx : NumPy NDArray of complex float
-    -   2D array of shape [f1 x f2] containing the bispectrum for channel
-        combination xxx.
+    B_xxx : numpy.ndarray of complex float
+        2D array of shape `[f1 x f2]` containing the bispectrum for channel
+        combination `xxx`.
 
-    B_yyy : NumPy NDArray of complex float
-    -   2D array of shape [f1 x f2] containing the bispectrum for channel
-        combination yyy.
+    B_yyy : numpy.ndarray of complex float
+        2D array of shape `[f1 x f2]` containing the bispectrum for channel
+        combination `yyy`.
 
-    RETURNS
+    Returns
     -------
-    tde : NumPy NDArray of float
-    -   1D array of shape [f2 * 2 - 1] containing the time delay estimates.
+    tde : numpy.ndarray of float
+        1D array of shape `[f2 * 2 - 1]` containing the time delay estimates.
 
-    NOTES
+    Notes
     -----
     -   No checks on the input data are performed for speed.
     """
@@ -548,27 +538,25 @@ def _compute_tde_ii(
     return _compute_shift_ifft_I(np.sum(I, axis=1))
 
 
-def _compute_tde_iii(
-    B_xyx: NDArray[np.complex128], B_xxx: NDArray[np.complex128]
-) -> NDArray[np.float64]:
+def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     """Compute TDE from bispectra with method III for a single connection.
 
-    PARAMETERS
+    Parameters
     ----------
-    B_xyx : NumPy NDArray of complex float
-    -   2D array of shape [f1 x f2] containing the bispectrum for channel
-        combination xyx.
+    B_xyx : numpy.ndarray of complex float
+        2D array of shape `[f1 x f2]` containing the bispectrum for channel
+        combination `xyx`.
 
-    B_xxx : NumPy NDArray of complex float
-    -   2D array of shape [f1 x f2] containing the bispectrum for channel
-        combination xxx.
+    B_xxx : numpy.ndarray of complex float
+        2D array of shape `[f1 x f2]` containing the bispectrum for channel
+        combination `xxx`.
 
-    RETURNS
+    Returns
     -------
-    tde : NumPy NDArray of float
-    -   1D array of shape [f2 * 2 - 1] containing the time delay estimates.
+    tde : numpy.ndarray of float
+        1D array of shape `[f2 * 2 - 1]` containing the time delay estimates.
 
-    NOTES
+    Notes
     -----
     -   No checks on the input data are performed for speed.
     """
@@ -579,32 +567,32 @@ def _compute_tde_iii(
 
 
 def _compute_tde_iv(
-    B_xyx: NDArray[np.complex128],
-    B_xxx: NDArray[np.complex128],
-    B_yyy: NDArray[np.complex128],
-) -> NDArray[np.float64]:
+    B_xyx: np.ndarray,
+    B_xxx: np.ndarray,
+    B_yyy: np.ndarray,
+) -> np.ndarray:
     """Compute TDE from bispectra with method IV for a single connection.
 
-    PARAMETERS
+    Parameters
     ----------
-    B_xyx : NumPy NDArray of complex float
-    -   2D array of shape [f1 x f2] containing the bispectrum for channel
-        combination xyx.
+    B_xyx : numpy.ndarray of complex float
+        2D array of shape `[f1 x f2]` containing the bispectrum for channel
+        combination `xyx`.
 
-    B_xxx : NumPy NDArray of complex float
-    -   2D array of shape [f1 x f2] containing the bispectrum for channel
-        combination xxx.
+    B_xxx : numpy.ndarray of complex float
+        2D array of shape `[f1 x f2]` containing the bispectrum for channel
+        combination `xxx`.
 
-    B_yyy : NumPy NDArray of complex float
-    -   2D array of shape [f1 x f2] containing the bispectrum for channel
-        combination yyy.
+    B_yyy : numpy.ndarray of complex float
+        2D array of shape `[f1 x f2]` containing the bispectrum for channel
+        combination `yyy`.
 
-    RETURNS
+    Returns
     -------
-    tde : NumPy NDArray of float
-    -   1D array of shape [f2 * 2 - 1] containing the time delay estimates.
+    tde : numpy.ndarray of float
+        1D array of shape `[f2 * 2 - 1]` containing the time delay estimates.
 
-    NOTES
+    Notes
     -----
     -   No checks on the input data are performed for speed.
     """
