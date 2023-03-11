@@ -1,34 +1,40 @@
 """Helper tools for processing CFC results."""
 
+from abc import ABC
 import copy
 from warnings import warn
 
+from numba import njit
 import numpy as np
+from numpy.typing import NDArray
 import scipy as sp
 from matplotlib.figure import Figure
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pqdm.processes import pqdm
-from numba import njit
 
 
-class Results:
-    """Class for storing results.
+class _ResultsBase(ABC):
+    """Base class for storing results."""
+
+
+class ResultsCFC(_ResultsBase):
+    """Class for storing cross-frequency coupling (CFC) results.
 
     PARAMETERS
     ----------
-    data : NumPy ndarray
+    data : NumPy NDArray of float
     -   3D array of results to store with shape [connections x f1 x f2].
 
-    indices : tuple of NumPy ndarray
+    indices : tuple of NumPy NDArray of int
     -   Indices of the channels for each connection of `data`. Should contain 2
         1D arrays of equal length for the seed and target indices,
         respectively.
 
-    f1 : NumPy ndarray
+    f1 : NumPy NDArray of float
     -   1D array of low frequencies in `data`.
 
-    f2 : NumPy ndarray
+    f2 : NumPy NDArray of float
     -   1D array of high frequencies in `data`.
 
     name : str
@@ -47,7 +53,7 @@ class Results:
     name : str
     -   Name of the results.
 
-    indices : tuple of NumPy ndarray
+    indices : tuple of NumPy NDArray of int
     -   Indices of the channels for each connection of the results. Contains 2
         1D arrays of equal length for the seed and target indices,
         respectively.
@@ -55,10 +61,10 @@ class Results:
     n_cons : str
     -   Number of connections in the results.
 
-    f1 : NumPy ndarray
+    f1 : NumPy NDArray of float
     -   1D array of low frequencies in the results.
 
-    f2 : NumPy ndarray
+    f2 : NumPy NDArray of float
     -   1D array of high frequencies in the results.
     """
 
@@ -84,20 +90,20 @@ class Results:
 
     def __init__(
         self,
-        data: np.ndarray,
-        indices: tuple[np.ndarray],
-        f1: np.ndarray,
-        f2: np.ndarray,
+        data: NDArray[np.float64],
+        indices: tuple[NDArray[np.int64]],
+        f1: NDArray[np.float64],
+        f2: NDArray[np.float64],
         name: str,
     ) -> None:
         self._sort_init_inputs(data, indices, f1, f2, name)
 
     def _sort_init_inputs(
         self,
-        data: np.ndarray,
-        indices: tuple[np.ndarray],
-        f1: np.ndarray,
-        f2: np.ndarray,
+        data: NDArray[np.float64],
+        indices: tuple[NDArray[np.int64]],
+        f1: NDArray[np.float64],
+        f2: NDArray[np.float64],
         name: str,
     ) -> None:
         """Sort inputs to the object."""
@@ -141,7 +147,10 @@ class Results:
 
     def get_results(
         self, form: str = "raveled"
-    ) -> np.ndarray | tuple[np.ndarray, tuple[np.ndarray]]:
+    ) -> (
+        NDArray[np.float64]
+        | tuple[NDArray[np.float64], tuple[NDArray[np.int64]]]
+    ):
         """Return a copy of the results as arrays.
 
         PARAMETERS
@@ -153,10 +162,10 @@ class Results:
 
         RETURNS
         -------
-        results : NumPy ndarray
+        results : NumPy NDArray of float
         -   Spectral coupling results.
 
-        indices : tuple of NumPy ndarray
+        indices : tuple of NumPy NDArray of int
         -   Channel indices of the seeds and targets. Only returned if `form`
             is "compact".
         """
@@ -168,15 +177,17 @@ class Results:
             return self._data.copy()
         return self._get_compact_results()
 
-    def _get_compact_results(self) -> tuple[np.ndarray, tuple[np.ndarray]]:
+    def _get_compact_results(
+        self,
+    ) -> tuple[NDArray[np.float64], tuple[NDArray[np.int64]]]:
         """Return a compacted form of the results.
 
         RETURNS
         -------
-        compact_results : NumPy ndarray
+        compact_results : NumPy NDArray of float
         -   Results with shape [seeds x targets x f1 x f2].
 
-        indices : tuple[NumPy ndarray]
+        indices : tuple[NumPy NDArray] of int
         -   Channel indices of `compact_results`, for the seeds and targets,
             respectively.
         """
@@ -208,14 +219,14 @@ class Results:
     def plot(
         self,
         connections: list[int] | None = None,
-        f1: np.ndarray | None = None,
-        f2: np.ndarray | None = None,
+        f1: NDArray[np.float64] | None = None,
+        f2: NDArray[np.float64] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: float = 5.0,
         minor_tick_intervals: float = 1.0,
         show: bool = True,
-    ) -> None:
+    ) -> tuple[list[Figure], list[NDArray]]:
         """Plot the results.
 
         PARAMETERS
@@ -223,11 +234,11 @@ class Results:
         connections : list of int | None; default None
         -   Indices of connections to plot. If None, plot all connections.
 
-        f1 : NumPy ndarray | None; default None
+        f1 : NumPy NDArray of float | None; default None
         -   Low frequencies of the results to plot. If None, plot all low
             frequencies.
 
-        f2 : NumPy ndarray | None; default None
+        f2 : NumPy NDArray of float | None; default None
         -   High frequencies of the results to plot. If None, plot all high
             frequencies.
 
@@ -254,7 +265,7 @@ class Results:
         -   Figures of the results in a list of length
             ceil(n_cons / (n_rows * n_cols)).
 
-        axes : list of matplotlib pyplot Axes
+        axes : list of NumPy NDArray of matplotlib pyplot Axes
         -   Subplot axes for the results in a list of length
             ceil(n_cons / (n_rows * n_cols)) where each entry is a 1D NumPy
             array of length (n_rows * n_cols).
@@ -296,13 +307,19 @@ class Results:
     def _sort_plot_inputs(
         self,
         connections: list[int] | None,
-        f1: np.ndarray | None,
-        f2: np.ndarray | None,
+        f1: NDArray[np.float64] | None,
+        f2: NDArray[np.float64] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,
         minor_tick_intervals: float,
-    ) -> tuple[list[int], np.ndarray, np.ndarray, list[int], list[int]]:
+    ) -> tuple[
+        list[int],
+        NDArray[np.float64],
+        NDArray[np.float64],
+        list[int],
+        list[int],
+    ]:
         """Sort the plotting inputs.
 
         RETURNS
@@ -310,10 +327,10 @@ class Results:
         connections : list of int
         -   Indices of connections to plot.
 
-        f1 : NumPy ndarray
+        f1 : NumPy NDArray of float
         -   Low frequencies of the results to plot.
 
-        f2 : NumPy ndarray
+        f2 : NumPy NDArray of float
         -   High frequencies of the results to plot.
 
         f1_idcs : list of int
@@ -371,7 +388,7 @@ class Results:
 
     def _create_plots(
         self, connections: list[int], n_rows: int, n_cols: int
-    ) -> tuple[list[Figure], list[np.ndarray[plt.Axes]]]:
+    ) -> tuple[list[Figure], list[NDArray]]:
         """Create figures and subplots to fill with results.
 
         RETURNS
@@ -407,10 +424,10 @@ class Results:
     def _plot_results(
         self,
         figures: list[Figure],
-        axes: list[np.ndarray[plt.Axes]],
+        axes: list[NDArray],
         connections: list[int],
-        f1: np.ndarray,
-        f2: np.ndarray,
+        f1: NDArray[np.float64],
+        f2: NDArray[np.float64],
         f1_idcs: list[int],
         f2_idcs: list[int],
         n_rows: int,
@@ -464,8 +481,8 @@ class Results:
     def _set_axis_ticks(
         self,
         axis: plt.Axes,
-        f1: np.ndarray,
-        f2: np.ndarray,
+        f1: NDArray[np.float64],
+        f2: NDArray[np.float64],
         major_tick_intervals: float,
         minor_tick_intervals: float,
     ) -> None:
@@ -489,9 +506,85 @@ class Results:
         axis.yaxis.set_minor_locator(plt.MaxNLocator(n_minor_yticks))
 
 
+class ResultsTDE(_ResultsBase):
+    """Class for storing time delay estimation (TDE) results.
+
+    PARAMETERS
+    ----------
+    data : NumPy NDArray of float
+    -   2D array of results to store with shape [connections x times].
+
+    indices : tuple of NumPy NDArray of int
+    -   Indices of the channels for each connection of `data`. Should contain 2
+        1D arrays of equal length for the seed and target indices,
+        respectively.
+
+    times : NumPy NDArray of float
+    -   1D array of timepoints in `data`.
+
+    name : str
+    -   Name of the results being stored.
+
+    METHODS
+    -------
+    get_results
+    -   Return a copy of results as arrays.
+
+    plot
+    -   Plots the results.
+
+    ATTRIBUTES
+    ----------
+    name : str
+    -   Name of the results.
+
+    indices : tuple of NumPy NDArray of int
+    -   Indices of the channels for each connection of the results. Contains 2
+        1D arrays of equal length for the seed and target indices,
+        respectively.
+
+    n_cons : str
+    -   Number of connections in the results.
+
+    times : NumPy NDArray of float
+    -   1D array of timepoints in `data`.
+    """
+
+    _data = None
+
+    indices = None
+    _seeds = None
+    _targets = None
+    n_cons = None
+    _n_chans = None
+
+    times = None
+
+    name = None
+
+    def __repr__(self) -> str:
+        """Return printable represenation of the object."""
+        return repr(
+            f"<Result: {self.name} | [{self.n_cons} connections x "
+            f"{len(self.times)} times]>"
+        )
+
+    def __init__(
+        self,
+        data: NDArray[np.float64],
+        indices: tuple[NDArray[np.int64]],
+        times: NDArray[np.float64],
+        name: str,
+    ) -> None:
+        self._sort_init_inputs(data, indices, times, name)
+
+
 def compute_fft(
-    data: np.ndarray, sfreq: float, n_jobs: int = 1, verbose: bool = True
-) -> tuple[np.ndarray, np.ndarray]:
+    data: NDArray[np.float64],
+    sfreq: int,
+    n_jobs: int = 1,
+    verbose: bool = True,
+) -> tuple[NDArray[np.complex128], NDArray[np.float64]]:
     """Compute the FFT on real-valued data.
 
     As the data is assumed to be real-valued, only those values corresponding
@@ -499,11 +592,11 @@ def compute_fft(
 
     PARAMETERS
     ----------
-    data : NumPy ndarray
+    data : NumPy NDArray of float
     -   3D array of real-valued data to compute the FFT on, with shape [epochs
         x channels x times].
 
-    sfreq : float
+    sfreq : int
     -   Sampling frequency of the data in Hz.
 
     n_jobs : int; default 1
@@ -514,20 +607,20 @@ def compute_fft(
 
     RETURNS
     -------
-    fft : NumPy ndarray
+    fft : NumPy NDArray of complex float
     -   3D array of FFT coefficients of the data with shape [epochs x channels
         x positive frequencies].
 
-    freqs : NumPy ndarray
+    freqs : NumPy NDArray of float
     -   1D array of the frequencies in `fft`.
 
     RAISES
     ------
     ValueError
-    -   Raised if `data` is not a NumPy ndarray or does not have 3 dimensions.
+    -   Raised if `data` is not a NumPy NDArray or does not have 3 dimensions.
     """
     if not isinstance(data, np.ndarray):
-        raise TypeError("`data` must be a NumPy array.")
+        raise TypeError("`data` must be a NumPy NDArray.")
     if data.ndim != 3:
         raise ValueError("`data` must be a 3D array.")
 
@@ -536,13 +629,22 @@ def compute_fft(
     if n_jobs < 1:
         raise ValueError("`n_jobs` must be >= 1.")
 
+    if not isinstance(sfreq, int):
+        if isinstance(sfreq, float):
+            if verbose:
+                warn(
+                    "`sfreq` is a float. Converting it to an int.", UserWarning
+                )
+        else:
+            raise TypeError("`sfreq` must be an int.")
+
     if verbose and not np.isreal(data).all():
         warn("`data` is expected to be real-valued.", UserWarning)
 
     if verbose:
         print("Computing FFT on the data...")
 
-    freqs = np.linspace(0, sfreq / 2, sfreq + 1)
+    freqs = np.linspace(0.0, sfreq / 2.0, int(sfreq) + 1)
 
     window = np.hanning(data.shape[2])
 
@@ -565,19 +667,21 @@ def compute_fft(
     if verbose:
         print("    [FFT computation finished]\n")
 
-    return fft[..., 1 : len(freqs)], freqs[1:]  # ignore zero freq.
+    return fft[..., : len(freqs)], freqs
 
 
 @njit
-def fast_find_first(vector: np.ndarray, value: float) -> int:
+def fast_find_first(
+    vector: NDArray[np.float64 | np.int64], value: float | int
+) -> int:
     """Quickly find the first index of a value in a 1D array using Numba.
 
     PARAMETERS
     ----------
-    vector : NumPy ndarray
+    vector : NumPy NDArray of float or int
     -   1D array to find `value` in.
 
-    value : float
+    value : float | int
     -   value to find in `vector`.
 
     RETURNS
@@ -598,7 +702,7 @@ def fast_find_first(vector: np.ndarray, value: float) -> int:
 
 def _generate_data(
     n_epochs: int, n_chans: int, n_times: int, seed: int = 44
-) -> np.ndarray:
+) -> NDArray[np.float64]:
     """Generate random data of the specified shape."""
     random = np.random.RandomState(seed)
     return random.rand(n_epochs, n_chans, n_times)

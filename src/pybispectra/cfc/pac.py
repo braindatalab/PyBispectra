@@ -1,29 +1,33 @@
 """Tools for handling PAC analysis."""
 
 import copy
-from warnings import warn
 
 import numpy as np
+from numpy.typing import NDArray
 from numba import njit
 from pqdm.processes import pqdm
 
-from pybispectra.utils import Results, fast_find_first
-from .process import _Process
+from pybispectra.utils import (
+    _ProcessBispectra,
+    ResultsCFC,
+    _compute_bispectrum,
+    fast_find_first,
+)
 
 
 np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
 
 
-class PAC(_Process):
+class PAC(_ProcessBispectra):
     """Class for computing phase-amplitude (PAC) coupling using bispectra.
 
     PARAMETERS
     ----------
-    data : NumPy ndarray
+    data : NumPy NDArray of float
     -   3D array of FFT coefficients with shape [epochs x channels x
         frequencies].
 
-    freqs : NumPy ndarray
+    freqs : NumPy NDArray of float
     -   1D array of the frequencies in `data`.
 
     verbose : bool; default True
@@ -42,20 +46,20 @@ class PAC(_Process):
 
     ATTRIBUTES
     ----------
-    data : NumPy ndarray
+    data : NumPy NDArray of float
     -   FFT coefficients with shape [epochs x channels x frequencies].
 
-    freqs : NumPy ndarray
+    freqs : NumPy NDArray of float
     -   1D array of the frequencies in `data`.
 
-    indices : tuple of NumPy ndarray
+    indices : tuple of NumPy NDArray of int
     -   2 arrays containing the seed and target indices (respectively) most
         recently used with `compute`.
 
-    f1 : NumPy ndarray
+    f1 : NumPy NDArray of float
     -   1D array of low frequencies most recently used with `compute`.
 
-    f2 : NumPy ndarray
+    f2 : NumPy NDArray of float
     -   1D array of high frequencies most recently used with `compute`.
 
     verbose : bool
@@ -77,9 +81,9 @@ class PAC(_Process):
 
     def compute(
         self,
-        indices: tuple[np.ndarray] | None = None,
-        f1: np.ndarray | None = None,
-        f2: np.ndarray | None = None,
+        indices: tuple[NDArray[np.float64]] | None = None,
+        f1: NDArray[np.float64] | None = None,
+        f2: NDArray[np.float64] | None = None,
         symmetrise: str | list[str] = ["none", "antisym"],
         normalise: str | list[str] = ["none", "threenorm"],
         n_jobs: int = 1,
@@ -88,16 +92,16 @@ class PAC(_Process):
 
         PARAMETERS
         ----------
-        indices: tuple of NumPy ndarray of int | None; default None
+        indices: tuple of NumPy NDArray of int | None; default None
         -   Indices of the channels to compute PAC between. Should contain 2
             1D arrays of equal length for the seed and target indices,
             respectively. If None, coupling between all channels is computed.
 
-        f1 : numpy ndarray | None; default None
+        f1 : numpy NDArray of float | None; default None
         -   A 1D array of the lower frequencies to compute PAC on. If None, all
             frequencies are used.
 
-        f2 : numpy ndarray | None; default None
+        f2 : numpy NDArray of float | None; default None
         -   A 1D array of the higher frequencies to compute PAC on. If None,
             all frequencies are used.
 
@@ -116,6 +120,8 @@ class PAC(_Process):
 
         NOTES
         -----
+        -   If the seed and target for a given connection is the same channel
+            and antisymmetrisation is being performed, NaN values are returned.
         -   PAC is computed between all values of `f1` and `f2`. If any value
             of `f1` is higher than `f2`, a NaN value is returned.
         """
@@ -154,41 +160,6 @@ class PAC(_Process):
         self._pac_nosym_threenorm = None
         self._pac_antisym_nonorm = None
         self._pac_antisym_threenorm = None
-
-    def _sort_indices(self, indices: np.ndarray) -> None:
-        """Sort seed-target indices inputs."""
-        super()._sort_indices(indices)
-
-        if self.verbose:
-            if self._return_antisym and (
-                any(
-                    seed == target
-                    for seed, target in zip(self._seeds, self._targets)
-                )
-            ):
-                warn(
-                    "The seed and target for at least one connection is the "
-                    "same channel. The corresponding antisymmetrised "
-                    "result(s) will be zero.",
-                    UserWarning,
-                )
-
-    def _sort_freqs(self, f1: np.ndarray, f2: np.ndarray) -> None:
-        """Sort frequency inputs."""
-        super()._sort_freqs(f1, f2)
-
-        if self.verbose:
-            if any(
-                hfreq + lfreq not in self.freqs
-                for hfreq in self.f2
-                for lfreq in self.f1
-            ):
-                warn(
-                    "At least one value of `f2` + `f1` is not present in the "
-                    "frequencies. The corresponding result(s) will have a "
-                    "value of NaN.",
-                    UserWarning,
-                )
 
     def _sort_metrics(
         self, symmetrise: str | list[str], normalise: str | list[str]
@@ -232,12 +203,20 @@ class PAC(_Process):
         if self.verbose:
             print("    Computing bispectra...")
 
+        if self._return_antisym:
+            # kmm, mkm
+            kmn = np.array([np.array([0, 1, 1]), np.array([1, 0, 1])])
+        else:
+            # kmm
+            kmn = np.array([np.array([0, 1, 1])])
+
         args = [
             {
                 "data": self.data[:, (seed, target)],
                 "freqs": self.freqs,
                 "f1s": self.f1,
                 "f2s": self.f2,
+                "kmn": kmn,
             }
             for seed, target in zip(self._seeds, self._targets)
         ]
@@ -247,7 +226,7 @@ class PAC(_Process):
             np.array(
                 pqdm(
                     args,
-                    _compute_bispectra,
+                    _compute_bispectrum,
                     self._n_jobs,
                     argument_type="kwargs",
                     desc="Processing connections...",
@@ -301,6 +280,13 @@ class PAC(_Process):
                 self._pac_antisym_nonorm = np.abs(
                     self._bispectra[0] - self._bispectra[1]
                 )
+                for con_i, seed, target in zip(
+                    range(self._n_cons), self._seeds, self._targets
+                ):
+                    if seed == target:
+                        self._pac_antisym_nonorm[con_i] = np.full_like(
+                            self._pac_antisym_nonorm[con_i], fill_value=np.nan
+                        )
 
         if self._return_threenorm:
             if self._return_nosym:
@@ -309,6 +295,14 @@ class PAC(_Process):
                 self._pac_antisym_threenorm = np.abs(
                     self._bicoherence[0] - self._bicoherence[1]
                 )
+                for con_i, seed, target in zip(
+                    range(self._n_cons), self._seeds, self._targets
+                ):
+                    if seed == target:
+                        self._pac_antisym_threenorm[con_i] = np.full_like(
+                            self._pac_antisym_threenorm[con_i],
+                            fill_value=np.nan,
+                        )
 
     def _store_results(self) -> None:
         """Store computed results in objects."""
@@ -316,7 +310,7 @@ class PAC(_Process):
 
         if self._pac_nosym_nonorm is not None:
             results.append(
-                Results(
+                ResultsCFC(
                     self._pac_nosym_nonorm,
                     self.indices,
                     self.f1,
@@ -327,7 +321,7 @@ class PAC(_Process):
 
         if self._pac_nosym_threenorm is not None:
             results.append(
-                Results(
+                ResultsCFC(
                     self._pac_nosym_threenorm,
                     self.indices,
                     self.f1,
@@ -338,7 +332,7 @@ class PAC(_Process):
 
         if self._pac_antisym_nonorm is not None:
             results.append(
-                Results(
+                ResultsCFC(
                     self._pac_antisym_nonorm,
                     self.indices,
                     self.f1,
@@ -349,7 +343,7 @@ class PAC(_Process):
 
         if self._pac_antisym_threenorm is not None:
             results.append(
-                Results(
+                ResultsCFC(
                     self._pac_antisym_threenorm,
                     self.indices,
                     self.f1,
@@ -365,95 +359,33 @@ class PAC(_Process):
 
 
 @njit
-def _compute_bispectra(
-    data: np.ndarray, freqs: np.ndarray, f1s: np.ndarray, f2s: np.ndarray
-) -> np.ndarray:
-    """Compute bispectra for a single connection.
-
-    PARAMETERS
-    ----------
-    data : NumPy ndarray
-    -   3D array of FFT coefficients with shape [epochs x 2 x frequencies],
-        where the second dimension contains the data for the seed and target
-        channel of a single connection, respectively.
-
-    freqs : NumPy ndarray
-    -   1D array of frequencies in `data`.
-
-    f1s : NumPy ndarray
-    -   1D array of low frequencies to compute bispectra for.
-
-    f2s : NumPy ndarray
-    -   1D array of high frequencies to compute bispectra for.
-
-    RETURNS
-    -------
-    results : NumPy ndarray
-    -   4D array containing the bispectra of a single connection with shape [2
-        x epochs x f1 x f2], where the first dimension corresponds to the
-        standard bispectra (B_kmm) and symmetric bispectra (B_mkm),
-        respectively (where k is the seed and m is the target).
-
-    NOTES
-    -----
-    -   Averaging across epochs is not performed here as `np.mean` of complex
-        numbers if not supported when compiling using Numba.
-    """
-    results = np.full(
-        (2, data.shape[0], f1s.shape[0], f2s.shape[0]),
-        fill_value=np.nan,
-        dtype=np.complex128,
-    )
-    for f1_i, f1 in enumerate(f1s):
-        for f2_i, f2 in enumerate(f2s):
-            if f1 < f2 and (f2 + f1) in freqs:
-                f1_loc = fast_find_first(freqs, f1)
-                f2_loc = fast_find_first(freqs, f2)
-                fdiff_loc = fast_find_first(freqs, f2 + f1)
-                for epoch_i, epoch_data in enumerate(data):
-                    # B_kmm
-                    fft_f1 = epoch_data[0, f1_loc]
-                    fft_f2 = epoch_data[1, f2_loc]
-                    fft_fdiff = epoch_data[1, fdiff_loc]
-                    results[0, epoch_i, f1_i, f2_i] = (
-                        fft_f1 * fft_f2 * np.conjugate(fft_fdiff)
-                    )
-
-                    # B_mkm
-                    fft_f1 = epoch_data[1, f1_loc]
-                    fft_f2 = epoch_data[0, f2_loc]
-                    results[1, epoch_i, f1_i, f2_i] = (
-                        fft_f1 * fft_f2 * np.conjugate(fft_fdiff)
-                    )
-
-    return results
-
-
-@njit
 def _compute_threenorm(
-    data: np.ndarray, freqs: np.ndarray, f1s: np.ndarray, f2s: np.ndarray
-) -> np.ndarray:
+    data: NDArray[np.float64],
+    freqs: NDArray[np.float64],
+    f1s: NDArray[np.float64],
+    f2s: NDArray[np.float64],
+) -> NDArray[np.float64]:
     """Compute threenorm for a single connection across epochs.
 
     PARAMETERS
     ----------
-    data : NumPy ndarray
+    data : NumPy NDArray fo float
     -   3D array of FFT coefficients with shape [epochs x 2 x frequencies],
         where the second dimension contains the data for the seed and target
         channel of a single connection, respectively.
 
-    freqs : NumPy ndarray
+    freqs : NumPy NDArray of float
     -   1D array of frequencies in `data`.
 
-    f1s : NumPy ndarray
+    f1s : NumPy NDArray of float
     -   1D array of low frequencies to compute threenorm for.
 
-    f2s : NumPy ndarray
+    f2s : NumPy NDArray of float
     -   1D array of high frequencies to compute threenorm for.
 
     RETURNS
     -------
-    results : NumPy ndarray
+    results : NumPy NDArray of float
     -   2D array containing the threenorm of a single connection averaged
         across epochs, with shape [f1 x f2].
     """
