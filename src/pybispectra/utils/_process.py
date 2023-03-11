@@ -7,56 +7,11 @@ from warnings import warn
 from numba import njit
 import numpy as np
 
-from pybispectra.utils import _ResultsBase, fast_find_first
+from pybispectra.utils import fast_find_first
 
 
 class _ProcessBase(ABC):
-    """Base class for processing results.
-
-    PARAMETERS
-    ----------
-    data : NumPy ndarray
-    -   FFT coefficients with shape [epochs x channels x frequencies].
-
-    freqs : NumPy ndarray
-    -   1D array of the frequencies in `data`.
-
-    verbose : bool; default True
-    -   Whether or not to report the progress of the processing.
-
-    METHODS
-    -------
-    compute
-    -   Compute results.
-
-    get_results
-    -   Return a copy of the results.
-
-    copy
-    -   Return a copy of the object.
-
-    ATTRIBUTES
-    ----------
-    data : NumPy ndarray
-    -   3D array of FFT coefficients with shape [epochs x channels x
-        frequencies].
-
-    freqs : NumPy ndarray
-    -   1D array of the frequencies in `data`.
-
-    indices : tuple of NumPy ndarray
-    -   2 arrays containing the seed and target indices (respectively) most
-        recently used with `compute`.
-
-    f1 : NumPy ndarray
-    -   1D array of low frequencies most recently used with `compute`.
-
-    f2 : NumPy ndarray
-    -   1D array of high frequencies most recently used with `compute`.
-
-    verbose : bool; default True
-    -   Whether or not to report the progress of the processing.
-    """
+    """Base class for processing results."""
 
     indices = None
     _seeds = None
@@ -71,7 +26,10 @@ class _ProcessBase(ABC):
     _results = None
 
     def __init__(
-        self, data: np.ndarray, freqs: np.ndarray, verbose: bool = True
+        self,
+        data: np.ndarray,
+        freqs: np.ndarray,
+        verbose: bool = True,
     ) -> None:
         self.verbose = copy.copy(verbose)
         self._sort_init_inputs(data, freqs)
@@ -144,7 +102,7 @@ class _ProcessBase(ABC):
             f2 = f1[1:].copy()
 
         if not isinstance(f1, np.ndarray) or not isinstance(f2, np.ndarray):
-            raise TypeError("`f1` and `f2` must be NumPy ndarrays.")
+            raise TypeError("`f1` and `f2` must be NumPy NDArrays.")
         if f1.ndim != 1 or f2.ndim != 1:
             raise ValueError("`f1` and `f2` must be 1D arrays.")
 
@@ -199,10 +157,9 @@ class _ProcessBase(ABC):
     def _store_results(self) -> None:
         """Store computed results in an object."""
 
-    @property
-    def results(self) -> _ResultsBase | tuple[_ResultsBase]:
+    @abstractmethod
+    def results(self) -> None:
         """Return a copy of the results."""
-        return self._results
 
     def copy(self):
         """Return a copy of the object."""
@@ -258,38 +215,38 @@ def _compute_bispectrum(
 ) -> np.ndarray:
     """Compute the bispectrum for a single connection.
 
-    PARAMETERS
+    Parameters
     ----------
-    data : NumPy ndarray
-    -   3D array of FFT coefficients with shape [epochs x 2 x frequencies],
+    data : np.ndarray of float
+    -   3D array of FFT coefficients with shape `[epochs x 2 x frequencies]`,
         where the second dimension contains the data for the seed and target
         channel of a single connection, respectively.
 
-    freqs : NumPy ndarray
-    -   1D array of frequencies in `data`.
+    freqs : np.ndarray of float
+    -   1D array of frequencies in ``data``.
 
-    f1s : NumPy ndarray
+    f1s : np.ndarray of float
     -   1D array of low frequencies to compute bispectra for.
 
-    f2s : NumPy ndarray
+    f2s : np.ndarray of float
     -   1D array of high frequencies to compute bispectra for.
 
-    kmn : NumPy ndarray
+    kmn : np.ndarray of int
     -   1D array of 1D arrays of length 3, where each sub-array contains the k,
         m, and n channel indices in `data`, respectively, to compute the
         bispectrum for.
 
-    RETURNS
+    Returns
     -------
-    results : NumPy ndarray
-    -   4D array containing the bispectra of a single connection with shape
-        [kmn x epochs x f1 x f2], where the first dimension corresponds to the
-        different channel indices given in `kmn`.
+    results : np.ndarray of complex float
+    -   4D complex-valued array containing the bispectra of a single connection
+        with shape `[kmn x epochs x f1 x f2]`, where the first dimension
+        corresponds to the different channel indices given in ``kmn``.
 
-    NOTES
+    Notes
     -----
-    -   Averaging across epochs is not performed here as `np.mean` of complex
-        numbers if not supported when compiling using Numba.
+    -   Averaging across epochs is not performed here as :func:`np.mean` of
+        complex numbers is not supported when compiling using Numba.
     -   No checks on the input data are performed for speed.
     """
     results = np.full(

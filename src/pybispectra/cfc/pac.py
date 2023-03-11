@@ -3,7 +3,6 @@
 import copy
 
 import numpy as np
-from numpy.typing import NDArray
 from numba import njit
 from pqdm.processes import pqdm
 
@@ -19,51 +18,43 @@ np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
 
 
 class PAC(_ProcessBispectra):
-    """Class for computing phase-amplitude (PAC) coupling using bispectra.
+    """Class for computing phase-amplitude coupling (PAC) using bispectra.
 
-    PARAMETERS
+    Parameters
     ----------
-    data : NumPy NDArray of float
-    -   3D array of FFT coefficients with shape [epochs x channels x
-        frequencies].
+    data : numpy.ndarray of float
+        3D array of FFT coefficients with shape `[epochs x channels x
+        frequencies]`.
 
-    freqs : NumPy NDArray of float
-    -   1D array of the frequencies in `data`.
+    freqs : numpy.ndarray of float
+        1D array of the frequencies in :attr:`data`.
 
-    verbose : bool; default True
-    -   Whether or not to report the progress of the processing.
+    verbose : bool (default True)
+        Whether or not to report the progress of the processing.
 
-    METHODS
-    -------
-    compute
-    -   Compute PAC, averaged over epochs.
-
-    get_results
-    -   Return a copy of the results.
-
-    copy
-    -   Return a copy of the object.
-
-    ATTRIBUTES
+    Attributes
     ----------
-    data : NumPy NDArray of float
-    -   FFT coefficients with shape [epochs x channels x frequencies].
+    results : tuple of ResultsCFC
+        PAC results for each of the computed metrics.
 
-    freqs : NumPy NDArray of float
-    -   1D array of the frequencies in `data`.
+    data : numpy.ndarray of float
+        FFT coefficients with shape `[epochs x channels x frequencies]`.
 
-    indices : tuple of NumPy NDArray of int
-    -   2 arrays containing the seed and target indices (respectively) most
-        recently used with `compute`.
+    freqs : numpy.ndarray of float
+        1D array of the frequencies in :attr:`data`.
 
-    f1 : NumPy NDArray of float
-    -   1D array of low frequencies most recently used with `compute`.
+    indices : tuple of numpy.ndarray of int
+        Two arrays containing the seed and target indices (respectively) most
+        recently used with :meth:`compute`.
 
-    f2 : NumPy NDArray of float
-    -   1D array of high frequencies most recently used with `compute`.
+    f1 : numpy.ndarray of float
+        1D array of low frequencies most recently used with :meth:`compute`.
+
+    f2 : numpy.ndarray of float
+        1D array of high frequencies most recently used with :meth:`compute`.
 
     verbose : bool
-    -   Whether or not to report the progress of the processing.
+        Whether or not to report the progress of the processing.
     """
 
     _return_nosym = False
@@ -81,49 +72,52 @@ class PAC(_ProcessBispectra):
 
     def compute(
         self,
-        indices: tuple[NDArray[np.float64]] | None = None,
-        f1: NDArray[np.float64] | None = None,
-        f2: NDArray[np.float64] | None = None,
+        indices: tuple[np.ndarray] | None = None,
+        f1: np.ndarray | None = None,
+        f2: np.ndarray | None = None,
         symmetrise: str | list[str] = ["none", "antisym"],
         normalise: str | list[str] = ["none", "threenorm"],
         n_jobs: int = 1,
     ) -> None:
         """Compute PAC, averaged over epochs.
 
-        PARAMETERS
+        Parameters
         ----------
-        indices: tuple of NumPy NDArray of int | None; default None
-        -   Indices of the channels to compute PAC between. Should contain 2
+        indices : tuple of numpy.ndarray of int | None (default None)
+            Indices of the channels to compute PAC between. Should contain two
             1D arrays of equal length for the seed and target indices,
-            respectively. If None, coupling between all channels is computed.
+            respectively. If ``None``, coupling between all channels is
+            computed.
 
-        f1 : numpy NDArray of float | None; default None
-        -   A 1D array of the lower frequencies to compute PAC on. If None, all
-            frequencies are used.
-
-        f2 : numpy NDArray of float | None; default None
-        -   A 1D array of the higher frequencies to compute PAC on. If None,
+        f1 : numpy.ndarray of float | None (default None)
+            A 1D array of the lower frequencies to compute PAC on. If ``None``,
             all frequencies are used.
 
-        symmetrise : str | list of str; default ["none", "antisym"]
-        -   Symmetrisation to perform when computing PAC. If "none", no
-            symmetrisation is performed. If "antisym", antisymmetrisation is
-            performed.
+        f2 : numpy.ndarray of float | None (default None)
+            A 1D array of the higher frequencies to compute PAC on. If
+            ``None``, all frequencies are used.
 
-        normalise : str | list of str; default ["none", "threenorm"]
-        -   Normalisation to perform when computing PAC. If "none", no
-            normalisation is performed. If "threenorm", the bispectra is
+        symmetrise : str | list of str (default ``["none", "antisym"]``)
+            Symmetrisation to perform when computing PAC. If ``"none"``, no
+            symmetrisation is performed. If ``"antisym"``, antisymmetrisation
+            is performed.
+
+        normalise : str | list of str (default ``["none", "threenorm"]``)
+            Normalisation to perform when computing PAC. If ``"none"``, no
+            normalisation is performed. If ``"threenorm"``, the bispectra is
             normalised to the bicoherence using a threenorm.
 
-        n_jobs : int; default 1
-        -   The number of jobs to run in parallel.
+        n_jobs : int (default ``1``)
+            The number of jobs to run in parallel.
 
-        NOTES
+        Notes
         -----
         -   If the seed and target for a given connection is the same channel
-            and antisymmetrisation is being performed, NaN values are returned.
-        -   PAC is computed between all values of `f1` and `f2`. If any value
-            of `f1` is higher than `f2`, a NaN value is returned.
+            and antisymmetrisation is being performed, ``numpy.nan`` values are
+            returned.
+        -   PAC is computed between all values of :attr:`f1` and :attr:`f2`. If
+            any value of :attr:`f1` is higher than :attr:`f2`, a ``numpy.nan``
+            value is returned.
         """
         self._reset_attrs()
 
@@ -199,7 +193,8 @@ class PAC(_ProcessBispectra):
             self._return_threenorm = True
 
     def _compute_bispectra(self) -> None:
-        """Compute bispectra between f1s and f2s of channels in `indices`."""
+        """Compute bispectra between f1s and f2s of channels in
+        :attr:`indices`."""
         if self.verbose:
             print("    Computing bispectra...")
 
@@ -352,42 +347,44 @@ class PAC(_ProcessBispectra):
                 )
             )
 
-        if len(results) == 1:
-            self._results = results[0]
-        else:
-            self._results = tuple(results)
+        self._results = tuple(results)
+
+    @property
+    def results(self) -> tuple[ResultsCFC]:
+        """Return the results."""
+        return self._results
 
 
 @njit
 def _compute_threenorm(
-    data: NDArray[np.float64],
-    freqs: NDArray[np.float64],
-    f1s: NDArray[np.float64],
-    f2s: NDArray[np.float64],
-) -> NDArray[np.float64]:
+    data: np.ndarray,
+    freqs: np.ndarray,
+    f1s: np.ndarray,
+    f2s: np.ndarray,
+) -> np.ndarray:
     """Compute threenorm for a single connection across epochs.
 
     PARAMETERS
     ----------
-    data : NumPy NDArray fo float
-    -   3D array of FFT coefficients with shape [epochs x 2 x frequencies],
+    data : numpy.ndarray of float
+        3D array of FFT coefficients with shape `[epochs x 2 x frequencies]`,
         where the second dimension contains the data for the seed and target
         channel of a single connection, respectively.
 
-    freqs : NumPy NDArray of float
-    -   1D array of frequencies in `data`.
+    freqs : numpy.ndarray of float
+        1D array of frequencies in ``data``.
 
-    f1s : NumPy NDArray of float
-    -   1D array of low frequencies to compute threenorm for.
+    f1s : numpy.ndarray of float
+        1D array of low frequencies to compute the threenorm for.
 
-    f2s : NumPy NDArray of float
-    -   1D array of high frequencies to compute threenorm for.
+    f2s : numpy.ndarray of float
+        1D array of high frequencies to compute the threenorm for.
 
     RETURNS
     -------
-    results : NumPy NDArray of float
-    -   2D array containing the threenorm of a single connection averaged
-        across epochs, with shape [f1 x f2].
+    results : numpy.ndarray of float
+        2D array containing the threenorm of a single connection averaged
+        across epochs, with shape `[f1 x f2]`.
     """
     results = np.full(
         (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64

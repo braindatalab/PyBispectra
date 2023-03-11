@@ -1,7 +1,6 @@
 """Tools for handling PPC analysis."""
 
 import numpy as np
-from numpy.typing import NDArray
 from numba import njit
 from pqdm.processes import pqdm
 
@@ -11,84 +10,78 @@ from pybispectra.utils import _ProcessBase, ResultsCFC, fast_find_first
 class PPC(_ProcessBase):
     """Class for computing phase-phase coupling (PPC).
 
-    PARAMETERS
+    Parameters
     ----------
-    data : NumPy NDArray of float
-    -   3D array of FFT coefficients with shape [epochs x channels x
-        frequencies].
+    data : numpy.ndarray of float
+        3D array of FFT coefficients with shape `[epochs x channels x
+        frequencies]`.
 
-    freqs : NumPy NDArray of float
-    -   1D array of the frequencies in `data`.
+    freqs : numpy.ndarray of float
+        1D array of the frequencies in :attr:`data`.
 
-    verbose : bool; default True
-    -   Whether or not to report the progress of the processing.
+    verbose : bool (default True)
+        Whether or not to report the progress of the processing.
 
-    METHODS
-    -------
-    compute
-    -   Compute PPC, averaged over epochs.
-
-    get_results
-    -   Return a copy of the results.
-
-    copy
-    -   Return a copy of the object.
-
-    ATTRIBUTES
+    Attributes
     ----------
-    data : NumPy NDArray of float
-    -   FFT coefficients with shape [epochs x channels x frequencies].
+    results : tuple of ResultsCFC
+        PPC results for each of the computed metrics.
 
-    freqs : NumPy NDArray of float
-    -   1D array of the frequencies in `data`.
+    data : numpy.ndarray of float
+        FFT coefficients with shape `[epochs x channels x frequencies]`.
 
-    indices : tuple of NumPy NDArray
-    -   2 arrays containing the seed and target indices (respectively) most
-        recently used with `compute`.
+    freqs : numpy.ndarray of float
+        1D array of the frequencies in :attr:`data`.
 
-    f1 : NumPy NDArray of float
-    -   1D array of low frequencies most recently used with `compute`.
+    indices : tuple of numpy.ndarray of int
+        Two arrays containing the seed and target indices (respectively) most
+        recently used with :meth:`compute`.
 
-    f2 : NumPy NDArray of float
-    -   1D array of high frequencies most recently used with `compute`.
+    f1 : numpy.ndarray of float
+        1D array of low frequencies most recently used with :meth:`compute`.
+
+    f2 : numpy.ndarray of float
+        1D array of high frequencies most recently used with :meth:`compute`.
 
     verbose : bool
-    -   Whether or not to report the progress of the processing.
+        Whether or not to report the progress of the processing.
     """
 
     _ppc = None
 
     def compute(
         self,
-        indices: tuple[NDArray[np.int64]] | None = None,
-        f1: NDArray[np.float64] | None = None,
-        f2: NDArray[np.float64] | None = None,
+        indices: tuple[np.ndarray] | None = None,
+        f1: np.ndarray | None = None,
+        f2: np.ndarray | None = None,
         n_jobs: int = 1,
     ) -> None:
         """Compute PPC, averaged over epochs.
 
-        PARAMETERS
+        Parameters
         ----------
-        indices: tuple of NumPy NDArray of int | None; default None
-        -   Indices of the channels to compute PPC between. Should contain 2
+        indices : tuple of numpy.ndarray of int | None (default None)
+            Indices of the channels to compute PPC between. Should contain two
             1D arrays of equal length for the seed and target indices,
-            respectively. If None, coupling between all channels is computed.
+            respectively. If ``None``, coupling between all channels is
+            computed.
 
-        f1 : NumPy NDArray of float | None; default None
-        -   A 1D array of the lower frequencies to compute PPC on. If None, all
-            frequencies are used.
-
-        f2 : NumPy NDArray of float | None; default None
-        -   A 1D array of the higher frequencies to compute PPC on. If None,
+        f1 : numpy.ndarray of float | None (default None)
+            1D array of the lower frequencies to compute PPC on. If ``None``,
             all frequencies are used.
 
-        n_jobs : int; default 1
-        -   Number of jobs to run in parallel.
+        f2 : numpy.ndarray of float | None; default None
+            1D array of the higher frequencies to compute PPC on. If ``None``,
+            all frequencies are used.
+
+        n_jobs : int (default ``1``)
+            Number of jobs to run in parallel.
 
         NOTES
         -----
-        -   PPC is computed between all values of `f1` and `f2`. If any value
-            of `f1` is higher than `f2`, a NaN value is returned.
+        -   PPC is computed between all values of :attr:`f1` and :attr:`f2`.
+            If any value of :attr:`f1` is higher than :attr:`f2`, a
+            ``numpy.nan`` value is returned.
         """
         self._reset_attrs()
 
@@ -139,36 +132,41 @@ class PPC(_ProcessBase):
             self._ppc, self.indices, self.f1, self.f2, "PPC"
         )
 
+    @property
+    def results(self) -> tuple[ResultsCFC]:
+        """Return the results."""
+        return self._results
+
 
 @njit
 def _compute_ppc(
-    data: NDArray[np.float64],
-    freqs: NDArray[np.float64],
-    f1s: NDArray[np.float64],
-    f2s: NDArray[np.float64],
-) -> NDArray[np.float64]:
+    data: np.ndarray,
+    freqs: np.ndarray,
+    f1s: np.ndarray,
+    f2s: np.ndarray,
+) -> np.ndarray:
     """Compute PPC for a single connection across epochs.
 
     PARAMETERS
     ----------
-    data : NumPy NDArray of float
-    -   3D array of FFT coefficients with shape [epochs x 2 x frequencies],
+    data : numpy.ndarray of float
+        3D array of FFT coefficients with shape `[epochs x 2 x frequencies]`,
         where the second dimension contains the data for the seed and target
         channel of a single connection, respectively.
 
-    freqs : NumPy NDArray of float
-    -   1D array of frequencies in `data`.
+    freqs : numpy.ndarray of float
+        1D array of frequencies in ``data``.
 
-    f1s : NumPy NDArray of float
-    -   1D array of low frequencies to compute coupling for.
+    f1s : numpy.ndarray of float
+        1D array of low frequencies to compute coupling for.
 
-    f2s : NumPy NDArray of float
-    -   1D array of high frequencies to compute coupling for.
+    f2s : numpy.ndarray of float
+        1D array of high frequencies to compute coupling for.
 
     RETURNS
     -------
-    results : NumPy NDArray of float
-    -   2D array of PPC for a single connection with shape [f1 x f2].
+    results : numpy.ndarray of float
+        2D array of PPC for a single connection with shape `[f1 x f2]`.
     """
     results = np.full(
         (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64

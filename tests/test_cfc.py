@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 
 from pybispectra.cfc import PAC, PPC
-from pybispectra.utils import Results, compute_fft, _generate_data
+from pybispectra.utils import ResultsCFC, compute_fft, _generate_data
 
 
 def test_ppc() -> None:

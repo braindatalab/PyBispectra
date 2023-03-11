@@ -4,7 +4,7 @@ from pybispectra.utils import compute_fft
 
 if __name__ == "__main__":
     rand = np.random.RandomState(44)
-    data = rand.rand(10, 2, 200)
+    data = rand.rand(10, 3, 200)
     sfreq = 100
     n_jobs = 1
 

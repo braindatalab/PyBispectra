@@ -1,4 +1,4 @@
-"""Helper tools for processing CFC results."""
+"""Helper tools for processing and storing results."""
 
 from abc import ABC
 import copy
@@ -562,13 +562,6 @@ class ResultsTDE(_ResultsBase):
 
     name = None
 
-    def __repr__(self) -> str:
-        """Return printable represenation of the object."""
-        return repr(
-            f"<Result: {self.name} | [{self.n_cons} connections x "
-            f"{len(self.times)} times]>"
-        )
-
     def __init__(
         self,
         data: NDArray[np.float64],
@@ -578,13 +571,65 @@ class ResultsTDE(_ResultsBase):
     ) -> None:
         self._sort_init_inputs(data, indices, times, name)
 
+    def _sort_init_inputs(
+        self,
+        data: NDArray[np.float64],
+        indices: tuple[NDArray[np.int64]],
+        times: NDArray[np.float64],
+        name: str,
+    ) -> None:
+        """Sort inputs to the object."""
+        if not isinstance(data, np.ndarray):
+            raise TypeError("`data` must be a NumPy array.")
+        if data.ndim != 2:
+            raise ValueError("`data` must be a 2D array.")
+        self._data = data.copy()
+
+        if not isinstance(indices, tuple):
+            raise TypeError("`indices` must be a tuple.")
+        if len(indices) != 2:
+            raise ValueError("`indices` must have a length of 2.")
+        if not isinstance(indices[0], np.ndarray) or not isinstance(
+            indices[1], np.ndarray
+        ):
+            raise TypeError("Entries of `indices` must be NumPy arrays.")
+        if indices[0].ndim != 1 or indices[1].ndim != 1:
+            raise ValueError("Entries of `indices` must be 1D arrays.")
+        if len(indices[0]) != len(indices[1]):
+            raise ValueError("Entries of `indices` must have the same length.")
+        self.indices = copy.copy(indices)
+        self._seeds = indices[0].copy()
+        self._targets = indices[1].copy()
+        self.n_cons = len(indices[0])
+        self._n_chans = len(np.unique([*self._seeds, *self._targets]))
+
+        if not isinstance(times, np.ndarray):
+            raise TypeError("`times` must be NumPy arrays.")
+        if times.ndim != 1:
+            raise ValueError("`times` must be 1D arrays.")
+        self.times = times.copy()
+
+        if data.shape != (len(indices[0]), len(times)):
+            raise ValueError("`data` must have shape [connections x times].")
+
+        if not isinstance(name, str):
+            raise TypeError("`name` must be a string.")
+        self.name = copy.copy(name)
+
+    def __repr__(self) -> str:
+        """Return printable represenation of the object."""
+        return repr(
+            f"<Result: {self.name} | [{self.n_cons} connections x "
+            f"{len(self.times)} times]>"
+        )
+
 
 def compute_fft(
     data: NDArray[np.float64],
     sfreq: int,
     n_jobs: int = 1,
     verbose: bool = True,
-) -> tuple[NDArray[np.complex128], NDArray[np.float64]]:
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Compute the FFT on real-valued data.
 
     As the data is assumed to be real-valued, only those values corresponding
@@ -607,7 +652,7 @@ def compute_fft(
 
     RETURNS
     -------
-    fft : NumPy NDArray of complex float
+    fft : NumPy NDArray of float
     -   3D array of FFT coefficients of the data with shape [epochs x channels
         x positive frequencies].
 
