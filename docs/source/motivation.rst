@@ -39,8 +39,8 @@ estimation with bispectra, as well as for computing phase-phase coupling.
 Additional tools are included for plotting results and for computing the
 Fourier coefficients required by these methods.
 
-Check out the :doc:`Installation & Examples <usage>` guide for installation instructions and examples of
-how the package can be used.
+You can find the installation instructions :doc:`here <installation>`, as well
+as examples of how tools in the package can be used :doc:`here <examples>`.
 
 
 References

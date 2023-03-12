@@ -30,8 +30,18 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx.ext.intersphinx",
     "numpydoc",
+    "nbsphinx",
+    "nbsphinx_link",
+    "sphinxcontrib.bibtex",
+    "sphinx_gallery.gen_gallery",
 ]
+bibtex_bibfiles = ["refs.bib"]
 autosummary_generate = True
+
+sphinx_gallery_conf = {
+    "examples_dirs": "../../examples",
+    "gallery_dirs": "auto_examples",
+}
 
 templates_path = ["_templates"]
 exclude_patterns = []

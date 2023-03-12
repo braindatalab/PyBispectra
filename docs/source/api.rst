@@ -6,7 +6,7 @@ and functions required to perform cross-frequency coupling and time delay
 estimation analyses.
 
 .. autosummary::
-    :toctree: _autosummary
+    :toctree: generated
     :template: custom-module-template.rst
     :recursive:
 

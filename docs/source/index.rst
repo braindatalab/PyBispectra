@@ -30,5 +30,6 @@ coefficients of data are also provided.
    :caption: Contents:
 
    motivation
-   usage
+   installation
+   examples
    api

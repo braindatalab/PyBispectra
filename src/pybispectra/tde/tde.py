@@ -217,8 +217,7 @@ class TDE(_ProcessBispectra):
             self._return_method_iv = True
 
     def _compute_bispectra(self) -> None:
-        """Compute bispectra between f1s and f2s of channels in
-        :attr:`indices`."""
+        """Compute bispectra between f1s and f2s of seeds and targets."""
         if self.verbose:
             print("    Computing bispectra...")
 
