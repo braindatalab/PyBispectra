@@ -16,21 +16,20 @@ from pybispectra import compute_fft, PPC
 ###############################################################################
 # Background
 # ----------
-#
 # PPC quantifies the relationship between the phases of a lower frequency
 # :math:`f_1` and a higher frequency :math:`f_2` within a single signal, or
 # across different signals.
 #
 # The method available in PyBispectra can be thought of as a measure of
 # coherence between frequencies :footcite:`Giehl2021` (note that it is not
-# based on bispectra):
+# based on the bispectrum):
 #
-# :math:`\large PPC(x_{f_1}, y_{f_2})=\LARGE \frac{|\langle A_x(f_1)A_y(f_2) e^{i(\varphi_x(f_1)\frac{f_2}{f_1}-\varphi_x(f_2))} \rangle|}{\langle A_x(f_1)A_y(f_2) \rangle}`,  # noqa E501
+# :math:`\large PPC(\vec{x}_{f_1},\vec{y}_{f_2})=\LARGE \frac{|\langle \vec{a}_x(f_1)\vec{a}_y(f_2) e^{i(\vec{\varphi}_x(f_1)\frac{f_2}{f_1}-\vec{\varphi}_y(f_2))} \rangle|}{\langle \vec{a}_x(f_1)\vec{a}_y(f_2) \rangle}`,
 #
-# where :math:`A(f)` and :math:`\varphi(f)` are the amplitude and phase of a
-# signal at a given frequency, respectively, and the angled brackets represent
-# the average over epochs. The phase of :math:`f_1` is accelerated to match
-# that of :math:`f_2` by scaling the phase by a factor of
+# where :math:`\vec{a}(f)` and :math:`\vec{\varphi}(f)` are the amplitude and
+# phase of a signal at a given frequency, respectively, and the angled brackets
+# represent the average over epochs.The phase of :math:`f_1` is accelerated to
+# match that of :math:`f_2` by scaling the phase by a factor of
 # :math:`\frac{f_2}{f_1}`. PPC values for this measure lie in the range
 # :math:`[0, 1]`, with 0 representing a random phase relationship, and 1
 # representing perfect phase coupling.
@@ -38,7 +37,6 @@ from pybispectra import compute_fft, PPC
 ###############################################################################
 # Generating data and computing Fourier coefficients
 # --------------------------------------------------
-#
 # We will start by generating some data that we can compute PPC on, then
 # compute the Fourier coefficients of the data.
 
@@ -64,7 +62,6 @@ print(
 #
 # Computing PPC
 # -------------
-#
 # To compute PPC, we start by initialising the :class:`PPC` class object with
 # the FFT coefficients and the frequency information. To compute PPC, we call
 # the :meth:`compute` method. By default, PPC is computed between all channel
@@ -85,7 +82,7 @@ ppc.compute(
     indices=(np.array([0, 1]), np.array([0, 1])), f1=None, f2=None
 )  # compute PPC
 
-ppc_results = ppc.results.get_results()  # return results
+ppc_results = ppc.results.get_results()  # return results as array
 
 print(
     f"PPC results: [{ppc_results.shape[0]} connections x "
@@ -100,8 +97,33 @@ print(
 # :math:`f2` cannot be computed, in which case the values are ``numpy.nan``
 # (see the plotted results below for a visual demonstration of this).
 
+###############################################################################
+# Plotting PPC
+# ------------
+# Let us now inspect the results. For this, we will plot the results for both
+# connections on the same plot. If we wished, we could plot this information on
+# separate plots, or specify a subset of frequencies to inspect.
+
+# %%
+
+fig, axes = ppc.results.plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
+
+###############################################################################
+# As you can see, values for the lower right triangle of each plot are missing,
+# corresponding to the frequency combinations where :math:`f_1` is greater than
+# :math:`f_2`, and hence where PPC cannot be computed. Note that the ``Figure``
+# and ``Axes`` objects can also be returned for any desired manual adjustments
+# of the plots.
+#
+# Controlling for spurious PAC with PPC
+# -------------------------------------
+# Now that we have an idea of how PAC and PPC can be computed, the following
+# example will look at how PPC can be used to control for spurious PAC results
+# stemming from frequency harmonics :footcite:`Giehl2021`.
 
 ###############################################################################
 # References
 # -----------------------------------------------------------------------------
 # .. footbibliography::
+
+# %%

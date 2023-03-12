@@ -566,8 +566,8 @@ def _compute_tde_ii(
     No checks on the input data are performed for speed.
     """
     I = np.zeros((B_xyx.shape[0], B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
-    phi = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) - np.angle(B_yyy))
-    I[:, : B_xyx.shape[1]] = np.exp(1j * phi)
+    phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
+    I[:, : B_xyx.shape[1]] = np.exp(1j * phi_prime)
 
     return _compute_shift_ifft_I(np.sum(I, axis=1))
 
@@ -631,10 +631,10 @@ def _compute_tde_iv(
     No checks on the input data are performed for speed.
     """
     I = np.zeros((B_xyx.shape[0], B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
-    phi = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) - np.angle(B_yyy))
+    phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
     I[:, : B_xyx.shape[1]] = (
         np.abs(B_xyx)
-        * np.exp(1j * phi)
+        * np.exp(1j * phi_prime)
         / np.sqrt(np.abs(B_xxx) * np.abs(B_yyy))
     )
 

@@ -14,6 +14,57 @@ cross-frequency coupling and time delay estimation.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how phase-amplitude coupling (PAC) can be computed with PyBispectra.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_plot_compute_pac_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_plot_compute_pac.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Compute phase-amplitude coupling</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how time delay estimates (TDE) can be computed with PyBispectra.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_plot_compute_tde_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_plot_compute_tde.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Compute time delay estimates</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how phase-phase coupling (PPC) can be used to control for spurious ph...">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_plot_pac_control_ppc_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_plot_pac_control_ppc.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Control for spurious phase-amplitude coupling with phase-phase coupling</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how phase-phase coupling (PPC) can be computed with PyBispectra.">
 
 .. only:: html
@@ -37,6 +88,9 @@ cross-frequency coupling and time delay estimation.
 .. toctree::
    :hidden:
 
+   /auto_examples/plot_compute_pac
+   /auto_examples/plot_compute_tde
+   /auto_examples/plot_pac_control_ppc
    /auto_examples/plot_compute_ppc
 
 
