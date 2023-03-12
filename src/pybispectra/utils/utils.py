@@ -1,6 +1,5 @@
 """Helper tools for processing and storing results."""
 
-from abc import ABC
 import copy
 from warnings import warn
 
@@ -13,58 +12,46 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pqdm.processes import pqdm
 
 
-class _ResultsBase(ABC):
-    """Base class for storing results."""
-
-
-class ResultsCFC(_ResultsBase):
+class ResultsCFC:
     """Class for storing cross-frequency coupling (CFC) results.
 
-    PARAMETERS
+    Parameters
     ----------
-    data : NumPy NDArray of float
-    -   3D array of results to store with shape [connections x f1 x f2].
+    data : numpy.ndarray of float
+        3D array of results to store with shape `[connections x f1 x f2]`.
 
-    indices : tuple of NumPy NDArray of int
-    -   Indices of the channels for each connection of `data`. Should contain 2
-        1D arrays of equal length for the seed and target indices,
+    indices : tuple of numpy.ndarray of int
+        Indices of the channels for each connection of :attr:`data`. Should
+        contain 2 1D arrays of equal length for the seed and target indices,
         respectively.
 
-    f1 : NumPy NDArray of float
-    -   1D array of low frequencies in `data`.
+    f1 : numpy.ndarray of float
+        1D array of low frequencies in :attr:`data`.
 
-    f2 : NumPy NDArray of float
-    -   1D array of high frequencies in `data`.
+    f2 : numpy.ndarray of float
+        1D array of high frequencies in :attr:`data`.
 
     name : str
-    -   Name of the results being stored.
+        Name of the results being stored.
 
-    METHODS
-    -------
-    get_results
-    -   Return a copy of results as arrays.
-
-    plot
-    -   Plots the results.
-
-    ATTRIBUTES
+    Attributes
     ----------
     name : str
-    -   Name of the results.
+        Name of the results.
 
-    indices : tuple of NumPy NDArray of int
-    -   Indices of the channels for each connection of the results. Contains 2
-        1D arrays of equal length for the seed and target indices,
+    indices : tuple of numpy.ndarray of int
+        Indices of the channels for each connection of the results. Contains
+        two 1D arrays of equal length for the seed and target indices,
         respectively.
 
     n_cons : str
-    -   Number of connections in the results.
+        Number of connections in the results.
 
-    f1 : NumPy NDArray of float
-    -   1D array of low frequencies in the results.
+    f1 : numpy.ndarray of float
+        1D array of low frequencies in the results.
 
-    f2 : NumPy NDArray of float
-    -   1D array of high frequencies in the results.
+    f2 : numpy.ndarray of float
+        1D array of high frequencies in the results.
     """
 
     _data = None
@@ -149,21 +136,21 @@ class ResultsCFC(_ResultsBase):
     ) -> np.ndarray | tuple[np.ndarray, tuple[np.ndarray]]:
         """Return a copy of the results as arrays.
 
-        PARAMETERS
+        Parameters
         ----------
-        form : str; default "raveled"
-        -   How the results should be returned: "raveled" - results have shape
-            [connections x f1 x f2]; "compact" - results have shape [seeds x
-            targets x f1 x f2].
+        form : str (default ``"raveled"``)
+            How the results should be returned: ``"raveled"`` - results have
+            shape `[connections x f1 x f2]`; ``"compact"`` - results have shape
+            `[seeds x targets x f1 x f2]`.
 
-        RETURNS
+        Returns
         -------
-        results : NumPy NDArray of float
-        -   Spectral coupling results.
+        results : numpy.ndarray of float
+            Spectral coupling results.
 
-        indices : tuple of NumPy NDArray of int
-        -   Channel indices of the seeds and targets. Only returned if `form`
-            is "compact".
+        indices : tuple of numpy.ndarray of int
+            Channel indices of the seeds and targets. Only returned if ``form``
+            is ``"compact"``.
         """
         accepted_forms = ["raveled", "compact"]
         if form not in accepted_forms:
@@ -180,11 +167,11 @@ class ResultsCFC(_ResultsBase):
 
         RETURNS
         -------
-        compact_results : NumPy NDArray of float
-        -   Results with shape [seeds x targets x f1 x f2].
+        compact_results : (default None) of float
+            Results with shape `[seeds x targets x f1 x f2]`.
 
-        indices : tuple[NumPy NDArray] of int
-        -   Channel indices of `compact_results`, for the seeds and targets,
+        indices : tuple[numpy.ndarray] of int
+            Channel indices of ``compact_results`` for the seeds and targets,
             respectively.
         """
         fill = np.full((len(self.f1), len(self.f2)), fill_value=np.nan)
@@ -225,51 +212,51 @@ class ResultsCFC(_ResultsBase):
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
 
-        PARAMETERS
+        Parameters
         ----------
-        connections : list of int | None; default None
-        -   Indices of connections to plot. If None, plot all connections.
+        connections : list of int | None (default None)
+            Indices of connections to plot. If ``None``, plot all connections.
 
-        f1 : NumPy NDArray of float | None; default None
-        -   Low frequencies of the results to plot. If None, plot all low
+        f1 : numpy.ndarray of float | None (default None)
+            Low frequencies of the results to plot. If ``None``, plot all low
             frequencies.
 
-        f2 : NumPy NDArray of float | None; default None
-        -   High frequencies of the results to plot. If None, plot all high
+        f2 : numpy.ndarray of float | None (default None)
+            High frequencies of the results to plot. If ``None``, plot all high
             frequencies.
 
-        n_rows : int; default 1
-        -   Number of rows of subplots per figure.
+        n_rows : int (default ``1``)
+            Number of rows of subplots per figure.
 
-        n_cols : int; default 1
-        -   Number of columns of subplots per figure.
+        n_cols : int (default ``1``)
+            Number of columns of subplots per figure.
 
-        major_tick_intervals : float; default 5.0
-        -   Intervals (in Hz) at which the major ticks of the x- and y-axes
+        major_tick_intervals : float (default ``5.0``)
+            Intervals (in Hz) at which the major ticks of the x- and y-axes
             should occur.
 
-        minor_tick_intervals : float; default 1.0
-        -   Intervals (in Hz) at which the minor ticks of the x- and y-axes
+        minor_tick_intervals : float (default ``1.0``)
+            Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
-        show : bool; default True
-        -   Whether or not to show the plotted results.
+        show : bool (default ``True``)
+            Whether or not to show the plotted results.
 
-        RETURNS
+        Returns
         -------
         figures : list of matplotlib Figure
-        -   Figures of the results in a list of length
-            ceil(n_cons / (n_rows * n_cols)).
+            Figures of the results in a list of length
+            ``ceil(n_cons / (n_rows * n_cols))``.
 
-        axes : list of NumPy NDArray of matplotlib pyplot Axes
-        -   Subplot axes for the results in a list of length
-            ceil(n_cons / (n_rows * n_cols)) where each entry is a 1D NumPy
-            array of length (n_rows * n_cols).
+        axes : list of numpy.ndarray of matplotlib pyplot Axes
+            Subplot axes for the results in a list of length
+            ``ceil(n_cons / (n_rows * n_cols))`` where each entry is a 1D
+            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
 
-        NOTES
+        Notes
         -----
-        -   `n_rows` and `n_cols` of 1 will plot the results for each
-            connection on a new figure.
+        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
+        connection on a new figure.
         """
         connections, f1, f2, f1_idcs, f2_idcs = self._sort_plot_inputs(
             connections,
@@ -312,22 +299,22 @@ class ResultsCFC(_ResultsBase):
     ) -> tuple[list[int], np.ndarray, np.ndarray, list[int], list[int],]:
         """Sort the plotting inputs.
 
-        RETURNS
+        Returns
         -------
         connections : list of int
-        -   Indices of connections to plot.
+            Indices of connections to plot.
 
-        f1 : NumPy NDArray of float
-        -   Low frequencies of the results to plot.
+        f1 : numpy.ndarray of float
+            Low frequencies of the results to plot.
 
-        f2 : NumPy NDArray of float
-        -   High frequencies of the results to plot.
+        f2 : numpy.ndarray of float
+            High frequencies of the results to plot.
 
         f1_idcs : list of int
-        -   Indices of `f1` in the results.
+            Indices of ``f1`` in the results.
 
         f2_idcs : list of int
-        -   Indices of `f2` in the results.
+            Indices of ``f2`` in the results.
         """
         if connections is None:
             connections = np.arange(self.n_cons).tolist()
@@ -381,16 +368,16 @@ class ResultsCFC(_ResultsBase):
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Create figures and subplots to fill with results.
 
-        RETURNS
+        Returns
         -------
         figures : list of matplotlib Figure
-        -   Figures for the results in a list of length
-            ceil(n_cons / (n_rows * n_cols)).
+            Figures for the results in a list of length
+            ``ceil(n_cons / (n_rows * n_cols))``.
 
-        axes : list of NumPy array of matplotlib pyplot Axes
-        -   Subplot axes for the results in a list of length
-            ceil(n_cons / (n_rows * n_cols)) where each entry is a 1D NumPy
-            array of length (n_rows * n_cols).
+        axes : list of numpy.ndarray of matplotlib pyplot Axes
+            Subplot axes for the results in a list of length
+            ``ceil(n_cons / (n_rows * n_cols))`` where each entry is a 1D
+            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
         """
         figures = []
         axes = []
@@ -496,48 +483,40 @@ class ResultsCFC(_ResultsBase):
         axis.yaxis.set_minor_locator(plt.MaxNLocator(n_minor_yticks))
 
 
-class ResultsTDE(_ResultsBase):
+class ResultsTDE:
     """Class for storing time delay estimation (TDE) results.
 
-    PARAMETERS
+    Parameters
     ----------
-    data : NumPy NDArray of float
-    -   2D array of results to store with shape [connections x times].
+    data : numpy.ndarray of float
+        2D array of results to store with shape `[connections x times]`.
 
-    indices : tuple of NumPy NDArray of int
-    -   Indices of the channels for each connection of `data`. Should contain 2
-        1D arrays of equal length for the seed and target indices,
+    indices : tuple of numpy.ndarray of int
+        Indices of the channels for each connection of :attr:`data`. Should
+        contain two 1D arrays of equal length for the seed and target indices,
         respectively.
 
-    times : NumPy NDArray of float
-    -   1D array of timepoints in `data`.
+    times : numpy.ndarray of float
+        1D array of timepoints in :attr:`data`.
 
     name : str
-    -   Name of the results being stored.
+        Name of the results being stored.
 
-    METHODS
-    -------
-    get_results
-    -   Return a copy of results as arrays.
-
-    plot
-    -   Plots the results.
-
-    ATTRIBUTES
+    Attributes
     ----------
     name : str
-    -   Name of the results.
+        Name of the results.
 
-    indices : tuple of NumPy NDArray of int
-    -   Indices of the channels for each connection of the results. Contains 2
-        1D arrays of equal length for the seed and target indices,
+    indices : tuple of numpy.ndarray of int
+        Indices of the channels for each connection of the results. Contains
+        two 1D arrays of equal length for the seed and target indices,
         respectively.
 
     n_cons : str
-    -   Number of connections in the results.
+        Number of connections in the results.
 
-    times : NumPy NDArray of float
-    -   1D array of timepoints in `data`.
+    times : numpy.ndarray of float
+        1D array of timepoints in ``data``.
     """
 
     _data = None
@@ -625,34 +604,29 @@ def compute_fft(
     As the data is assumed to be real-valued, only those values corresponding
     to the positive frequencies are returned.
 
-    PARAMETERS
+    Parameters
     ----------
-    data : NumPy NDArray of float
-    -   3D array of real-valued data to compute the FFT on, with shape [epochs
-        x channels x times].
+    data : numpy.ndarray of float
+        3D array of real-valued data to compute the FFT on, with shape `[epochs
+        x channels x times]`.
 
     sfreq : int
-    -   Sampling frequency of the data in Hz.
+        Sampling frequency of the data in Hz.
 
-    n_jobs : int; default 1
-    -   Number of jobs to run in parallel
+    n_jobs : int (default ``1``)
+        Number of jobs to run in parallel.
 
-    verbose : bool; default True
-    -   Whether or not to report the status of the processing.
+    verbose : bool (default ``True``)
+        Whether or not to report the status of the processing.
 
-    RETURNS
+    Returns
     -------
-    fft : NumPy NDArray of float
-    -   3D array of FFT coefficients of the data with shape [epochs x channels
+    fft : numpy.ndarray of float
+        3D array of FFT coefficients of the data with shape [epochs x channels
         x positive frequencies].
 
-    freqs : NumPy NDArray of float
-    -   1D array of the frequencies in `fft`.
-
-    RAISES
-    ------
-    ValueError
-    -   Raised if `data` is not a NumPy NDArray or does not have 3 dimensions.
+    freqs : numpy.ndarray of float
+        1D array of the frequencies in ``fft``.
     """
     if not isinstance(data, np.ndarray):
         raise TypeError("`data` must be a NumPy NDArray.")
@@ -709,23 +683,22 @@ def compute_fft(
 def fast_find_first(vector: np.ndarray, value: float | int) -> int:
     """Quickly find the first index of a value in a 1D array using Numba.
 
-    PARAMETERS
+    Parameters
     ----------
-    vector : NumPy NDArray of float or int
-    -   1D array to find `value` in.
+    vector : numpy.ndarray of float or int
+        1D array to find ``value`` in.
 
     value : float | int
-    -   value to find in `vector`.
+        value to find in ``vector``.
 
-    RETURNS
+    Returns
     -------
     index : int
-    -   First index of `value` in `vector`.
+        First index of ``value`` in ``vector``.
 
-    NOTES
+    Notes
     -----
-    -   Does not check if `vector` is a 1D NumPy array or if `value` is a
-        single value for speed.
+    Does not perform checks in inputs for speed.
     """
     for idx, val in enumerate(vector):
         if val == value:

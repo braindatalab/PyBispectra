@@ -3,7 +3,6 @@
 __version__ = "0.0.1"
 
 from .utils import (
-    _ResultsBase,
     ResultsCFC,
     ResultsTDE,
     compute_fft,

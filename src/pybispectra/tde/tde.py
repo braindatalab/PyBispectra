@@ -52,15 +52,6 @@ class TDE(_ProcessBispectra):
 
     verbose : bool
         Whether or not to report the progress of the processing.
-
-    References
-    ----------
-    [1] Nikias & Pan (1988). Time Delay Estimation in Unknown Gaussian
-        Spatially Correlated Noise. IEEE Transactions on Acoustics, Speech, and
-        Signal Processing. DOI: 10.1109/29.9008.
-
-    [2] Jurhar & Haufe (In Preparation). Estimating Signal Time-Delays under
-        Mixed Noise Influence with Novel Cross- and Bispectrum Methods.
     """
 
     _return_nosym = False
@@ -99,11 +90,11 @@ class TDE(_ProcessBispectra):
         method: int | list[int] = [1, 2, 3, 4],
         n_jobs: int = 1,
     ) -> None:
-        """Compute TDE, averaged over epochs.
+        r"""Compute TDE, averaged over epochs.
 
         Parameters
         ----------
-        indices: tuple of numpy.ndarray of int | None (default None)
+        indices : tuple of numpy.ndarray of int | None (default None)
             Indices of the channels to compute TDE between. Should contain two
             1D arrays of equal length for the seed and target indices,
             respectively. If ``None``, coupling between all channels is
@@ -123,19 +114,63 @@ class TDE(_ProcessBispectra):
             performed.
 
         method : int | list of int (default ``[1, 2, 3, 4]``)
-            The method to use to compute TDE, as in [1].
+            The method to use to compute TDE :footcite:`Nikias1988`.
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel.
 
         Notes
         -----
-        -   If the seed and target for a given connection is the same channel,
-            ``numpy.nan`` values are returned.
-        -   TDE is computed between all values of :attr:`f1` and :attr:`f2`. If
-            any value of :attr:`f1` is higher than :attr:`f2`, a ``numpy.nan``
-            value is returned.
-        """
+        TDE can be computed from the bispectrum, :math:`B`, of signals
+        :math:`\vec{x}` and :math:`\vec{y}` of the seeds and targets,
+        respectively, which has the general form:
+
+        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>`,
+
+        where :math:`kmn` is a combination of channels :math:`\vec{x}` and
+        :math:`\vec{y}`, and the angled brackets represent the averaged value
+        over epochs. Four methods exist for computing TDE based on the
+        bispectrum :footcite:`Nikias1988`. The fundamental equation is as
+        follows:
+
+        :math:`\large TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}I(\vec{x}_{f_1},\vec{y}_{f_2})e^{-if_1\tau}df_1df_2`,
+
+        where :math:`I` varies depending on the method, and :math:`\tau` is a
+        given time delay. Phase information of the signals is extracted from
+        the bispectrum in two variants used by the different methods:
+
+        :math:`\large \phi(\vec{x}_{f_1},\vec{y}_{f_2})=\varphi_{B_{xyx}}(f_1,f_2)-\varphi_{B_{xxx}}(f_1,f_2)`
+
+        :math:`\large \phi'(\vec{x}_{f_1},\vec{y}_{f_2})=\varphi_{B_{xyx}}(f_1,f_2)-\frac{1}{2}(\varphi_{B_{xxx}}(f_1, f_2) + \varphi_{B_{yyy}}(f_1,f_2))`
+
+        **Method I**:
+        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=e^{i\phi(\vec{x}_{f_1},\vec{y}_{f_2})}`
+
+        **Method II**:
+        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=e^{i\phi'(\vec{x}_{f_1},\vec{y}_{f_2})}`
+
+        **Method III**:
+        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{B_{xyx}(f_1,f_2)}{B_{xxx}(f_1,f_2)}`
+
+        **Method IV**:
+        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{|B_{xyx}(f_1,f_2)|e^{i\phi'(\vec{x}_{f_1},\vec{y}_{f_2})}}{\sqrt{|B_{xxx}(f_1,f_2)||B_{yyy}(f_1,f_2)|}}`
+
+        where :math:`\varphi_{B}` is the phase of the bispectrum.
+        Antisymmetrisation of the bispectrum is implemented as the replacement
+        of :math:`B_{xyx}` with :math:`(B_{xxy} - B_{yxx})` in the above
+        equations :footcite:`JurharInPrep`.
+
+        If the seed and target for a given connection is the same channel,
+        ``numpy.nan`` values are returned.
+
+        TDE is computed between all values of :attr:`f1` and :attr:`f2`. If any
+        value of :attr:`f1` is higher than :attr:`f2`, a ``numpy.nan`` value is
+        returned.
+
+        References
+        ----------
+        .. footbibliography::
+        """  # noqa E501
         self._reset_attrs()
 
         self._sort_metrics(symmetrise, method)
@@ -491,7 +526,7 @@ def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
 
     Notes
     -----
-    -   No checks on the input data are performed for speed.
+    No checks on the input data are performed for speed.
     """
     I = np.zeros((B_xyx.shape[0], B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
     phi = np.angle(B_xyx) - np.angle(B_xxx)
@@ -528,7 +563,7 @@ def _compute_tde_ii(
 
     Notes
     -----
-    -   No checks on the input data are performed for speed.
+    No checks on the input data are performed for speed.
     """
     I = np.zeros((B_xyx.shape[0], B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
     phi = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) - np.angle(B_yyy))
@@ -557,7 +592,7 @@ def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
 
     Notes
     -----
-    -   No checks on the input data are performed for speed.
+    No checks on the input data are performed for speed.
     """
     I = np.zeros((B_xyx.shape[0], B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
     I[:, : B_xyx.shape[1]] = B_xyx / B_xxx
@@ -593,7 +628,7 @@ def _compute_tde_iv(
 
     Notes
     -----
-    -   No checks on the input data are performed for speed.
+    No checks on the input data are performed for speed.
     """
     I = np.zeros((B_xyx.shape[0], B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
     phi = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) - np.angle(B_yyy))

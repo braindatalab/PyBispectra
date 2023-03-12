@@ -73,9 +73,8 @@ def linkcode_resolve(domain: str, info: dict):
     if "dev" in pybispectra.__version__:
         kind = "main"
     else:
-        kind = "maint/%s" % (".".join(pybispectra.__version__.split(".")[:2]))
-    return "http://github.com/mne-tools/mne-python/blob/%s/mne/%s%s" % (
-        kind,
-        fn,
-        linespec,
+        kind = ".".join(pybispectra.__version__.split("."))
+    return (
+        f"http://github.com/braindatalab/pybispectra/tree/{kind}/src/"
+        f"pybispectra/{fn}{linespec}"
     )

@@ -79,7 +79,7 @@ class PAC(_ProcessBispectra):
         normalise: str | list[str] = ["none", "threenorm"],
         n_jobs: int = 1,
     ) -> None:
-        """Compute PAC, averaged over epochs.
+        r"""Compute PAC, averaged over epochs.
 
         Parameters
         ----------
@@ -112,13 +112,36 @@ class PAC(_ProcessBispectra):
 
         Notes
         -----
-        -   If the seed and target for a given connection is the same channel
-            and antisymmetrisation is being performed, ``numpy.nan`` values are
-            returned.
-        -   PAC is computed between all values of :attr:`f1` and :attr:`f2`. If
-            any value of :attr:`f1` is higher than :attr:`f2`, a ``numpy.nan``
-            value is returned.
-        """
+        PAC can be computed from the bispectrum, :math:`B`, of signals
+        :math:`\vec{x}` and :math:`\vec{y}` of the seeds and targets,
+        respectively :footcite:`Kovach2018`:
+
+        :math:`\large B_{xyy}(f_1,f_2)=<\vec{x}(f_1)\vec{y}(f_2)\vec{y}^*(f_2+f_1)>`,
+
+        :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1)B_{xyy}(f_2)B_{xyy}^*(f_2+f_1)`,
+
+        where the angled brackets represent the averaged value over epochs.
+        Antisymmetrisaion is achieved by subtracting the PAC results from the
+        transposed bispectrum, :math:`B_{xyx}` :footcite:`Chella2014`. The
+        bispectrum can be normalised to the bicoherence, :math:`\mathcal{B}`,
+        using the threenorm, :math:`N` :footcite:`Zandvoort2021`:
+
+        :math:`\large N_{xyy}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{y}(f_2)|^3><|\vec{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+
+        :math:`\large \mathcal{B}_{xyy}(f_1,f_2)=\Large \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}`.
+
+        If the seed and target for a given connection is the same channel and
+        antisymmetrisation is being performed, ``numpy.nan`` values are
+        returned.
+
+        PAC is computed between all values of :attr:`f1` and :attr:`f2`. If any
+        value of :attr:`f1` is higher than :attr:`f2`, a ``numpy.nan`` value is
+        returned.
+
+        References
+        ----------
+        .. footbibliography::
+        """  # noqa E501
         self._reset_attrs()
 
         self._sort_metrics(symmetrise, normalise)

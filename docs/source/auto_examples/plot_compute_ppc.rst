@@ -54,7 +54,7 @@ The method available in PyBispectra can be thought of as a measure of
 coherence between frequencies :footcite:`Giehl2021` (note that it is not
 based on bispectra):
 
-:math:`\large PPC(x_{f_1}, y_{f_2})=\LARGE \frac{|\langle A_x(f_1)A_y(f_2) e^{i(\varphi_x(f_1)\frac{f_2}{f_1}-\varphi_x(f_2))} \rangle|}{\langle A_x(f_1)A_y(f_2) \rangle}`,
+:math:`\large PPC(x_{f_1}, y_{f_2})=\LARGE \frac{|\langle A_x(f_1)A_y(f_2) e^{i(\varphi_x(f_1)\frac{f_2}{f_1}-\varphi_x(f_2))} \rangle|}{\langle A_x(f_1)A_y(f_2) \rangle}`,  # noqa E501
 
 where :math:`A(f)` and :math:`\varphi(f)` are the amplitude and phase of a
 signal at a given frequency, respectively, and the angled brackets represent
@@ -127,18 +127,20 @@ Here, we specify the :attr:`indices` to compute PPC on. :attr:`indices` is
 expected to be a tuple containing two NumPy arrays for the indices of the
 seed and target channels, respectively. The indices specified below mean that
 PPC will only be computed across frequencies within each channel (i.e.
-0 <-> 0; and 1 <-> 1). By leaving the frequency arguments :attr:`f1` and
+0 -> 0; and 1 -> 1). By leaving the frequency arguments :attr:`f1` and
 :attr:`f2` blank, we will look at all possible frequency combinations.
 
-.. GENERATED FROM PYTHON SOURCE LINES 82-93
+.. GENERATED FROM PYTHON SOURCE LINES 82-95
 
 .. code-block:: default
 
 
     ppc = PPC(data=fft, freqs=freqs)  # initialise object
-    ppc.compute(indices=(np.array([0, 1]), np.array([0, 1])))  # compute PPC
+    ppc.compute(
+        indices=(np.array([0, 1]), np.array([0, 1])), f1=None, f2=None
+    )  # compute PPC
 
-    ppc_results = ppc.results.get_results()
+    ppc_results = ppc.results.get_results()  # return results
 
     print(
         f"PPC results: [{ppc_results.shape[0]} connections x "
@@ -153,10 +155,10 @@ PPC will only be computed across frequencies within each channel (i.e.
 
     Traceback (most recent call last):
       File "C:\Users\User\GitHub\pybispectra\examples\plot_compute_ppc.py", line 84, in <module>
-        ppc.compute(indices=(np.array([0, 1]), np.array([0, 1])))  # compute PPC
-      File "C:\Users\User\GitHub\pybispectra\src\pybispectra\cfc\ppc.py", line 95, in compute
+        ppc.compute(
+      File "C:\Users\User\GitHub\pybispectra\src\pybispectra\cfc\ppc.py", line 107, in compute
         self._compute_ppc()
-      File "C:\Users\User\GitHub\pybispectra\src\pybispectra\cfc\ppc.py", line 119, in _compute_ppc
+      File "C:\Users\User\GitHub\pybispectra\src\pybispectra\cfc\ppc.py", line 131, in _compute_ppc
         pqdm(
       File "C:\Users\User\anaconda3\envs\pybispectra\lib\site-packages\pqdm\processes.py", line 22, in pqdm
         return _parallel_process(
@@ -171,16 +173,16 @@ PPC will only be computed across frequencies within each channel (i.e.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 94-100
+.. GENERATED FROM PYTHON SOURCE LINES 96-102
 
-We can see that PPC has been computed for 2 connections (0 <-> 0; and 1 <->
-1), and all possible frequency combinations. Whilst there are 10,000 such
-combinations in our [100 x 100] matrices, PPC for those entries where
-:math:`f1` would be higher than :math:`f2` cannot be computed, in which case
-the values are ``numpy.nan`` (see the plotted results below for a visual
-demonstration of this).
+We can see that PPC has been computed for 2 connections (0 -> 0; and 1 -> 1),
+and all possible frequency combinations, averaged across our 30 epochs.
+Whilst there are 10,000 such frequency combinations in our [100 x 100]
+matrices, PPC for those entries where :math:`f1` would be higher than
+:math:`f2` cannot be computed, in which case the values are ``numpy.nan``
+(see the plotted results below for a visual demonstration of this).
 
-.. GENERATED FROM PYTHON SOURCE LINES 103-106
+.. GENERATED FROM PYTHON SOURCE LINES 105-108
 
 References
 -----------------------------------------------------------------------------
@@ -189,7 +191,7 @@ References
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.092 seconds)
+   **Total running time of the script:** ( 0 minutes  1.920 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_compute_ppc.py:

@@ -10,6 +10,4 @@ estimation analyses.
     :template: custom-module-template.rst
     :recursive:
 
-    pybispectra.cfc
-    pybispectra.tde
-    pybispectra.utils
+    pybispectra

@@ -25,7 +25,7 @@ from pybispectra import compute_fft, PPC
 # coherence between frequencies :footcite:`Giehl2021` (note that it is not
 # based on bispectra):
 #
-# :math:`\large PPC(x_{f_1}, y_{f_2})=\LARGE \frac{|\langle A_x(f_1)A_y(f_2) e^{i(\varphi_x(f_1)\frac{f_2}{f_1}-\varphi_x(f_2))} \rangle|}{\langle A_x(f_1)A_y(f_2) \rangle}`,
+# :math:`\large PPC(x_{f_1}, y_{f_2})=\LARGE \frac{|\langle A_x(f_1)A_y(f_2) e^{i(\varphi_x(f_1)\frac{f_2}{f_1}-\varphi_x(f_2))} \rangle|}{\langle A_x(f_1)A_y(f_2) \rangle}`,  # noqa E501
 #
 # where :math:`A(f)` and :math:`\varphi(f)` are the amplitude and phase of a
 # signal at a given frequency, respectively, and the angled brackets represent
@@ -75,7 +75,7 @@ print(
 # expected to be a tuple containing two NumPy arrays for the indices of the
 # seed and target channels, respectively. The indices specified below mean that
 # PPC will only be computed across frequencies within each channel (i.e.
-# 0 <-> 0; and 1 <-> 1). By leaving the frequency arguments :attr:`f1` and
+# 0 -> 0; and 1 -> 1). By leaving the frequency arguments :attr:`f1` and
 # :attr:`f2` blank, we will look at all possible frequency combinations.
 
 # %%
@@ -93,8 +93,8 @@ print(
 )
 
 ###############################################################################
-# We can see that PPC has been computed for 2 connections (0 <-> 0; and 1 <->
-# 1), and all possible frequency combinations, averaged across our 30 epochs.
+# We can see that PPC has been computed for 2 connections (0 -> 0; and 1 -> 1),
+# and all possible frequency combinations, averaged across our 30 epochs.
 # Whilst there are 10,000 such frequency combinations in our [100 x 100]
 # matrices, PPC for those entries where :math:`f1` would be higher than
 # :math:`f2` cannot be computed, in which case the values are ``numpy.nan``

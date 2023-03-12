@@ -1,4 +1,4 @@
-﻿pybispectra.tde
+pybispectra.tde
 ===============
 
 .. automodule:: pybispectra.tde

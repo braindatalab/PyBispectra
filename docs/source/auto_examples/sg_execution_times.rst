@@ -6,10 +6,10 @@
 
 Computation times
 =================
-**00:02.092** total execution time for **auto_examples** files:
+**00:01.920** total execution time for **auto_examples** files:
 
 +-------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_plot_compute_ppc.py` (``plot_compute_ppc.py``)   | 00:02.092 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_plot_compute_ppc.py` (``plot_compute_ppc.py``)   | 00:01.920 | 0.0 MB |
 +-------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_auto_examples_plot_compute_pac.py` (``plot_compute_pac.py``)   | 00:00.000 | 0.0 MB |
 +-------------------------------------------------------------------------------+-----------+--------+

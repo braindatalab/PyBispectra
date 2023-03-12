@@ -1,4 +1,4 @@
-﻿pybispectra.utils
+pybispectra.utils
 =================
 
 .. automodule:: pybispectra.utils

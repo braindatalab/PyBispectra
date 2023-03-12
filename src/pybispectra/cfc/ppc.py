@@ -56,7 +56,7 @@ class PPC(_ProcessBase):
         f2: np.ndarray | None = None,
         n_jobs: int = 1,
     ) -> None:
-        """Compute PPC, averaged over epochs.
+        r"""Compute PPC, averaged over epochs.
 
         Parameters
         ----------
@@ -77,12 +77,24 @@ class PPC(_ProcessBase):
         n_jobs : int (default ``1``)
             Number of jobs to run in parallel.
 
-        NOTES
+        Notes
         -----
-        -   PPC is computed between all values of :attr:`f1` and :attr:`f2`.
-            If any value of :attr:`f1` is higher than :attr:`f2`, a
-            ``numpy.nan`` value is returned.
-        """
+        PPC is computed as coherence between frequencies :footcite:`Giehl2021`:
+
+        :math:`\large PPC(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{|\langle \vec{a}_x(f_1)\vec{a}_y(f_2) e^{i(\vec{\varphi}_x(f_1)\frac{f_2}{f_1}-\vec{\varphi}_y(f_2))} \rangle|}{\langle \vec{a}_x(f_1)\vec{a}_y(f_2) \rangle}`,
+
+        where :math:`\vec{a}(f)` and :math:`\vec{\varphi}(f)` are the amplitude and phase
+        of a signal at a given frequency, respectively, and the angled brackets
+        represent the average over epochs.
+
+        PPC is computed between all values of :attr:`f1` and :attr:`f2`. If any
+        value of :attr:`f1` is higher than :attr:`f2`, a ``numpy.nan`` value is
+        returned.
+
+        References
+        ----------
+        .. footbibliography::
+        """  # noqa E501
         self._reset_attrs()
 
         self._sort_indices(indices)

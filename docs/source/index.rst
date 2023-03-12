@@ -25,7 +25,7 @@ computation times. Additional tools for plotting results and computing Fourier
 coefficients of data are also provided.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
    :titlesonly:
    :caption: Contents:
 

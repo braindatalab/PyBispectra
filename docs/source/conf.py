@@ -35,7 +35,9 @@ extensions = [
     "sphinxcontrib.bibtex",
     "sphinx_gallery.gen_gallery",
 ]
+
 bibtex_bibfiles = ["refs.bib"]
+
 autosummary_generate = True
 
 sphinx_gallery_conf = {
@@ -89,6 +91,7 @@ numpydoc_xref_ignore = {
     "with",
     "length",
     "pair",
+    "pyplot",
     "matplotlib",
     "optional",
     "kwargs",

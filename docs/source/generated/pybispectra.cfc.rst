@@ -1,4 +1,4 @@
-﻿pybispectra.cfc
+pybispectra.cfc
 ===============
 
 .. automodule:: pybispectra.cfc
