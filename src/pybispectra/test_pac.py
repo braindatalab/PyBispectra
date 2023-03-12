@@ -10,13 +10,13 @@ if __name__ == "__main__":
 
     fft, freqs = compute_fft(data, sfreq, n_jobs)
 
-    # ppc = PPC(fft, freqs)
-    # ppc.compute(n_jobs=n_jobs)
-    # ppc_results = ppc.results
+    ppc = PPC(fft, freqs)
+    ppc.compute(n_jobs=n_jobs)
+    ppc_results = ppc.results
 
-    pac = PAC(fft, freqs)
-    pac.compute(symmetrise="none", normalise="none", n_jobs=n_jobs)
-    pac_results = pac.results
-    pac_results[0].plot()
+    # pac = PAC(fft, freqs)
+    # pac.compute(symmetrise="none", normalise="none", n_jobs=n_jobs)
+    # pac_results = pac.results
+    # pac_results[0].plot()
 
     print("jeff")

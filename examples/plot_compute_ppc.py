@@ -10,13 +10,13 @@ PyBispectra.
 # %%
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 from pybispectra import compute_fft, PPC
 
 ###############################################################################
 # Background
 # ----------
-#
 # PPC quantifies the relationship between the phases of a lower frequency
 # :math:`f_1` and a higher frequency :math:`f_2` within a single signal, or
 # across different signals.
@@ -38,7 +38,6 @@ from pybispectra import compute_fft, PPC
 ###############################################################################
 # Generating data and computing Fourier coefficients
 # --------------------------------------------------
-#
 # We will start by generating some data that we can compute PPC on, then
 # compute the Fourier coefficients of the data.
 
@@ -64,7 +63,6 @@ print(
 #
 # Computing PPC
 # -------------
-#
 # To compute PPC, we start by initialising the :class:`PPC` class object with
 # the FFT coefficients and the frequency information. To compute PPC, we call
 # the :meth:`compute` method. By default, PPC is computed between all channel
@@ -85,7 +83,7 @@ ppc.compute(
     indices=(np.array([0, 1]), np.array([0, 1])), f1=None, f2=None
 )  # compute PPC
 
-ppc_results = ppc.results.get_results()  # return results
+ppc_results = ppc.results.get_results()  # return results as array
 
 print(
     f"PPC results: [{ppc_results.shape[0]} connections x "
@@ -100,8 +98,31 @@ print(
 # :math:`f2` cannot be computed, in which case the values are ``numpy.nan``
 # (see the plotted results below for a visual demonstration of this).
 
+###############################################################################
+# Plotting PPC
+# ------------
+# Let us now inspect the results. For this, we will plot the results for both
+# connections on the same plot. If we wished, we could plot this information on
+# separate plots, or specify a subset of frequencies to inspect.
+
+# %%
+
+fig, axes = ppc.results.plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
+
+###############################################################################
+# As you can see, values for the lower right triangle of each plot are missing,
+# corresponding to the frequency combinations where :math:`f_1` is greater than
+# :math:`f_2`, and hence where PPC cannot be computed. Note that the figure and
+# axis objects can also be returned for any desired manual adjustments of the
+# plots.
+#
+# Now that we have an idea of how PAC and PPC can be computed, the following
+# example will look at how PPC can be used to control for spurious PAC results
+# stemming from frequency harmonics :footcite:`Giehl2021`.
 
 ###############################################################################
 # References
 # -----------------------------------------------------------------------------
 # .. footbibliography::
+
+# %%

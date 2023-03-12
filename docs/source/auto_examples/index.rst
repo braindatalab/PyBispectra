@@ -18,57 +18,6 @@ cross-frequency coupling and time delay estimation.
 
 .. only:: html
 
-  .. image:: /auto_examples/images/thumb/sphx_glr_plot_compute_tde_thumb.png
-    :alt:
-
-  :ref:`sphx_glr_auto_examples_plot_compute_tde.py`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Compute phase-phase coupling</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how phase-phase coupling (PPC) can be computed with PyBispectra.">
-
-.. only:: html
-
-  .. image:: /auto_examples/images/thumb/sphx_glr_plot_plot_results_thumb.png
-    :alt:
-
-  :ref:`sphx_glr_auto_examples_plot_plot_results.py`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Compute phase-phase coupling</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how phase-phase coupling (PPC) can be computed with PyBispectra.">
-
-.. only:: html
-
-  .. image:: /auto_examples/images/thumb/sphx_glr_plot_compute_pac_thumb.png
-    :alt:
-
-  :ref:`sphx_glr_auto_examples_plot_compute_pac.py`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Compute phase-phase coupling</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how phase-phase coupling (PPC) can be computed with PyBispectra.">
-
-.. only:: html
-
   .. image:: /auto_examples/images/thumb/sphx_glr_plot_compute_ppc_thumb.png
     :alt:
 
@@ -88,9 +37,6 @@ cross-frequency coupling and time delay estimation.
 .. toctree::
    :hidden:
 
-   /auto_examples/plot_compute_tde
-   /auto_examples/plot_plot_results
-   /auto_examples/plot_compute_pac
    /auto_examples/plot_compute_ppc
 
 

@@ -185,7 +185,7 @@ def _compute_ppc(
     )
     for f1_i, f1 in enumerate(f1s):
         for f2_i, f2 in enumerate(f2s):
-            if f1 < f2:
+            if f1 < f2 and f1 > 0:
                 fft_f1 = data[:, 0, fast_find_first(freqs, f1)]  # seed f1
                 fft_f2 = data[:, 1, fast_find_first(freqs, f2)]  # target f2
                 numerator = np.abs(

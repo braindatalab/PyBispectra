@@ -331,8 +331,6 @@ class ResultsCFC:
 
         if f1 is None:
             f1 = self.f1.copy()
-            half_f2_max = self.f2[-1] / 2
-            f1 = np.array([freq for freq in f1 if freq <= half_f2_max])
         if f2 is None:
             f2 = self.f2.copy()
         if not isinstance(f1, np.ndarray) or not isinstance(f2, np.ndarray):
@@ -385,7 +383,7 @@ class ResultsCFC:
         plot_n = 0
         for con_i in range(len(connections)):
             if con_i == plot_n:
-                fig, axs = plt.subplots(n_rows, n_cols)
+                fig, axs = plt.subplots(n_rows, n_cols, layout="constrained")
                 figures.append(fig)
                 if n_rows * n_cols > 1:
                     axs = np.ravel(axs)
@@ -425,9 +423,9 @@ class ResultsCFC:
                     f1, f2, self._data[con_i][np.ix_(f1_idcs, f2_idcs)].T
                 )
 
-                divider = make_axes_locatable(axis)
-                cax = divider.append_axes("right", size="5%", pad=0.1)
-                plt.colorbar(mesh, ax=axis, cax=cax, label="Coupling (A.U.)")
+                plt.colorbar(
+                    mesh, ax=axis, label="Coupling (A.U.)", shrink=0.3
+                )
 
                 axis.set_aspect("equal")
                 self._set_axis_ticks(
@@ -440,8 +438,8 @@ class ResultsCFC:
                     color=[0.7, 0.7, 0.7],
                     alpha=0.7,
                 )
-                axis.set_xlabel("$F_1$ (Hz)")
-                axis.set_ylabel("$F_2$ (Hz)")
+                axis.set_xlabel("$f_1$ (Hz)")
+                axis.set_ylabel("$f_2$ (Hz)")
 
                 axis.set_title(
                     f"Seed: {self._seeds[con_i]} | Target: "
@@ -466,6 +464,12 @@ class ResultsCFC:
         """Set major and minor tick intervals of x- and y-axes."""
         n_major_xticks = len(np.arange(f1[0], f1[-1], major_tick_intervals))
         n_major_yticks = len(np.arange(f2[0], f2[-1], major_tick_intervals))
+
+        # extra tick necessary if 0 Hz plotted
+        if f1[0] == 0.0:
+            n_major_xticks += 1
+        if f2[0] == 0.0:
+            n_major_yticks += 1
 
         # MaxNLocator only cares about tens (e.g. 10 and 19 have same result)
         n_minor_xticks = (
