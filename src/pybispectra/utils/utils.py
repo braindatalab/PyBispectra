@@ -77,7 +77,7 @@ class ResultsCFC:
     def __init__(
         self,
         data: np.ndarray,
-        indices: tuple[np.ndarray],
+        indices: tuple,
         f1: np.ndarray,
         f2: np.ndarray,
         name: str,
@@ -87,7 +87,7 @@ class ResultsCFC:
     def _sort_init_inputs(
         self,
         data: np.ndarray,
-        indices: tuple[np.ndarray],
+        indices: tuple,
         f1: np.ndarray,
         f2: np.ndarray,
         name: str,
@@ -131,9 +131,7 @@ class ResultsCFC:
             raise TypeError("`name` must be a string.")
         self.name = copy.copy(name)
 
-    def get_results(
-        self, form: str = "raveled"
-    ) -> np.ndarray | tuple[np.ndarray, tuple[np.ndarray]]:
+    def get_results(self, form: str = "raveled") -> np.ndarray | tuple:
         """Return a copy of the results as arrays.
 
         Parameters
@@ -162,7 +160,7 @@ class ResultsCFC:
 
     def _get_compact_results(
         self,
-    ) -> tuple[np.ndarray, tuple[np.ndarray]]:
+    ) -> tuple:
         """Return a compacted form of the results.
 
         RETURNS
@@ -201,7 +199,7 @@ class ResultsCFC:
 
     def plot(
         self,
-        connections: list[int] | None = None,
+        connections: list | None = None,
         f1: np.ndarray | None = None,
         f2: np.ndarray | None = None,
         n_rows: int = 1,
@@ -209,7 +207,7 @@ class ResultsCFC:
         major_tick_intervals: float = 5.0,
         minor_tick_intervals: float = 1.0,
         show: bool = True,
-    ) -> tuple[list[Figure], list[np.ndarray]]:
+    ) -> tuple:
         """Plot the results.
 
         Parameters
@@ -289,14 +287,14 @@ class ResultsCFC:
 
     def _sort_plot_inputs(
         self,
-        connections: list[int] | None,
+        connections: list | None,
         f1: np.ndarray | None,
         f2: np.ndarray | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,
         minor_tick_intervals: float,
-    ) -> tuple[list[int], np.ndarray, np.ndarray, list[int], list[int],]:
+    ) -> tuple:
         """Sort the plotting inputs.
 
         Returns
@@ -362,8 +360,8 @@ class ResultsCFC:
         return connections, f1, f2, f1_idcs, f2_idcs
 
     def _create_plots(
-        self, connections: list[int], n_rows: int, n_cols: int
-    ) -> tuple[list[Figure], list[np.ndarray]]:
+        self, connections: list, n_rows: int, n_cols: int
+    ) -> tuple:
         """Create figures and subplots to fill with results.
 
         Returns
@@ -398,13 +396,13 @@ class ResultsCFC:
 
     def _plot_results(
         self,
-        figures: list[Figure],
-        axes: list[np.ndarray],
-        connections: list[int],
+        figures: list,
+        axes: list,
+        connections: list,
         f1: np.ndarray,
         f2: np.ndarray,
-        f1_idcs: list[int],
-        f2_idcs: list[int],
+        f1_idcs: list,
+        f2_idcs: list,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,
@@ -538,7 +536,7 @@ class ResultsTDE:
     def __init__(
         self,
         data: np.ndarray,
-        indices: tuple[np.ndarray],
+        indices: tuple,
         times: np.ndarray,
         name: str,
     ) -> None:
@@ -547,7 +545,7 @@ class ResultsTDE:
     def _sort_init_inputs(
         self,
         data: np.ndarray,
-        indices: tuple[np.ndarray],
+        indices: tuple,
         times: np.ndarray,
         name: str,
     ) -> None:
@@ -602,7 +600,7 @@ def compute_fft(
     sfreq: int,
     n_jobs: int = 1,
     verbose: bool = True,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple:
     """Compute the FFT on real-valued data.
 
     As the data is assumed to be real-valued, only those values corresponding

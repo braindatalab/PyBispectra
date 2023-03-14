@@ -83,11 +83,11 @@ class TDE(_ProcessBispectra):
 
     def compute(
         self,
-        indices: tuple[np.ndarray] | None = None,
+        indices: tuple | None = None,
         f1: np.ndarray | None = None,
         f2: np.ndarray | None = None,
-        symmetrise: str | list[str] = ["none", "antisym"],
-        method: int | list[int] = [1, 2, 3, 4],
+        symmetrise: str | list = ["none", "antisym"],
+        method: int | list = [1, 2, 3, 4],
         n_jobs: int = 1,
     ) -> None:
         r"""Compute TDE, averaged over epochs.
@@ -213,7 +213,7 @@ class TDE(_ProcessBispectra):
         self._xyz = None
 
     def _sort_metrics(
-        self, symmetrise: str | list[str], method: int | list[int]
+        self, symmetrise: str | list, method: int | list
     ) -> None:
         """Sort inputs for the form of results being requested."""
         if not isinstance(symmetrise, str) and not isinstance(

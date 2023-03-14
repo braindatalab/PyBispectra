@@ -72,11 +72,11 @@ class PAC(_ProcessBispectra):
 
     def compute(
         self,
-        indices: tuple[np.ndarray] | None = None,
+        indices: tuple | None = None,
         f1: np.ndarray | None = None,
         f2: np.ndarray | None = None,
-        symmetrise: str | list[str] = ["none", "antisym"],
-        normalise: str | list[str] = ["none", "threenorm"],
+        symmetrise: str | list = ["none", "antisym"],
+        normalise: str | list = ["none", "threenorm"],
         n_jobs: int = 1,
     ) -> None:
         r"""Compute PAC, averaged over epochs.
@@ -179,7 +179,7 @@ class PAC(_ProcessBispectra):
         self._pac_antisym_threenorm = None
 
     def _sort_metrics(
-        self, symmetrise: str | list[str], normalise: str | list[str]
+        self, symmetrise: str | list, normalise: str | list
     ) -> None:
         """Sort inputs for the form of results being requested."""
         if not isinstance(symmetrise, str) and not isinstance(
