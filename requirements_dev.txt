@@ -1,0 +1,4 @@
+pytest
+mock
+sphinx
+numpy-doc
