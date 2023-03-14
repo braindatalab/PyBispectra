@@ -38,7 +38,7 @@ extensions = [
 
 bibtex_bibfiles = ["refs.bib"]
 
-root_doc = ["index"]
+root_doc = ["source/index"]
 
 autosummary_generate = True
 
