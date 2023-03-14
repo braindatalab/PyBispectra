@@ -1,3 +1,4 @@
+pybispectra
 numpy
 scipy
 numba
