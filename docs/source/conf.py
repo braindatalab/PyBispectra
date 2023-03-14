@@ -12,7 +12,7 @@ import sys
 from pybispectra.utils import linkcode_resolve
 
 
-project = "PyBispectra"
+project = "pybispectra"
 copyright = "2023, Thomas Samuel Binns"
 author = "Thomas Samuel Binns"
 release = "0.0.1"
