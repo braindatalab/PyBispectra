@@ -1,8 +1,8 @@
 __version__ = "0.0.1"
 
-from pybispectra.cfc import PAC, PPC
-from pybispectra.tde import TDE
-from pybispectra.utils import (
+from .cfc import PAC, PPC
+from .tde import TDE
+from .utils import (
     ResultsCFC,
     ResultsTDE,
     compute_fft,

@@ -10,14 +10,16 @@ import os
 import sys
 import mock
 
-MOCK_MODULES = [
-    "pybispectra",
-    "pybispectra.cfc",
-    "pybispectra.tde",
-    "pybispectra.utils",
-]
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
+# MOCK_MODULES = [
+#    "pybispectra",
+#    "pybispectra.cfc",
+#    "pybispectra.cfc.pac",
+#    "pybispectra.cfc.ppc",
+#    "pybispectra.tde",
+#    "pybispectra.utils",
+# ]
+# for mod_name in MOCK_MODULES:
+#    sys.modules[mod_name] = mock.Mock()
 
 from pybispectra.utils import linkcode_resolve
 
