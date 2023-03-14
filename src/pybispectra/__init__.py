@@ -7,4 +7,5 @@ from .utils import (
     ResultsTDE,
     compute_fft,
     fast_find_first,
+    linkcode_resolve,
 )
