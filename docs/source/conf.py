@@ -22,7 +22,7 @@ release = "0.0.1"
 
 sys.path.insert(0, os.path.abspath("../.."))
 
-master_doc = "index"
+master_doc = "source/index"
 
 extensions = [
     "sphinx.ext.mathjax",
