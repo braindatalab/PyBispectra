@@ -6,3 +6,7 @@ matplotlib
 mock
 sphinx
 numpydoc
+nbsphinx
+nbsphinx_link
+sphinxcontrib-bibtex
+sphinx-gallery
