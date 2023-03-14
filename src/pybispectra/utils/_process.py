@@ -57,7 +57,7 @@ class _ProcessBase(ABC):
         self.data = data.copy()
         self.freqs = freqs.copy()
 
-    def _sort_indices(self, indices: tuple | None) -> None:
+    def _sort_indices(self, indices: tuple[np.ndarray] | None) -> None:
         """Sort seed-target indices inputs."""
         indices = copy.copy(indices)
         if indices is None:

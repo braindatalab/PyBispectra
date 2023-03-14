@@ -51,7 +51,7 @@ class PPC(_ProcessBase):
 
     def compute(
         self,
-        indices: tuple | None = None,
+        indices: tuple[np.ndarray] | None = None,
         f1: np.ndarray | None = None,
         f2: np.ndarray | None = None,
         n_jobs: int = 1,
