@@ -22,7 +22,7 @@ import sys
 # for mod_name in MOCK_MODULES:
 #    sys.modules[mod_name] = mock.Mock()
 
-sys.path.insert(0, os.path.abspath("../.."))
+sys.path.append(os.path()))
 
 from pybispectra.utils import linkcode_resolve
 
@@ -34,6 +34,8 @@ release = "0.0.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+
+sys.path.insert(0, os.path.abspath("../.."))
 
 extensions = [
     "sphinx.ext.mathjax",
