@@ -9,19 +9,6 @@
 import os
 import sys
 
-# import mock
-
-# MOCK_MODULES = [
-#    "pybispectra",
-#    "pybispectra.cfc",
-#    "pybispectra.cfc.pac",
-#    "pybispectra.cfc.ppc",
-#    "pybispectra.tde",
-#    "pybispectra.utils",
-# ]
-# for mod_name in MOCK_MODULES:
-#    sys.modules[mod_name] = mock.Mock()
-
 from pybispectra.utils import linkcode_resolve
 
 
@@ -34,6 +21,8 @@ release = "0.0.1"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 sys.path.insert(0, os.path.abspath("../.."))
+
+master_doc = "index"
 
 extensions = [
     "sphinx.ext.mathjax",
