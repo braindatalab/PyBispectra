@@ -20,9 +20,7 @@ release = "0.0.1"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-sys.path.insert(0, os.path.abspath("../.."))
-
-master_doc = "source/index"
+sys.path.insert(0, os.path.abspath("../../"))
 
 extensions = [
     "sphinx.ext.mathjax",
