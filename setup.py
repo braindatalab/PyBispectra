@@ -5,5 +5,5 @@ from setuptools import setup
 setup(
     name="pybispectra",
     version="0.0.1",
-    packages=["pybispectra"],
+    packages=["src/pybispectra"],
 )
