@@ -125,5 +125,3 @@ fig, axes = ppc.results.plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
 # References
 # -----------------------------------------------------------------------------
 # .. footbibliography::
-
-# %%
