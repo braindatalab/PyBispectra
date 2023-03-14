@@ -1,0 +1,8 @@
+numpy
+scipy
+numba
+pqdm
+matplotlib
+mock
+sphinx
+numpy-doc
