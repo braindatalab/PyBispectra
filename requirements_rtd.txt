@@ -1,4 +1,3 @@
-git+https://github.com/braindatalab/pybispectra.git
 numpy
 scipy
 numba
