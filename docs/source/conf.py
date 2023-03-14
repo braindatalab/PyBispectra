@@ -38,6 +38,8 @@ extensions = [
 
 bibtex_bibfiles = ["refs.bib"]
 
+root_doc = ["index"]
+
 autosummary_generate = True
 
 sphinx_gallery_conf = {
