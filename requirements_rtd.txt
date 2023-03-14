@@ -3,7 +3,6 @@ scipy
 numba
 pqdm
 matplotlib
-mock
 sphinx
 numpydoc
 nbsphinx

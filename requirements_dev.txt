@@ -1,4 +1,8 @@
 pytest
-mock
 sphinx
-numpy-doc
+numpydoc
+nbsphinx
+nbsphinx_link
+sphinxcontrib-bibtex
+sphinx-gallery
+pydata-sphinx-theme
