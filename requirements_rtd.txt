@@ -1,3 +1,4 @@
+src/pybispectra/
 numpy
 scipy
 numba

@@ -22,8 +22,6 @@ import sys
 # for mod_name in MOCK_MODULES:
 #    sys.modules[mod_name] = mock.Mock()
 
-sys.path.append(os.path()))
-
 from pybispectra.utils import linkcode_resolve
 
 
