@@ -9,4 +9,4 @@ Install the package into the desired environment using pip `pip install pybispec
 [See here for the list of requirements](requirements.txt).
 
 ## Use:
-To get started with the toolbox, check out the [documentation] and [examples](https://github.com/braindatalab/pybispectra/tree/main/examples).
+To get started with the toolbox, check out the [documentation](https://pybispectra.readthedocs.io/en/latest/index.html) and [examples](https://pybispectra.readthedocs.io/en/latest/examples.html).
