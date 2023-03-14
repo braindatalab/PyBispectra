@@ -5,4 +5,4 @@ pqdm
 matplotlib
 mock
 sphinx
-numpy-doc
+numpydoc
