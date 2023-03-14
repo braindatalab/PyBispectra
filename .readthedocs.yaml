@@ -19,7 +19,6 @@ sphinx:
 python:
    install:
    - requirements: requirements.txt
-   - requirements: requirements_dev.txt
    - method: setup.py
 
 submodules:
