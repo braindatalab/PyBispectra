@@ -3,3 +3,4 @@ scipy
 numba
 pqdm
 matplotlib
+mock
