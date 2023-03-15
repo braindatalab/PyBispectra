@@ -251,6 +251,50 @@ class TDE(_ProcessBispectra):
         if 4 in method:
             self._return_method_iv = True
 
+    def _sort_indices(self, indices: np.ndarray | None) -> None:
+        """Sort seed-target indices inputs."""
+        indices = copy.copy(indices)
+        if indices is None:
+            seed_indices = np.reshape(
+                np.repeat(range(self._n_chans), self._n_chans),
+                (self._n_chans, self._n_chans),
+            )
+            target_indices = np.reshape(
+                np.tile(range(self._n_chans), self._n_chans),
+                (self._n_chans, self._n_chans),
+            )
+            indices = (
+                seed_indices[np.triu_indices(self._n_chans, 1)],
+                target_indices[np.triu_indices(self._n_chans, 1)],
+            )
+        if not isinstance(indices, tuple):
+            raise TypeError("`indices` should be a tuple.")
+        if len(indices) != 2:
+            raise ValueError("`indices` should have a length of 2.")
+        self.indices = copy.deepcopy(indices)
+
+        seeds = indices[0]
+        targets = indices[1]
+        for group_idcs in (seeds, targets):
+            if not isinstance(group_idcs, np.ndarray):
+                raise TypeError("Entries of `indices` should be NumPy arrays.")
+            if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
+                raise ValueError(
+                    "`indices` contains indices for channels not present in "
+                    "the data."
+                )
+        if len(seeds) != len(targets):
+            raise ValueError("Entires of `indices` must have equal length.")
+        if any(seed == target for seed, target in zip(indices[0], indices[1])):
+            raise ValueError(
+                "Seeds and targets in `indices` should not be the same "
+                "channel for any connection."
+            )
+        self._seeds = seeds
+        self._targets = targets
+
+        self._n_cons = len(seeds)
+
     def _compute_bispectra(self) -> None:
         """Compute bispectra between f1s and f2s of seeds and targets."""
         if self.verbose:
@@ -311,12 +355,12 @@ class TDE(_ProcessBispectra):
 
     def _compute_tde_nosym(self) -> None:
         """Compute unsymmetrised TDE."""
-        B_xxx = self._bispectra[self._xyz.keys().index("xxx")]
+        B_xxx = self._bispectra[list(self._xyz.keys()).index("xxx")]
 
         if self._return_method_ii or self._return_method_iv:
-            B_yyy = self._bispectra[self._xyz.keys().index("yyy")]
+            B_yyy = self._bispectra[list(self._xyz.keys()).index("yyy")]
 
-        B_xyx = self._bispectra[self._xyz.keys().index("xyx")]
+        B_xyx = self._bispectra[list(self._xyz.keys()).index("xyx")]
 
         if self._return_method_i:
             self._tde_i_nosym = self._compute_tde_form_parallel(
@@ -392,9 +436,15 @@ class TDE(_ProcessBispectra):
             "dict. Please contact the PyBispectra developers."
         )
 
+        con_kwargs = []
+        for con_i in range(self._n_cons):
+            con_kwargs.append(
+                {key: value[con_i] for key, value in kwargs.items()}
+            )
+
         return np.array(
             pqdm(
-                kwargs,
+                con_kwargs,
                 func,
                 self._n_jobs,
                 argument_type="kwargs",
@@ -528,11 +578,11 @@ def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[0], B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
+    I = np.zeros((B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
     phi = np.angle(B_xyx) - np.angle(B_xxx)
-    I[:, : B_xyx.shape[1]] = np.exp(1j * phi)
+    I[: B_xyx.shape[1]] = np.nansum(np.exp(1j * phi), axis=0)
 
-    return _compute_shift_ifft_I(np.sum(I, axis=1))
+    return _compute_shift_ifft_I(I)
 
 
 def _compute_tde_ii(
@@ -565,11 +615,11 @@ def _compute_tde_ii(
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[0], B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
+    I = np.zeros((B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
     phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
-    I[:, : B_xyx.shape[1]] = np.exp(1j * phi_prime)
+    I[: B_xyx.shape[1]] = np.nansum(np.exp(1j * phi_prime), axis=0)
 
-    return _compute_shift_ifft_I(np.sum(I, axis=1))
+    return _compute_shift_ifft_I(I)
 
 
 def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
@@ -594,10 +644,10 @@ def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[0], B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
-    I[:, : B_xyx.shape[1]] = np.divide(B_xyx, B_xxx)
+    I = np.zeros((B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
+    I[: B_xyx.shape[1]] = np.nansum(np.divide(B_xyx, B_xxx), axis=0)
 
-    return _compute_shift_ifft_I(np.sum(I, axis=1))
+    return _compute_shift_ifft_I(I)
 
 
 def _compute_tde_iv(
@@ -630,11 +680,14 @@ def _compute_tde_iv(
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[0], B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
+    I = np.zeros((B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
     phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
-    I[:, : B_xyx.shape[1]] = np.divide(
-        np.multiply(np.abs(B_xyx), np.exp(1j * phi_prime)),
-        np.sqrt(np.multiply(np.abs(B_xxx), np.abs(B_yyy))),
+    I[: B_xyx.shape[1]] = np.nansum(
+        np.divide(
+            np.multiply(np.abs(B_xyx), np.exp(1j * phi_prime)),
+            np.sqrt(np.multiply(np.abs(B_xxx), np.abs(B_yyy))),
+        ),
+        axis=0,
     )
 
-    return _compute_shift_ifft_I(np.sum(I, axis=1))
+    return _compute_shift_ifft_I(I)
