@@ -9,3 +9,4 @@ from .utils import (
     fast_find_first,
     linkcode_resolve,
 )
+from .waveshape import WaveShape

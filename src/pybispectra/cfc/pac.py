@@ -3,22 +3,21 @@
 import copy
 
 import numpy as np
-from numba import njit
 from pqdm.processes import pqdm
 
-from pybispectra.utils import (
-    _ProcessBispectra,
-    ResultsCFC,
+from pybispectra.utils import ResultsCFC
+from pybispectra.utils._process import (
+    _ProcessBispectrum,
     _compute_bispectrum,
-    fast_find_first,
+    _compute_threenorm,
 )
 
 
 np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
 
 
-class PAC(_ProcessBispectra):
-    """Class for computing phase-amplitude coupling (PAC) using bispectra.
+class PAC(_ProcessBispectrum):
+    """Class for computing phase-amplitude coupling (PAC) using the bispectrum.
 
     Parameters
     ----------
@@ -62,7 +61,7 @@ class PAC(_ProcessBispectra):
     _return_nonorm = False
     _return_threenorm = False
 
-    _bispectra = None
+    _bispectrum = None
     _bicoherence = None
 
     _pac_nosym_nonorm = None
@@ -104,7 +103,7 @@ class PAC(_ProcessBispectra):
 
         normalise : str | list of str (default ``["none", "threenorm"]``)
             Normalisation to perform when computing PAC. If ``"none"``, no
-            normalisation is performed. If ``"threenorm"``, the bispectra is
+            normalisation is performed. If ``"threenorm"``, the bispectrum is
             normalised to the bicoherence using a threenorm.
 
         n_jobs : int (default ``1``)
@@ -112,15 +111,19 @@ class PAC(_ProcessBispectra):
 
         Notes
         -----
-        PAC can be computed from the bispectrum, :math:`B`, of signals
+        PAC can be computed as the bispectrum, :math:`B`, of signals
         :math:`\vec{x}` and :math:`\vec{y}` of the seeds and targets,
-        respectively :footcite:`Kovach2018`:
+        respectively, which has the general form
 
-        :math:`\large B_{xyy}(f_1,f_2)=<\vec{x}(f_1)\vec{y}(f_2)\vec{y}^*(f_2+f_1)>`,
+        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>`,
 
-        :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1)B_{xyy}(f_2)B_{xyy}^*(f_2+f_1)`,
+        where :math:`kmn` is a combination of channels :math:`\vec{x}` and
+        :math:`\vec{y}`, and the angled brackets represent the averaged value
+        over epochs. PAC between signals :math:`\vec{x}` and :math:`\vec{y}` is
+        given as
 
-        where the angled brackets represent the averaged value over epochs.
+        :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1)B_{xyy}(f_2)B_{xyy}^*(f_2+f_1)`.
+
         Antisymmetrisaion is achieved by subtracting the PAC results from the
         transposed bispectrum, :math:`B_{xyx}` :footcite:`Chella2014`. The
         bispectrum can be normalised to the bicoherence, :math:`\mathcal{B}`,
@@ -152,7 +155,7 @@ class PAC(_ProcessBispectra):
         if self.verbose:
             print("Computing PAC...\n")
 
-        self._compute_bispectra()
+        self._compute_bispectrum()
         if self._return_threenorm:
             self._compute_bicoherence()
         self._compute_pac()
@@ -170,7 +173,7 @@ class PAC(_ProcessBispectra):
         self._return_nonorm = False
         self._return_threenorm = False
 
-        self._bispectra = None
+        self._bispectrum = None
         self._bicoherence = None
 
         self._pac_nosym_nonorm = None
@@ -215,10 +218,10 @@ class PAC(_ProcessBispectra):
         if "threenorm" in normalise:
             self._return_threenorm = True
 
-    def _compute_bispectra(self) -> None:
-        """Compute bispectra between f1s and f2s of seeds and targets."""
+    def _compute_bispectrum(self) -> None:
+        """Compute bispectrum between f1s and f2s of seeds and targets."""
         if self.verbose:
-            print("    Computing bispectra...")
+            print("    Computing bispectrum...")
 
         if self._return_antisym:
             # kmm, mkm
@@ -239,7 +242,7 @@ class PAC(_ProcessBispectra):
         ]
 
         # have to average complex value outside of Numba-compiled function
-        self._bispectra = (
+        self._bispectrum = (
             np.array(
                 pqdm(
                     args,
@@ -258,7 +261,7 @@ class PAC(_ProcessBispectra):
             print("        [Bispectra computation finished]\n")
 
     def _compute_bicoherence(self) -> None:
-        """Compute bicoherence from the bispectra using the threenorm."""
+        """Compute bicoherence from the bispectrum using the threenorm."""
         if self.verbose:
             print("    Computing bicoherence...")
 
@@ -283,19 +286,19 @@ class PAC(_ProcessBispectra):
             )
         )
 
-        self._bicoherence = self._bispectra / threenorm
+        self._bicoherence = self._bispectrum / threenorm
 
         if self.verbose:
             print("        [Bicoherence computation finished]\n")
 
     def _compute_pac(self) -> None:
-        """Compute PAC results from bispectra/bicoherence."""
+        """Compute PAC results from bispectrum/bicoherence."""
         if self._return_nonorm:
             if self._return_nosym:
-                self._pac_nosym_nonorm = np.abs(self._bispectra[0])
+                self._pac_nosym_nonorm = np.abs(self._bispectrum[0])
             if self._return_antisym:
                 self._pac_antisym_nonorm = np.abs(
-                    self._bispectra[0] - self._bispectra[1]
+                    self._bispectrum[0] - self._bispectrum[1]
                 )
                 for con_i, seed, target in zip(
                     range(self._n_cons), self._seeds, self._targets
@@ -375,52 +378,3 @@ class PAC(_ProcessBispectra):
     def results(self) -> tuple[ResultsCFC]:
         """Return the results."""
         return self._results
-
-
-@njit
-def _compute_threenorm(
-    data: np.ndarray,
-    freqs: np.ndarray,
-    f1s: np.ndarray,
-    f2s: np.ndarray,
-) -> np.ndarray:
-    """Compute threenorm for a single connection across epochs.
-
-    PARAMETERS
-    ----------
-    data : numpy.ndarray of float
-        3D array of FFT coefficients with shape `[epochs x 2 x frequencies]`,
-        where the second dimension contains the data for the seed and target
-        channel of a single connection, respectively.
-
-    freqs : numpy.ndarray of float
-        1D array of frequencies in ``data``.
-
-    f1s : numpy.ndarray of float
-        1D array of low frequencies to compute the threenorm for.
-
-    f2s : numpy.ndarray of float
-        1D array of high frequencies to compute the threenorm for.
-
-    RETURNS
-    -------
-    results : numpy.ndarray of float
-        2D array containing the threenorm of a single connection averaged
-        across epochs, with shape `[f1 x f2]`.
-    """
-    results = np.full(
-        (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
-    )
-    for f1_i, f1 in enumerate(f1s):
-        for f2_i, f2 in enumerate(f2s):
-            if f1 < f2 and (f2 + f1) in freqs:
-                fft_f1 = data[:, 0, fast_find_first(freqs, f1)]
-                fft_f2 = data[:, 1, fast_find_first(freqs, f2)]
-                fft_fdiff = data[:, 1, fast_find_first(freqs, f2 + f1)]
-                results[f1_i, f2_i] = (
-                    (np.abs(fft_f1) ** 3).mean()
-                    * (np.abs(fft_f2) ** 3).mean()
-                    * (np.abs(fft_fdiff) ** 3).mean()
-                ) ** 1 / 3
-
-    return results

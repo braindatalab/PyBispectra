@@ -6,8 +6,6 @@ from .utils import (
     ResultsCFC,
     ResultsTDE,
     compute_fft,
+    compute_rank,
     fast_find_first,
-    _generate_data,
 )
-from ._process import _ProcessBase, _ProcessBispectra, _compute_bispectrum
-from ._docs import linkcode_resolve

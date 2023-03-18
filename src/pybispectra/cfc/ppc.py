@@ -4,7 +4,8 @@ import numpy as np
 from numba import njit
 from pqdm.processes import pqdm
 
-from pybispectra.utils import _ProcessBase, ResultsCFC, fast_find_first
+from pybispectra.utils import ResultsCFC, fast_find_first
+from pybispectra.utils._process import _ProcessBase
 
 
 class PPC(_ProcessBase):

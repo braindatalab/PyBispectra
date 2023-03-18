@@ -118,7 +118,7 @@ print(
 
 # %%
 
-fig, axes = ppc.results.plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
+fig, axes = pac.results.plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
 
 ###############################################################################
 # As you can see, values for the lower right triangle of each plot are missing,

@@ -4,17 +4,13 @@ import copy
 from typing import Callable
 
 import numpy as np
-from numba import njit
 from pqdm.processes import pqdm
 
-from pybispectra.utils import (
-    _ProcessBispectra,
-    ResultsTDE,
-    _compute_bispectrum,
-)
+from pybispectra.utils import ResultsTDE
+from pybispectra.utils._process import _ProcessBispectrum, _compute_bispectrum
 
 
-class TDE(_ProcessBispectra):
+class TDE(_ProcessBispectrum):
     """Class for computing time delay estimation (TDE) using bispectra.
 
     Parameters

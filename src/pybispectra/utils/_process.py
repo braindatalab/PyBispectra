@@ -166,8 +166,8 @@ class _ProcessBase(ABC):
         return copy.deepcopy(self)
 
 
-class _ProcessBispectra(_ProcessBase):
-    """Base class for processing bispectra-based results."""
+class _ProcessBispectrum(_ProcessBase):
+    """Base class for processing bispectrum-based results."""
 
     def _sort_indices(self, indices: np.ndarray) -> None:
         """Sort seed-target indices inputs."""
@@ -267,5 +267,54 @@ def _compute_bispectrum(
                             * epoch_data[m, f2_loc]
                             * np.conjugate(epoch_data[n, fdiff_loc])
                         )
+
+    return results
+
+
+@njit
+def _compute_threenorm(
+    data: np.ndarray,
+    freqs: np.ndarray,
+    f1s: np.ndarray,
+    f2s: np.ndarray,
+) -> np.ndarray:
+    """Compute threenorm for a single connection across epochs.
+
+    PARAMETERS
+    ----------
+    data : numpy.ndarray of float
+        3D array of FFT coefficients with shape `[epochs x 2 x frequencies]`,
+        where the second dimension contains the data for the seed and target
+        channel of a single connection, respectively.
+
+    freqs : numpy.ndarray of float
+        1D array of frequencies in ``data``.
+
+    f1s : numpy.ndarray of float
+        1D array of low frequencies to compute the threenorm for.
+
+    f2s : numpy.ndarray of float
+        1D array of high frequencies to compute the threenorm for.
+
+    RETURNS
+    -------
+    results : numpy.ndarray of float
+        2D array containing the threenorm of a single connection averaged
+        across epochs, with shape `[f1 x f2]`.
+    """
+    results = np.full(
+        (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
+    )
+    for f1_i, f1 in enumerate(f1s):
+        for f2_i, f2 in enumerate(f2s):
+            if f1 < f2 and (f2 + f1) in freqs:
+                fft_f1 = data[:, 0, fast_find_first(freqs, f1)]
+                fft_f2 = data[:, 1, fast_find_first(freqs, f2)]
+                fft_fdiff = data[:, 1, fast_find_first(freqs, f2 + f1)]
+                results[f1_i, f2_i] = (
+                    (np.abs(fft_f1) ** 3).mean()
+                    * (np.abs(fft_f2) ** 3).mean()
+                    * (np.abs(fft_fdiff) ** 3).mean()
+                ) ** 1 / 3
 
     return results

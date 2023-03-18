@@ -3,13 +3,12 @@
 import copy
 from warnings import warn
 
+from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 from numba import njit
 import numpy as np
-import scipy as sp
-from matplotlib.figure import Figure
-from matplotlib import pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pqdm.processes import pqdm
+import scipy as sp
 
 
 class ResultsCFC:
@@ -708,6 +707,36 @@ def fast_find_first(vector: np.ndarray, value: float | int) -> int:
         if val == value:
             return idx
     raise ValueError("`value` is not present in `vector`.")
+
+
+def compute_rank(data: np.ndarray, sv_tol: float = 1e-5) -> int:
+    """Compute the min. rank of data over epochs from non-zero singular values.
+
+    Parameters
+    ----------
+    data : numpy.ndarray, shape [epochs x channels x timepoints]
+        Data to find the rank of.
+
+    sv_tol : float (default 1e-5)
+        Tolerance to use to define non-zero singular values based on the
+        largest singular value.
+
+    Returns
+    -------
+    rank : int
+        Minimum rank of ``data`` over epochs.
+    """
+    if not isinstance(data, np.ndarray):
+        raise TypeError("`data` must be a NumPy array.")
+    if data.ndim != 3:
+        raise ValueError("`data` must be a 3D array.")
+
+    if not isinstance(sv_tol, float) and not isinstance(sv_tol, int):
+        raise TypeError("`sv_tol` must be a float or an int.")
+
+    singular_vals = np.linalg.svd(data, compute_uv=False).min(axis=0)
+
+    return np.count_nonzero(singular_vals > singular_vals[0] * sv_tol)
 
 
 def _generate_data(
