@@ -11,5 +11,6 @@ setup(
         "pybispectra.cfc",
         "pybispectra.tde",
         "pybispectra.utils",
+        "pybispectra.waveshape"
     ],
 )
