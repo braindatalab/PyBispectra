@@ -1,8 +1,17 @@
 ![](https://github.com/tsbinns/tsbinns.github.io/blob/master/assets/pybispectra/logo.gif)
 
-A Python signal processing package for computing spectral-domain interactions using bispectra.
+A Python signal processing package for computing spectral-domain and
+time-domain interactions using bispectra.
 
-This package provides the tools for computing spectral-domain interactions between signals such as phase-amplitude coupling (PAC) based on bispectra, and phase-phase coupling (PPC). Parallel processing and [Numba](https://numba.pydata.org/) optimisation are implemented to reduce computation times. Additional tools for plotting results and computing Fourier coefficients of data are also provided.
+This package provides the tools for performing spectral- and time-domain
+analyses based on bispectra, including phase-amplitude coupling, time delay
+estimation, and wave shape features. Additional tools for computing phase-phase
+coupling, generalised eigendecompositions, Fourier coefficients, and plotting
+results are also provided.
+
+Parallel processing and [Numba](https://numba.pydata.org/) optimisation are
+implemented to reduce computation times. There is a minor reliance on
+[MNE](https://mne.tools/stable/index.html).
 
 ## Installation & Requirements:
 Install the package into the desired environment using pip `pip install pybispectra`<br/>
