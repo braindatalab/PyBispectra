@@ -96,7 +96,7 @@ pac.compute(
     indices=None, f1=np.arange(5, 10), f2=np.arange(15, 25)
 )  # compute PAC
 
-pac_results = pac.results.get_results()  # return results as array
+pac_results = pac.results[0].get_results()  # return results as array
 
 print(
     f"PPC results: [{pac_results.shape[0]} connections x "
@@ -120,7 +120,7 @@ print(
 
 # %%
 
-fig, axes = pac.results.plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
+fig, axes = pac.results[0].plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
 
 ###############################################################################
 # As you can see, values for the lower right triangle of each plot are missing,
@@ -139,3 +139,5 @@ fig, axes = pac.results.plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
 # References
 # -----------------------------------------------------------------------------
 # .. footbibliography::
+
+# %%
