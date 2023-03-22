@@ -9,7 +9,7 @@
 import os
 import sys
 
-from pybispectra.utils import linkcode_resolve
+from pybispectra.utils._docs import linkcode_resolve
 
 
 project = "pybispectra"
