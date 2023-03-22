@@ -6,27 +6,37 @@ build-backend = "hatchling.build"
 name = "pybispectra"
 version = "0.0.1"
 authors = [
-    { name="Thomas Samuel Binns", email="t.s.binns@outlook.com" },
+    { name="Thomas Samuel Binns", email="t.s.binns@outlook.com" }
 ]
 description = "Python signal analysis package for computing spectral-domain interactions using bispectra."
 readme = "README.md"
-requires-python = ">=3.6, <3.11"
+requires-python = "3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Operating System :: OS Independent"
 ]
 
 dependencies = [
     "numpy",
     "scipy",
     "numba",
+    "mne",
     "pqdm",
-    "matplotlib",
+    "matplotlib"
 ]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = [
+    "pytest",
+    "sphinx",
+    "numpydoc",
+    "nbsphinx",
+    "nbsphinx_link",
+    "sphinxcontrib-bibtex",
+    "sphinx-gallery",
+    "pydata-sphinx-theme"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/braindatalab/pybispectra"
