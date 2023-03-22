@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 import numpy as np
 
-from pybispectra.utils import fast_find_first
+from .utils import fast_find_first
 
 
 class ResultsCFC:
