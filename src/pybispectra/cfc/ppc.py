@@ -5,10 +5,10 @@ from numba import njit
 from pqdm.processes import pqdm
 
 from pybispectra.utils import ResultsCFC, fast_find_first
-from pybispectra.utils._process import _ProcessBase
+from pybispectra.utils._process import _ProcessFreqBase
 
 
-class PPC(_ProcessBase):
+class PPC(_ProcessFreqBase):
     """Class for computing phase-phase coupling (PPC).
 
     Parameters
