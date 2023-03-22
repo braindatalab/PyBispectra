@@ -18,6 +18,7 @@ class _ProcessBase(ABC):
     _targets = None
     _n_cons = None
 
+    sfreq = None
     f1 = None
     f2 = None
 
@@ -29,12 +30,15 @@ class _ProcessBase(ABC):
         self,
         data: np.ndarray,
         freqs: np.ndarray,
+        sfreq: float | None = None,
         verbose: bool = True,
     ) -> None:
         self.verbose = copy.copy(verbose)
-        self._sort_init_inputs(data, freqs)
+        self._sort_init_inputs(data, sfreq, freqs)
 
-    def _sort_init_inputs(self, data: np.ndarray, freqs: np.ndarray) -> None:
+    def _sort_init_inputs(
+        self, data: np.ndarray, freqs: np.ndarray, sfreq: float | None
+    ) -> None:
         """Check init. inputs are appropriate."""
         if not isinstance(data, np.ndarray):
             raise TypeError("`data` must be a NumPy array.")
@@ -45,6 +49,16 @@ class _ProcessBase(ABC):
             raise TypeError("`freqs` must be a NumPy array.")
         if freqs.ndim != 1:
             raise ValueError("`freqs` must be a 1D array.")
+
+        if sfreq is not None:
+            if not isinstance(sfreq, float):
+                raise TypeError("`sfreq` must be a float.")
+            if 0.5 * freqs[-1] > sfreq:
+                raise ValueError(
+                    "One or more frequencies in `freqs` are greater than the "
+                    "Nyquist frequency."
+                )
+            self.sfreq = copy.deepcopy(sfreq)
 
         self._n_epochs, self._n_chans, self._n_freqs = data.shape
 

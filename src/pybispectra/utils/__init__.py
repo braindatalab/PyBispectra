@@ -2,10 +2,6 @@
 
 __version__ = "0.0.1"
 
-from .utils import (
-    ResultsCFC,
-    ResultsTDE,
-    compute_fft,
-    compute_rank,
-    fast_find_first,
-)
+from .ged import SpatioSpectralFilter
+from .results import ResultsCFC, ResultsTDE
+from .utils import compute_fft, compute_rank, fast_find_first
