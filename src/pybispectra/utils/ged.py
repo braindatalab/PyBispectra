@@ -4,6 +4,7 @@ from copy import deepcopy
 from warnings import warn
 
 import numpy as np
+import mne
 from mne.decoding import SSD
 from mne.time_frequency import csd_array_fourier, csd_array_multitaper
 import scipy as sp
