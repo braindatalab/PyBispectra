@@ -9,10 +9,9 @@ from mne.time_frequency import csd_array_fourier, csd_array_multitaper
 import scipy as sp
 
 from pybispectra.utils.utils import _create_mne_info
-from pybispectra.utils._process import _ProcessTimeBase
 
 
-class SpatioSpectralFilter(_ProcessTimeBase):
+class SpatioSpectralFilter:
     r"""Class for performing spatiospectral filtering.
 
     Parameters
@@ -87,6 +86,13 @@ class SpatioSpectralFilter(_ProcessTimeBase):
     .. footbibliography::
     """
 
+    data = None
+    _n_epochs = None
+    _n_chans = None
+    _n_times = None
+
+    sfreq = None
+
     filters = None
     patterns = None
     ratio = None
@@ -100,8 +106,23 @@ class SpatioSpectralFilter(_ProcessTimeBase):
         sfreq: float,
         verbose: bool = True,
     ) -> None:  # noqa D107
-        # super call required to check that sfreq is given
-        super().__init__(data, freqs, sfreq, verbose)
+        self.verbose = deepcopy(verbose)
+        self._sort_init_inputs(data, sfreq)
+
+    def _sort_init_inputs(self, data: np.ndarray, sfreq: float) -> None:
+        """Check init. inputs are appropriate."""
+        if not isinstance(data, np.ndarray):
+            raise TypeError("`data` must be a NumPy array.")
+        if data.ndim != 3:
+            raise ValueError("`data` must be a 3D array.")
+
+        if not isinstance(sfreq, float):
+            raise TypeError("`sfreq` must be a float.")
+        self.sfreq = deepcopy(sfreq)
+
+        self._n_epochs, self._n_chans, self._n_times = data.shape
+
+        self.data = data.copy()
 
     def _sort_freq_bounds(
         self,

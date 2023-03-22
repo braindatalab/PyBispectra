@@ -10,8 +10,8 @@ import numpy as np
 from pybispectra.utils import fast_find_first
 
 
-class _ProcessBase(ABC):
-    """Base class for processing results."""
+class _ProcessFreqBase(ABC):
+    """Base class for processing frequency-domain results."""
 
     indices = None
     _seeds = None
@@ -180,7 +180,7 @@ class _ProcessBase(ABC):
         return deepcopy(self)
 
 
-class _ProcessBispectrum(_ProcessBase):
+class _ProcessBispectrum(_ProcessFreqBase):
     """Base class for processing bispectrum-based results."""
 
     def _sort_indices(self, indices: np.ndarray) -> None:
