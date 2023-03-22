@@ -1,6 +1,6 @@
 """Tools for processing and handling CFC and TDE results."""
 
-import copy
+from copy import deepcopy
 from abc import ABC, abstractmethod
 from warnings import warn
 
@@ -33,7 +33,7 @@ class _ProcessBase(ABC):
         sfreq: float | None = None,
         verbose: bool = True,
     ) -> None:
-        self.verbose = copy.copy(verbose)
+        self.verbose = deepcopy(verbose)
         self._sort_init_inputs(data, sfreq, freqs)
 
     def _sort_init_inputs(
@@ -58,7 +58,7 @@ class _ProcessBase(ABC):
                     "One or more frequencies in `freqs` are greater than the "
                     "Nyquist frequency."
                 )
-            self.sfreq = copy.deepcopy(sfreq)
+            self.sfreq = deepcopy(sfreq)
 
         self._n_epochs, self._n_chans, self._n_freqs = data.shape
 
@@ -73,7 +73,7 @@ class _ProcessBase(ABC):
 
     def _sort_indices(self, indices: tuple[np.ndarray] | None) -> None:
         """Sort seed-target indices inputs."""
-        indices = copy.copy(indices)
+        indices = deepcopy(indices)
         if indices is None:
             indices = tuple(
                 [
@@ -85,7 +85,7 @@ class _ProcessBase(ABC):
             raise TypeError("`indices` should be a tuple.")
         if len(indices) != 2:
             raise ValueError("`indices` should have a length of 2.")
-        self.indices = copy.deepcopy(indices)
+        self.indices = deepcopy(indices)
 
         seeds = indices[0]
         targets = indices[1]
@@ -147,7 +147,7 @@ class _ProcessBase(ABC):
         if n_jobs < 1:
             raise ValueError("`n_jobs` must be >= 1.")
 
-        self._n_jobs = copy.copy(n_jobs)
+        self._n_jobs = deepcopy(n_jobs)
 
     @abstractmethod
     def compute(self):
@@ -177,7 +177,7 @@ class _ProcessBase(ABC):
 
     def copy(self):
         """Return a copy of the object."""
-        return copy.deepcopy(self)
+        return deepcopy(self)
 
 
 class _ProcessBispectrum(_ProcessBase):

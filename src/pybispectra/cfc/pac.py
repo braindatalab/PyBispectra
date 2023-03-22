@@ -1,6 +1,6 @@
 """Tools for handling PAC analysis."""
 
-import copy
+from copy import deepcopy
 
 import numpy as np
 from pqdm.processes import pqdm
@@ -197,9 +197,9 @@ class PAC(_ProcessBispectrum):
             )
 
         if isinstance(symmetrise, str):
-            symmetrise = [copy.copy(symmetrise)]
+            symmetrise = [deepcopy(symmetrise)]
         if isinstance(normalise, str):
-            normalise = [copy.copy(normalise)]
+            normalise = [deepcopy(normalise)]
 
         supported_sym = ["none", "antisym"]
         if any(entry not in supported_sym for entry in symmetrise):

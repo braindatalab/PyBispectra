@@ -1,6 +1,6 @@
 """Tools for handling TDE analysis."""
 
-import copy
+from copy import deepcopy
 from typing import Callable
 
 import numpy as np
@@ -222,9 +222,9 @@ class TDE(_ProcessBispectrum):
             raise TypeError("`method` must be a list of ints or an int.")
 
         if isinstance(symmetrise, str):
-            symmetrise = [copy.copy(symmetrise)]
+            symmetrise = [deepcopy(symmetrise)]
         if isinstance(method, int):
-            method = [copy.copy(method)]
+            method = [deepcopy(method)]
 
         supported_sym = ["none", "antisym"]
         if any(entry not in supported_sym for entry in symmetrise):
@@ -249,7 +249,7 @@ class TDE(_ProcessBispectrum):
 
     def _sort_indices(self, indices: np.ndarray | None) -> None:
         """Sort seed-target indices inputs."""
-        indices = copy.copy(indices)
+        indices = deepcopy(indices)
         if indices is None:
             seed_indices = np.reshape(
                 np.repeat(range(self._n_chans), self._n_chans),
@@ -267,7 +267,7 @@ class TDE(_ProcessBispectrum):
             raise TypeError("`indices` should be a tuple.")
         if len(indices) != 2:
             raise ValueError("`indices` should have a length of 2.")
-        self.indices = copy.deepcopy(indices)
+        self.indices = deepcopy(indices)
 
         seeds = indices[0]
         targets = indices[1]
@@ -296,7 +296,7 @@ class TDE(_ProcessBispectrum):
         if self.verbose:
             print("    Computing bispectra...")
 
-        self._xyz = copy.deepcopy(self._kmn)
+        self._xyz = deepcopy(self._kmn)
         if not self._return_method_ii and not self._return_method_iv:
             del self._xyz["yyy"]
         if not self._return_nosym:

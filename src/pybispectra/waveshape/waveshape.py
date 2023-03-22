@@ -1,6 +1,6 @@
 """Tools for handling wave shape analysis."""
 
-import copy
+from copy import deepcopy
 
 import numpy as np
 from pqdm.processes import pqdm
@@ -144,7 +144,7 @@ class WaveShape(_ProcessBispectrum):
 
     def _sort_indices(self, indices: tuple) -> None:
         """Sort channel indices inputs."""
-        indices = copy.deepcopy(indices)
+        indices = deepcopy(indices)
         if indices is None:
             indices = tuple(np.arange(self._n_chans))
         if not isinstance(indices, tuple):
