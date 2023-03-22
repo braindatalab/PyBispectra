@@ -92,7 +92,9 @@ print(
 # %%
 
 pac = PAC(data=fft, freqs=freqs)  # initialise object
-pac.compute(indices=None, f1=np.arange(5, 10), f2=(15, 25))  # compute PAC
+pac.compute(
+    indices=None, f1=np.arange(5, 10), f2=np.arange(15, 25)
+)  # compute PAC
 
 pac_results = pac.results.get_results()  # return results as array
 
