@@ -94,6 +94,9 @@ class SpatioSpectralFilter:
 
     sfreq = None
 
+    indices = None
+    _use_n_chans = None
+
     filters = None
     patterns = None
     ratio = None
@@ -202,18 +205,19 @@ class SpatioSpectralFilter:
             )
 
         self.indices = indices
+        self._use_n_chans = len(indices)
 
     def _sort_rank(self, rank: int | None) -> None:
         """Sort rank subspace projection input."""
         rank = deepcopy(rank)
 
         if rank is None:
-            rank = deepcopy(self._n_chans)
+            rank = deepcopy(self._use_n_chans)
 
         if not isinstance(rank, int):
             raise TypeError("`rank` must be an int.")
 
-        if rank < 1 or rank > self._n_chans:
+        if rank < 1 or rank > self._use_n_chans:
             raise ValueError(
                 "`rank` must be >= 1 and <= the number of channels in "
                 "`indices`"
@@ -276,7 +280,7 @@ class SpatioSpectralFilter:
         if self.verbose:
             print("Fitting SSD filters...\n")
 
-        info = _create_mne_info(self._n_chans, self.sfreq)
+        info = _create_mne_info(self._use_n_chans, self.sfreq)
         filt_params_signal, filt_params_noise = self._create_mne_filt_params(
             signal_bounds, noise_bounds, signal_noise_gap
         )
@@ -332,11 +336,10 @@ class SpatioSpectralFilter:
 
         return filt_params_signal, filt_params_noise
 
-    def _compute_ssd(self) -> None:
+    def _compute_ssd(
+        self, info: mne.Info, filt_params_signal: dict, filt_params_noise: dict
+    ) -> None:
         """Compute SSD on data using the MNE implementation."""
-        info = _create_mne_info(self._n_chans, self.sfreq)
-        filt_params_signal, filt_params_noise = self._create_mne_filt_params()
-
         ssd = SSD(
             info,
             filt_params_signal,
@@ -348,7 +351,7 @@ class SpatioSpectralFilter:
             return_filtered=False,
             rank=self.rank,
         )
-        self._transformed_data = ssd.fit_transform(self.data)
+        self._transformed_data = ssd.fit_transform(self.data[:, self.indices])
 
         self.filters = ssd.filters_.copy()
         self.patterns = ssd.patterns_.copy()
@@ -405,15 +408,15 @@ class SpatioSpectralFilter:
 
         mt_bandwidth : float (default 5.0)
             Bandwidth of the multitaper windowing function (in Hz). Only used
-            if :attr:``csd_method`` is ``"multitaper"``.
+            if :attr:`csd_method` is ``"multitaper"``.
 
         mt_adaptive : bool (default True)
             Whether to use adaptive weights when combining tapered spectra.
-            Only used if :attr:``csd_method`` is ``"multitaper"``.
+            Only used if :attr:`csd_method` is ``"multitaper"``.
 
         mt_low_bias : bool (default True)
             Whether to only use tapers with > 90% spectral concentration within
-            the bandwidth. Only used if :attr:``csd_method`` is
+            the bandwidth. Only used if :attr:`csd_method` is
             ``"multitaper"``.
 
         n_jobs : int (default 1)
@@ -479,7 +482,7 @@ class SpatioSpectralFilter:
 
         if csd_method == "multitaper":
             csd = csd_array_multitaper(
-                X=self.data,
+                X=self.data[:, self.indices],
                 sfreq=self.sfreq,
                 t0=0,
                 fmin=fmin,
@@ -497,7 +500,7 @@ class SpatioSpectralFilter:
             )
         else:
             csd = csd_array_fourier(
-                X=self.data,
+                X=self.data[:, self.indices],
                 sfreq=self.sfreq,
                 t0=0,
                 fmin=fmin,
@@ -544,7 +547,7 @@ class SpatioSpectralFilter:
         ix = np.argsort(eigvals)[::-1]  # sort in descending order
 
         self._transformed_data = np.einsum(
-            "ijk,jl->ilk", self.data, self.filters
+            "ijk,jl->ilk", self.data[:, self.indices], self.filters
         )
 
         self.filters = projection @ eigvects[:, ix]  # project to sensor space
@@ -570,8 +573,12 @@ class SpatioSpectralFilter:
         csd = np.real(csd)
         freqs = freqs.tolist()
 
-        cov_signal = np.zeros((self._n_chans, self._n_chans), dtype=np.float64)
-        cov_noise = np.zeros((self._n_chans, self._n_chans), dtype=np.float64)
+        cov_signal = np.zeros(
+            (self._use_n_chans, self._use_n_chans), dtype=np.float64
+        )
+        cov_noise = np.zeros(
+            (self._use_n_chans, self._use_n_chans), dtype=np.float64
+        )
 
         for harmonic_i in range(self.n_harmonics + 1):
             # signal CSD info.
@@ -609,7 +616,7 @@ class SpatioSpectralFilter:
         projection : numpy.ndarray, shape of [channels x rank]
             Rank subspace projection matrix.
         """
-        if self.rank < self._n_chans:
+        if self.rank < self._use_n_chans:
             eigvals, eigvects = sp.linalg.eigh(cov_signal)
             ix = np.argsort(eigvals)[::-1]  # sort in descending order
             eigvals = eigvals[ix]
@@ -618,7 +625,7 @@ class SpatioSpectralFilter:
                 np.eye(self.rank) * eigvals[: self.rank] ** -0.5
             )
         else:
-            projection = np.eye(self._n_chans)
+            projection = np.eye(self._use_n_chans)
 
         cov_signal = projection.T @ cov_signal @ projection
         cov_noise = projection.T @ cov_noise @ projection
