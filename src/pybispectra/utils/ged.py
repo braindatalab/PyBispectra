@@ -267,7 +267,7 @@ class SpatioSpectralFilter:
         Notes
         -----
         The SSD implementation in MNE is used to compute the filters
-        (mne.decoding.SSD).
+        (:class:`mne.decoding.SSD`).
 
         References
         ----------
@@ -425,8 +425,9 @@ class SpatioSpectralFilter:
         Notes
         -----
         MNE is used to compute the CSD, from which the covariance matrices are
-        obtained :footcite:`Bartz2019 (mne.time_frequency.csd_array_multitaper
-        and mne.time_frequency.csd_array_fourier).
+        obtained :footcite:`Bartz2019`
+        (:func:`mne.time_frequency.csd_array_multitaper` and
+        :func:`mne.time_frequency.csd_array_fourier`).
 
         References
         ----------
