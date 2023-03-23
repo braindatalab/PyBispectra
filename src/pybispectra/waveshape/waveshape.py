@@ -17,10 +17,10 @@ class WaveShape(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape [epochs x channels x frequencies]
+    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
         FFT coefficients.
 
-    freqs : numpy.ndarray of float, shape [frequencies]
+    freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies in :attr:`data`.
 
     verbose : bool (default True)
@@ -28,23 +28,23 @@ class WaveShape(_ProcessBispectrum):
 
     Attributes
     ----------
-    results : tuple of ResultsWaveShape, shape [channels x f1 x f2]
+    results : tuple of ResultsWaveShape, shape of [channels x f1 x f2]
         Bicoherence of the data.
 
-    data : numpy.ndarray of float, shape [epochs x channels x frequencies]
+    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
         FFT coefficients.
 
-    freqs : numpy.ndarray of float, shape [frequencies]
+    freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies in :attr:`data`.
 
     indices : tuple of numpy.ndarray of int
         1D array of channel indices most recently used with :meth:`compute`.
 
-    f1 : numpy.ndarray of float
-        1D array of low frequencies most recently used with :meth:`compute`.
+    f1 : numpy.ndarray of float, shape of [frequencies]
+        Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2 : numpy.ndarray of float
-        1D array of high frequencies most recently used with :meth:`compute`.
+    f2 : numpy.ndarray of float, shape of [frequencies]
+        High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -134,7 +134,7 @@ class WaveShape(_ProcessBispectrum):
         self._store_results()
 
         if self.verbose:
-            print("    [Bicoherence computation finished]\n")
+            print("    ... Bicoherence computation finished\n")
 
     def _reset_attrs(self) -> None:
         """Reset attrs. of the object to prevent interference."""
@@ -164,7 +164,7 @@ class WaveShape(_ProcessBispectrum):
 
         Returns
         -------
-        bispectrum : np.ndarray, shape [channels x f1 x f2]
+        bispectrum : np.ndarray, shape of [channels x f1s x f2s]
             Complex-valued array containing the bispectrum for each channel.
         """
         if self.verbose:
@@ -198,7 +198,7 @@ class WaveShape(_ProcessBispectrum):
         )
 
         if self.verbose:
-            print("        [Bispectra computation finished]\n")
+            print("        ... Bispectrum computation finished\n")
 
         return bispectrum
 
@@ -207,7 +207,7 @@ class WaveShape(_ProcessBispectrum):
 
         Returns
         -------
-        threenorm : np.ndarray, shape [channels x f1 x f2]
+        threenorm : numpy.ndarray of float, shape of [channels x f1s x f2s]
             Complex-valued array containing the threenorm for each channel.
         """
         if self.verbose:
@@ -235,7 +235,7 @@ class WaveShape(_ProcessBispectrum):
         )
 
         if self.verbose:
-            print("        [Threenorm computation finished]\n")
+            print("        ... Threenorm computation finished\n")
 
         return threenorm
 

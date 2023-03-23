@@ -13,12 +13,11 @@ class PPC(_ProcessFreqBase):
 
     Parameters
     ----------
-    data : numpy.ndarray of float
-        3D array of FFT coefficients with shape `[epochs x channels x
-        frequencies]`.
+    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+        FFT coefficients.
 
-    freqs : numpy.ndarray of float
-        1D array of the frequencies in :attr:`data`.
+    freqs : numpy.ndarray of float, shape of [frequencies]
+        Frequencies (in Hz) in :attr:`data`.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -28,21 +27,21 @@ class PPC(_ProcessFreqBase):
     results : tuple of ResultsCFC
         PPC results for each of the computed metrics.
 
-    data : numpy.ndarray of float
-        FFT coefficients with shape `[epochs x channels x frequencies]`.
+    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+        FFT coefficients..
 
-    freqs : numpy.ndarray of float
-        1D array of the frequencies in :attr:`data`.
+    freqs : numpy.ndarray of float, shape of [frequencies]
+        Frequencies (in Hz) in :attr:`data`.
 
-    indices : tuple of numpy.ndarray of int
-        Two arrays containing the seed and target indices (respectively) most
-        recently used with :meth:`compute`.
+    indices : tuple of numpy.ndarray of int, length of 2
+        Indices of the seed and target channels, respectively, most recently
+        used with :meth:`compute`.
 
-    f1 : numpy.ndarray of float
-        1D array of low frequencies most recently used with :meth:`compute`.
+    f1 : numpy.ndarray of float, shape of [frequencies]
+        Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2 : numpy.ndarray of float
-        1D array of high frequencies most recently used with :meth:`compute`.
+    f2 : numpy.ndarray of float, shape of [frequencies]
+        High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -61,19 +60,21 @@ class PPC(_ProcessFreqBase):
 
         Parameters
         ----------
-        indices : tuple of numpy.ndarray of int | None (default None)
-            Indices of the channels to compute PPC between. Should contain two
-            1D arrays of equal length for the seed and target indices,
-            respectively. If ``None``, coupling between all channels is
+        indices : tuple of numpy.ndarray of int | None (default None), length
+        of 2
+            Indices of the seed and target channels, respectively, to compute
+            PPC between. If ``None``, coupling between all channels is
             computed.
 
-        f1 : numpy.ndarray of float | None (default None)
-            1D array of the lower frequencies to compute PPC on. If ``None``,
-            all frequencies are used.
+        f1 : numpy.ndarray of float | None (default None), shape of
+        [frequencies]
+            Lower frequencies to compute PPC on. If ``None``, all frequencies
+            are used.
 
-        f2 : numpy.ndarray of float | None; default None
-            1D array of the higher frequencies to compute PPC on. If ``None``,
-            all frequencies are used.
+        f2 : numpy.ndarray of float | None (default None), shape of
+        [frequencies]
+            Higher frequencies to compute PPC on. If ``None``, all frequencies
+            are used.
 
         n_jobs : int (default ``1``)
             Number of jobs to run in parallel.
@@ -109,7 +110,7 @@ class PPC(_ProcessFreqBase):
         self._store_results()
 
         if self.verbose:
-            print("    [PPC computation finished]\n")
+            print("    ... PPC computation finished\n")
 
     def _reset_attrs(self) -> None:
         """Reset attrs. of the object to prevent interference."""
@@ -162,24 +163,23 @@ def _compute_ppc(
 
     PARAMETERS
     ----------
-    data : numpy.ndarray of float
-        3D array of FFT coefficients with shape `[epochs x 2 x frequencies]`,
-        where the second dimension contains the data for the seed and target
-        channel of a single connection, respectively.
+    data : numpy.ndarray of float, shape of [epochs x 2 x frequencies]
+        FFT coefficients where the second dimension contains the data for the
+        seed and target channel of a single connection, respectively.
 
-    freqs : numpy.ndarray of float
-        1D array of frequencies in ``data``.
+    freqs : numpy.ndarray of float, shape of [frequencies]
+        Frequencies in ``data``.
 
-    f1s : numpy.ndarray of float
-        1D array of low frequencies to compute coupling for.
+    f1s : numpy.ndarray of float, shape of [frequencies]
+        Low frequencies to compute coupling for.
 
-    f2s : numpy.ndarray of float
-        1D array of high frequencies to compute coupling for.
+    f2s : numpy.ndarray of float, shape of [frequencies]
+        High frequencies to compute coupling for.
 
     RETURNS
     -------
-    results : numpy.ndarray of float
-        2D array of PPC for a single connection with shape `[f1 x f2]`.
+    results : numpy.ndarray of float, shape of [f1s x f2s]
+        PPC for a single connection.
     """
     results = np.full(
         (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64

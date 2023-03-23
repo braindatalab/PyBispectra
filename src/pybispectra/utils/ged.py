@@ -17,7 +17,7 @@ class SpatioSpectralFilter:
 
     Parameters
     ----------
-    data : numpy.ndarray, shape [epochs x channels x times]
+    data : numpy.ndarray, shape of [epochs x channels x times]
 
     sfreq : float
         Sampling frequency of :attr:`data` (in Hz).
@@ -27,18 +27,18 @@ class SpatioSpectralFilter:
 
     Attributes
     ----------
-    transformed_data : numpy.ndarray, shape [epochs x :attr:`rank` x times]
+    transformed_data : numpy.ndarray, shape of [epochs x rank x times]
         :attr:`data` transformed with :attr:`filters`.
 
-    filters : numpy.ndarray, shape [channels x :attr:`rank`]
+    filters : numpy.ndarray, shape of [channels x rank]
         Spatial filters (eigenvectors of the eigendecomposition). Sorted in
         descending order according to the size of the signal:noise ratios of
         :attr:`ratios`.
 
-    patterns : numpy.ndarray, shape [:attr:`rank` x channels]
+    patterns : numpy.ndarray, shape of [rank x channels]
         Spatial patterns for each of the spatial filters.
 
-    ratios : numpy.ndarray, shape [:attr:`rank`]
+    ratios : numpy.ndarray, shape of [rank]
         Signal:noise ratios for each of the spatial filters (eigenvalues of the
         eigendecomposition). Sorted in descending order.
 
@@ -67,11 +67,11 @@ class SpatioSpectralFilter:
 
     Generalised eigendecompositions have the general form
 
-    :math:`NW \Lambda=SW`,
+    :math:`\large NW \Lambda=SW`,
 
     which can also be represented in the ratio form
 
-    :math:`\Lambda=\frac{W^TSW}{W^TNW}`,
+    :math:`\large \Lambda=\frac{W^TSW}{W^TNW}`,
 
     where :math:`S` and :math:`N` are the covariance matrices for the signal
     and noise information in the data, respectively, :math:`W` is a common set
@@ -239,12 +239,13 @@ class SpatioSpectralFilter:
 
         Parameters
         ----------
-        signal_bounds : tuple of float
-            Frequencies (in Hz) to treat as the signal of interest.
+        signal_bounds : tuple of float, length of 2
+            Lower and upper frequencies (in Hz), respectively, to treat as the
+            signal of interest.
 
-        noise_bounds : tuple of float
-            Frequencies (in Hz) to treat as the noise, excluding the frequency
-            boundary in :attr:`signal_bounds` +/- :attr:`signal_noise_gap`.
+        noise_bounds : tuple of float, length of 2
+            Lower and upper frequencies (in Hz) to treat as the noise,
+            excluding the frequencies in :attr:`signal_bounds`.
 
         signal_noise_gap : float (default 1.0)
             Frequency count (in Hz) to treat as a transtition boundary between
@@ -272,6 +273,9 @@ class SpatioSpectralFilter:
         self._sort_indices(indices)
         self._sort_rank(rank)
 
+        if self.verbose:
+            print("Fitting SSD filters...\n")
+
         info = _create_mne_info(self._n_chans, self.sfreq)
         filt_params_signal, filt_params_noise = self._create_mne_filt_params(
             signal_bounds, noise_bounds, signal_noise_gap
@@ -281,6 +285,9 @@ class SpatioSpectralFilter:
 
         self._fitted = True
 
+        if self.verbose:
+            print("    ... SSD filter fitting finished\n")
+
     def _create_mne_filt_params(
         self,
         signal_bounds: tuple[float],
@@ -288,14 +295,6 @@ class SpatioSpectralFilter:
         signal_noise_gap: float,
     ) -> tuple[dict, dict]:
         """Create filter parameters for use with MNE's SSD implementation.
-
-        Parameters
-        ----------
-        signal_bounds : tuple of float
-
-        noise_bounds : tuple of float
-
-        signal_noise_gap : float
 
         Returns
         -------
@@ -373,14 +372,15 @@ class SpatioSpectralFilter:
 
         Parameters
         ----------
-        signal_bounds : tuple of float
-            Frequencies (in Hz) to treat as the signal of interest.
+        signal_bounds : tuple of float, length of 2
+            Lower and upper frequencies (in Hz), respectively, to treat as the
+            signal of interest.
 
-        noise_bounds : tuple of float
-            Frequencies (in Hz) to treat as the noise, excluding the frequency
-            boundary in :attr:`signal_bounds` +/- :attr:`signal_noise_gap`. For
-            harmonics, the same number of frequency bins around the harmonic
-            frequencies are taken as noise frequencies.
+        noise_bounds : tuple of float, length of 2
+            Lower and upper frequencies (in Hz) to treat as the noise,
+            excluding the frequencies in :attr:`signal_bounds`. For harmonics,
+            the same number of frequency bins around the harmonic frequencies
+            are taken as noise frequencies.
 
         n_harmonics : int (default 0)
             Number of harmonic frequencies of :attr:`signal_bounds` to use when
@@ -435,6 +435,9 @@ class SpatioSpectralFilter:
         self._sort_rank(rank)
         self._sort_csd_method(csd_method)
 
+        if self.verbose:
+            print("Fitting HPMax filters...\n")
+
         csd, freqs = self._compute_csd(
             csd_method,
             n_fft,
@@ -446,6 +449,9 @@ class SpatioSpectralFilter:
         self._compute_hpmax(csd, freqs)
 
         self._fitted = True
+
+        if self.verbose:
+            print("    ... HPMax filter fitting finished\n")
 
     def _compute_csd(
         self,
@@ -460,12 +466,15 @@ class SpatioSpectralFilter:
 
         Returns
         -------
-        csd : numpy.ndarray, shape [channels x channels x frequencies]
+        csd : numpy.ndarray, shape of [channels x channels x frequencies]
             CSD of the data.
 
-        freqs : numpy.ndarray, shape [frequencies]
+        freqs : numpy.ndarray, shape of [frequencies]
             Frequencies in ``csd``.
         """
+        if self.verbose:
+            print("    Computing CSD...")
+
         fmin, fmax = self._get_fmin_fmax()
 
         if csd_method == "multitaper":
@@ -507,6 +516,9 @@ class SpatioSpectralFilter:
             [csd.get_data(freq) for freq in csd.frequencies]
         ).transpose(1, 2, 0)
 
+        if self.verbose:
+            print("        ... CSD computation finished\n")
+
         return csd, freqs
 
     def _get_fmin_fmax(self) -> tuple[float, float]:
@@ -520,6 +532,9 @@ class SpatioSpectralFilter:
 
     def _compute_hpmax(self, csd: np.ndarray, freqs: np.ndarray) -> None:
         """Compute HPMax on the data CSD."""
+        if self.verbose:
+            print("    Computing HPMax filters...")
+
         cov_signal, cov_noise = self._compute_cov_from_csd(csd, freqs)
         cov_signal, cov_noise, projection = self._project_cov_rank_subspace(
             cov_signal, cov_noise
@@ -536,6 +551,9 @@ class SpatioSpectralFilter:
         self.patterns = np.linalg.pinv(self.filters)
         self.ratios = eigvals[ix]
 
+        if self.verbose:
+            print("        ... HPMax filter computation finished\n")
+
     def _compute_cov_from_csd(
         self, csd: np.ndarray, freqs: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray]:
@@ -543,10 +561,10 @@ class SpatioSpectralFilter:
 
         Returns
         -------
-        cov_signal : numpy.ndarray, shape [channels x channels]
+        cov_signal : numpy.ndarray, shape of [channels x channels]
             Covariance of the signal frequencies.
 
-        cov_noise : numpy.ndarray, shape [channels x channels]
+        cov_noise : numpy.ndarray, shape of [channels x channels]
             Covariance of the noise frequencies.
         """
         csd = np.real(csd)
@@ -580,15 +598,15 @@ class SpatioSpectralFilter:
 
         Returns
         -------
-        cov_signal : numpy.ndarray, shape [:attr:`rank` x :attr:`rank`]
+        cov_signal : numpy.ndarray, shape of [rank x rank]
             Covariance of the signal frequencies projected into the rank
             subspace.
 
-        cov_noise : numpy.ndarray, shape [:attr:`rank` x :attr:`rank`]
+        cov_noise : numpy.ndarray, shape of [rank x rank]
             Covariance of the noise frequencies projected into the rank
             subspace.
 
-        projection : numpy.ndarray, shape [channels x :attr:`rank`]
+        projection : numpy.ndarray, shape of [channels x rank]
             Rank subspace projection matrix.
         """
         if self.rank < self._n_chans:
@@ -619,7 +637,8 @@ class SpatioSpectralFilter:
 
         Returns
         -------
-        transformed_data : numpy.ndarray, shape [epochs x components x times]
+        transformed_data : numpy.ndarray, shape of [epochs x components x
+        times]
             Transformed data with only those components created with filters
             whose signal:noise ratios are > :attr:`min_ratio`.
 

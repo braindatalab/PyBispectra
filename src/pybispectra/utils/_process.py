@@ -218,37 +218,37 @@ def _compute_bispectrum(
 
     Parameters
     ----------
-    data : np.ndarray of float
-    -   3D array of FFT coefficients with shape `[epochs x 2 x frequencies]`,
-        where the second dimension contains the data for the seed and target
-        channel of a single connection, respectively.
+    data : np.ndarray of float, shape of [epochs x 2 x frequencies]
+        FFT coefficients, where the second dimension contains the data for the
+        seed and target channel of a single connection, respectively.
 
-    freqs : np.ndarray of float
-    -   1D array of frequencies in ``data``.
+    freqs : np.ndarray of float, shape of [frequencies]
+        Frequencies in ``data``.
 
-    f1s : np.ndarray of float
-    -   1D array of low frequencies to compute bispectra for.
+    f1s : np.ndarray of float, shape of [frequencies]
+        Low frequencies to compute the bispectrum for.
 
-    f2s : np.ndarray of float
-    -   1D array of high frequencies to compute bispectra for.
+    f2s : np.ndarray of float, shape of [frequencies]
+        High frequencies to compute the bispectrum for.
 
-    kmn : np.ndarray of int
-    -   1D array of 1D arrays of length 3, where each sub-array contains the k,
-        m, and n channel indices in `data`, respectively, to compute the
+    kmn : np.ndarray of int, shape of [? x 3]
+        Array of variable length of arrays, where each sub-array contains the
+        k, m, and n channel indices in `data`, respectively, to compute the
         bispectrum for.
 
     Returns
     -------
-    results : np.ndarray of complex float
-    -   4D complex-valued array containing the bispectra of a single connection
-        with shape `[kmn x epochs x f1 x f2]`, where the first dimension
-        corresponds to the different channel indices given in ``kmn``.
+    results : np.ndarray of complex float, shape of [kmn x epochs x f1s x f2s]
+        Complex-valued array containing the bispectrum of a single connection,
+        where the first dimension corresponds to the different channel indices
+        given in ``kmn``.
 
     Notes
     -----
-    -   Averaging across epochs is not performed here as :func:`np.mean` of
-        complex numbers is not supported when compiling using Numba.
-    -   No checks on the input data are performed for speed.
+    Averaging across epochs is not performed here as :func:`np.mean` of complex
+    numbers is not supported when compiling using Numba.
+
+    No checks on the input data are performed for speed.
     """
     results = np.full(
         (len(kmn), data.shape[0], f1s.shape[0], f2s.shape[0]),
@@ -283,25 +283,23 @@ def _compute_threenorm(
 
     PARAMETERS
     ----------
-    data : numpy.ndarray of float
-        3D array of FFT coefficients with shape `[epochs x 2 x frequencies]`,
-        where the second dimension contains the data for the seed and target
-        channel of a single connection, respectively.
+    data : numpy.ndarray of float, shape of [epochs x 2 x frequencies]
+        FFT coefficients, where the second dimension contains the data for the
+        seed and target channel of a single connection, respectively.
 
-    freqs : numpy.ndarray of float
-        1D array of frequencies in ``data``.
+    freqs : numpy.ndarray of float, shape of [frequencies]
+        Frequencies in ``data``.
 
-    f1s : numpy.ndarray of float
-        1D array of low frequencies to compute the threenorm for.
+    f1s : numpy.ndarray of float, shape of [frequencies]
+        Low frequencies to compute the threenorm for.
 
-    f2s : numpy.ndarray of float
-        1D array of high frequencies to compute the threenorm for.
+    f2s : numpy.ndarray of float, shape of [frequencies]
+        High frequencies to compute the threenorm for.
 
     RETURNS
     -------
-    results : numpy.ndarray of float
-        2D array containing the threenorm of a single connection averaged
-        across epochs, with shape `[f1 x f2]`.
+    results : numpy.ndarray of float, shape of [f1s x f2s]
+        Threenorm of a single connection averaged across epochs.
     """
     results = np.full(
         (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64

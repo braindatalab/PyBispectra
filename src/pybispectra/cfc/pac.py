@@ -21,12 +21,11 @@ class PAC(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray of float
-        3D array of FFT coefficients with shape `[epochs x channels x
-        frequencies]`.
+    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+        FFT coefficients.
 
-    freqs : numpy.ndarray of float
-        1D array of the frequencies in :attr:`data`.
+    freqs : numpy.ndarray of float, shape of [frequencies]
+        Frequencies (in Hz) in :attr:`data`.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -36,21 +35,21 @@ class PAC(_ProcessBispectrum):
     results : tuple of ResultsCFC
         PAC results for each of the computed metrics.
 
-    data : numpy.ndarray of float
-        FFT coefficients with shape `[epochs x channels x frequencies]`.
+    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+        FFT coefficients.
 
-    freqs : numpy.ndarray of float
-        1D array of the frequencies in :attr:`data`.
+    freqs : numpy.ndarray of float, shape of [frequencies]
+        Frequencies (in Hz) in :attr:`data`.
 
-    indices : tuple of numpy.ndarray of int
-        Two arrays containing the seed and target indices (respectively) most
-        recently used with :meth:`compute`.
+    indices : tuple of numpy.ndarray of int, length of 2
+        Indices of the seed and target channels, respectively, most recently
+        used with :meth:`compute`.
 
-    f1 : numpy.ndarray of float
-        1D array of low frequencies most recently used with :meth:`compute`.
+    f1 : numpy.ndarray of float, shape of [frequencies]
+        Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2 : numpy.ndarray of float
-        1D array of high frequencies most recently used with :meth:`compute`.
+    f2 : numpy.ndarray of float, shape of [frequencies]
+        High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -82,19 +81,21 @@ class PAC(_ProcessBispectrum):
 
         Parameters
         ----------
-        indices : tuple of numpy.ndarray of int | None (default None)
-            Indices of the channels to compute PAC between. Should contain two
-            1D arrays of equal length for the seed and target indices,
-            respectively. If ``None``, coupling between all channels is
+        indices : tuple of numpy.ndarray of int | None (default None), length
+        of 2
+            Indices of the seed and target channels, respectively, to compute
+            PAC between. If ``None``, coupling between all channels is
             computed.
 
-        f1 : numpy.ndarray of float | None (default None)
-            A 1D array of the lower frequencies to compute PAC on. If ``None``,
-            all frequencies are used.
+        f1 : numpy.ndarray of float | None (default None), shape of
+        [frequencies]
+            Lower frequencies to compute PAC on. If ``None``, all frequencies
+            are used.
 
-        f2 : numpy.ndarray of float | None (default None)
-            A 1D array of the higher frequencies to compute PAC on. If
-            ``None``, all frequencies are used.
+        f2 : numpy.ndarray of float | None (default None), shape of
+        [frequencies]
+            Higher frequencies to compute PAC on. If ``None``, all frequencies
+            are used.
 
         symmetrise : str | list of str (default ``["none", "antisym"]``)
             Symmetrisation to perform when computing PAC. If ``"none"``, no
@@ -162,7 +163,7 @@ class PAC(_ProcessBispectrum):
         self._store_results()
 
         if self.verbose:
-            print("    [PAC computation finished]\n")
+            print("    ... PAC computation finished\n")
 
     def _reset_attrs(self) -> None:
         """Reset attrs. of the object to prevent interference."""
@@ -258,7 +259,7 @@ class PAC(_ProcessBispectrum):
         )
 
         if self.verbose:
-            print("        [Bispectra computation finished]\n")
+            print("        ... Bispectra computation finished\n")
 
     def _compute_bicoherence(self) -> None:
         """Compute bicoherence from the bispectrum using the threenorm."""
@@ -289,7 +290,7 @@ class PAC(_ProcessBispectrum):
         self._bicoherence = self._bispectrum / threenorm
 
         if self.verbose:
-            print("        [Bicoherence computation finished]\n")
+            print("        ... Bicoherence computation finished\n")
 
     def _compute_pac(self) -> None:
         """Compute PAC results from bispectrum/bicoherence."""

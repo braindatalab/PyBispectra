@@ -22,9 +22,8 @@ def compute_fft(
 
     Parameters
     ----------
-    data : numpy.ndarray of float
-        3D array of real-valued data to compute the FFT on, with shape `[epochs
-        x channels x times]`.
+    data : numpy.ndarray of float, shape of [epochs x channels x times]
+        Real-valued data to compute the FFT on.
 
     sfreq : int
         Sampling frequency of the data in Hz.
@@ -37,12 +36,11 @@ def compute_fft(
 
     Returns
     -------
-    fft : numpy.ndarray of float
-        3D array of FFT coefficients of the data with shape [epochs x channels
-        x positive frequencies].
+    fft : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+        FFT coefficients for the positive frequencies of ``data``.
 
-    freqs : numpy.ndarray of float
-        1D array of the frequencies in ``fft``.
+    freqs : numpy.ndarray of float, shape of [frequencies]
+        Frequencies (in Hz) in ``fft``.
     """
     if not isinstance(data, np.ndarray):
         raise TypeError("`data` must be a NumPy NDArray.")
@@ -127,7 +125,7 @@ def compute_rank(data: np.ndarray, sv_tol: float = 1e-5) -> int:
 
     Parameters
     ----------
-    data : numpy.ndarray, shape [epochs x channels x timepoints]
+    data : numpy.ndarray, shape of [epochs x channels x times]
         Data to find the rank of.
 
     sv_tol : float (default 1e-5)

@@ -64,6 +64,7 @@ intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy", None),
     "matplotlib": ("https://matplotlib.org/stable", None),
     "numba": ("https://numba.readthedocs.io/en/latest", None),
+    "mne": ("https://mne.tools/stable/index.html", None),
 }
 
 
@@ -99,6 +100,12 @@ numpydoc_xref_ignore = {
     "dtype",
     "object",
     # shapes
+    "epochs",
+    "channels",
+    "rank",
+    "times",
+    "frequencies",
+    "x",
     "n_vertices",
     "n_faces",
     "n_channels",
