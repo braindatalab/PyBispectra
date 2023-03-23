@@ -39,6 +39,7 @@ extensions = [
 bibtex_bibfiles = ["refs.bib"]
 
 autosummary_generate = True
+autodoc_default_options = {"inherited-members": None}
 
 sphinx_gallery_conf = {
     "examples_dirs": "../../examples",
