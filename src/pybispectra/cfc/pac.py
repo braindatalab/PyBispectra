@@ -32,7 +32,7 @@ class PAC(_ProcessBispectrum):
 
     Attributes
     ----------
-    results : tuple of ResultsCFC
+    results : tuple of pybispectra.ResultsCFC
         PAC results for each of the computed metrics.
 
     data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
@@ -81,19 +81,16 @@ class PAC(_ProcessBispectrum):
 
         Parameters
         ----------
-        indices : tuple of numpy.ndarray of int | None (default None), length
-        of 2
+        indices : tuple of numpy.ndarray of int | None (default None), length of 2
             Indices of the seed and target channels, respectively, to compute
             PAC between. If ``None``, coupling between all channels is
             computed.
 
-        f1 : numpy.ndarray of float | None (default None), shape of
-        [frequencies]
+        f1 : numpy.ndarray of float | None (default None), shape of [frequencies]
             Lower frequencies to compute PAC on. If ``None``, all frequencies
             are used.
 
-        f2 : numpy.ndarray of float | None (default None), shape of
-        [frequencies]
+        f2 : numpy.ndarray of float | None (default None), shape of [frequencies]
             Higher frequencies to compute PAC on. If ``None``, all frequencies
             are used.
 
@@ -378,4 +375,4 @@ class PAC(_ProcessBispectrum):
     @property
     def results(self) -> tuple[ResultsCFC]:
         """Return the results."""
-        return self._results
+        return deepcopy(self._results)

@@ -1,5 +1,7 @@
 """Tools for handling PPC analysis."""
 
+from copy import deepcopy
+
 import numpy as np
 from numba import njit
 from pqdm.processes import pqdm
@@ -24,11 +26,11 @@ class PPC(_ProcessFreqBase):
 
     Attributes
     ----------
-    results : tuple of ResultsCFC
+    results : tuple of pybispectra.ResultsCFC
         PPC results for each of the computed metrics.
 
     data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
-        FFT coefficients..
+        FFT coefficients.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
@@ -60,19 +62,16 @@ class PPC(_ProcessFreqBase):
 
         Parameters
         ----------
-        indices : tuple of numpy.ndarray of int | None (default None), length
-        of 2
+        indices : tuple of numpy.ndarray of int | None (default None), length of 2
             Indices of the seed and target channels, respectively, to compute
             PPC between. If ``None``, coupling between all channels is
             computed.
 
-        f1 : numpy.ndarray of float | None (default None), shape of
-        [frequencies]
+        f1 : numpy.ndarray of float | None (default None), shape of [frequencies]
             Lower frequencies to compute PPC on. If ``None``, all frequencies
             are used.
 
-        f2 : numpy.ndarray of float | None (default None), shape of
-        [frequencies]
+        f2 : numpy.ndarray of float | None (default None), shape of [frequencies]
             Higher frequencies to compute PPC on. If ``None``, all frequencies
             are used.
 
@@ -149,7 +148,7 @@ class PPC(_ProcessFreqBase):
     @property
     def results(self) -> tuple[ResultsCFC]:
         """Return the results."""
-        return self._results
+        return deepcopy(self._results)
 
 
 @njit

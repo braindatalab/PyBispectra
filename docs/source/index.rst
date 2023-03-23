@@ -28,7 +28,7 @@ implemented to reduce computation times. There is a minor reliance on
 `MNE <https://mne.tools/stable/index.html>`_.
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
    :titlesonly:
    :caption: Contents:
 

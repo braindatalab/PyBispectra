@@ -31,7 +31,7 @@ def compute_fft(
     n_jobs : int (default ``1``)
         Number of jobs to run in parallel.
 
-    verbose : bool (default ``True``)
+    verbose : bool (default True)
         Whether or not to report the status of the processing.
 
     Returns
@@ -128,7 +128,7 @@ def compute_rank(data: np.ndarray, sv_tol: float = 1e-5) -> int:
     data : numpy.ndarray, shape of [epochs x channels x times]
         Data to find the rank of.
 
-    sv_tol : float (default 1e-5)
+    sv_tol : float (default ``1e-5``)
         Tolerance to use to define non-zero singular values based on the
         largest singular value.
 

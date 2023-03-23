@@ -251,7 +251,7 @@ class SpatioSpectralFilter:
             Lower and upper frequencies (in Hz) to treat as the noise,
             excluding the frequencies in :attr:`signal_bounds`.
 
-        signal_noise_gap : float (default 1.0)
+        signal_noise_gap : float (default ``1.0``)
             Frequency count (in Hz) to treat as a transtition boundary between
             :attr:`signal_bounds` and :attr:`noise_bounds`. Used to reduce
             spectral leakage between he signal and noise frequencies.
@@ -385,7 +385,7 @@ class SpatioSpectralFilter:
             the same number of frequency bins around the harmonic frequencies
             are taken as noise frequencies.
 
-        n_harmonics : int (default 0)
+        n_harmonics : int (default ``0``)
             Number of harmonic frequencies of :attr:`signal_bounds` to use when
             computing the filters. If ``0``, no harmonics are used. Only used
             when :attr:`method` is ``"hpmax"``.
@@ -406,7 +406,7 @@ class SpatioSpectralFilter:
             Number of samples in the FFT. If ``None``, the number of times in
             each epoch is used.
 
-        mt_bandwidth : float (default 5.0)
+        mt_bandwidth : float (default ``5.0``)
             Bandwidth of the multitaper windowing function (in Hz). Only used
             if :attr:`csd_method` is ``"multitaper"``.
 
@@ -419,7 +419,7 @@ class SpatioSpectralFilter:
             the bandwidth. Only used if :attr:`csd_method` is
             ``"multitaper"``.
 
-        n_jobs : int (default 1)
+        n_jobs : int (default ``1``)
             Number of jobs to use when computing the CSD.
 
         Notes
@@ -639,7 +639,7 @@ class SpatioSpectralFilter:
 
         Parameters
         ----------
-        min_ratio : float (default 1.0)
+        min_ratio : float (default ``1.0``)
             Minimum required value of :attr:`ratios` to return the data
             transformed with the corresponding spatial filter.
 

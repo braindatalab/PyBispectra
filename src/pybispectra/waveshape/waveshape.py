@@ -53,9 +53,8 @@ class WaveShape(_ProcessBispectrum):
     -----
     It is recommended that spatiospectral filtering for a given frequency band
     of interest has been performed on :attr:`data` before analysing wave shape
-    properties :footcite:`Bartz2019`. This can be performed in PyBispectra
-    using the SpatioSpectralFilter class (see the corresponding example file
-    for details).
+    properties :footcite:`Bartz2019`. This can be performed with
+    :class:`pybispectra.SpatioSpectralFilter`.
 
     References
     ----------

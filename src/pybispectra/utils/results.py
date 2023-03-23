@@ -14,19 +14,19 @@ class ResultsCFC:
 
     Parameters
     ----------
-    data : numpy.ndarray of float
-        3D array of results to store with shape `[connections x f1 x f2]`.
+    data : numpy.ndarray of float, shape of [connections x low frequencies x high frequencies]
+        Results to store.
 
     indices : tuple of numpy.ndarray of int
         Indices of the channels for each connection of :attr:`data`. Should
         contain 2 1D arrays of equal length for the seed and target indices,
         respectively.
 
-    f1 : numpy.ndarray of float
-        1D array of low frequencies in :attr:`data`.
+    f1 : numpy.ndarray of float, shape of [frequencies]
+        Low frequencies (in Hz) in :attr:`data`.
 
-    f2 : numpy.ndarray of float
-        1D array of high frequencies in :attr:`data`.
+    f2 : numpy.ndarray of float, shape of [frequencies]
+        High frequencies (in Hz) in :attr:`data`.
 
     name : str
         Name of the results being stored.
@@ -41,14 +41,14 @@ class ResultsCFC:
         two 1D arrays of equal length for the seed and target indices,
         respectively.
 
-    n_cons : str
+    n_cons : int
         Number of connections in the results.
 
-    f1 : numpy.ndarray of float
-        1D array of low frequencies in the results.
+    f1 : numpy.ndarray of float, shape of [frequencies]
+        Low frequencies (in Hz) in :attr:`data`.
 
-    f2 : numpy.ndarray of float
-        1D array of high frequencies in the results.
+    f2 : numpy.ndarray of float, shape of [frequencies]
+        High frequencies (in Hz) in :attr:`data`.
     """
 
     _data = None
