@@ -9,7 +9,9 @@
 import os
 import sys
 
-from pybispectra.utils._docs import linkcode_resolve
+from sphinx.ext.autosummary.generate import AutosummaryRenderer
+
+from pybispectra.utils._docs import linkcode_resolve, smart_fullname
 
 
 project = "pybispectra"
@@ -38,8 +40,15 @@ extensions = [
 
 bibtex_bibfiles = ["refs.bib"]
 
+
+def fixed_init(self, app, template_dir=None):
+    AutosummaryRenderer.__old_init__(self, app, template_dir)
+    self.env.filters["smart_fullname"] = smart_fullname
+
+
+AutosummaryRenderer.__old_init__ = AutosummaryRenderer.__init__
+AutosummaryRenderer.__init__ = fixed_init
 autosummary_generate = True
-autodoc_default_options = {"inherited-members": None}
 
 sphinx_gallery_conf = {
     "examples_dirs": "../../examples",
