@@ -104,6 +104,7 @@ numpydoc_xref_ignore = {
     "channels",
     "rank",
     "times",
+    "components",
     "frequencies",
     "x",
     "n_vertices",
