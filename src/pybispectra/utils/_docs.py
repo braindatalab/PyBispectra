@@ -78,10 +78,3 @@ def linkcode_resolve(domain: str, info: dict):
         f"http://github.com/braindatalab/pybispectra/tree/{kind}/src/"
         f"pybispectra/{fn}{linespec}"
     )
-
-
-def smart_fullname(fullname):
-    parts = fullname.split(".")
-    return ".".join(
-        (part for i, part in enumerate(parts) if i != len(parts) - 2)
-    )
