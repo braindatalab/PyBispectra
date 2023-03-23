@@ -46,7 +46,7 @@ sphinx_gallery_conf = {
     "gallery_dirs": "auto_examples",
 }
 
-templates_path = ["_templates"]
+# templates_path = ["_templates"]
 exclude_patterns = []
 
 
