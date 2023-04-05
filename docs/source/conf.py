@@ -38,15 +38,12 @@ extensions = [
 
 bibtex_bibfiles = ["refs.bib"]
 
-autosummary_generate = True
-add_module_names = False
-
 sphinx_gallery_conf = {
     "examples_dirs": "../../examples",
     "gallery_dirs": "auto_examples",
 }
 
-# templates_path = ["_templates"]
+templates_path = ["_templates"]
 exclude_patterns = []
 
 
