@@ -7,7 +7,6 @@ Cross-Frequency Coupling
 
 .. automodule:: pybispectra.cfc
     :no-members:
-    :no-inherited-members:
 
 .. autosummary::
     :toctree: generated/
