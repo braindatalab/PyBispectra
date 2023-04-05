@@ -5,9 +5,18 @@ This is the reference for the modules of PyBispectra which contain the classes
 and functions required to perform cross-frequency coupling and time delay
 estimation analyses.
 
-.. autosummary::
-    :toctree: generated
-    :template: custom-module-template.rst
-    :recursive:
+.. container:: d-none
 
-    pybispectra
+    :py:mod:`pybispectra`:
+
+    .. automodule:: pybispectra
+        :no-members:
+        :no-inherited-members:
+
+.. toctree::
+    :maxdepth: 2
+
+    cfc
+    tde
+    waveshape
+    utils

@@ -6,7 +6,7 @@ from pybispectra.utils import compute_fft
 if __name__ == "__main__":
     rand = np.random.RandomState(44)
     data = rand.rand(10, 3, 200)
-    sfreq = 100
+    sfreq = 100.0
     n_jobs = 1
 
     data = rand.rand(2, 2, 220)
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # pac_results = pac.results
     # pac_results[0].plot()
 
-    tde = TDE(fft, freqs)
+    tde = TDE(fft, freqs, sfreq)
     tde.compute(symmetrise="none", n_jobs=n_jobs)
 
     print("jeff")
