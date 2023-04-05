@@ -10,6 +10,7 @@ Time Delay Estimation
     :no-inherited-members:
 
 .. autosummary::
+    :template: custom-class-template.rst
     :toctree: generated/
 
     TDE

@@ -10,6 +10,7 @@ Waveshape
     :no-inherited-members:
 
 .. autosummary::
+    :template: custom-class-template.rst
     :toctree: generated/
 
     WaveShape
