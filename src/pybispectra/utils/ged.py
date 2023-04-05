@@ -4,7 +4,7 @@ from copy import deepcopy
 from warnings import warn
 
 import numpy as np
-import mne
+from mne import Info
 from mne.decoding import SSD
 from mne.time_frequency import csd_array_fourier, csd_array_multitaper
 import scipy as sp
@@ -17,7 +17,7 @@ class SpatioSpectralFilter:
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs x channels x times]
+    data : numpy.ndarray, shape of [epochs, channels, times]
 
     sfreq : float
         Sampling frequency of :attr:`data` (in Hz).
@@ -27,15 +27,15 @@ class SpatioSpectralFilter:
 
     Attributes
     ----------
-    transformed_data : numpy.ndarray, shape of [epochs x rank x times]
+    transformed_data : numpy.ndarray, shape of [epochs, rank, times]
         :attr:`data` transformed with :attr:`filters`.
 
-    filters : numpy.ndarray, shape of [channels x rank]
+    filters : numpy.ndarray, shape of [channels, rank]
         Spatial filters (eigenvectors of the eigendecomposition). Sorted in
         descending order according to the size of the signal:noise ratios of
         :attr:`ratios`.
 
-    patterns : numpy.ndarray, shape of [rank x channels]
+    patterns : numpy.ndarray, shape of [rank, channels]
         Spatial patterns for each of the spatial filters.
 
     ratios : numpy.ndarray, shape of [rank]
@@ -176,9 +176,9 @@ class SpatioSpectralFilter:
         if n_harmonics < 0:
             raise ValueError("`n_harmonics` must be >= 0.")
 
-        if (
-            self.signal_bounds[1] * (self.n_harmonics + 1)
-        ) + self._n_noise_freqs[1] > self.sfreq * 0.5:
+        if (self.signal_bounds[1] * (n_harmonics + 1)) + self._n_noise_freqs[
+            1
+        ] > self.sfreq * 0.5:
             raise ValueError(
                 "`n_harmonics` for the requested signal and noise freqs. "
                 "extends beyond the Nyquist frequency."
@@ -337,7 +337,7 @@ class SpatioSpectralFilter:
         return filt_params_signal, filt_params_noise
 
     def _compute_ssd(
-        self, info: mne.Info, filt_params_signal: dict, filt_params_noise: dict
+        self, info: Info, filt_params_signal: dict, filt_params_noise: dict
     ) -> None:
         """Compute SSD on data using the MNE implementation."""
         ssd = SSD(
@@ -470,7 +470,7 @@ class SpatioSpectralFilter:
 
         Returns
         -------
-        csd : numpy.ndarray, shape of [channels x channels x frequencies]
+        csd : numpy.ndarray, shape of [channels, channels, frequencies]
             CSD of the data.
 
         freqs : numpy.ndarray, shape of [frequencies]
@@ -565,10 +565,10 @@ class SpatioSpectralFilter:
 
         Returns
         -------
-        cov_signal : numpy.ndarray, shape of [channels x channels]
+        cov_signal : numpy.ndarray, shape of [channels, channels]
             Covariance of the signal frequencies.
 
-        cov_noise : numpy.ndarray, shape of [channels x channels]
+        cov_noise : numpy.ndarray, shape of [channels, channels]
             Covariance of the noise frequencies.
         """
         csd = np.real(csd)
@@ -606,15 +606,15 @@ class SpatioSpectralFilter:
 
         Returns
         -------
-        cov_signal : numpy.ndarray, shape of [rank x rank]
+        cov_signal : numpy.ndarray, shape of [rank, rank]
             Covariance of the signal frequencies projected into the rank
             subspace.
 
-        cov_noise : numpy.ndarray, shape of [rank x rank]
+        cov_noise : numpy.ndarray, shape of [rank, rank]
             Covariance of the noise frequencies projected into the rank
             subspace.
 
-        projection : numpy.ndarray, shape of [channels x rank]
+        projection : numpy.ndarray, shape of [channels, rank]
             Rank subspace projection matrix.
         """
         if self.rank < self._use_n_chans:
@@ -645,7 +645,7 @@ class SpatioSpectralFilter:
 
         Returns
         -------
-        transformed_data : numpy.ndarray, shape of [epochs x components x
+        transformed_data : numpy.ndarray, shape of [epochs, components x
         times]
             Transformed data with only those components created with filters
             whose signal:noise ratios are > :attr:`min_ratio`.

@@ -15,7 +15,7 @@ class PPC(_ProcessFreqBase):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
@@ -29,7 +29,7 @@ class PPC(_ProcessFreqBase):
     results : tuple of pybispectra.ResultsCFC
         PPC results for each of the computed metrics.
 
-    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
@@ -162,7 +162,7 @@ def _compute_ppc(
 
     PARAMETERS
     ----------
-    data : numpy.ndarray of float, shape of [epochs x 2 x frequencies]
+    data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
         FFT coefficients where the second dimension contains the data for the
         seed and target channel of a single connection, respectively.
 
@@ -177,7 +177,7 @@ def _compute_ppc(
 
     RETURNS
     -------
-    results : numpy.ndarray of float, shape of [f1s x f2s]
+    results : numpy.ndarray of float, shape of [f1s, f2s]
         PPC for a single connection.
     """
     results = np.full(

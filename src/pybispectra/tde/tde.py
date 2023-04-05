@@ -15,11 +15,15 @@ class TDE(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
+
+    sfreq : float
+        Sampling frequency (in Hz) of the data from which :attr:`data` was
+        derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -29,11 +33,15 @@ class TDE(_ProcessBispectrum):
     results : tuple of ResultsTDE
         TDE results for each of the computed metrics.
 
-    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
+
+    sfreq : float
+        Sampling frequency (in Hz) of the data from which :attr:`data` was
+        derived.
 
     indices : tuple of numpy.ndarray of int, length of 2
         Indices of the seed and target channels, respectively, most recently
@@ -75,6 +83,25 @@ class TDE(_ProcessBispectrum):
         "yxx": (1, 0, 0),
     }
     _xyz = None
+
+    _times = None
+
+    def __init__(
+        self,
+        data: np.ndarray,
+        freqs: np.ndarray,
+        sfreq: int | float,
+        verbose: bool = True,
+    ) -> None:  # noqa D107
+        super().__init__(data, freqs, verbose)
+        self._sort_sfreq(sfreq)
+
+    def _sort_sfreq(self, sfreq: int | float):
+        """Sort sampling frequency input."""
+        if not isinstance(sfreq, float) and not isinstance(sfreq, int):
+            raise TypeError("`sfreq` must be an int or a float.")
+
+        self.sfreq = deepcopy(sfreq)
 
     def compute(
         self,
@@ -344,6 +371,8 @@ class TDE(_ProcessBispectrum):
         if self._return_antisym:
             self._compute_tde_antisym()
 
+        self._compute_times()
+
         if self.verbose:
             print("        ... TDE computation finished\n")
 
@@ -377,14 +406,14 @@ class TDE(_ProcessBispectrum):
 
     def _compute_tde_antisym(self) -> None:
         """Compute antisymmetrised TDE."""
-        B_xxx = self._bispectra[self._xyz.keys().index("xxx")]
+        B_xxx = self._bispectra[list(self._xyz.keys()).index("xxx")]
 
         if self._return_method_ii or self._return_method_iv:
-            B_yyy = self._bispectra[self._xyz.keys().index("yyy")]
+            B_yyy = self._bispectra[list(self._xyz.keys()).index("yyy")]
 
         B_xyx = (
-            self._bispectra[self._xyz.keys().index("xxy")]
-            - self._bispectra[self._xyz.keys().index("yxx")]
+            self._bispectra[list(self._xyz.keys()).index("xxy")]
+            - self._bispectra[list(self._xyz.keys()).index("yxx")]
         )
 
         if self._return_method_i:
@@ -421,7 +450,7 @@ class TDE(_ProcessBispectrum):
 
         Returns
         -------
-        tde : numpy.ndarray of float, shape of [connections x f2 * 2 - 1]
+        tde : numpy.ndarray of float, shape of [connections, f2 * 2 - 1]
             Time delay estimates.
         """
         assert isinstance(kwargs, dict), (
@@ -445,6 +474,13 @@ class TDE(_ProcessBispectrum):
                 disable=not self.verbose,
             )
         )
+
+    def _compute_times(self) -> None:
+        """Compute timepoints (in ms) in the results."""
+        n_samples = 2 * len(self.f2)
+        epoch_len = n_samples / self.sfreq
+
+        self._times = np.linspace(0, epoch_len, n_samples + 1)
 
     def _store_results(self) -> None:
         """Store computed results in objects."""
@@ -537,16 +573,17 @@ def _compute_shift_ifft_I(I: np.ndarray) -> np.ndarray:
 
     PARAMETERS
     ----------
-    I : numpy.ndarray of complex float, shape of [f2 * 2 - 1]
+    I : numpy.ndarray of complex float, shape of [f2 * 2]
         Bispectrum phase information for computing TDE, summed over the lower
         frequencies.
 
     RETURNS
     -------
-    tde : numpy.ndarray of float, shape of [f2 * 2 - 1]
+    tde : numpy.ndarray of float, shape of [f2 * 2]
         Time delay estimates.
     """
-    return np.abs(np.fft.fftshift(np.fft.ifft(I)))
+    # return np.abs(np.fft.fftshift(np.fft.ifft(I)))
+    return np.abs(np.fft.ifft(I))
 
 
 def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
@@ -554,22 +591,22 @@ def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray of complex float, shape of [f1s x f2s]
+    B_xyx : numpy.ndarray of complex float, shape of [f1s, f2s]
         Bispectrum for channel combination `xyx`.
 
-    B_xxx : numpy.ndarray of complex float, shape of [f1s x f2s]
+    B_xxx : numpy.ndarray of complex float, shape of [f1s, f2s]
         Bispectrum for channel combination `xxx`.
 
     Returns
     -------
-    tde : numpy.ndarray of float, shape of [f2 * 2 - 1]
+    tde : numpy.ndarray of float, shape of [f2 * 2]
         Time delay estimates.
 
     Notes
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
+    I = np.zeros((B_xyx.shape[1] * 2 + 1), dtype=np.complex128)
     phi = np.angle(B_xyx) - np.angle(B_xxx)
     I[: B_xyx.shape[1]] = np.nansum(np.exp(1j * phi), axis=0)
 
@@ -585,25 +622,25 @@ def _compute_tde_ii(
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray of complex float, shape of [f1s x f2s]
+    B_xyx : numpy.ndarray of complex float, shape of [f1s, f2s]
         Bispectrum for channel combination `xyx`.
 
-    B_xxx : numpy.ndarray of complex float, shape of [f1s x f2s]
+    B_xxx : numpy.ndarray of complex float, shape of [f1s, f2s]
         Bispectrum for channel combination `xxx`.
 
-    B_yyy : numpy.ndarray of complex float, shape of [f1s x f2s]
+    B_yyy : numpy.ndarray of complex float, shape of [f1s, f2s]
         Bispectrum for channel combination `yyy`.
 
     Returns
     -------
-    tde : numpy.ndarray of float, shape of [f2 * 2 - 1]
+    tde : numpy.ndarray of float, shape of [f2 * 2]
         Time delay estimates.
 
     Notes
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
+    I = np.zeros((B_xyx.shape[1] * 2 + 1), dtype=np.complex128)
     phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
     I[: B_xyx.shape[1]] = np.nansum(np.exp(1j * phi_prime), axis=0)
 
@@ -615,22 +652,22 @@ def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray of complex float, shape of [f1s x f2s]
+    B_xyx : numpy.ndarray of complex float, shape of [f1s, f2s]
         Bispectrum for channel combination `xyx`.
 
-    B_xxx : numpy.ndarray of complex float, shape of [f1s x f2s]
+    B_xxx : numpy.ndarray of complex float, shape of [f1s, f2s]
         Bispectrum for channel combination `xxx`.
 
     Returns
     -------
-    tde : numpy.ndarray of float, shape of [f2 * 2 - 1]
+    tde : numpy.ndarray of float, shape of [f2 * 2]
         Time delay estimates.
 
     Notes
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
+    I = np.zeros((B_xyx.shape[1] * 2 + 1), dtype=np.complex128)
     I[: B_xyx.shape[1]] = np.nansum(np.divide(B_xyx, B_xxx), axis=0)
 
     return _compute_shift_ifft_I(I)
@@ -645,25 +682,25 @@ def _compute_tde_iv(
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray of complex float, shape of [f1s x f2s]
+    B_xyx : numpy.ndarray of complex float, shape of [f1s, f2s]
         Bispectrum for channel combination `xyx`.
 
-    B_xxx : numpy.ndarray of complex float, shape of [f1s x f2s]
+    B_xxx : numpy.ndarray of complex float, shape of [f1s, f2s]
         Bispectrum for channel combination `xxx`.
 
-    B_yyy : numpy.ndarray of complex float, shape of [f1s x f2s]
+    B_yyy : numpy.ndarray of complex float, shape of [f1s, f2s]
         Bispectrum for channel combination `yyy`.
 
     Returns
     -------
-    tde : numpy.ndarray of float, shape of [f2 * 2 - 1]
+    tde : numpy.ndarray of float, shape of [f2 * 2]
         Time delay estimates.
 
     Notes
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[1] * 2 - 1), dtype=np.complex128)
+    I = np.zeros((B_xyx.shape[1] * 2 + 1), dtype=np.complex128)
     phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
     I[: B_xyx.shape[1]] = np.nansum(
         np.divide(

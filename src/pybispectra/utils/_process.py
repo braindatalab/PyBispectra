@@ -115,6 +115,10 @@ class _ProcessFreqBase(ABC):
                 "data."
             )
 
+        if self.sfreq is not None:
+            if self.sfreq < f2[-1] * 2:
+                raise ValueError("`sfreq` must be >= all entries of f2 * 2.")
+
         if self.verbose:
             if any(lfreq >= hfreq for hfreq in f2 for lfreq in f1):
                 warn(
@@ -218,7 +222,7 @@ def _compute_bispectrum(
 
     Parameters
     ----------
-    data : np.ndarray of float, shape of [epochs x 2 x frequencies]
+    data : np.ndarray of float, shape of [epochs, 2, frequencies]
         FFT coefficients, where the second dimension contains the data for the
         seed and target channel of a single connection, respectively.
 
@@ -231,14 +235,14 @@ def _compute_bispectrum(
     f2s : np.ndarray of float, shape of [frequencies]
         High frequencies to compute the bispectrum for.
 
-    kmn : np.ndarray of int, shape of [? x 3]
-        Array of variable length of arrays, where each sub-array contains the
-        k, m, and n channel indices in `data`, respectively, to compute the
+    kmn : np.ndarray of int, shape of [x, 3]
+        Array of variable length (x) of arrays, where each sub-array contains
+        the k, m, and n channel indices in `data`, respectively, to compute the
         bispectrum for.
 
     Returns
     -------
-    results : np.ndarray of complex float, shape of [kmn x epochs x f1s x f2s]
+    results : np.ndarray of complex float, shape of [kmn, epochs, f1s, f2s]
         Complex-valued array containing the bispectrum of a single connection,
         where the first dimension corresponds to the different channel indices
         given in ``kmn``.
@@ -283,7 +287,7 @@ def _compute_threenorm(
 
     PARAMETERS
     ----------
-    data : numpy.ndarray of float, shape of [epochs x 2 x frequencies]
+    data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
         FFT coefficients, where the second dimension contains the data for the
         seed and target channel of a single connection, respectively.
 
@@ -298,7 +302,7 @@ def _compute_threenorm(
 
     RETURNS
     -------
-    results : numpy.ndarray of float, shape of [f1s x f2s]
+    results : numpy.ndarray of float, shape of [f1s, f2s]
         Threenorm of a single connection averaged across epochs.
     """
     results = np.full(

@@ -17,7 +17,7 @@ class WaveShape(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
@@ -28,10 +28,10 @@ class WaveShape(_ProcessBispectrum):
 
     Attributes
     ----------
-    results : tuple of ResultsWaveShape, shape of [channels x f1 x f2]
+    results : tuple of ResultsWaveShape, shape of [channels, f1, f2]
         Bicoherence of the data.
 
-    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
@@ -163,7 +163,7 @@ class WaveShape(_ProcessBispectrum):
 
         Returns
         -------
-        bispectrum : np.ndarray, shape of [channels x f1s x f2s]
+        bispectrum : np.ndarray, shape of [channels, f1s, f2s]
             Complex-valued array containing the bispectrum for each channel.
         """
         if self.verbose:
@@ -206,7 +206,7 @@ class WaveShape(_ProcessBispectrum):
 
         Returns
         -------
-        threenorm : numpy.ndarray of float, shape of [channels x f1s x f2s]
+        threenorm : numpy.ndarray of float, shape of [channels, f1s, f2s]
             Complex-valued array containing the threenorm for each channel.
         """
         if self.verbose:

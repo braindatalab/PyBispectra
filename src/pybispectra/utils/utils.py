@@ -11,7 +11,7 @@ import scipy as sp
 
 def compute_fft(
     data: np.ndarray,
-    sfreq: int,
+    sfreq: int | float,
     n_jobs: int = 1,
     verbose: bool = True,
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -22,10 +22,10 @@ def compute_fft(
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs x channels x times]
+    data : numpy.ndarray of float, shape of [epochs, channels, times]
         Real-valued data to compute the FFT on.
 
-    sfreq : int
+    sfreq : int | float
         Sampling frequency of the data in Hz.
 
     n_jobs : int (default ``1``)
@@ -36,7 +36,7 @@ def compute_fft(
 
     Returns
     -------
-    fft : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+    fft : numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients for the positive frequencies of ``data``.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
@@ -52,14 +52,8 @@ def compute_fft(
     if n_jobs < 1:
         raise ValueError("`n_jobs` must be >= 1.")
 
-    if not isinstance(sfreq, int):
-        if isinstance(sfreq, float):
-            if verbose:
-                warn(
-                    "`sfreq` is a float. Converting it to an int.", UserWarning
-                )
-        else:
-            raise TypeError("`sfreq` must be an int.")
+    if not isinstance(sfreq, int) and not isinstance(sfreq, float):
+        raise TypeError("`sfreq` must be an int or a float.")
 
     if verbose and not np.isreal(data).all():
         warn("`data` is expected to be real-valued.", UserWarning)
@@ -125,7 +119,7 @@ def compute_rank(data: np.ndarray, sv_tol: float = 1e-5) -> int:
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs x channels x times]
+    data : numpy.ndarray, shape of [epochs, channels, times]
         Data to find the rank of.
 
     sv_tol : float (default ``1e-5``)

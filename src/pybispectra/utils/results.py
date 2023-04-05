@@ -14,7 +14,7 @@ class ResultsCFC:
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [connections x low frequencies x high frequencies]
+    data : numpy.ndarray of float, shape of [connections, low frequencies, high frequencies]
         Results to store.
 
     indices : tuple of numpy.ndarray of int
@@ -67,8 +67,8 @@ class ResultsCFC:
     def __repr__(self) -> str:
         """Return printable represenation of the object."""
         return repr(
-            f"<Result: {self.name} | [{self.n_cons} connections x "
-            f"{len(self.f1)} f1 x {len(self.f2)} f2]>"
+            f"<Result: {self.name} | [{self.n_cons} connections, "
+            f"{len(self.f1)} f1, {len(self.f2)} f2]>"
         )
 
     def __init__(
@@ -122,7 +122,7 @@ class ResultsCFC:
         self.f2 = f2.copy()
 
         if data.shape != (len(indices[0]), len(f1), len(f2)):
-            raise ValueError("`data` must have shape [connections x f1 x f2].")
+            raise ValueError("`data` must have shape [connections, f1, f2].")
 
         if not isinstance(name, str):
             raise TypeError("`name` must be a string.")
@@ -137,8 +137,8 @@ class ResultsCFC:
         ----------
         form : str (default ``"raveled"``)
             How the results should be returned: ``"raveled"`` - results have
-            shape `[connections x f1 x f2]`; ``"compact"`` - results have shape
-            `[seeds x targets x f1 x f2]`.
+            shape `[connections, f1, f2]`; ``"compact"`` - results have shape
+            `[seeds, targets, f1, f2]`.
 
         Returns
         -------
@@ -165,7 +165,7 @@ class ResultsCFC:
         RETURNS
         -------
         compact_results : (default None) of float
-            Results with shape `[seeds x targets x f1 x f2]`.
+            Results with shape `[seeds, targets, f1, f2]`.
 
         indices : tuple[numpy.ndarray] of int
             Channel indices of ``compact_results`` for the seeds and targets,
@@ -489,8 +489,8 @@ class ResultsTDE:
 
     Parameters
     ----------
-    data : numpy.ndarray of float
-        2D array of results to store with shape `[connections x times]`.
+    data : numpy.ndarray of float, shape of [connections, times]
+        Results to store.
 
     indices : tuple of numpy.ndarray of int
         Indices of the channels for each connection of :attr:`data`. Should
@@ -498,7 +498,7 @@ class ResultsTDE:
         respectively.
 
     times : numpy.ndarray of float
-        1D array of timepoints in :attr:`data`.
+        1D array of timepoints in :attr:`data` (in ms).
 
     name : str
         Name of the results being stored.
@@ -580,7 +580,7 @@ class ResultsTDE:
         self.times = times.copy()
 
         if data.shape != (len(indices[0]), len(times)):
-            raise ValueError("`data` must have shape [connections x times].")
+            raise ValueError("`data` must have shape [connections, times].")
 
         if not isinstance(name, str):
             raise TypeError("`name` must be a string.")
@@ -589,6 +589,6 @@ class ResultsTDE:
     def __repr__(self) -> str:
         """Return printable represenation of the object."""
         return repr(
-            f"<Result: {self.name} | [{self.n_cons} connections x "
+            f"<Result: {self.name} | [{self.n_cons} connections, "
             f"{len(self.times)} times]>"
         )

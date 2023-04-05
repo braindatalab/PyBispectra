@@ -21,7 +21,7 @@ class PAC(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
@@ -35,7 +35,7 @@ class PAC(_ProcessBispectrum):
     results : tuple of pybispectra.ResultsCFC
         PAC results for each of the computed metrics.
 
-    data : numpy.ndarray of float, shape of [epochs x channels x frequencies]
+    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
