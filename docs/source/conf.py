@@ -9,6 +9,7 @@
 import os
 import sys
 
+import pybispectra
 from pybispectra.utils._docs import linkcode_resolve
 
 
@@ -52,6 +53,33 @@ exclude_patterns = []
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
+
+# The full version, including alpha/beta/rc tags.
+release = pybispectra.__version__
+# The short X.Y version.
+version = ".".join(release.split(".")[:2])
+
+html_theme_options = {
+    "icon_links": [
+        dict(
+            name="GitHub",
+            url="https://github.com/braindatalab/pybispectra",
+            icon="fa-brands fa-square-github",
+        )
+    ],
+    "icon_links_label": "External Links",  # for screen reader
+    "use_edit_page_button": False,
+    "navigation_with_keys": False,
+    "show_toc_level": 1,
+    "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"],
+    "footer_items": ["copyright"],
+    "switcher": {
+        "json_url": "https://pybispectra.readthedocs.io/en/dev/_static/versions.json",  # noqa E501
+        "version_match": version,
+    },
+    "pygment_light_style": "default",
+    "pygment_dark_style": "github-dark",
+}
 
 
 # -- Intersphinx configuration -----------------------------------------------
