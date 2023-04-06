@@ -12,9 +12,10 @@ Install the package into the desired environment using pip:
 Development
 -----------
 
-To install the package in editable mode for development, clone the GitHub
-repository and navigate to the folder location, then install the package and
-its `development requirements <../../../requirements_dev.txt>`_ using pip:
+To install the package in editable mode for development, clone the `GitHub
+repository <https://github.com/braindatalab/pybispectra/tree/main>` and
+navigate to the desired installation location, then install the package and its
+`development requirements <../../../requirements_dev.txt>`_ using pip:
 
 .. code-block:: console
     

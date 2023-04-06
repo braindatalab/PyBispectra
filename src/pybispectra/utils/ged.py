@@ -645,8 +645,7 @@ class SpatioSpectralFilter:
 
         Returns
         -------
-        transformed_data : numpy.ndarray, shape of [epochs, components x
-        times]
+        transformed_data : numpy.ndarray, shape of [epochs, components, times]
             Transformed data with only those components created with filters
             whose signal:noise ratios are > :attr:`min_ratio`.
 

@@ -24,8 +24,8 @@ coupling, generalised eigendecompositions, Fourier coefficients, and plotting
 results are also provided.
 
 Parallel processing and `Numba <https://numba.pydata.org/>`_ optimisation are
-implemented to reduce computation times. There is a minor reliance on
-`MNE <https://mne.tools/stable/index.html>`_.
+implemented to reduce computation times. There is a minor reliance on the
+`MNE <https://mne.tools/stable/index.html>`_ signal procressing toolbox.
 
 .. toctree::
    :maxdepth: 3
