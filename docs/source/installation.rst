@@ -7,7 +7,7 @@ Install the package into the desired environment using pip:
     
     $ pip install pybispectra
 
-`See here for the list of requirements <../requirements.txt>`_.
+`See here for the list of requirements <../requirements.rst>`_.
 
 Development
 -----------
