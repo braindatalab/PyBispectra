@@ -54,11 +54,6 @@ exclude_patterns = []
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 
-# The full version, including alpha/beta/rc tags.
-release = pybispectra.__version__
-# The short X.Y version.
-version = ".".join(release.split(".")[:2])
-
 html_theme_options = {
     "icon_links": [
         dict(
@@ -75,7 +70,7 @@ html_theme_options = {
     "footer_items": ["copyright"],
     "switcher": {
         "json_url": "https://pybispectra.readthedocs.io/en/main/_static/versions.json",  # noqa E501
-        "version_match": version,
+        "version_match": pybispectra.__version__,
     },
     "pygment_light_style": "default",
     "pygment_dark_style": "github-dark",
