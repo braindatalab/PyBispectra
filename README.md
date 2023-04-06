@@ -10,8 +10,8 @@ coupling, generalised eigendecompositions, Fourier coefficients, and plotting
 results are also provided.
 
 Parallel processing and [Numba](https://numba.pydata.org/) optimisation are
-implemented to reduce computation times. There is a minor reliance on
-[MNE](https://mne.tools/stable/index.html).
+implemented to reduce computation times. There is a minor reliance on the
+[MNE](https://mne.tools/stable/index.html) signal processing toolbox.
 
 ## Installation & Requirements:
 Install the package into the desired environment using pip `pip install pybispectra`<br/>
