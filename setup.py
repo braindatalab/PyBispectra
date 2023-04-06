@@ -4,13 +4,13 @@ from setuptools import setup
 
 setup(
     name="pybispectra",
-    version="0.0.1",
+    version="dev",
     package_dir={"": "src/"},
     packages=[
         "pybispectra",
         "pybispectra.cfc",
         "pybispectra.tde",
         "pybispectra.utils",
-        "pybispectra.waveshape"
+        "pybispectra.waveshape",
     ],
 )
