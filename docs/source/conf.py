@@ -74,7 +74,7 @@ html_theme_options = {
     "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"],
     "footer_items": ["copyright"],
     "switcher": {
-        "json_url": "https://pybispectra.readthedocs.io/en/dev/_static/versions.json",  # noqa E501
+        "json_url": "https://pybispectra.readthedocs.io/en/main/_static/versions.json",  # noqa E501
         "version_match": version,
     },
     "pygment_light_style": "default",
