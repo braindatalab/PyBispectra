@@ -477,10 +477,13 @@ class TDE(_ProcessBispectrum):
 
     def _compute_times(self) -> None:
         """Compute timepoints (in ms) in the results."""
-        n_samples = 2 * len(self.f2)
-        epoch_len = n_samples / self.sfreq
+        n_samples = len(self.f2)
+        half_epoch_len = (n_samples / self.sfreq) * 0.5
 
-        self._times = np.linspace(0, epoch_len, n_samples + 1)
+        self._times = (
+            np.linspace(-half_epoch_len, half_epoch_len, n_samples * 2 + 1)
+            * 1000
+        )
 
     def _store_results(self) -> None:
         """Store computed results in objects."""
@@ -582,8 +585,7 @@ def _compute_shift_ifft_I(I: np.ndarray) -> np.ndarray:
     tde : numpy.ndarray of float, shape of [f2 * 2]
         Time delay estimates.
     """
-    # return np.abs(np.fft.fftshift(np.fft.ifft(I)))
-    return np.abs(np.fft.ifft(I))
+    return np.abs(np.fft.fftshift(np.fft.ifft(I)))
 
 
 def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:

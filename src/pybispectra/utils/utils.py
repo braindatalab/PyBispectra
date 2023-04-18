@@ -12,6 +12,7 @@ import scipy as sp
 def compute_fft(
     data: np.ndarray,
     sfreq: int | float,
+    n_freqs: int | None = None,
     n_jobs: int = 1,
     verbose: bool = True,
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -28,10 +29,14 @@ def compute_fft(
     sfreq : int | float
         Sampling frequency of the data in Hz.
 
+    n_freqs : int | None (default ``None``)
+        Number of frequencies in the ouput, not including the zero frequency.
+        By default, is equal to ``int(sfreq)``.
+
     n_jobs : int (default ``1``)
         Number of jobs to run in parallel.
 
-    verbose : bool (default True)
+    verbose : bool (default ``True``)
         Whether or not to report the status of the processing.
 
     Returns
@@ -42,31 +47,19 @@ def compute_fft(
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in ``fft``.
     """
-    if not isinstance(data, np.ndarray):
-        raise TypeError("`data` must be a NumPy NDArray.")
-    if data.ndim != 3:
-        raise ValueError("`data` must be a 3D array.")
-
-    if not isinstance(n_jobs, int):
-        raise TypeError("`n_jobs` must be an integer.")
-    if n_jobs < 1:
-        raise ValueError("`n_jobs` must be >= 1.")
-
-    if not isinstance(sfreq, int) and not isinstance(sfreq, float):
-        raise TypeError("`sfreq` must be an int or a float.")
-
-    if verbose and not np.isreal(data).all():
-        warn("`data` is expected to be real-valued.", UserWarning)
+    n_freqs = _compute_freqs_input_checks(
+        data, sfreq, n_freqs, n_jobs, verbose
+    )
 
     if verbose:
         print("Computing FFT on the data...")
 
-    freqs = np.linspace(0.0, sfreq / 2.0, int(sfreq) + 1)
+    freqs = np.abs(np.fft.fftfreq(n=n_freqs * 2, d=1 / sfreq)[: n_freqs + 1])
 
     window = np.hanning(data.shape[2])
 
     args = [
-        {"a": sp.signal.detrend(chan_data) * window}
+        {"a": sp.signal.detrend(chan_data) * window, "n": n_freqs + 1}
         for chan_data in data.transpose(1, 0, 2)
     ]
 
@@ -85,6 +78,43 @@ def compute_fft(
         print("    [FFT computation finished]\n")
 
     return fft[..., : len(freqs)], freqs
+
+
+def _compute_freqs_input_checks(
+    data: np.ndarray,
+    sfreq: int | float,
+    n_freqs: int | None,
+    n_jobs: int,
+    verbose: bool,
+) -> int:
+    """Checks inputs for computing FFT.
+
+    Returns
+    -------
+    n_freqs : int
+    """
+    if not isinstance(data, np.ndarray):
+        raise TypeError("`data` must be a NumPy NDArray.")
+    if data.ndim != 3:
+        raise ValueError("`data` must be a 3D array.")
+
+    if n_freqs is None:
+        n_freqs = int(sfreq)
+    elif not isinstance(n_freqs, int):
+        raise TypeError("`n_freqs` must be an integer")
+
+    if not isinstance(n_jobs, int):
+        raise TypeError("`n_jobs` must be an integer.")
+    if n_jobs < 1:
+        raise ValueError("`n_jobs` must be >= 1.")
+
+    if not isinstance(sfreq, int) and not isinstance(sfreq, float):
+        raise TypeError("`sfreq` must be an int or a float.")
+
+    if verbose and not np.isreal(data).all():
+        warn("`data` is expected to be real-valued.", UserWarning)
+
+    return n_freqs
 
 
 @njit
@@ -106,7 +136,7 @@ def fast_find_first(vector: np.ndarray, value: float | int) -> int:
 
     Notes
     -----
-    Does not perform checks in inputs for speed.
+    Does not perform checks on inputs for speed.
     """
     for idx, val in enumerate(vector):
         if val == value:

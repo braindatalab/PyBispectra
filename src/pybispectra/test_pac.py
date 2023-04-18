@@ -13,7 +13,7 @@ if __name__ == "__main__":
     data[:, 1, 20:] = data[:, 0, :200].copy()
     data = data[:, :, :200]
 
-    fft, freqs = compute_fft(data, sfreq, n_jobs)
+    fft, freqs = compute_fft(data, sfreq, 200, n_jobs)
 
     # ppc = PPC(fft, freqs)
     # ppc.compute(n_jobs=n_jobs)
@@ -25,6 +25,10 @@ if __name__ == "__main__":
     # pac_results[0].plot()
 
     tde = TDE(fft, freqs, sfreq)
-    tde.compute(symmetrise="none", n_jobs=n_jobs)
+    tde.compute(
+        symmetrise="none",
+        n_jobs=n_jobs,
+        indices=(np.array([0, 1]), np.array([1, 0])),
+    )
 
     print("jeff")
