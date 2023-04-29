@@ -1,5 +1,6 @@
 """Helper tools for processing results."""
 
+from typing import Callable
 from warnings import warn
 
 from mne import Info, create_info
@@ -12,14 +13,17 @@ import scipy as sp
 def compute_fft(
     data: np.ndarray,
     sfreq: int | float,
-    n_freqs: int | None = None,
+    n_points: int | None = None,
+    window: str = "hanning",
+    return_neg_freqs: bool = False,
     n_jobs: int = 1,
     verbose: bool = True,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute the FFT on real-valued data.
 
     As the data is assumed to be real-valued, only those values corresponding
-    to the positive frequencies are returned.
+    to the positive frequencies are returned by default (see
+    :param:`return_neg_freqs`).
 
     Parameters
     ----------
@@ -29,9 +33,17 @@ def compute_fft(
     sfreq : int | float
         Sampling frequency of the data in Hz.
 
-    n_freqs : int | None (default ``None``)
-        Number of frequencies in the ouput, not including the zero frequency.
-        By default, is equal to ``int(sfreq)``.
+    n_points : int | None (default ``None``)
+        Number of points in the FFT. If ``None``, is equal to the number of
+        times + 1.
+
+    window : str (default ``"hanning"``)
+        Type of window to apply to :param:`data` before computing the FFT.
+        Accepts ``"hanning"`` and ``"hamming"``. See :func:`numpy.hanning` and
+        :func:`numpy.hamming`.
+
+    return_neg_freqs : bool (default ``False``)
+        Whether or not to return the FFT coefficients for negative frequencies.
 
     n_jobs : int (default ``1``)
         Number of jobs to run in parallel.
@@ -42,24 +54,27 @@ def compute_fft(
     Returns
     -------
     fft : numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        FFT coefficients for the positive frequencies of ``data``.
+        FFT coefficients of :param:`data`.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
-        Frequencies (in Hz) in ``fft``.
+        Frequencies (in Hz) in :param:`fft`.
     """
-    n_freqs = _compute_freqs_input_checks(
-        data, sfreq, n_freqs, n_jobs, verbose
+    n_points, window_func = _compute_fft_input_checks(
+        data, sfreq, n_points, window, return_neg_freqs, n_jobs, verbose
     )
 
     if verbose:
         print("Computing FFT on the data...")
 
-    freqs = np.abs(np.fft.fftfreq(n=n_freqs * 2, d=1 / sfreq)[: n_freqs + 1])
+    freqs = np.fft.fftfreq(n=n_points, d=1 / sfreq)
+    if not return_neg_freqs:
+        freqs = np.abs(freqs)
+        freqs = freqs[: freqs.argmax()]
 
-    window = np.hanning(data.shape[2])
+    window = window_func(data.shape[2])
 
     args = [
-        {"a": sp.signal.detrend(chan_data) * window, "n": n_freqs + 1}
+        {"a": sp.signal.detrend(chan_data) * window, "n": n_points}
         for chan_data in data.transpose(1, 0, 2)
     ]
 
@@ -80,28 +95,32 @@ def compute_fft(
     return fft[..., : len(freqs)], freqs
 
 
-def _compute_freqs_input_checks(
+def _compute_fft_input_checks(
     data: np.ndarray,
     sfreq: int | float,
-    n_freqs: int | None,
+    n_points: int | None,
+    window: str,
+    return_neg_freqs: bool,
     n_jobs: int,
     verbose: bool,
-) -> int:
-    """Checks inputs for computing FFT.
+) -> tuple[int, Callable]:
+    """Check inputs for computing FFT.
 
     Returns
     -------
-    n_freqs : int
+    n_points : int
+
+    window_func : Callable
     """
     if not isinstance(data, np.ndarray):
-        raise TypeError("`data` must be a NumPy NDArray.")
+        raise TypeError("`data` must be a NumPy array.")
     if data.ndim != 3:
         raise ValueError("`data` must be a 3D array.")
 
-    if n_freqs is None:
-        n_freqs = int(sfreq)
-    elif not isinstance(n_freqs, int):
-        raise TypeError("`n_freqs` must be an integer")
+    if n_points is None:
+        n_points = data.shape[2] + 1
+    elif not isinstance(n_points, int):
+        raise TypeError("`n_points` must be an integer")
 
     if not isinstance(n_jobs, int):
         raise TypeError("`n_jobs` must be an integer.")
@@ -111,28 +130,40 @@ def _compute_freqs_input_checks(
     if not isinstance(sfreq, int) and not isinstance(sfreq, float):
         raise TypeError("`sfreq` must be an int or a float.")
 
+    if not isinstance(window, str):
+        raise TypeError("`window` must be a str.")
+    if window not in ["hanning", "hamming"]:
+        raise ValueError("The requested `window` type is not recognised.")
+    if window == "hanning":
+        window_func = np.hanning
+    else:
+        window_func = np.hamming
+
+    if not isinstance(return_neg_freqs, bool):
+        raise TypeError("`return_neg_freqs` must be a bool.")
+
     if verbose and not np.isreal(data).all():
         warn("`data` is expected to be real-valued.", UserWarning)
 
-    return n_freqs
+    return n_points, window_func
 
 
 @njit
-def fast_find_first(vector: np.ndarray, value: float | int) -> int:
+def fast_find_first(vector: np.ndarray, value: int | float) -> int:
     """Quickly find the first index of a value in a 1D array using Numba.
 
     Parameters
     ----------
-    vector : numpy.ndarray of float or int
-        1D array to find ``value`` in.
+    vector : numpy.ndarray of int or float
+        1D array to find :param:`value` in.
 
-    value : float | int
-        value to find in ``vector``.
+    value : int | float
+        Value to find in :param:`vector`.
 
     Returns
     -------
     index : int
-        First index of ``value`` in ``vector``.
+        First index of :param:`value` in :param:`vector`.
 
     Notes
     -----
@@ -144,7 +175,7 @@ def fast_find_first(vector: np.ndarray, value: float | int) -> int:
     raise ValueError("`value` is not present in `vector`.")
 
 
-def compute_rank(data: np.ndarray, sv_tol: float = 1e-5) -> int:
+def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
     """Compute the min. rank of data over epochs from non-zero singular values.
 
     Parameters
@@ -152,14 +183,14 @@ def compute_rank(data: np.ndarray, sv_tol: float = 1e-5) -> int:
     data : numpy.ndarray, shape of [epochs, channels, times]
         Data to find the rank of.
 
-    sv_tol : float (default ``1e-5``)
-        Tolerance to use to define non-zero singular values based on the
+    sv_tol : int | float (default ``1e-5``)
+        Tolerance to use to define non-zero singular values, based on the
         largest singular value.
 
     Returns
     -------
     rank : int
-        Minimum rank of ``data`` over epochs.
+        Minimum rank of :param:`data` over epochs.
     """
     if not isinstance(data, np.ndarray):
         raise TypeError("`data` must be a NumPy array.")

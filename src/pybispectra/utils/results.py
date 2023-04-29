@@ -22,10 +22,10 @@ class ResultsCFC:
         contain 2 1D arrays of equal length for the seed and target indices,
         respectively.
 
-    f1 : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray of float, shape of [frequencies]
         Low frequencies (in Hz) in :attr:`data`.
 
-    f2 : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray of float, shape of [frequencies]
         High frequencies (in Hz) in :attr:`data`.
 
     name : str
@@ -44,12 +44,12 @@ class ResultsCFC:
     n_cons : int
         Number of connections in the results.
 
-    f1 : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray of float, shape of [frequencies]
         Low frequencies (in Hz) in :attr:`data`.
 
-    f2 : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray of float, shape of [frequencies]
         High frequencies (in Hz) in :attr:`data`.
-    """
+    """  # noqa E501
 
     _data = None
 
@@ -59,8 +59,8 @@ class ResultsCFC:
     n_cons = None
     _n_chans = None
 
-    f1 = None
-    f2 = None
+    f1s = None
+    f2s = None
 
     name = None
 
@@ -68,25 +68,25 @@ class ResultsCFC:
         """Return printable represenation of the object."""
         return repr(
             f"<Result: {self.name} | [{self.n_cons} connections, "
-            f"{len(self.f1)} f1, {len(self.f2)} f2]>"
+            f"{len(self.f1s)} f1s, {len(self.f2s)} f2s]>"
         )
 
     def __init__(
         self,
         data: np.ndarray,
         indices: tuple[np.ndarray],
-        f1: np.ndarray,
-        f2: np.ndarray,
+        f1s: np.ndarray,
+        f2s: np.ndarray,
         name: str,
-    ) -> None:
-        self._sort_init_inputs(data, indices, f1, f2, name)
+    ) -> None:  # noqa D107
+        self._sort_init_inputs(data, indices, f1s, f2s, name)
 
     def _sort_init_inputs(
         self,
         data: np.ndarray,
         indices: tuple[np.ndarray],
-        f1: np.ndarray,
-        f2: np.ndarray,
+        f1s: np.ndarray,
+        f2s: np.ndarray,
         name: str,
     ) -> None:
         """Sort inputs to the object."""
@@ -114,15 +114,15 @@ class ResultsCFC:
         self.n_cons = len(indices[0])
         self._n_chans = len(np.unique([*self._seeds, *self._targets]))
 
-        if not isinstance(f1, np.ndarray) or not isinstance(f2, np.ndarray):
-            raise TypeError("`f1` and `f2` must be NumPy arrays.")
-        if f1.ndim != 1 or f2.ndim != 1:
-            raise ValueError("`f1` and `f2` must be 1D arrays.")
+        if not isinstance(f1s, np.ndarray) or not isinstance(f2, np.ndarray):
+            raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
+        if f1s.ndim != 1 or f2s.ndim != 1:
+            raise ValueError("`f1s` and `f2s` must be 1D arrays.")
         self.f1 = f1.copy()
         self.f2 = f2.copy()
 
-        if data.shape != (len(indices[0]), len(f1), len(f2)):
-            raise ValueError("`data` must have shape [connections, f1, f2].")
+        if data.shape != (len(indices[0]), len(f1s), len(f2s)):
+            raise ValueError("`data` must have shape [connections, f1s, f2s].")
 
         if not isinstance(name, str):
             raise TypeError("`name` must be a string.")
@@ -137,8 +137,8 @@ class ResultsCFC:
         ----------
         form : str (default ``"raveled"``)
             How the results should be returned: ``"raveled"`` - results have
-            shape `[connections, f1, f2]`; ``"compact"`` - results have shape
-            `[seeds, targets, f1, f2]`.
+            shape `[connections, f1s, f2s]`; ``"compact"`` - results have shape
+            `[seeds, targets, f1s, f2s]`.
 
         Returns
         -------
@@ -165,15 +165,15 @@ class ResultsCFC:
         RETURNS
         -------
         compact_results : (default None) of float
-            Results with shape `[seeds, targets, f1, f2]`.
+            Results with shape `[seeds, targets, f1s, f2s]`.
 
         indices : tuple[numpy.ndarray] of int
             Channel indices of ``compact_results`` for the seeds and targets,
             respectively.
         """
-        fill = np.full((len(self.f1), len(self.f2)), fill_value=np.nan)
+        fill = np.full((len(self.f1s), len(self.f2s)), fill_value=np.nan)
         compact_results = np.full(
-            (self._n_chans, self._n_chans, len(self.f1), len(self.f2)),
+            (self._n_chans, self._n_chans, len(self.f1s), len(self.f2s)),
             fill_value=fill,
         )
         for con_result, seed, target in zip(
@@ -199,8 +199,8 @@ class ResultsCFC:
     def plot(
         self,
         connections: list[int] | None = None,
-        f1: np.ndarray | None = None,
-        f2: np.ndarray | None = None,
+        f1s: np.ndarray | None = None,
+        f2s: np.ndarray | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: float = 5.0,
@@ -214,11 +214,11 @@ class ResultsCFC:
         connections : list of int | None (default None)
             Indices of connections to plot. If ``None``, plot all connections.
 
-        f1 : numpy.ndarray of float | None (default None)
+        f1s : numpy.ndarray of float | None (default None)
             Low frequencies of the results to plot. If ``None``, plot all low
             frequencies.
 
-        f2 : numpy.ndarray of float | None (default None)
+        f2s : numpy.ndarray of float | None (default None)
             High frequencies of the results to plot. If ``None``, plot all high
             frequencies.
 
@@ -255,10 +255,10 @@ class ResultsCFC:
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
         connection on a new figure.
         """
-        connections, f1, f2, f1_idcs, f2_idcs = self._sort_plot_inputs(
+        connections, f1s, f2s, f1_idcs, f2_idcs = self._sort_plot_inputs(
             connections,
-            f1,
-            f2,
+            f1s,
+            f2s,
             n_rows,
             n_cols,
             major_tick_intervals,
@@ -269,8 +269,8 @@ class ResultsCFC:
             figures,
             axes,
             connections,
-            f1,
-            f2,
+            f1s,
+            f2s,
             f1_idcs,
             f2_idcs,
             n_rows,
@@ -287,13 +287,13 @@ class ResultsCFC:
     def _sort_plot_inputs(
         self,
         connections: list[int] | None,
-        f1: np.ndarray | None,
-        f2: np.ndarray | None,
+        f1s: np.ndarray | None,
+        f2s: np.ndarray | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,
         minor_tick_intervals: float,
-    ) -> tuple[list[int], np.ndarray, np.ndarray, list[int], list[int],]:
+    ) -> tuple[list[int], np.ndarray, np.ndarray, list[int], list[int]]:
         """Sort the plotting inputs.
 
         Returns
@@ -301,10 +301,10 @@ class ResultsCFC:
         connections : list of int
             Indices of connections to plot.
 
-        f1 : numpy.ndarray of float
+        f1s : numpy.ndarray of float
             Low frequencies of the results to plot.
 
-        f2 : numpy.ndarray of float
+        f2s : numpy.ndarray of float
             High frequencies of the results to plot.
 
         f1_idcs : list of int
@@ -326,22 +326,22 @@ class ResultsCFC:
                 "The requested connection is not present in the results."
             )
 
-        if f1 is None:
-            f1 = self.f1.copy()
-        if f2 is None:
-            f2 = self.f2.copy()
-        if not isinstance(f1, np.ndarray) or not isinstance(f2, np.ndarray):
-            raise TypeError("`f1` and `f2` must be NumPy arrays.")
-        if f1.ndim != 1 or f2.ndim != 1:
-            raise ValueError("`f1` and `f2` must be 1D arrays.")
-        if any(freq not in self.f1 for freq in f1) or any(
-            freq not in self.f2 for freq in f2
+        if f1s is None:
+            f1s = self.f1s.copy()
+        if f2s is None:
+            f2s = self.f2s.copy()
+        if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
+            raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
+        if f1s.ndim != 1 or f2s.ndim != 1:
+            raise ValueError("`f1s` and `f2s` must be 1D arrays.")
+        if any(freq not in self.f1s for freq in f1s) or any(
+            freq not in self.f2s for freq in f2s
         ):
             raise ValueError(
-                "Entries of `f1` and `f2` must be present in the results."
+                "Entries of `f1s` and `f2s` must be present in the results."
             )
-        f1_idcs = [fast_find_first(self.f1, freq) for freq in f1]
-        f2_idcs = [fast_find_first(self.f2, freq) for freq in f2]
+        f1_idcs = [fast_find_first(self.f1s, freq) for freq in f1s]
+        f2_idcs = [fast_find_first(self.f2s, freq) for freq in f2s]
 
         if not isinstance(n_rows, int) or not isinstance(n_cols, int):
             raise TypeError("`n_rows` and `n_cols` must be integers.")
@@ -356,7 +356,7 @@ class ResultsCFC:
                 "floats."
             )
 
-        return connections, f1, f2, f1_idcs, f2_idcs
+        return connections, f1s, f2s, f1_idcs, f2_idcs
 
     def _create_plots(
         self, connections: list[int], n_rows: int, n_cols: int
@@ -398,8 +398,8 @@ class ResultsCFC:
         figures: list[Figure],
         axes: list[np.ndarray],
         connections: list[int],
-        f1: np.ndarray,
-        f2: np.ndarray,
+        f1s: np.ndarray,
+        f2s: np.ndarray,
         f1_idcs: list[int],
         f2_idcs: list[int],
         n_rows: int,
@@ -417,7 +417,7 @@ class ResultsCFC:
                 axis = axes[fig_i][fig_plot_n]
 
                 mesh = axis.pcolormesh(
-                    f1, f2, self._data[con_i][np.ix_(f1_idcs, f2_idcs)].T
+                    f1s, f2s, self._data[con_i][np.ix_(f1_idcs, f2_idcs)].T
                 )
 
                 plt.colorbar(
@@ -426,7 +426,7 @@ class ResultsCFC:
 
                 axis.set_aspect("equal")
                 self._set_axis_ticks(
-                    axis, f1, f2, major_tick_intervals, minor_tick_intervals
+                    axis, f1s, f2s, major_tick_intervals, minor_tick_intervals
                 )
                 axis.grid(
                     which="major",
@@ -453,28 +453,28 @@ class ResultsCFC:
     def _set_axis_ticks(
         self,
         axis: plt.Axes,
-        f1: np.ndarray,
-        f2: np.ndarray,
+        f1s: np.ndarray,
+        f2s: np.ndarray,
         major_tick_intervals: float,
         minor_tick_intervals: float,
     ) -> None:
         """Set major and minor tick intervals of x- and y-axes."""
-        n_major_xticks = len(np.arange(f1[0], f1[-1], major_tick_intervals))
-        n_major_yticks = len(np.arange(f2[0], f2[-1], major_tick_intervals))
+        n_major_xticks = len(np.arange(f1s[0], f1s[-1], major_tick_intervals))
+        n_major_yticks = len(np.arange(f2s[0], f2s[-1], major_tick_intervals))
 
         # extra tick necessary if 0 Hz plotted
-        if f1[0] == 0.0:
+        if f1s[0] == 0.0:
             n_major_xticks += 1
-        if f2[0] == 0.0:
+        if f2s[0] == 0.0:
             n_major_yticks += 1
 
         # MaxNLocator only cares about tens (e.g. 10 and 19 have same result)
         n_minor_xticks = (
-            np.ceil(len(np.arange(f1[0], f1[-1], minor_tick_intervals)) / 10)
+            np.ceil(len(np.arange(f1s[0], f1s[-1], minor_tick_intervals)) / 10)
             * 10
         )
         n_minor_yticks = (
-            np.ceil(len(np.arange(f2[0], f2[-1], minor_tick_intervals)) / 10)
+            np.ceil(len(np.arange(f2s[0], f2s[-1], minor_tick_intervals)) / 10)
             * 10
         )
 

@@ -45,10 +45,10 @@ class PAC(_ProcessBispectrum):
         Indices of the seed and target channels, respectively, most recently
         used with :meth:`compute`.
 
-    f1 : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray of float, shape of [frequencies]
         Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2 : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray of float, shape of [frequencies]
         High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
@@ -71,8 +71,8 @@ class PAC(_ProcessBispectrum):
     def compute(
         self,
         indices: tuple[np.ndarray] | None = None,
-        f1: np.ndarray | None = None,
-        f2: np.ndarray | None = None,
+        f1s: np.ndarray | None = None,
+        f2s: np.ndarray | None = None,
         symmetrise: str | list[str] = ["none", "antisym"],
         normalise: str | list[str] = ["none", "threenorm"],
         n_jobs: int = 1,
@@ -86,11 +86,11 @@ class PAC(_ProcessBispectrum):
             PAC between. If ``None``, coupling between all channels is
             computed.
 
-        f1 : numpy.ndarray of float | None (default None), shape of [frequencies]
+        f1s : numpy.ndarray of float | None (default None), shape of [frequencies]
             Lower frequencies to compute PAC on. If ``None``, all frequencies
             are used.
 
-        f2 : numpy.ndarray of float | None (default None), shape of [frequencies]
+        f2s : numpy.ndarray of float | None (default None), shape of [frequencies]
             Higher frequencies to compute PAC on. If ``None``, all frequencies
             are used.
 
@@ -135,9 +135,9 @@ class PAC(_ProcessBispectrum):
         antisymmetrisation is being performed, ``numpy.nan`` values are
         returned.
 
-        PAC is computed between all values of :attr:`f1` and :attr:`f2`. If any
-        value of :attr:`f1` is higher than :attr:`f2`, a ``numpy.nan`` value is
-        returned.
+        PAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
+        any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``
+        value is returned.
 
         References
         ----------
@@ -147,7 +147,7 @@ class PAC(_ProcessBispectrum):
 
         self._sort_metrics(symmetrise, normalise)
         self._sort_indices(indices)
-        self._sort_freqs(f1, f2)
+        self._sort_freqs(f1s, f2s)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
@@ -232,8 +232,8 @@ class PAC(_ProcessBispectrum):
             {
                 "data": self.data[:, (seed, target)],
                 "freqs": self.freqs,
-                "f1s": self.f1,
-                "f2s": self.f2,
+                "f1s": self.f1s,
+                "f2s": self.f2s,
                 "kmn": kmn,
             }
             for seed, target in zip(self._seeds, self._targets)
@@ -267,8 +267,8 @@ class PAC(_ProcessBispectrum):
             {
                 "data": self.data[:, (seed, target)],
                 "freqs": self.freqs,
-                "f1s": self.f1,
-                "f2s": self.f2,
+                "f1s": self.f1s,
+                "f2s": self.f2s,
             }
             for seed, target in zip(self._seeds, self._targets)
         ]
@@ -331,8 +331,8 @@ class PAC(_ProcessBispectrum):
                 ResultsCFC(
                     self._pac_nosym_nonorm,
                     self.indices,
-                    self.f1,
-                    self.f2,
+                    self.f1s,
+                    self.f2s,
                     "PAC - Unsymmetrised Bispectra",
                 )
             )
@@ -342,8 +342,8 @@ class PAC(_ProcessBispectrum):
                 ResultsCFC(
                     self._pac_nosym_threenorm,
                     self.indices,
-                    self.f1,
-                    self.f2,
+                    self.f1s,
+                    self.f2s,
                     "PAC - Unsymmetrised Bicoherence",
                 )
             )
@@ -353,8 +353,8 @@ class PAC(_ProcessBispectrum):
                 ResultsCFC(
                     self._pac_antisym_nonorm,
                     self.indices,
-                    self.f1,
-                    self.f2,
+                    self.f1s,
+                    self.f2s,
                     "PAC - Antisymmetrised Bispectra",
                 )
             )
@@ -364,8 +364,8 @@ class PAC(_ProcessBispectrum):
                 ResultsCFC(
                     self._pac_antisym_threenorm,
                     self.indices,
-                    self.f1,
-                    self.f2,
+                    self.f1s,
+                    self.f2s,
                     "PAC - Antisymmetrised Bicoherence",
                 )
             )

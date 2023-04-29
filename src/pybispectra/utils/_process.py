@@ -30,12 +30,15 @@ class _ProcessFreqBase(ABC):
         self,
         data: np.ndarray,
         freqs: np.ndarray,
+        sfreq: int | float,
         verbose: bool = True,
     ) -> None:
         self.verbose = deepcopy(verbose)
-        self._sort_init_inputs(data, freqs)
+        self._sort_init_inputs(data, freqs, sfreq)
 
-    def _sort_init_inputs(self, data: np.ndarray, freqs: np.ndarray) -> None:
+    def _sort_init_inputs(
+        self, data: np.ndarray, freqs: np.ndarray, sfreq: int | float
+    ) -> None:
         """Check init. inputs are appropriate."""
         if not isinstance(data, np.ndarray):
             raise TypeError("`data` must be a NumPy array.")
@@ -55,8 +58,16 @@ class _ProcessFreqBase(ABC):
                 "frequencies"
             )
 
+        if not isinstance(sfreq, float) and not isinstance(sfreq, int):
+            raise TypeError("`sfreq` must be an int or a float.")
+        if np.abs(freqs).max() * 2 > sfreq:
+            raise ValueError(
+                "At least one entry of `freqs` is > the Nyquist frequency."
+            )
+
         self.data = data.copy()
         self.freqs = freqs.copy()
+        self.sfreq = deepcopy(sfreq)
 
     def _sort_indices(self, indices: tuple[np.ndarray] | None) -> None:
         """Sort seed-target indices inputs."""
