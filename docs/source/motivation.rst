@@ -26,18 +26,19 @@ where time delays can be used to infer features of the physical relationships
 between interacting brain regions :footcite:`Silchenko2010`.
 
 
-What are bispectra and why use them?
-------------------------------------
+What is the bispectrum and why use it?
+--------------------------------------
 
 
 
 
 What is available in PyBispectra?
 ---------------------------------
-PyBispectra offers tools for computing phase-amplitude coupling and time delay
-estimation with bispectra, as well as for computing phase-phase coupling.
-Additional tools are included for plotting results and for computing the
-Fourier coefficients required by these methods.
+PyBispectra offers tools for computing phase-amplitude coupling, time delay
+estimation, and wave shape feature analysis with bispectra. Additional tools
+are included for computing phase-phase coupling, computing Fourier
+coefficients, performing generalised eigendecompositions, as well as plotting
+results.
 
 You can find the installation instructions :doc:`here <installation>`, as well
 as examples of how tools in the package can be used :doc:`here <examples>`.

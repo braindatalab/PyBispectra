@@ -1,5 +1,6 @@
 """Helper tools for processing results."""
 
+from multiprocessing import cpu_count
 from typing import Callable
 from warnings import warn
 
@@ -35,7 +36,7 @@ def compute_fft(
 
     n_points : int | None (default ``None``)
         Number of points in the FFT. If ``None``, is equal to the number of
-        times + 1.
+        times.
 
     window : str (default ``"hanning"``)
         Type of window to apply to :param:`data` before computing the FFT.
@@ -46,7 +47,8 @@ def compute_fft(
         Whether or not to return the FFT coefficients for negative frequencies.
 
     n_jobs : int (default ``1``)
-        Number of jobs to run in parallel.
+        Number of jobs to run in parallel. If ``-1``, all available CPUs are
+        used.
 
     verbose : bool (default ``True``)
         Whether or not to report the status of the processing.
@@ -59,7 +61,7 @@ def compute_fft(
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :param:`fft`.
     """
-    n_points, window_func = _compute_fft_input_checks(
+    n_points, window_func, n_jobs = _compute_fft_input_checks(
         data, sfreq, n_points, window, return_neg_freqs, n_jobs, verbose
     )
 
@@ -69,7 +71,7 @@ def compute_fft(
     freqs = np.fft.fftfreq(n=n_points, d=1 / sfreq)
     if not return_neg_freqs:
         freqs = np.abs(freqs)
-        freqs = freqs[: freqs.argmax()]
+        freqs = freqs[: freqs.argmax() + 1]
 
     window = window_func(data.shape[2])
 
@@ -118,14 +120,16 @@ def _compute_fft_input_checks(
         raise ValueError("`data` must be a 3D array.")
 
     if n_points is None:
-        n_points = data.shape[2] + 1
-    elif not isinstance(n_points, int):
+        n_points = data.shape[2]
+    if not isinstance(n_points, int):
         raise TypeError("`n_points` must be an integer")
 
     if not isinstance(n_jobs, int):
         raise TypeError("`n_jobs` must be an integer.")
-    if n_jobs < 1:
-        raise ValueError("`n_jobs` must be >= 1.")
+    if n_jobs < 1 and n_jobs != -1:
+        raise ValueError("`n_jobs` must be >= 1 or -1.")
+    if n_jobs == -1:
+        n_jobs = cpu_count()
 
     if not isinstance(sfreq, int) and not isinstance(sfreq, float):
         raise TypeError("`sfreq` must be an int or a float.")
@@ -145,7 +149,7 @@ def _compute_fft_input_checks(
     if verbose and not np.isreal(data).all():
         warn("`data` is expected to be real-valued.", UserWarning)
 
-    return n_points, window_func
+    return n_points, window_func, n_jobs
 
 
 @njit

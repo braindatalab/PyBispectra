@@ -105,7 +105,8 @@ class PAC(_ProcessBispectrum):
             normalised to the bicoherence using a threenorm.
 
         n_jobs : int (default ``1``)
-            The number of jobs to run in parallel.
+            The number of jobs to run in parallel. If ``-1``, all available
+            CPUs are used.
 
         Notes
         -----

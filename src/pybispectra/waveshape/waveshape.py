@@ -40,10 +40,10 @@ class WaveShape(_ProcessBispectrum):
     indices : tuple of numpy.ndarray of int
         1D array of channel indices most recently used with :meth:`compute`.
 
-    f1 : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray of float, shape of [frequencies]
         Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2 : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray of float, shape of [frequencies]
         High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
@@ -66,8 +66,8 @@ class WaveShape(_ProcessBispectrum):
     def compute(
         self,
         indices: np.ndarray | None = None,
-        f1: np.ndarray | None = None,
-        f2: np.ndarray | None = None,
+        f1s: np.ndarray | None = None,
+        f2s: np.ndarray | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute bicoherence within channels, averaged over epochs.
@@ -78,16 +78,17 @@ class WaveShape(_ProcessBispectrum):
             Indices of the channels to compute bicoherence within. If ``None``,
             bicoherence within all channels is computed.
 
-        f1 : numpy.ndarray of float | None (default None)
+        f1s : numpy.ndarray of float | None (default None)
             A 1D array of the lower frequencies to compute bicoherence for. If
             ``None``, all frequencies are used.
 
-        f2 : numpy.ndarray of float | None (default None)
+        f2s : numpy.ndarray of float | None (default None)
             A 1D array of the higher frequencies to compute bicoherence for. If
             ``None``, all frequencies are used.
 
         n_jobs : int (default ``1``)
-            The number of jobs to run in parallel.
+            The number of jobs to run in parallel. If ``-1``, all available
+            CPUs are used.
 
         Notes
         -----
@@ -110,8 +111,8 @@ class WaveShape(_ProcessBispectrum):
 
         :math:`\large \mathcal{B}_{xxx}(f_1,f_2)=\Large \frac{B_{xxx}(f_1,f_2)}{N_{xxx}(f_1,f_2)}`.
 
-        Bicoherence is computed for all values of :attr:`f1` and :attr:`f2`. If
-        any value of :attr:`f1` is higher than :attr:`f2`, a ``numpy.nan``
+        Bicoherence is computed for all values of :attr:`f1s` and :attr:`f2s`.
+        If any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``
         value is returned.
 
         References
@@ -121,7 +122,7 @@ class WaveShape(_ProcessBispectrum):
         self._reset_attrs()
 
         self._sort_indices(indices)
-        self._sort_freqs(f1, f2)
+        self._sort_freqs(f1s, f2s)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
@@ -173,8 +174,8 @@ class WaveShape(_ProcessBispectrum):
             {
                 "data": self.data[:, channel],
                 "freqs": self.freqs,
-                "f1s": self.f1,
-                "f2s": self.f2,
+                "f1s": self.f1s,
+                "f2s": self.f2s,
                 "kmn": np.array([np.array([0, 0, 0])]),
             }
             for channel in self.indices
@@ -216,8 +217,8 @@ class WaveShape(_ProcessBispectrum):
             {
                 "data": self.data[:, channel],
                 "freqs": self.freqs,
-                "f1s": self.f1,
-                "f2s": self.f2,
+                "f1s": self.f1s,
+                "f2s": self.f2s,
             }
             for channel in self.indices
         ]

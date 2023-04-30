@@ -142,7 +142,8 @@ class TDE(_ProcessBispectrum):
             The method to use to compute TDE :footcite:`Nikias1988`.
 
         n_jobs : int (default ``1``)
-            The number of jobs to run in parallel.
+            The number of jobs to run in parallel. If ``-1``, all available
+            CPUs are used.
 
         Notes
         -----

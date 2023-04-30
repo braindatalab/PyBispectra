@@ -1,6 +1,7 @@
 """Tools for performing generalised eigendecompositions."""
 
 from copy import deepcopy
+from multiprocessing import cpu_count
 from warnings import warn
 
 import numpy as np
@@ -97,9 +98,18 @@ class SpatioSpectralFilter:
     indices = None
     _use_n_chans = None
 
+    signal_bounds = None
+    noise_bounds = None
+    signal_noise_gap = None
+    _n_noise_freqs = None
+
+    n_harmonics = None
+
+    rank = None
+
     filters = None
     patterns = None
-    ratio = None
+    ratios = None
     _transformed_data = None
 
     _fitted = False
@@ -355,7 +365,7 @@ class SpatioSpectralFilter:
 
         self.filters = ssd.filters_.copy()
         self.patterns = ssd.patterns_.copy()
-        self.ratio = ssd.eigvals_.copy()
+        self.ratios = ssd.eigvals_.copy()
 
     def fit_transform_hpmax(
         self,
@@ -420,7 +430,8 @@ class SpatioSpectralFilter:
             ``"multitaper"``.
 
         n_jobs : int (default ``1``)
-            Number of jobs to use when computing the CSD.
+            Number of jobs to use when computing the CSD. If ``-1``, all
+            available CPUs are used.
 
         Notes
         -----
@@ -438,6 +449,7 @@ class SpatioSpectralFilter:
         self._sort_indices(indices)
         self._sort_rank(rank)
         self._sort_csd_method(csd_method)
+        n_jobs = self._sort_parallelisation(n_jobs)
 
         if self.verbose:
             print("Fitting HPMax filters...\n")
@@ -456,6 +468,17 @@ class SpatioSpectralFilter:
 
         if self.verbose:
             print("    ... HPMax filter fitting finished\n")
+
+    def _sort_parallelisation(self, n_jobs: int) -> int:
+        """Sort parallelisation inputs."""
+        if not isinstance(n_jobs, int):
+            raise TypeError("`n_jobs` must be an integer.")
+        if n_jobs < 1 and n_jobs != -1:
+            raise ValueError("`n_jobs` must be >= 1 or -1.")
+        if n_jobs == -1:
+            n_jobs = cpu_count()
+
+        return n_jobs
 
     def _compute_csd(
         self,

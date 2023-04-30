@@ -114,12 +114,12 @@ class ResultsCFC:
         self.n_cons = len(indices[0])
         self._n_chans = len(np.unique([*self._seeds, *self._targets]))
 
-        if not isinstance(f1s, np.ndarray) or not isinstance(f2, np.ndarray):
+        if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
             raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
         if f1s.ndim != 1 or f2s.ndim != 1:
             raise ValueError("`f1s` and `f2s` must be 1D arrays.")
-        self.f1 = f1.copy()
-        self.f2 = f2.copy()
+        self.f1s = f1s.copy()
+        self.f2s = f2s.copy()
 
         if data.shape != (len(indices[0]), len(f1s), len(f2s)):
             raise ValueError("`data` must have shape [connections, f1s, f2s].")
@@ -538,7 +538,7 @@ class ResultsTDE:
         indices: tuple[np.ndarray],
         times: np.ndarray,
         name: str,
-    ) -> None:
+    ) -> None:  # noqa D107
         self._sort_init_inputs(data, indices, times, name)
 
     def _sort_init_inputs(

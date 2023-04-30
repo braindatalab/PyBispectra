@@ -59,10 +59,10 @@ from pybispectra import compute_fft, PAC
 # generate data
 random = np.random.RandomState(44)
 data = random.rand(30, 2, 500)  # [epochs x channels x frequencies]
-sfreq = 100  # sampling frequency in Hz
+sfreq = 100.0  # sampling frequency in Hz
 
 # compute Fourier coeffs.
-fft, freqs = compute_fft(data=data, sfreq=sfreq)
+fft, freqs = compute_fft(data=data, sfreq=sfreq, n_points=int(sfreq * 2))
 
 print(
     f"FFT coeffs.: [{fft.shape[0]} epochs x {fft.shape[1]} channels x "
@@ -71,7 +71,7 @@ print(
 
 ###############################################################################
 # As you can see, we have FFT coefficients for 2 channels across 30 epochs,
-# with 101 frequencies ranging from 0 to 50 Hz with a frequency resolution of
+# with 250 frequencies ranging from 0 to 50 Hz with a frequency resolution of
 # 0.5 Hz. We will use these coefficients to compute PAC.
 #
 # Computing PAC
@@ -86,21 +86,21 @@ print(
 # expected to be a tuple containing two NumPy arrays for the indices of the
 # seed and target channels, respectively. The indices specified below mean that
 # PPC will only be computed across frequencies within each channel (i.e.
-# 0 -> 0; and 1 -> 1). By leaving the frequency arguments :attr:`f1` and
-# :attr:`f2` blank, we will look at all possible frequency combinations.
+# 0 -> 0; and 1 -> 1). By leaving the frequency arguments :attr:`f1s` and
+# :attr:`f2s` blank, we will look at all possible frequency combinations.
 
 # %%
 
-pac = PAC(data=fft, freqs=freqs)  # initialise object
+pac = PAC(data=fft, freqs=freqs, sfreq=sfreq)  # initialise object
 pac.compute(
-    indices=None, f1=np.arange(5, 10), f2=np.arange(15, 25)
+    indices=None, f1s=np.arange(5, 10), f2s=np.arange(15, 25)
 )  # compute PAC
 
 pac_results = pac.results[0].get_results()  # return results as array
 
 print(
     f"PPC results: [{pac_results.shape[0]} connections x "
-    f"{pac_results.shape[1]} f1 x {pac_results.shape[2]} f2]"
+    f"{pac_results.shape[1]} f1s x {pac_results.shape[2]} f2s]"
 )
 
 ###############################################################################

@@ -39,10 +39,10 @@ class PPC(_ProcessFreqBase):
         Indices of the seed and target channels, respectively, most recently
         used with :meth:`compute`.
 
-    f1 : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray of float, shape of [frequencies]
         Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2 : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray of float, shape of [frequencies]
         High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
@@ -54,8 +54,8 @@ class PPC(_ProcessFreqBase):
     def compute(
         self,
         indices: tuple[np.ndarray] | None = None,
-        f1: np.ndarray | None = None,
-        f2: np.ndarray | None = None,
+        f1s: np.ndarray | None = None,
+        f2s: np.ndarray | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute PPC, averaged over epochs.
@@ -67,16 +67,17 @@ class PPC(_ProcessFreqBase):
             PPC between. If ``None``, coupling between all channels is
             computed.
 
-        f1 : numpy.ndarray of float | None (default None), shape of [frequencies]
+        f1s : numpy.ndarray of float | None (default None), shape of [frequencies]
             Lower frequencies to compute PPC on. If ``None``, all frequencies
             are used.
 
-        f2 : numpy.ndarray of float | None (default None), shape of [frequencies]
+        f2s : numpy.ndarray of float | None (default None), shape of [frequencies]
             Higher frequencies to compute PPC on. If ``None``, all frequencies
             are used.
 
         n_jobs : int (default ``1``)
-            Number of jobs to run in parallel.
+            Number of jobs to run in parallel. If ``-1``, all available CPUs
+            are used.
 
         Notes
         -----
@@ -99,7 +100,7 @@ class PPC(_ProcessFreqBase):
         self._reset_attrs()
 
         self._sort_indices(indices)
-        self._sort_freqs(f1, f2)
+        self._sort_freqs(f1s, f2s)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
@@ -122,8 +123,8 @@ class PPC(_ProcessFreqBase):
             {
                 "data": self.data[:, (seed, target)],
                 "freqs": self.freqs,
-                "f1s": self.f1,
-                "f2s": self.f2,
+                "f1s": self.f1s,
+                "f2s": self.f2s,
             }
             for seed, target in zip(self._seeds, self._targets)
         ]
@@ -142,7 +143,7 @@ class PPC(_ProcessFreqBase):
     def _store_results(self) -> None:
         """Store computed results in an object."""
         self._results = ResultsCFC(
-            self._ppc, self.indices, self.f1, self.f2, "PPC"
+            self._ppc, self.indices, self.f1s, self.f2s, "PPC"
         )
 
     @property

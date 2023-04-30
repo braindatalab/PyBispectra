@@ -1,7 +1,8 @@
 """Tools for processing and handling CFC and TDE results."""
 
-from copy import deepcopy
 from abc import ABC, abstractmethod
+from copy import deepcopy
+from multiprocessing import cpu_count
 from warnings import warn
 
 from numba import njit
@@ -19,8 +20,8 @@ class _ProcessFreqBase(ABC):
     _n_cons = None
 
     sfreq = None
-    f1 = None
-    f2 = None
+    f1s = None
+    f2s = None
 
     _n_jobs = None
 
@@ -103,51 +104,52 @@ class _ProcessFreqBase(ABC):
         self._n_cons = len(seeds)
 
     def _sort_freqs(
-        self, f1: np.ndarray | None, f2: np.ndarray | None
+        self, f1s: np.ndarray | None, f2s: np.ndarray | None
     ) -> None:
         """Sort frequency inputs."""
-        if f1 is None:
-            f1 = self.freqs.copy()[:-1]
-            if f2 is None:
-                f2 = self.freqs.copy()[1:]
-        if f2 is None:
-            f2 = f1[1:].copy()
+        if f1s is None:
+            f1s = self.freqs.copy()[:-1]
+            if f2s is None:
+                f2s = self.freqs.copy()[1:]
+        if f2s is None:
+            f2s = f1s[1:].copy()
 
-        if not isinstance(f1, np.ndarray) or not isinstance(f2, np.ndarray):
-            raise TypeError("`f1` and `f2` must be NumPy NDArrays.")
-        if f1.ndim != 1 or f2.ndim != 1:
-            raise ValueError("`f1` and `f2` must be 1D arrays.")
+        if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
+            raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
+        if f1s.ndim != 1 or f2s.ndim != 1:
+            raise ValueError("`f1s` and `f2s` must be 1D arrays.")
 
-        if any(freq not in self.freqs for freq in f1) or any(
-            freq not in self.freqs for freq in f2
+        if any(freq not in self.freqs for freq in f1s) or any(
+            freq not in self.freqs for freq in f2s
         ):
             raise ValueError(
-                "All frequencies in `f1` and `f2` must be present in the "
+                "All frequencies in `f1s` and `f2s` must be present in the "
                 "data."
             )
 
         if self.sfreq is not None:
-            if self.sfreq < f2[-1] * 2:
-                raise ValueError("`sfreq` must be >= all entries of f2 * 2.")
+            if self.sfreq < f2s[-1] * 2:
+                raise ValueError("`sfreq` must be >= all entries of f2s * 2.")
 
         if self.verbose:
-            if any(lfreq >= hfreq for hfreq in f2 for lfreq in f1):
+            if any(lfreq >= hfreq for hfreq in f2s for lfreq in f1s):
                 warn(
-                    "At least one value in `f1` is >= a value in `f2`. The "
+                    "At least one value in `f1s` is >= a value in `f2s`. The "
                     "corresponding result(s) will have a value of NaN.",
                     UserWarning,
                 )
 
-        self.f1 = f1.copy()
-        self.f2 = f2.copy()
+        self.f1s = f1s.copy()
+        self.f2s = f2s.copy()
 
     def _sort_parallelisation(self, n_jobs: int) -> None:
         """Sort parallelisation inputs."""
         if not isinstance(n_jobs, int):
             raise TypeError("`n_jobs` must be an integer.")
-
-        if n_jobs < 1:
-            raise ValueError("`n_jobs` must be >= 1.")
+        if n_jobs < 1 and n_jobs != -1:
+            raise ValueError("`n_jobs` must be >= 1 or -1.")
+        if n_jobs == -1:
+            n_jobs = cpu_count()
 
         self._n_jobs = deepcopy(n_jobs)
 
@@ -162,8 +164,8 @@ class _ProcessFreqBase(ABC):
         self._targets = None
         self._n_cons = None
 
-        self.f1 = None
-        self.f2 = None
+        self.f1s = None
+        self.f2s = None
 
         self._n_jobs = None
 
@@ -203,19 +205,19 @@ class _ProcessBispectrum(_ProcessFreqBase):
                     UserWarning,
                 )
 
-    def _sort_freqs(self, f1: np.ndarray, f2: np.ndarray) -> None:
+    def _sort_freqs(self, f1s: np.ndarray, f2s: np.ndarray) -> None:
         """Sort frequency inputs."""
-        super()._sort_freqs(f1, f2)
+        super()._sort_freqs(f1s, f2s)
 
         if self.verbose:
             if any(
                 hfreq + lfreq not in self.freqs
-                for hfreq in self.f2
-                for lfreq in self.f1
+                for hfreq in self.f2s
+                for lfreq in self.f1s
             ):
                 warn(
-                    "At least one value of `f2` + `f1` is not present in the "
-                    "frequencies. The corresponding result(s) will be "
+                    "At least one value of `f2s` + `f1s` is not present in "
+                    "the frequencies. The corresponding result(s) will be "
                     "NaN-valued.",
                     UserWarning,
                 )
@@ -253,7 +255,7 @@ def _compute_bispectrum(
 
     Returns
     -------
-    results : np.ndarray of complex float, shape of [kmn, epochs, f1s, f2s]
+    results : np.ndarray of complex float, shape of [x, epochs, f1s, f2s]
         Complex-valued array containing the bispectrum of a single connection,
         where the first dimension corresponds to the different channel indices
         given in ``kmn``.
