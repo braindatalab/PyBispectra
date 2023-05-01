@@ -24,7 +24,7 @@ def compute_fft(
 
     As the data is assumed to be real-valued, only those values corresponding
     to the positive frequencies are returned by default (see
-    :param:`return_neg_freqs`).
+    ``return_neg_freqs``).
 
     Parameters
     ----------
@@ -39,7 +39,7 @@ def compute_fft(
         times.
 
     window : str (default ``"hanning"``)
-        Type of window to apply to :param:`data` before computing the FFT.
+        Type of window to apply to ``data`` before computing the FFT.
         Accepts ``"hanning"`` and ``"hamming"``. See :func:`numpy.hanning` and
         :func:`numpy.hamming`.
 
@@ -56,10 +56,10 @@ def compute_fft(
     Returns
     -------
     fft : numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        FFT coefficients of :param:`data`.
+        FFT coefficients of ``data``.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
-        Frequencies (in Hz) in :param:`fft`.
+        Frequencies (in Hz) in ``fft``.
     """
     n_points, window_func, n_jobs = _compute_fft_input_checks(
         data, sfreq, n_points, window, return_neg_freqs, n_jobs, verbose
@@ -159,15 +159,15 @@ def fast_find_first(vector: np.ndarray, value: int | float) -> int:
     Parameters
     ----------
     vector : numpy.ndarray of int or float
-        1D array to find :param:`value` in.
+        1D array to find ``value`` in.
 
     value : int | float
-        Value to find in :param:`vector`.
+        Value to find in ``vector``.
 
     Returns
     -------
     index : int
-        First index of :param:`value` in :param:`vector`.
+        First index of ``value`` in ``vector``.
 
     Notes
     -----
@@ -194,7 +194,7 @@ def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
     Returns
     -------
     rank : int
-        Minimum rank of :param:`data` over epochs.
+        Minimum rank of ``data`` over epochs.
     """
     if not isinstance(data, np.ndarray):
         raise TypeError("`data` must be a NumPy array.")

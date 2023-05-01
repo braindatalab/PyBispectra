@@ -13,5 +13,6 @@ Cross-Frequency Coupling
     :template: custom-class-template.rst
     :toctree: generated/
 
+    AAC
     PAC
     PPC

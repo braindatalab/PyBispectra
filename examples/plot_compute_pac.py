@@ -71,7 +71,7 @@ print(
 
 ###############################################################################
 # As you can see, we have FFT coefficients for 2 channels across 30 epochs,
-# with 250 frequencies ranging from 0 to 50 Hz with a frequency resolution of
+# with 101 frequencies ranging from 0 to 50 Hz with a frequency resolution of
 # 0.5 Hz. We will use these coefficients to compute PAC.
 #
 # Computing PAC
@@ -82,19 +82,17 @@ print(
 # and frequency combinations, however we can also specify particular
 # combinations of interest.
 #
-# Here, we specify the :attr:`indices` to compute PPC on. :attr:`indices` is
+# Here, we specify the :attr:`indices` to compute PAC on. :attr:`indices` is
 # expected to be a tuple containing two NumPy arrays for the indices of the
 # seed and target channels, respectively. The indices specified below mean that
-# PPC will only be computed across frequencies within each channel (i.e.
+# PAC will only be computed across frequencies within each channel (i.e.
 # 0 -> 0; and 1 -> 1). By leaving the frequency arguments :attr:`f1s` and
 # :attr:`f2s` blank, we will look at all possible frequency combinations.
 
 # %%
 
 pac = PAC(data=fft, freqs=freqs, sfreq=sfreq)  # initialise object
-pac.compute(
-    indices=None, f1s=np.arange(5, 10), f2s=np.arange(15, 25)
-)  # compute PAC
+pac.compute(indices=(np.array([0, 1]), np.array([0, 1])))  # compute PAC
 
 pac_results = pac.results[0].get_results()  # return results as array
 
@@ -106,38 +104,26 @@ print(
 ###############################################################################
 # We can see that PAC has been computed for 2 connections (0 -> 0; and 1 -> 1),
 # and all possible frequency combinations, averaged across our 30 epochs.
-# Whilst there are 10,000 such frequency combinations in our [100 x 100]
-# matrices, PPC for those entries where :math:`f1` would be higher than
-# :math:`f2` cannot be computed, in which case the values are ``numpy.nan``
+# Whilst there are > 10,000 such frequency combinations in our [101 x 101]
+# matrices, PAC for those entries where :math:`f_1` would be higher than
+# :math:`f_2`, as well as where :math:`f_2 + f_1` exceeds the frequency bounds
+# of our data, cannot be computed. In such cases, the values are ``numpy.nan``
 # (see the plotted results below for a visual demonstration of this).
 
 ###############################################################################
-# Plotting PPC
+# Plotting PAC
 # ------------
 # Let us now inspect the results. For this, we will plot the results for both
 # connections on the same plot. If we wished, we could plot this information on
-# separate plots, or specify a subset of frequencies to inspect.
+# separate plots, or specify a subset of frequencies to inspect. Note that the
+# ``Figure`` and ``Axes`` objects can also be returned for any desired manual
+# adjustments of the plots.
 
 # %%
 
 fig, axes = pac.results[0].plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
 
 ###############################################################################
-# As you can see, values for the lower right triangle of each plot are missing,
-# corresponding to the frequency combinations where :math:`f_1` is greater than
-# :math:`f_2`, and hence where PPC cannot be computed. Note that the ``Figure``
-# and ``Axes`` objects can also be returned for any desired manual adjustments
-# of the plots.
-#
-# Controlling for spurious PAC with PPC
-# -------------------------------------
-# Now that we have an idea of how PAC and PPC can be computed, the following
-# example will look at how PPC can be used to control for spurious PAC results
-# stemming from frequency harmonics :footcite:`Giehl2021`.
-
-###############################################################################
 # References
 # -----------------------------------------------------------------------------
 # .. footbibliography::
-
-# %%

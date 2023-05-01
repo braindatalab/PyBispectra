@@ -66,11 +66,11 @@ class SpatioSpectralFilter:
     compared to SSD :footcite:`Bartz2019`. It is recommended that you explore
     the performance of the different methods on your data.
 
-    Generalised eigendecompositions have the general form
+    Generalised eigendecompositions have the general form:
 
     :math:`\large NW \Lambda=SW`,
 
-    which can also be represented in the ratio form
+    which can also be represented in the ratio form:
 
     :math:`\large \Lambda=\frac{W^TSW}{W^TNW}`,
 
@@ -314,21 +314,20 @@ class SpatioSpectralFilter:
         -------
         filt_params_signal : dict
             Filter parameters for the signal frequencies, with the keys
-            ``"l_freq"``, ``"h_freq"``, ``"l_trans_bandwidth"``, and
-            ``"h_trans_bandwidth"``, as in mne.decoding.SSD.
+            "l_freq", "h_freq", "l_trans_bandwidth", and "h_trans_bandwidth",
+            as in ``mne.decoding.SSD``.
 
         filt_params_noise : dict
             Filter parameters for the noise frequencies, with the keys
-            ``"l_freq"``, ``"h_freq"``, ``"l_trans_bandwidth"``, and
-            ``"h_trans_bandwidth"``, as in mne.decoding.SSD.
+            "l_freq", "h_freq", "l_trans_bandwidth", and "h_trans_bandwidth",
+            as in ``mne.decoding.SSD``.
 
         Notes
         -----
-        ``"l_freq"`` and ``"h_freq"`` are derived from the first and second
-        entries, respectively, of :attr:``signal_bounds`` and
-        :attr:``noise_bounds``. ``"l_trans_bandwidth"`` and
-        ``"h_trans_bandwidth"`` are taken as :attr:``signal_noise_gap`` for
-        both signal and noise filters.
+        "l_freq" and "h_freq" are derived from the first and second entries,
+        respectively, of ``signal_bounds`` and ``noise_bounds``.
+        "l_trans_bandwidth" and "h_trans_bandwidth" are taken as
+        ``signal_noise_gap`` for both signal and noise filters.
         """
         filt_params_signal = {
             "l_freq": signal_bounds[0],
@@ -497,7 +496,7 @@ class SpatioSpectralFilter:
             CSD of the data.
 
         freqs : numpy.ndarray, shape of [frequencies]
-            Frequencies in ``csd``.
+            Frequencies (in Hz) in ``csd``.
         """
         if self.verbose:
             print("    Computing CSD...")
@@ -670,12 +669,12 @@ class SpatioSpectralFilter:
         -------
         transformed_data : numpy.ndarray, shape of [epochs, components, times]
             Transformed data with only those components created with filters
-            whose signal:noise ratios are > :attr:`min_ratio`.
+            whose signal:noise ratios are > ``min_ratio``.
 
         Notes
         -----
         Raises a warning if no components have a signal:noise ratio >
-        :attr:`min_ratio` and :attr:`verbose` is ``True``.
+        ``min_ratio`` and :attr:`verbose` is ``True``.
         """
         if not isinstance(min_ratio, float):
             raise TypeError("`min_ratio` must be a float")

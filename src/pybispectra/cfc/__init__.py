@@ -2,5 +2,6 @@
 
 __version__ = "0.0.1"
 
+from .aac import AAC
 from .pac import PAC
 from .ppc import PPC

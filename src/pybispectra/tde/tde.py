@@ -450,7 +450,7 @@ class TDE(_ProcessBispectrum):
             TDE computation function to parallelise.
 
         kwargs : dict
-            Arguments to pass to :param:`func`.
+            Arguments to pass to ``func``.
 
         Returns
         -------
@@ -482,7 +482,7 @@ class TDE(_ProcessBispectrum):
     def _compute_times(self) -> None:
         """Compute timepoints (in ms) in the results."""
         epoch_dur = 0.5 * ((self.freqs.shape[0] - 1) / self.sfreq)
-        self._times = np.linspace(-epoch_dur, epoch_dur, self._n_freqs)
+        self._times = np.linspace(-epoch_dur, epoch_dur, self._n_freqs) * 1000
 
     def _store_results(self) -> None:
         """Store computed results in objects."""
@@ -588,30 +588,29 @@ def _compute_bispectrum_tde(
 
     hankel_freq_mask : numpy.ndarray of float, shape of [fs, fs]
         Hankel matrix to use as a frequency mask for the frequencies in channel
-        n of :param:`data`, where ``fs`` is the zero and positive frequencies.
-        Can be generated with :func:`scipy.linalg.hankel` where ``c`` is a
-        vector ranging from 0 to ``fs`` and ``r`` is a vector ranging from
-        ``fs - 1`` to ``2 * fs``.
+        n of ``data``, where ``fs`` is the zero and positive frequencies.
+        Can be generated with ``scipy.linalg.hankel(c=numpy.arange(0, fs),
+        r=(numpy.arange(fs-1 : fs*2))``.
 
     kmn : tuple of tuple of int, shape of [x, 3]
         Tuple of variable length (x) of tuples, where each sub-tuple contains
-        the k, m, and n channel indices in `data`, respectively, to compute the
-        bispectrum for.
+        the k, m, and n channel indices in ``data``, respectively, to compute
+        the bispectrum for.
 
     Returns
     -------
     results : numpy.ndarray of complex float, shape of [x, epochs, fs, fs]
         Complex-valued array containing the bispectrum of a single connection,
         where the first dimension corresponds to the different channel indices
-        given in :param:`kmn`.
+        given in ``kmn``.
 
     Notes
     -----
-    Averaging across epochs is not performed here as :func:`numpy.mean` of
+    Averaging across epochs is not performed here as ``numpy.mean`` of
     complex numbers is not supported when compiling using Numba.
 
     No checks on the input data are performed for speed.
-    """  # noqa E501
+    """
     n_unique_freqs = hankel_freq_mask.shape[0]
     results = np.full(
         (len(kmn), data.shape[0], n_unique_freqs, n_unique_freqs),
@@ -640,33 +639,16 @@ def _compute_bispectrum_tde(
     return results
 
 
-def _compute_shift_ifft_I(I: np.ndarray) -> np.ndarray:
-    """Compute the zero-freq. center-shifted iFFT on the ``I`` matrix.
-
-    PARAMETERS
-    ----------
-    I : numpy.ndarray of complex float, shape of [frequencies]
-        Bispectrum phase information for computing TDE, summed over the f1
-        axis.
-
-    RETURNS
-    -------
-    tde : numpy.ndarray of float, shape of [frequencies]
-        Time delay estimates.
-    """
-    return np.abs(np.fft.fftshift(np.fft.ifft(I)))
-
-
 def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     """Compute TDE from bispectra with method I for a single connection.
 
     Parameters
     ----------
     B_xyx : numpy.ndarray of complex float, shape of [fs, fs]
-        Bispectrum for channel combination `xyx`.
+        Bispectrum for channel combination ``xyx``.
 
     B_xxx : numpy.ndarray of complex float, shape of [fs, fs]
-        Bispectrum for channel combination `xxx`.
+        Bispectrum for channel combination ``xxx``.
 
     Returns
     -------
@@ -681,7 +663,7 @@ def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     phi = np.angle(B_xyx) - np.angle(B_xxx)
     I[: B_xyx.shape[0]] = np.nansum(np.exp(1j * phi), axis=0)
 
-    return _compute_shift_ifft_I(I)
+    return np.abs(np.fft.fftshift(np.fft.ifft(I)))
 
 
 def _compute_tde_ii(
@@ -694,13 +676,13 @@ def _compute_tde_ii(
     Parameters
     ----------
     B_xyx : numpy.ndarray of complex float, shape of [fs, fs]
-        Bispectrum for channel combination `xyx`.
+        Bispectrum for channel combination ``xyx``.
 
     B_xxx : numpy.ndarray of complex float, shape of [fs, fs]
-        Bispectrum for channel combination `xxx`.
+        Bispectrum for channel combination ``xxx``.
 
     B_yyy : numpy.ndarray of complex float, shape of [fs, fs]
-        Bispectrum for channel combination `yyy`.
+        Bispectrum for channel combination ``yyy``.
 
     Returns
     -------
@@ -715,7 +697,7 @@ def _compute_tde_ii(
     phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
     I[: B_xyx.shape[0]] = np.nansum(np.exp(1j * phi_prime), axis=0)
 
-    return _compute_shift_ifft_I(I)
+    return np.abs(np.fft.fftshift(np.fft.ifft(I)))
 
 
 def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
@@ -724,10 +706,10 @@ def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     B_xyx : numpy.ndarray of complex float, shape of [fs, fs]
-        Bispectrum for channel combination `xyx`.
+        Bispectrum for channel combination ``xyx``.
 
     B_xxx : numpy.ndarray of complex float, shape of [fs, fs]
-        Bispectrum for channel combination `xxx`.
+        Bispectrum for channel combination ``xxx``.
 
     Returns
     -------
@@ -741,7 +723,7 @@ def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     I = np.zeros((B_xyx.shape[0] * 2 - 1), dtype=np.complex128)
     I[: B_xyx.shape[0]] = np.nansum(np.divide(B_xyx, B_xxx), axis=0)
 
-    return _compute_shift_ifft_I(I)
+    return np.abs(np.fft.fftshift(np.fft.ifft(I)))
 
 
 def _compute_tde_iv(
@@ -754,13 +736,13 @@ def _compute_tde_iv(
     Parameters
     ----------
     B_xyx : numpy.ndarray of complex float, shape of [fs, fs]
-        Bispectrum for channel combination `xyx`.
+        Bispectrum for channel combination ``xyx``.
 
     B_xxx : numpy.ndarray of complex float, shape of [fs, fs]
-        Bispectrum for channel combination `xxx`.
+        Bispectrum for channel combination ``xxx``.
 
     B_yyy : numpy.ndarray of complex float, shape of [fs, fs]
-        Bispectrum for channel combination `yyy`.
+        Bispectrum for channel combination ``yyy``.
 
     Returns
     -------
@@ -781,4 +763,4 @@ def _compute_tde_iv(
         axis=0,
     )
 
-    return _compute_shift_ifft_I(I)
+    return np.abs(np.fft.fftshift(np.fft.ifft(I)))

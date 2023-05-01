@@ -72,15 +72,13 @@ print(
 # expected to be a tuple containing two NumPy arrays for the indices of the
 # seed and target channels, respectively. The indices specified below mean that
 # PPC will only be computed across frequencies within each channel (i.e.
-# 0 -> 0; and 1 -> 1). By leaving the frequency arguments :attr:`f1` and
-# :attr:`f2` blank, we will look at all possible frequency combinations.
+# 0 -> 0; and 1 -> 1). By leaving the frequency arguments :attr:`f1s` and
+# :attr:`f2s` blank, we will look at all possible frequency combinations.
 
 # %%
 
-ppc = PPC(data=fft, freqs=freqs)  # initialise object
-ppc.compute(
-    indices=(np.array([0, 1]), np.array([0, 1])), f1=None, f2=None
-)  # compute PPC
+ppc = PPC(data=fft, freqs=freqs, sfreq=sfreq)  # initialise object
+ppc.compute(indices=(np.array([0, 1]), np.array([0, 1])))  # compute PPC
 
 ppc_results = ppc.results.get_results()  # return results as array
 

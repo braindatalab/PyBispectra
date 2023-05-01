@@ -1,6 +1,6 @@
 """Tools for processing and handling CFC and TDE results."""
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 from copy import deepcopy
 from multiprocessing import cpu_count
 from warnings import warn
@@ -108,11 +108,9 @@ class _ProcessFreqBase(ABC):
     ) -> None:
         """Sort frequency inputs."""
         if f1s is None:
-            f1s = self.freqs.copy()[:-1]
-            if f2s is None:
-                f2s = self.freqs.copy()[1:]
+            f1s = self.freqs.copy()
         if f2s is None:
-            f2s = f1s[1:].copy()
+            f2s = f1s.copy()
 
         if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
             raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
@@ -175,7 +173,7 @@ class _ProcessFreqBase(ABC):
     def _store_results(self) -> None:
         """Store computed results in an object."""
 
-    @abstractmethod
+    @abstractproperty
     def results(self) -> None:
         """Return a copy of the results."""
 
@@ -250,8 +248,8 @@ def _compute_bispectrum(
 
     kmn : np.ndarray of int, shape of [x, 3]
         Array of variable length (x) of arrays, where each sub-array contains
-        the k, m, and n channel indices in `data`, respectively, to compute the
-        bispectrum for.
+        the k, m, and n channel indices in ``data``, respectively, to compute
+        the bispectrum for.
 
     Returns
     -------
@@ -262,7 +260,7 @@ def _compute_bispectrum(
 
     Notes
     -----
-    Averaging across epochs is not performed here as :func:`np.mean` of complex
+    Averaging across epochs is not performed here as ``numpy.mean`` of complex
     numbers is not supported when compiling using Numba.
 
     No checks on the input data are performed for speed.

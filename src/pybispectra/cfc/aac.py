@@ -1,4 +1,4 @@
-"""Tools for handling PPC analysis."""
+"""Tools for handling AAC analysis."""
 
 from copy import deepcopy
 
@@ -10,8 +10,8 @@ from pybispectra.utils import ResultsCFC, fast_find_first
 from pybispectra.utils._process import _ProcessFreqBase
 
 
-class PPC(_ProcessFreqBase):
-    """Class for computing phase-phase coupling (PPC).
+class AAC(_ProcessFreqBase):
+    """Class for computing amplitude-amplitude coupling (AAC).
 
     Parameters
     ----------
@@ -27,7 +27,7 @@ class PPC(_ProcessFreqBase):
     Attributes
     ----------
     results : tuple of pybispectra.ResultsCFC
-        PPC results for each of the computed metrics.
+        AAC results for each of the computed metrics.
 
     data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
@@ -49,7 +49,8 @@ class PPC(_ProcessFreqBase):
         Whether or not to report the progress of the processing.
     """
 
-    _ppc = None
+    _power = None
+    _aac = None
 
     def compute(
         self,
@@ -58,21 +59,21 @@ class PPC(_ProcessFreqBase):
         f2s: np.ndarray | None = None,
         n_jobs: int = 1,
     ) -> None:
-        r"""Compute PPC, averaged over epochs.
+        r"""Compute AAC across epochs.
 
         Parameters
         ----------
         indices : tuple of numpy.ndarray of int | None (default None), length of 2
             Indices of the seed and target channels, respectively, to compute
-            PPC between. If ``None``, coupling between all channels is
+            AAC between. If ``None``, coupling between all channels is
             computed.
 
         f1s : numpy.ndarray of float | None (default None), shape of [frequencies]
-            Lower frequencies to compute PPC on. If ``None``, all frequencies
+            Lower frequencies to compute AAC on. If ``None``, all frequencies
             are used.
 
         f2s : numpy.ndarray of float | None (default None), shape of [frequencies]
-            Higher frequencies to compute PPC on. If ``None``, all frequencies
+            Higher frequencies to compute AAC on. If ``None``, all frequencies
             are used.
 
         n_jobs : int (default ``1``)
@@ -81,15 +82,10 @@ class PPC(_ProcessFreqBase):
 
         Notes
         -----
-        PPC is computed as coherence between frequencies :footcite:`Giehl2021`:
+        AAC is computed as the Pearson correlation coefficient between
+        frequencies.
 
-        :math:`\large PPC(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{|\langle \vec{a}_x(f_1)\vec{a}_y(f_2) e^{i(\vec{\varphi}_x(f_1)\frac{f_2}{f_1}-\vec{\varphi}_y(f_2))} \rangle|}{\langle \vec{a}_x(f_1)\vec{a}_y(f_2) \rangle}`,
-
-        where :math:`\vec{a}(f)` and :math:`\vec{\varphi}(f)` are the amplitude and phase
-        of a signal at a given frequency, respectively, and the angled brackets
-        represent the average over epochs.
-
-        PPC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
+        AAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
         any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``
         value is returned.
 
@@ -104,24 +100,34 @@ class PPC(_ProcessFreqBase):
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
-            print("Computing PPC...")
+            print("Computing AAC...")
 
-        self._compute_ppc()
+        self._compute_power()
+        self._compute_aac()
         self._store_results()
 
         if self.verbose:
-            print("    ... PPC computation finished\n")
+            print("    ... AAC computation finished\n")
 
     def _reset_attrs(self) -> None:
         """Reset attrs. of the object to prevent interference."""
         super()._reset_attrs()
-        self._ppc = None
+        self._aac = None
 
-    def _compute_ppc(self) -> None:
-        """Compute PPC between f1s of seeds and f2s of targets."""
+    def _compute_power(self) -> None:
+        """Compute power from the FFT coefficients."""
+        self._power = np.abs(self.data) ** 2
+        self._power[1:-1] *= 2  # pos./neg. freqs repeated
+        if self.freqs[0] == 0:  # zero freq. not repeated
+            self._power[0] *= 2
+        if self.freqs[-1] == self.sfreq / 2:  # Nyquist freq. not repeated
+            self._power[-1] *= 2
+
+    def _compute_aac(self) -> None:
+        """Compute AAC between f1s of seeds and f2s of targets."""
         args = [
             {
-                "data": self.data[:, (seed, target)],
+                "power": self._power[:, (seed, target)],
                 "freqs": self.freqs,
                 "f1s": self.f1s,
                 "f2s": self.f2s,
@@ -129,10 +135,10 @@ class PPC(_ProcessFreqBase):
             for seed, target in zip(self._seeds, self._targets)
         ]
 
-        self._ppc = np.array(
+        self._aac = np.array(
             pqdm(
                 args,
-                _compute_ppc,
+                _compute_aac,
                 self._n_jobs,
                 argument_type="kwargs",
                 desc="Processing connections...",
@@ -143,7 +149,7 @@ class PPC(_ProcessFreqBase):
     def _store_results(self) -> None:
         """Store computed results in an object."""
         self._results = ResultsCFC(
-            self._ppc, self.indices, self.f1s, self.f2s, "PPC"
+            self._aac, self.indices, self.f1s, self.f2s, "AAC"
         )
 
     @property
@@ -153,18 +159,18 @@ class PPC(_ProcessFreqBase):
 
 
 @njit
-def _compute_ppc(
-    data: np.ndarray,
+def _compute_aac(
+    power: np.ndarray,
     freqs: np.ndarray,
     f1s: np.ndarray,
     f2s: np.ndarray,
 ) -> np.ndarray:
-    """Compute PPC for a single connection across epochs.
+    """Compute AAC for a single connection across epochs.
 
     PARAMETERS
     ----------
-    data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
-        FFT coefficients where the second dimension contains the data for the
+    power : numpy.ndarray of float, shape of [epochs, 2, frequencies]
+        Signal power, where the second dimension contains the data for the
         seed and target channel of a single connection, respectively.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
@@ -179,7 +185,7 @@ def _compute_ppc(
     RETURNS
     -------
     results : numpy.ndarray of float, shape of [f1s, f2s]
-        PPC for a single connection.
+        AAC for a single connection.
     """
     results = np.full(
         (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
@@ -187,22 +193,17 @@ def _compute_ppc(
     for f1_i, f1 in enumerate(f1s):
         for f2_i, f2 in enumerate(f2s):
             if f1 < f2 and f1 > 0:
-                fft_f1 = data[:, 0, fast_find_first(freqs, f1)]  # seed f1
-                fft_f2 = data[:, 1, fast_find_first(freqs, f2)]  # target f2
-                numerator = np.abs(
-                    (
-                        np.abs(fft_f1)
-                        * np.abs(fft_f2)
-                        * np.exp(
-                            1j
-                            * (
-                                np.angle(fft_f1, True) * (f2 / f1)
-                                - np.angle(fft_f2, True)
-                            )
-                        )
-                    ).mean()
+                power_f1 = power[:, 0, fast_find_first(freqs, f1)]  # seed pow.
+                power_f2 = power[:, 1, fast_find_first(freqs, f2)]  # tar.pow.
+
+                power_f1_norm = power_f1 - np.mean(power_f1)
+                power_f2_norm = power_f2 - np.mean(power_f2)
+
+                numerator = np.sum(power_f1_norm * power_f2_norm)
+                denominator = np.sqrt(
+                    np.sum(power_f1_norm**2) * np.sum(power_f2_norm**2)
                 )
-                denominator = (np.abs(fft_f1) * np.abs(fft_f2)).mean()
+
                 results[f1_i, f2_i] = numerator / denominator
 
     return results
