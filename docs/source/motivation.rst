@@ -36,9 +36,9 @@ What is available in PyBispectra?
 ---------------------------------
 PyBispectra offers tools for computing phase-amplitude coupling, time delay
 estimation, and wave shape feature analysis with bispectra. Additional tools
-are included for computing phase-phase coupling, computing Fourier
-coefficients, performing generalised eigendecompositions, as well as plotting
-results.
+are included for computing phase-phase coupling, amplitude-amplitude coupling,
+and Fourier coefficients, as well as tools for performing generalised
+eigendecompositions and plotting results.
 
 You can find the installation instructions :doc:`here <installation>`, as well
 as examples of how tools in the package can be used :doc:`here <examples>`.

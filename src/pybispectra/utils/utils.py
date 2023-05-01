@@ -222,7 +222,7 @@ def _create_mne_info(n_chans: int, sfreq: float) -> Info:
 
     Returns
     -------
-    info : MNE Info
+    info : mne.Info
         MNE Info object.
 
     Notes
