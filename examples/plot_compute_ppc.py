@@ -48,7 +48,7 @@ data = random.rand(30, 2, 500)  # [epochs x channels x frequencies]
 sfreq = 100  # sampling frequency in Hz
 
 # compute Fourier coeffs.
-fft, freqs = compute_fft(data=data, sfreq=sfreq)
+fft, freqs = compute_fft(data=data, sampling_freq=sfreq)
 
 print(
     f"FFT coeffs.: [{fft.shape[0]} epochs x {fft.shape[1]} channels x "

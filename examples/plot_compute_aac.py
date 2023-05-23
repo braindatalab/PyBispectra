@@ -34,7 +34,7 @@ data = np.load("example_data_cfc.npy")  # [epochs x channels x frequencies]
 sfreq = 200  # sampling frequency in Hz
 
 # compute Fourier coeffs.
-fft, freqs = compute_fft(data=data, samplingfreq=sfreq, n_points=sfreq)
+fft, freqs = compute_fft(data=data, sampling_freq=sfreq, n_points=sfreq)
 
 print(
     f"FFT coeffs.: [{fft.shape[0]} epochs x {fft.shape[1]} channels x "
