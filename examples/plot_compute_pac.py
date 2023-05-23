@@ -51,18 +51,17 @@ from pybispectra import compute_fft, PAC
 ###############################################################################
 # Generating data and computing Fourier coefficients
 # --------------------------------------------------
-# We will start by generating some data that we can compute PAC on, then
+# We will start by loading some example data that we can compute PAC on, then
 # compute the Fourier coefficients of the data.
 
 # %%
 
-# generate data
-random = np.random.RandomState(44)
-data = random.rand(30, 2, 500)  # [epochs x channels x frequencies]
-sfreq = 100.0  # sampling frequency in Hz
+# load example data
+data = np.load("example_data_cfc.npy")  # [epochs x channels x frequencies]
+sfreq = 200  # sampling frequency in Hz
 
 # compute Fourier coeffs.
-fft, freqs = compute_fft(data=data, sfreq=sfreq, n_points=int(sfreq * 2))
+fft, freqs = compute_fft(data=data, sampling_freq=sfreq, n_points=sfreq)
 
 print(
     f"FFT coeffs.: [{fft.shape[0]} epochs x {fft.shape[1]} channels x "
@@ -71,8 +70,8 @@ print(
 
 ###############################################################################
 # As you can see, we have FFT coefficients for 2 channels across 30 epochs,
-# with 101 frequencies ranging from 0 to 50 Hz with a frequency resolution of
-# 0.5 Hz. We will use these coefficients to compute PAC.
+# with 101 frequencies ranging from 0 to 100 Hz with a frequency resolution of
+# 1 Hz. We will use these coefficients to compute PAC.
 #
 # Computing PAC
 # -------------
@@ -85,14 +84,14 @@ print(
 # Here, we specify the :attr:`indices` to compute PAC on. :attr:`indices` is
 # expected to be a tuple containing two NumPy arrays for the indices of the
 # seed and target channels, respectively. The indices specified below mean that
-# PAC will only be computed across frequencies within each channel (i.e.
-# 0 -> 0; and 1 -> 1). By leaving the frequency arguments :attr:`f1s` and
-# :attr:`f2s` blank, we will look at all possible frequency combinations.
+# PAC will only be computed across frequencies between the channels (i.e.
+# 0 -> 1). By leaving the frequency arguments :attr:`f1s` and :attr:`f2s`
+# blank, we will look at all possible frequency combinations.
 
 # %%
 
-pac = PAC(data=fft, freqs=freqs, sfreq=sfreq)  # initialise object
-pac.compute(indices=(np.array([0, 1]), np.array([0, 1])))  # compute PAC
+pac = PAC(data=fft, freqs=freqs, sampling_freq=sfreq)  # initialise object
+pac.compute(indices=(np.array([0]), np.array([1])))  # compute PAC
 
 pac_results = pac.results[0].get_results()  # return results as array
 
@@ -121,9 +120,13 @@ print(
 
 # %%
 
-fig, axes = pac.results[0].plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
+fig, axes = pac.results[0].plot(
+    f1s=np.arange(0, 51), major_tick_intervals=10.0, minor_tick_intervals=2.0
+)
 
 ###############################################################################
 # References
 # -----------------------------------------------------------------------------
 # .. footbibliography::
+
+# %%

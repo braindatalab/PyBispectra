@@ -28,7 +28,7 @@ from pybispectra import compute_fft, PPC
 #
 # where :math:`\vec{a}(f)` and :math:`\vec{\varphi}(f)` are the amplitude and
 # phase of a signal at a given frequency, respectively, and the angled brackets
-# represent the average over epochs.The phase of :math:`f_1` is accelerated to
+# represent the average over epochs. The phase of :math:`f_1` is accelerated to
 # match that of :math:`f_2` by scaling the phase by a factor of
 # :math:`\frac{f_2}{f_1}`. PPC values for this measure lie in the range
 # :math:`[0, 1]`, with 0 representing a random phase relationship, and 1
@@ -77,7 +77,7 @@ print(
 
 # %%
 
-ppc = PPC(data=fft, freqs=freqs, sfreq=sfreq)  # initialise object
+ppc = PPC(data=fft, freqs=freqs, sampling_freq=sfreq)  # initialise object
 ppc.compute(indices=(np.array([0, 1]), np.array([0, 1])))  # compute PPC
 
 ppc_results = ppc.results.get_results()  # return results as array
@@ -112,14 +112,10 @@ fig, axes = ppc.results.plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
 # :math:`f_2`, and hence where PPC cannot be computed. Note that the ``Figure``
 # and ``Axes`` objects can also be returned for any desired manual adjustments
 # of the plots.
-#
-# Controlling for spurious PAC with PPC
-# -------------------------------------
-# Now that we have an idea of how PAC and PPC can be computed, the following
-# example will look at how PPC can be used to control for spurious PAC results
-# stemming from frequency harmonics :footcite:`Giehl2021`.
 
 ###############################################################################
 # References
 # -----------------------------------------------------------------------------
 # .. footbibliography::
+
+# %%

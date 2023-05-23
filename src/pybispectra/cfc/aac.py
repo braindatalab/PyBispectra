@@ -21,6 +21,9 @@ class AAC(_ProcessFreqBase):
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
+    sampling_freq : int | float
+        Sampling frequency (in Hz) of :attr:`data`.
+
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
@@ -34,6 +37,9 @@ class AAC(_ProcessFreqBase):
 
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
+
+    sampling_freq : int | float
+        Sampling frequency (in Hz) of :attr:`data`.
 
     indices : tuple of numpy.ndarray of int, length of 2
         Indices of the seed and target channels, respectively, most recently
@@ -116,11 +122,15 @@ class AAC(_ProcessFreqBase):
 
     def _compute_power(self) -> None:
         """Compute power from the FFT coefficients."""
-        self._power = np.abs(self.data) ** 2
-        self._power[1:-1] *= 2  # pos./neg. freqs repeated
+        self._power = (1.0 / (self.sampling_freq * self.data.shape[2])) * (
+            np.abs(self.data) ** 2
+        )
+
         if self.freqs[0] == 0:  # zero freq. not repeated
             self._power[0] *= 2
-        if self.freqs[-1] == self.sfreq / 2:  # Nyquist freq. not repeated
+        if (
+            self.freqs[-1] == self.sampling_freq / 2
+        ):  # Nyquist freq. not repeated
             self._power[-1] *= 2
 
     def _compute_aac(self) -> None:
@@ -194,7 +204,7 @@ def _compute_aac(
         for f2_i, f2 in enumerate(f2s):
             if f1 < f2 and f1 > 0:
                 power_f1 = power[:, 0, fast_find_first(freqs, f1)]  # seed pow.
-                power_f2 = power[:, 1, fast_find_first(freqs, f2)]  # tar.pow.
+                power_f2 = power[:, 1, fast_find_first(freqs, f2)]  # tar. pow.
 
                 power_f1_norm = power_f1 - np.mean(power_f1)
                 power_f2_norm = power_f2 - np.mean(power_f2)

@@ -29,13 +29,12 @@ from pybispectra import compute_fft, AAC
 
 # %%
 
-# generate data
-random = np.random.RandomState(44)
-data = random.rand(30, 2, 500)  # [epochs x channels x frequencies]
-sfreq = 100.0  # sampling frequency in Hz
+# load example data
+data = np.load("example_data_cfc.npy")  # [epochs x channels x frequencies]
+sfreq = 200  # sampling frequency in Hz
 
 # compute Fourier coeffs.
-fft, freqs = compute_fft(data=data, sfreq=sfreq, n_points=int(sfreq * 2))
+fft, freqs = compute_fft(data=data, samplingfreq=sfreq, n_points=sfreq)
 
 print(
     f"FFT coeffs.: [{fft.shape[0]} epochs x {fft.shape[1]} channels x "
@@ -64,8 +63,8 @@ print(
 
 # %%
 
-aac = AAC(data=fft, freqs=freqs, sfreq=sfreq)  # initialise object
-aac.compute(indices=(np.array([0, 1]), np.array([0, 1])))  # compute AAC
+aac = AAC(data=fft, freqs=freqs, sampling_freq=sfreq)  # initialise object
+aac.compute(indices=(np.array([0]), np.array([1])))  # compute AAC
 
 aac_results = aac.results.get_results()  # return results as array
 
@@ -94,4 +93,6 @@ print(
 
 # %%
 
-fig, axes = aac.results.plot(n_rows=1, n_cols=2)  # 2 subplots for the cons.
+fig, axes = aac.results.plot(major_tick_intervals=5.0)
+
+# %%
