@@ -13,10 +13,10 @@ import pybispectra
 from pybispectra.utils._docs import linkcode_resolve
 
 
-project = "pybispectra"
+project = "PyBispectra"
 copyright = "2023, Thomas Samuel Binns"
 author = "Thomas Samuel Binns"
-release = "dev"
+release = "1.1.0dev"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -58,7 +58,7 @@ html_theme_options = {
     "icon_links": [
         dict(
             name="GitHub",
-            url="https://github.com/braindatalab/pybispectra",
+            url="https://github.com/braindatalab/PyBispectra",
             icon="fa-brands fa-square-github",
         )
     ],

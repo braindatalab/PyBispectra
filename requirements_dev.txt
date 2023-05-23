@@ -1,4 +1,9 @@
 pytest
+flake8
+black
+codespell
+pydocstyle
+pycodestyle
 sphinx
 numpydoc
 nbsphinx

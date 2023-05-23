@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pybispectra"
-version = "dev0.0.1"
+version = "1.0.0dev"
 authors = [
     { name="Thomas Samuel Binns", email="t.s.binns@outlook.com" }
 ]
 description = "A Python signal processing package for computing spectral-domain and time-domain interactions using bispectra."
 readme = "README.md"
-requires-python = "3.10"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -29,6 +29,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "flake8",
+    "black",
+    "codespell",
+    "pydocstyle",
+    "pycodestyle",
     "sphinx",
     "numpydoc",
     "nbsphinx",
@@ -39,5 +44,5 @@ dev = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/braindatalab/pybispectra"
-"Bug Tracker" = "https://github.com/braindatalab/pybispectra/issues"
+"Homepage" = "https://github.com/braindatalab/PyBispectra"
+"Bug Tracker" = "https://github.com/braindatalab/PyBispectra/issues"

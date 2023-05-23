@@ -1,4 +1,6 @@
-__version__ = "0.0.1"
+"""Initialisation of the PyBispectra package."""
+
+__version__ = "1.0.0dev"
 
 from .cfc import AAC, PAC, PPC
 from .tde import TDE

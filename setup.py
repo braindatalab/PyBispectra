@@ -1,11 +1,11 @@
-"""Install the pybispectra package."""
+"""Install the PyBispectra package."""
 
 from setuptools import setup
 
 setup(
     name="pybispectra",
-    version="dev0.0.1",
-    package_dir={"": "src/"},
+    version="1.0.0dev",
+    package_dir={"": "src"},
     packages=[
         "pybispectra",
         "pybispectra.cfc",
