@@ -19,7 +19,7 @@ class _ProcessFreqBase(ABC):
     _targets = None
     _n_cons = None
 
-    sfreq = None
+    sampling_freq = None
     f1s = None
     f2s = None
 
@@ -31,14 +31,14 @@ class _ProcessFreqBase(ABC):
         self,
         data: np.ndarray,
         freqs: np.ndarray,
-        sfreq: int | float,
+        sampling_freq: int | float,
         verbose: bool = True,
     ) -> None:
         self.verbose = deepcopy(verbose)
-        self._sort_init_inputs(data, freqs, sfreq)
+        self._sort_init_inputs(data, freqs, sampling_freq)
 
     def _sort_init_inputs(
-        self, data: np.ndarray, freqs: np.ndarray, sfreq: int | float
+        self, data: np.ndarray, freqs: np.ndarray, sampling_freq: int | float
     ) -> None:
         """Check init. inputs are appropriate."""
         if not isinstance(data, np.ndarray):
@@ -56,19 +56,19 @@ class _ProcessFreqBase(ABC):
         if self._n_freqs != len(freqs):
             raise ValueError(
                 "`data` and `freqs` should contain the same number of "
-                "frequencies"
+                "frequencies."
             )
 
-        if not isinstance(sfreq, float) and not isinstance(sfreq, int):
-            raise TypeError("`sfreq` must be an int or a float.")
-        if np.abs(freqs).max() * 2 > sfreq:
+        if not isinstance(sampling_freq, (int, float)):
+            raise TypeError("`sampling_freq` must be an int or a float.")
+        if np.abs(freqs).max() * 2 > sampling_freq:
             raise ValueError(
                 "At least one entry of `freqs` is > the Nyquist frequency."
             )
 
         self.data = data.copy()
         self.freqs = freqs.copy()
-        self.sfreq = deepcopy(sfreq)
+        self.sampling_freq = deepcopy(sampling_freq)
 
     def _sort_indices(self, indices: tuple[np.ndarray] | None) -> None:
         """Sort seed-target indices inputs."""
@@ -125,9 +125,9 @@ class _ProcessFreqBase(ABC):
                 "data."
             )
 
-        if self.sfreq is not None:
-            if self.sfreq < f2s[-1] * 2:
-                raise ValueError("`sfreq` must be >= all entries of f2s * 2.")
+        if self.sampling_freq is not None:
+            if self.sampling_freq < f2s[-1] * 2:
+                raise ValueError("`sampling_freq` must be >= all entries of f2s * 2.")
 
         if self.verbose:
             if any(lfreq >= hfreq for hfreq in f2s for lfreq in f1s):

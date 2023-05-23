@@ -13,9 +13,10 @@ Development
 -----------
 
 To install the package in editable mode for development, clone the `GitHub
-repository <https://github.com/braindatalab/pybispectra/tree/main>`_ and
+repository <https://github.com/braindatalab/PyBispectra/tree/main>`_ and
 navigate to the desired installation location, then install the package and its
-`development requirements <https://github.com/braindatalab/pybispectra/tree/main/requirements_dev.txt>`_
+`development requirements
+<https://github.com/braindatalab/PyBispectra/tree/main/requirements_dev.txt>`_
 using pip:
 
 .. code-block:: console

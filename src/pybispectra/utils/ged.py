@@ -20,7 +20,7 @@ class SpatioSpectralFilter:
     ----------
     data : numpy.ndarray, shape of [epochs, channels, times]
 
-    sfreq : float
+    sampling_freq : float
         Sampling frequency of :attr:`data` (in Hz).
 
     verbose : bool (default True)
@@ -48,23 +48,46 @@ class SpatioSpectralFilter:
     The filtering methods used here rely on generalised eigendecomposition: a
     multivariate method for generating filters that maximise discrimination
     between signal and noise features of the data :footcite:`Cohen2022`. Two
-    approaches are available: spatiospectral decomposition (SSD)
+    approaches are available: spatio-spectral decomposition (SSD)
     :footcite:`Nikulin2011`; and harmonic power maximisation (HPMax)
     :footcite:`Bartz2019`.
 
     In SSD, a signal band of interest and a flanking noise band are selected,
     with the goal of generating a spatial filter that will maximise information
     in the signal band of interest, and minimise information from the flanking
-    noise frequencies.
+    noise frequencies. In practice, this is implemented by bandpass filtering
+    the data at a frequency range of interest and computing the covariance
+    matrices on the signal and noise periods which are passed to the
+    generalised eigendecomposition.
 
     HPMax is an extension of SSD, in which not only the signal band of
     interest, but also information from the harmonics of these frequencies is
-    maximised with the spatial filters. This can be beneficial when information
-    at the harmonics as well as the base frequencies is also of interest, such
-    as with wave shape analyses :footcite:`Bartz2019`. Depending on the level
-    of noise in the data, however, performance of HPMax can be detrimental
-    compared to SSD :footcite:`Bartz2019`. It is recommended that you explore
-    the performance of the different methods on your data.
+    maximised with the spatial filters. HPMax is implemented by computing the
+    cross-spectral density of the data, which can then be summed across the
+    signal and noise frequencies of interest, taking advantage of the fact that
+    the cross-spectral density is a frequency-resolved representation of the
+    covariance matrix.
+
+    Depending on the signal-to-noise ratio (SNR) of the data, the performance
+    of these methods for recovering the underlying signal of interest -
+    measured by the ability to suppress noise whilst retaining the original
+    wave shape - can vary :footcite:`Bartz2019`:
+
+    *   Low SNRs: SSD filters applied to bandpass-filtered data (SSD+) can show
+        favourable performance compared to SSD applied to broadband data (SSD-)
+        and HPMax. The distortion of wave shape with bandpass filtering in SSD+
+        is compensated for by the higher level of noise reduction.
+
+    *   Intermediate SNRs: SSD- and HPMax performance can match or surpass SSD+
+        performance, and HPMax can outperform SSD-. The lower level of noise in
+        the base signal means that the weaker degree of noise reduction with
+        SSD- and HPMax is sufficient to uncover the signal without the
+        distorting effects of bandpass filtering on wave shape.
+
+    *   High SNRs: HPMax can show increased or similar performance to SSD-.
+
+    It is therefore recommended that you explore the performance of the
+    different methods on your data.
 
     Generalised eigendecompositions have the general form:
 
@@ -80,8 +103,8 @@ class SpatioSpectralFilter:
     information content and minimise noise information content), and
     :math:`\Lambda` is a diagonal matrix of eigenvalues representing the ratio
     of signal:noise information content in the data transformed with each
-    spatial filter. Accordingly, spatial filters for which the signal:noise
-    ratio is > 1 are generally of interest.
+    spatial filter. Accordingly, spatial filters for with an SNR > 1 are
+    generally of interest.
 
     References
     ----------
@@ -93,7 +116,7 @@ class SpatioSpectralFilter:
     _n_chans = None
     _n_times = None
 
-    sfreq = None
+    sampling_freq = None
 
     indices = None
     _use_n_chans = None
@@ -117,22 +140,24 @@ class SpatioSpectralFilter:
     def __init__(
         self,
         data: np.ndarray,
-        sfreq: float,
+        sampling_freq: float,
         verbose: bool = True,
     ) -> None:  # noqa D107
         self.verbose = deepcopy(verbose)
-        self._sort_init_inputs(data, sfreq)
+        self._sort_init_inputs(data, sampling_freq)
 
-    def _sort_init_inputs(self, data: np.ndarray, sfreq: float) -> None:
+    def _sort_init_inputs(
+        self, data: np.ndarray, sampling_freq: float
+    ) -> None:
         """Check init. inputs are appropriate."""
         if not isinstance(data, np.ndarray):
             raise TypeError("`data` must be a NumPy array.")
         if data.ndim != 3:
             raise ValueError("`data` must be a 3D array.")
 
-        if not isinstance(sfreq, float):
-            raise TypeError("`sfreq` must be a float.")
-        self.sfreq = deepcopy(sfreq)
+        if not isinstance(sampling_freq, float):
+            raise TypeError("`sampling_freq` must be a float.")
+        self.sampling_freq = deepcopy(sampling_freq)
 
         self._n_epochs, self._n_chans, self._n_times = data.shape
 
@@ -183,14 +208,23 @@ class SpatioSpectralFilter:
         if not isinstance(n_harmonics, int):
             raise TypeError("`n_harmonics` must be an int.")
 
-        if n_harmonics < 0:
-            raise ValueError("`n_harmonics` must be >= 0.")
+        if n_harmonics < -1:
+            raise ValueError("`n_harmonics` must be >= -1.")
+
+        if n_harmonics == -1:
+            n_harmonics = (
+                int(
+                    (self.sampling_freq * 0.5 - self._n_noise_freqs[1])
+                    // self.signal_bounds[1]
+                )
+                - 1
+            )
 
         if (self.signal_bounds[1] * (n_harmonics + 1)) + self._n_noise_freqs[
             1
-        ] > self.sfreq * 0.5:
+        ] > self.sampling_freq * 0.5:
             raise ValueError(
-                "`n_harmonics` for the requested signal and noise freqs. "
+                "`n_harmonics` for the requested signal and noise frequencies "
                 "extends beyond the Nyquist frequency."
             )
 
@@ -290,7 +324,7 @@ class SpatioSpectralFilter:
         if self.verbose:
             print("Fitting SSD filters...\n")
 
-        info = _create_mne_info(self._use_n_chans, self.sfreq)
+        info = _create_mne_info(self._use_n_chans, self.sampling_freq)
         filt_params_signal, filt_params_noise = self._create_mne_filt_params(
             signal_bounds, noise_bounds, signal_noise_gap
         )
@@ -370,7 +404,7 @@ class SpatioSpectralFilter:
         self,
         signal_bounds: tuple[float],
         noise_bounds: tuple[float],
-        n_harmonics: int = 0,
+        n_harmonics: int = -1,
         indices: tuple[int] | None = None,
         rank: int | None = None,
         csd_method: str = "multitaper",
@@ -394,10 +428,10 @@ class SpatioSpectralFilter:
             the same number of frequency bins around the harmonic frequencies
             are taken as noise frequencies.
 
-        n_harmonics : int (default ``0``)
+        n_harmonics : int (default ``-1``)
             Number of harmonic frequencies of :attr:`signal_bounds` to use when
-            computing the filters. If ``0``, no harmonics are used. Only used
-            when :attr:`method` is ``"hpmax"``.
+            computing the filters. If ``0``, no harmonics are used. If ``-1``,
+            all harmonics are used.
 
         indices : tuple of int | None (default None)
             Channel indices to fit the filters to. If ``None``, all channels
@@ -506,7 +540,7 @@ class SpatioSpectralFilter:
         if csd_method == "multitaper":
             csd = csd_array_multitaper(
                 X=self.data[:, self.indices],
-                sfreq=self.sfreq,
+                sfreq=self.sampling_freq,
                 t0=0,
                 fmin=fmin,
                 fmax=fmax,
@@ -524,7 +558,7 @@ class SpatioSpectralFilter:
         else:
             csd = csd_array_fourier(
                 X=self.data[:, self.indices],
-                sfreq=self.sfreq,
+                sfreq=self.sampling_freq,
                 t0=0,
                 fmin=fmin,
                 fmax=fmax,

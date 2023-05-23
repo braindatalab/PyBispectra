@@ -51,10 +51,13 @@ class WaveShape(_ProcessBispectrum):
 
     Notes
     -----
-    It is recommended that spatiospectral filtering for a given frequency band
+    It is recommended that spatio-spectral filtering for a given frequency band
     of interest has been performed on :attr:`data` before analysing wave shape
-    properties :footcite:`Bartz2019`. This can be performed with
-    :class:`pybispectra.SpatioSpectralFilter`.
+    properties :footcite:`Bartz2019`. Spatio-spectral filtering is recommended
+    as it can enhance the signal-to-noise ratio of your data as well as
+    mitigate the risks of source-mixing in the sensor space compromising the
+    bicoherence patterns of the data :footcite:`Bartz2019`. Filtering can be
+    performed with :class:`pybispectra.SpatioSpectralFilter`.
 
     References
     ----------
@@ -110,6 +113,11 @@ class WaveShape(_ProcessBispectrum):
         :math:`\large N_{xxx}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{x}(f_2)|^3><|\vec{x}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
 
         :math:`\large \mathcal{B}_{xxx}(f_1,f_2)=\Large \frac{B_{xxx}(f_1,f_2)}{N_{xxx}(f_1,f_2)}`.
+
+        The threenorm is a form of univariate normalisation, whereby the values
+        of the bicoherence will be bound in the range :math:`[0, 1]` in a
+        manner that is independent of the coupling properties within or between
+        signals :footcite:`Shahbazi2014`.
 
         Bicoherence is computed for all values of :attr:`f1s` and :attr:`f2s`.
         If any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``

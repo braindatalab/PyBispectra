@@ -538,8 +538,6 @@ class ResultsCFC(_ResultsBase):
                     axis.set_aspect("equal")
                     self._set_axis_ticks(
                         axis,
-                        f1s,
-                        f2s,
                         major_tick_intervals,
                         minor_tick_intervals,
                     )
@@ -568,61 +566,14 @@ class ResultsCFC(_ResultsBase):
     def _set_axis_ticks(
         self,
         axis: plt.Axes,
-        f1s: np.ndarray,
-        f2s: np.ndarray,
         major_tick_intervals: float,
         minor_tick_intervals: float,
     ) -> None:
         """Set major and minor tick intervals of x- and y-axes."""
-        n_major_xticks = len(
-            np.arange(
-                f1s[0], f1s[-1] + major_tick_intervals, major_tick_intervals
-            )
-        )
-        n_major_yticks = len(
-            np.arange(
-                f2s[0], f2s[-1] + major_tick_intervals, major_tick_intervals
-            )
-        )
-
-        # extra tick necessary if 0 Hz plotted
-        if f1s[0] == 0.0:
-            n_major_xticks += 1
-        if f2s[0] == 0.0:
-            n_major_yticks += 1
-
-        # MaxNLocator only cares about tens (e.g. 10 and 19 have same result)
-        n_minor_xticks = (
-            np.ceil(
-                len(
-                    np.arange(
-                        f1s[0],
-                        f1s[-1] + minor_tick_intervals,
-                        minor_tick_intervals,
-                    )
-                )
-                / 10
-            )
-            * 10
-        )
-        n_minor_yticks = (
-            np.ceil(
-                len(
-                    np.arange(
-                        f2s[0],
-                        f2s[-1] + minor_tick_intervals,
-                        minor_tick_intervals,
-                    )
-                )
-                / 10
-            )
-            * 10
-        )
-
-        axis.xaxis.set_major_locator(plt.MaxNLocator(n_major_xticks))
-        axis.xaxis.set_minor_locator(plt.MaxNLocator(n_minor_xticks))
-        axis.yaxis.set_major_locator(plt.MaxNLocator(n_major_yticks))
-        axis.yaxis.set_minor_locator(plt.MaxNLocator(n_minor_yticks))
+        axis.xaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
+        axis.xaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
+        axis.yaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
+        axis.yaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
 
 
 class ResultsTDE(_ResultsBase):
@@ -910,6 +861,7 @@ class ResultsTDE(_ResultsBase):
         minor_tick_intervals: float,
     ) -> None:
         """Set major and minor tick intervals of the x-axis."""
+        """
         n_major_xticks = len(
             np.arange(
                 times[0],
@@ -932,6 +884,7 @@ class ResultsTDE(_ResultsBase):
             )
             * 10
         )
+        """
 
-        axis.xaxis.set_major_locator(plt.MaxNLocator(n_major_xticks))
-        axis.xaxis.set_minor_locator(plt.MaxNLocator(n_minor_xticks))
+        axis.xaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
+        axis.xaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))

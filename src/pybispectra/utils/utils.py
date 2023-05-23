@@ -13,7 +13,7 @@ import scipy as sp
 
 def compute_fft(
     data: np.ndarray,
-    sfreq: int | float,
+    sampling_freq: int | float,
     n_points: int | None = None,
     window: str = "hanning",
     return_neg_freqs: bool = False,
@@ -31,7 +31,7 @@ def compute_fft(
     data : numpy.ndarray of float, shape of [epochs, channels, times]
         Real-valued data to compute the FFT on.
 
-    sfreq : int | float
+    sampling_freq : int | float
         Sampling frequency of the data in Hz.
 
     n_points : int | None (default ``None``)
@@ -62,13 +62,19 @@ def compute_fft(
         Frequencies (in Hz) in ``fft``.
     """
     n_points, window_func, n_jobs = _compute_fft_input_checks(
-        data, sfreq, n_points, window, return_neg_freqs, n_jobs, verbose
+        data,
+        sampling_freq,
+        n_points,
+        window,
+        return_neg_freqs,
+        n_jobs,
+        verbose,
     )
 
     if verbose:
         print("Computing FFT on the data...")
 
-    freqs = np.fft.fftfreq(n=n_points, d=1 / sfreq)
+    freqs = sp.fft.fftfreq(n=n_points, d=1 / sampling_freq)
     if not return_neg_freqs:
         freqs = np.abs(freqs)
         freqs = freqs[: freqs.argmax() + 1]
@@ -76,14 +82,14 @@ def compute_fft(
     window = window_func(data.shape[2])
 
     args = [
-        {"a": sp.signal.detrend(chan_data) * window, "n": n_points}
+        {"x": sp.signal.detrend(chan_data) * window, "n": n_points}
         for chan_data in data.transpose(1, 0, 2)
     ]
 
     fft = np.array(
         pqdm(
             args,
-            np.fft.fft,
+            sp.fft.fft,  # should be faster than NumPy for real-valued inputs
             n_jobs,
             argument_type="kwargs",
             desc="Processing channels...",
@@ -99,7 +105,7 @@ def compute_fft(
 
 def _compute_fft_input_checks(
     data: np.ndarray,
-    sfreq: int | float,
+    sampling_freq: int | float,
     n_points: int | None,
     window: str,
     return_neg_freqs: bool,
@@ -131,8 +137,8 @@ def _compute_fft_input_checks(
     if n_jobs == -1:
         n_jobs = cpu_count()
 
-    if not isinstance(sfreq, int) and not isinstance(sfreq, float):
-        raise TypeError("`sfreq` must be an int or a float.")
+    if not isinstance(sampling_freq, (int, float)):
+        raise TypeError("`sampling_freq` must be an int or a float.")
 
     if not isinstance(window, str):
         raise TypeError("`window` must be a str.")
@@ -201,7 +207,7 @@ def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
     if data.ndim != 3:
         raise ValueError("`data` must be a 3D array.")
 
-    if not isinstance(sv_tol, float) and not isinstance(sv_tol, int):
+    if not isinstance(sv_tol, (int, float)):
         raise TypeError("`sv_tol` must be a float or an int.")
 
     singular_vals = np.linalg.svd(data, compute_uv=False).min(axis=0)
@@ -209,7 +215,7 @@ def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
     return np.count_nonzero(singular_vals > singular_vals[0] * sv_tol)
 
 
-def _create_mne_info(n_chans: int, sfreq: float) -> Info:
+def _create_mne_info(n_chans: int, sampling_freq: float) -> Info:
     """Create an MNE Info object.
 
     Parameters
@@ -217,7 +223,7 @@ def _create_mne_info(n_chans: int, sfreq: float) -> Info:
     n_chans : int
         Number of channels in the data to create names and types for.
 
-    sfreq : float
+    sampling_freq : float
         Sampling frequency of the data (in Hz).
 
     Returns
@@ -234,7 +240,7 @@ def _create_mne_info(n_chans: int, sfreq: float) -> Info:
     ch_names = [str(i) for i in range(n_chans)]
     ch_types = ["eeg" for _ in range(n_chans)]
 
-    return create_info(ch_names, sfreq, ch_types, verbose=False)
+    return create_info(ch_names, sampling_freq, ch_types, verbose=False)
 
 
 def _generate_data(

@@ -132,6 +132,11 @@ class PAC(_ProcessBispectrum):
 
         :math:`\large \mathcal{B}_{xyy}(f_1,f_2)=\Large \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}`.
 
+        The threenorm is a form of univariate normalisation, whereby the values
+        of the bicoherence will be bound in the range :math:`[0, 1]` in a
+        manner that is independent of the coupling properties within or between
+        signals :footcite:`Shahbazi2014`.
+
         If the seed and target for a given connection is the same channel and
         antisymmetrisation is being performed, ``numpy.nan`` values are
         returned.
@@ -184,13 +189,11 @@ class PAC(_ProcessBispectrum):
         self, symmetrise: str | list[str], normalise: str | list[str]
     ) -> None:
         """Sort inputs for the form of results being requested."""
-        if not isinstance(symmetrise, str) and not isinstance(
-            symmetrise, list
-        ):
+        if not isinstance(symmetrise, (str, list)):
             raise TypeError(
                 "`symmetrise` must be a list of strings or a string."
             )
-        if not isinstance(normalise, str) and not isinstance(normalise, list):
+        if not isinstance(normalise, (str, list)):
             raise TypeError(
                 "`normalise` must be a list of strings or a string."
             )

@@ -26,7 +26,7 @@ class TDE(_ProcessBispectrum):
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
-    sfreq : int | float
+    sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which :attr:`data` was
         derived.
 
@@ -48,7 +48,7 @@ class TDE(_ProcessBispectrum):
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
-    sfreq : int | float
+    sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which :attr:`data` was
         derived.
 
@@ -89,10 +89,10 @@ class TDE(_ProcessBispectrum):
         self,
         data: np.ndarray,
         freqs: np.ndarray,
-        sfreq: int | float,
+        sampling_freq: int | float,
         verbose: bool = True,
     ) -> None:  # noqa D107
-        super().__init__(data, freqs, sfreq, verbose)
+        super().__init__(data, freqs, sampling_freq, verbose)
         self._sort_freqs_structure()
 
     def _sort_freqs_structure(self) -> None:
@@ -239,13 +239,11 @@ class TDE(_ProcessBispectrum):
         self, symmetrise: str | list[str], method: int | list[int]
     ) -> None:
         """Sort inputs for the form of results being requested."""
-        if not isinstance(symmetrise, str) and not isinstance(
-            symmetrise, list
-        ):
+        if not isinstance(symmetrise, (str, list)):
             raise TypeError(
                 "`symmetrise` must be a list of strings or a string."
             )
-        if not isinstance(method, int) and not isinstance(method, list):
+        if not isinstance(method, (int, list)):
             raise TypeError("`method` must be a list of ints or an int.")
 
         if isinstance(symmetrise, str):
@@ -481,7 +479,7 @@ class TDE(_ProcessBispectrum):
 
     def _compute_times(self) -> None:
         """Compute timepoints (in ms) in the results."""
-        epoch_dur = 0.5 * ((self.freqs.shape[0] - 1) / self.sfreq)
+        epoch_dur = 0.5 * ((self.freqs.shape[0] - 1) / self.sampling_freq)
         self._times = np.linspace(-epoch_dur, epoch_dur, self._n_freqs) * 1000
 
     def _store_results(self) -> None:
