@@ -56,6 +56,8 @@ class TDE(_ProcessBispectrum):
         Whether or not to report the progress of the processing.
     """
 
+    _allow_neg_freqs = True
+
     _return_nosym = False
     _return_antisym = False
     _return_method_i = False

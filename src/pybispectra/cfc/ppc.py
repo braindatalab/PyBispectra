@@ -6,7 +6,8 @@ import numpy as np
 from numba import njit
 from pqdm.processes import pqdm
 
-from pybispectra.utils import ResultsCFC, fast_find_first
+from pybispectra.utils import ResultsCFC
+from pybispectra.utils.utils import _fast_find_first
 from pybispectra.utils._process import _ProcessFreqBase
 
 
@@ -184,11 +185,13 @@ def _compute_ppc(
     results = np.full(
         (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
     )
+    f1_idx = 0  # starting index to find f1s
     for f1_i, f1 in enumerate(f1s):
+        f2_idx = 0  # starting index to find f2s
         for f2_i, f2 in enumerate(f2s):
             if f1 < f2 and f1 > 0:
-                fft_f1 = data[:, 0, fast_find_first(freqs, f1)]  # seed f1
-                fft_f2 = data[:, 1, fast_find_first(freqs, f2)]  # target f2
+                fft_f1 = data[:, 0, _fast_find_first(freqs, f1, f1_idx)]
+                fft_f2 = data[:, 1, _fast_find_first(freqs, f2, f2_idx)]
                 numerator = np.abs(
                     (
                         np.abs(fft_f1)

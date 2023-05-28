@@ -1,6 +1,6 @@
 """Tools for processing and handling CFC and TDE results."""
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from multiprocessing import cpu_count
 from warnings import warn
@@ -8,11 +8,14 @@ from warnings import warn
 from numba import njit
 import numpy as np
 
-from pybispectra.utils import fast_find_first
+from pybispectra.utils.utils import _fast_find_first
 
 
 class _ProcessFreqBase(ABC):
     """Base class for processing frequency-domain results."""
+
+    _data_ndims = 3  # usu. [epochs, channels, frequencies, (times)]
+    _allow_neg_freqs = False  # only True for TDE
 
     indices = None
     _seeds = None
@@ -43,15 +46,15 @@ class _ProcessFreqBase(ABC):
         """Check init. inputs are appropriate."""
         if not isinstance(data, np.ndarray):
             raise TypeError("`data` must be a NumPy array.")
-        if data.ndim != 3:
-            raise ValueError("`data` must be a 3D array.")
+        if data.ndim != self._data_ndims:
+            raise ValueError(f"`data` must be a {self._data_ndims}D array.")
 
         if not isinstance(freqs, np.ndarray):
             raise TypeError("`freqs` must be a NumPy array.")
         if freqs.ndim != 1:
             raise ValueError("`freqs` must be a 1D array.")
 
-        self._n_epochs, self._n_chans, self._n_freqs = data.shape
+        self._n_epochs, self._n_chans, self._n_freqs = data.shape[:3]
 
         if self._n_freqs != len(freqs):
             raise ValueError(
@@ -61,10 +64,26 @@ class _ProcessFreqBase(ABC):
 
         if not isinstance(sampling_freq, (int, float)):
             raise TypeError("`sampling_freq` must be an int or a float.")
-        if np.abs(freqs).max() * 2 > sampling_freq:
+        if np.abs(freqs).max() > sampling_freq / 2:
             raise ValueError(
                 "At least one entry of `freqs` is > the Nyquist frequency."
             )
+
+        if not self._allow_neg_freqs and np.any(freqs < 0):
+            raise ValueError("Entries of `freqs` should be >= 0.")
+
+        max_freq_idx = np.where(freqs == np.abs(freqs).max())[0][0]
+        if np.any(freqs[:max_freq_idx] != np.sort(freqs[:max_freq_idx])):
+            raise ValueError(
+                "Entries of `freqs` corresponding to positive frequencies "
+                "must be in ascending order."
+            )
+        if self._allow_neg_freqs:
+            if np.any(freqs[max_freq_idx:] != np.sort(freqs[max_freq_idx:])):
+                raise ValueError(
+                    "Entries of `freqs` corresponding to negative frequencies "
+                    "must be in ascending order."
+                )
 
         self.data = data.copy()
         self.freqs = freqs.copy()
@@ -125,12 +144,19 @@ class _ProcessFreqBase(ABC):
                 "data."
             )
 
+        if np.all(f1s != np.sort(f1s)):
+            raise ValueError("Entries of `f1s` must be in ascending order.")
+        if np.all(f2s != np.sort(f2s)):
+            raise ValueError("Entries of `f2s` must be in ascending order.")
+
         if self.sampling_freq is not None:
             if self.sampling_freq < f2s[-1] * 2:
-                raise ValueError("`sampling_freq` must be >= all entries of f2s * 2.")
+                raise ValueError(
+                    "`sampling_freq` must be >= all entries of f2s * 2."
+                )
 
         if self.verbose:
-            if any(lfreq >= hfreq for hfreq in f2s for lfreq in f1s):
+            if f1s.max() >= f2s.min():
                 warn(
                     "At least one value in `f1s` is >= a value in `f2s`. The "
                     "corresponding result(s) will have a value of NaN.",
@@ -173,7 +199,8 @@ class _ProcessFreqBase(ABC):
     def _store_results(self) -> None:
         """Store computed results in an object."""
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def results(self) -> None:
         """Return a copy of the results."""
 
@@ -270,12 +297,14 @@ def _compute_bispectrum(
         fill_value=np.nan,
         dtype=np.complex128,
     )
+    f1_idx = 0  # starting index to find f1s
     for f1_i, f1 in enumerate(f1s):
+        f2_idx = 0  # starting index to find f2s
         for f2_i, f2 in enumerate(f2s):
             if f1 < f2 and (f2 + f1) in freqs:
-                f1_loc = fast_find_first(freqs, f1)
-                f2_loc = fast_find_first(freqs, f2)
-                fdiff_loc = fast_find_first(freqs, f2 + f1)
+                f1_loc = _fast_find_first(freqs, f1, f1_idx)
+                f2_loc = _fast_find_first(freqs, f2, f2_idx)
+                fdiff_loc = _fast_find_first(freqs, f2 + f1, f2_idx)
                 for kmn_i, (k, m, n) in enumerate(kmn):
                     for epoch_i, epoch_data in enumerate(data):
                         results[kmn_i, epoch_i, f1_i, f2_i] = (
@@ -319,12 +348,16 @@ def _compute_threenorm(
     results = np.full(
         (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
     )
+    f1_idx = 0  # starting index to find f1s
     for f1_i, f1 in enumerate(f1s):
+        f2_idx = 0  # starting index to find f2s
         for f2_i, f2 in enumerate(f2s):
             if f1 < f2 and (f2 + f1) in freqs:
-                fft_f1 = data[:, 0, fast_find_first(freqs, f1)]
-                fft_f2 = data[:, 1, fast_find_first(freqs, f2)]
-                fft_fdiff = data[:, 1, fast_find_first(freqs, f2 + f1)]
+                fft_f1 = data[:, 0, _fast_find_first(freqs, f1, f1_idx)]
+                fft_f2 = data[:, 1, _fast_find_first(freqs, f2, f2_idx)]
+                fft_fdiff = data[
+                    :, 1, _fast_find_first(freqs, f2 + f1, f2_idx)
+                ]
                 results[f1_i, f2_i] = (
                     (np.abs(fft_f1) ** 3).mean()
                     * (np.abs(fft_f2) ** 3).mean()

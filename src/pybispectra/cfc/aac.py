@@ -6,7 +6,8 @@ import numpy as np
 from numba import njit
 from pqdm.processes import pqdm
 
-from pybispectra.utils import ResultsCFC, fast_find_first
+from pybispectra.utils import ResultsCFC
+from pybispectra.utils.utils import _compute_pearsonr, _fast_find_first
 from pybispectra.utils._process import _ProcessFreqBase
 
 
@@ -15,8 +16,8 @@ class AAC(_ProcessFreqBase):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        FFT coefficients.
+    data : numpy.ndarray of float, shape of [epochs, channels, frequencies, times]
+        Amplitude (power) of the time-frequency representation of data.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
@@ -30,10 +31,10 @@ class AAC(_ProcessFreqBase):
     Attributes
     ----------
     results : tuple of pybispectra.ResultsCFC
-        AAC results for each of the computed metrics.
+        AAC results.
 
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        FFT coefficients.
+    data : numpy.ndarray of float, shape of [epochs, channels, frequencies, times]
+        Amplitude (power) of the time-frequency representation of data.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
@@ -53,9 +54,10 @@ class AAC(_ProcessFreqBase):
 
     verbose : bool
         Whether or not to report the progress of the processing.
-    """
+    """  # noqa E501
 
-    _power = None
+    _data_ndims = 4  # [epochs, channels, frequencies, times]
+
     _aac = None
 
     def compute(
@@ -88,8 +90,9 @@ class AAC(_ProcessFreqBase):
 
         Notes
         -----
-        AAC is computed as the Pearson correlation coefficient between
-        frequencies.
+        AAC is computed as the Pearson correlation coefficient across times for
+        each frequency in each epoch, with coupling being averaged across
+        epochs :footcite:`Giehl2020`.
 
         AAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
         any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``
@@ -108,7 +111,6 @@ class AAC(_ProcessFreqBase):
         if self.verbose:
             print("Computing AAC...")
 
-        self._compute_power()
         self._compute_aac()
         self._store_results()
 
@@ -120,24 +122,11 @@ class AAC(_ProcessFreqBase):
         super()._reset_attrs()
         self._aac = None
 
-    def _compute_power(self) -> None:
-        """Compute power from the FFT coefficients."""
-        self._power = (1.0 / (self.sampling_freq * self.data.shape[2])) * (
-            np.abs(self.data) ** 2
-        )
-
-        if self.freqs[0] == 0:  # zero freq. not repeated
-            self._power[0] *= 2
-        if (
-            self.freqs[-1] == self.sampling_freq / 2
-        ):  # Nyquist freq. not repeated
-            self._power[-1] *= 2
-
     def _compute_aac(self) -> None:
         """Compute AAC between f1s of seeds and f2s of targets."""
         args = [
             {
-                "power": self._power[:, (seed, target)],
+                "data": self.data[:, (seed, target)],
                 "freqs": self.freqs,
                 "f1s": self.f1s,
                 "f2s": self.f2s,
@@ -168,9 +157,9 @@ class AAC(_ProcessFreqBase):
         return deepcopy(self._results)
 
 
-@njit
+# @njit
 def _compute_aac(
-    power: np.ndarray,
+    data: np.ndarray,
     freqs: np.ndarray,
     f1s: np.ndarray,
     f2s: np.ndarray,
@@ -179,41 +168,38 @@ def _compute_aac(
 
     PARAMETERS
     ----------
-    power : numpy.ndarray of float, shape of [epochs, 2, frequencies]
-        Signal power, where the second dimension contains the data for the
-        seed and target channel of a single connection, respectively.
+    data : numpy.ndarray of float, shape of (epochs, 2, frequencies, times)
+        Amplitude (power) of the time-frequency representation of data where
+        the second dimension contains the data for the seed and target channel
+        of a single connection, respectively.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : numpy.ndarray of float, shape of (frequencies)
         Frequencies in ``data``.
 
-    f1s : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray of float, shape of (frequencies)
         Low frequencies to compute coupling for.
 
-    f2s : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray of float, shape of (frequencies)
         High frequencies to compute coupling for.
 
     RETURNS
     -------
-    results : numpy.ndarray of float, shape of [f1s, f2s]
-        AAC for a single connection.
+    results : numpy.ndarray of float, shape of (f1s, f2s)
+        AAC averaged across epochs for a single connection.
     """
     results = np.full(
         (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
     )
+    f1_idx = 0  # starting index to find f1s
     for f1_i, f1 in enumerate(f1s):
+        f2_idx = 0  # starting index to find f2s
         for f2_i, f2 in enumerate(f2s):
-            if f1 < f2 and f1 > 0:
-                power_f1 = power[:, 0, fast_find_first(freqs, f1)]  # seed pow.
-                power_f2 = power[:, 1, fast_find_first(freqs, f2)]  # tar. pow.
+            if f1 <= f2 and f1 > 0:
+                f1_idx = _fast_find_first(freqs, f1, f1_idx)
+                f2_idx = _fast_find_first(freqs, f2, f2_idx)
 
-                power_f1_norm = power_f1 - np.mean(power_f1)
-                power_f2_norm = power_f2 - np.mean(power_f2)
-
-                numerator = np.sum(power_f1_norm * power_f2_norm)
-                denominator = np.sqrt(
-                    np.sum(power_f1_norm**2) * np.sum(power_f2_norm**2)
-                )
-
-                results[f1_i, f2_i] = numerator / denominator
+                results[f1_i, f2_i] = _compute_pearsonr(
+                    data[:, 0, f1_idx], data[:, 1, f2_idx]
+                ).mean(axis=0)
 
     return results

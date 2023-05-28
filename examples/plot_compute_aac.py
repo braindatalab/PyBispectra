@@ -11,7 +11,7 @@ computed with PyBispectra.
 
 import numpy as np
 
-from pybispectra import compute_fft, AAC
+from pybispectra import compute_tfr, AAC
 
 ###############################################################################
 # Background
@@ -30,15 +30,19 @@ from pybispectra import compute_fft, AAC
 # %%
 
 # load example data
-data = np.load("example_data_cfc.npy")  # [epochs x channels x frequencies]
-sfreq = 200  # sampling frequency in Hz
+data = np.load(
+    "examples\\example_data_cfc.npy"
+)  # [epochs x channels x frequencies]
+sampling_freq = 200  # sampling frequency in Hz
+freqs = np.arange(1, 101, 1)
 
 # compute Fourier coeffs.
-fft, freqs = compute_fft(data=data, sampling_freq=sfreq, n_points=sfreq)
+tfr, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=6)
 
 print(
-    f"FFT coeffs.: [{fft.shape[0]} epochs x {fft.shape[1]} channels x "
-    f"{fft.shape[2]} frequencies]\nFreq. range: {freqs[0]} - {freqs[-1]} Hz"
+    f"TFR of data: [{tfr.shape[0]} epochs x {tfr.shape[1]} channels x "
+    f"{tfr.shape[2]} frequencies x {tfr.shape[3]} times]\nFreq. range: "
+    f"{freqs[0]} - {freqs[-1]} Hz"
 )
 
 ###############################################################################
@@ -63,13 +67,13 @@ print(
 
 # %%
 
-aac = AAC(data=fft, freqs=freqs, sampling_freq=sfreq)  # initialise object
+aac = AAC(tfr, freqs, sampling_freq)  # initialise object
 aac.compute(indices=(np.array([0]), np.array([1])))  # compute AAC
 
 aac_results = aac.results.get_results()  # return results as array
 
 print(
-    f"PPC results: [{aac_results.shape[0]} connections x "
+    f"AAC results: [{aac_results.shape[0]} connections x "
     f"{aac_results.shape[1]} f1s x {aac_results.shape[2]} f2s]"
 )
 

@@ -9,6 +9,6 @@ from .utils import (
     ResultsTDE,
     SpatioSpectralFilter,
     compute_fft,
-    fast_find_first,
+    compute_tfr,
 )
 from .waveshape import WaveShape

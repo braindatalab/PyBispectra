@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 import numpy as np
 
-from .utils import fast_find_first
+from pybispectra.utils.utils import _fast_find_first
 
 
 class _ResultsBase(ABC):
@@ -498,8 +498,8 @@ class ResultsCFC(_ResultsBase):
             raise ValueError(
                 "Entries of `f1s` and `f2s` must be present in the results."
             )
-        f1_idcs = [fast_find_first(self.f1s, freq) for freq in f1s]
-        f2_idcs = [fast_find_first(self.f2s, freq) for freq in f2s]
+        f1_idcs = [_fast_find_first(self.f1s, freq) for freq in f1s]
+        f2_idcs = [_fast_find_first(self.f2s, freq) for freq in f2s]
 
         return connections, f1s, f2s, f1_idcs, f2_idcs
 
@@ -790,7 +790,7 @@ class ResultsTDE(_ResultsBase):
             raise ValueError(
                 "Entries of `times` must be present in the results."
             )
-        time_idcs = [fast_find_first(self.times, time) for time in times]
+        time_idcs = [_fast_find_first(self.times, time) for time in times]
 
         return connections, times, time_idcs
 
