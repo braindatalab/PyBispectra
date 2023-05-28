@@ -16,10 +16,10 @@ class AAC(_ProcessFreqBase):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies, times]
+    data : numpy.ndarray, shape of [epochs, channels, frequencies, times]
         Amplitude (power) of the time-frequency representation of data.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
@@ -33,23 +33,23 @@ class AAC(_ProcessFreqBase):
     results : tuple of pybispectra.ResultsCFC
         AAC results.
 
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies, times]
+    data : numpy.ndarray, shape of [epochs, channels, frequencies, times]
         Amplitude (power) of the time-frequency representation of data.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of :attr:`data`.
 
-    indices : tuple of numpy.ndarray of int, length of 2
+    indices : tuple of list of int, length of 2
         Indices of the seed and target channels, respectively, most recently
         used with :meth:`compute`.
 
-    f1s : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray, shape of [frequencies]
         Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2s : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray, shape of [frequencies]
         High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
@@ -62,7 +62,7 @@ class AAC(_ProcessFreqBase):
 
     def compute(
         self,
-        indices: tuple[np.ndarray] | None = None,
+        indices: tuple[list[int], list[int]] | None = None,
         f1s: np.ndarray | None = None,
         f2s: np.ndarray | None = None,
         n_jobs: int = 1,
@@ -71,16 +71,16 @@ class AAC(_ProcessFreqBase):
 
         Parameters
         ----------
-        indices : tuple of numpy.ndarray of int | None (default None), length of 2
+        indices : tuple of list of int, length of 2 | None (default None)
             Indices of the seed and target channels, respectively, to compute
             AAC between. If ``None``, coupling between all channels is
             computed.
 
-        f1s : numpy.ndarray of float | None (default None), shape of [frequencies]
+        f1s : numpy.ndarray | None (default None), shape of [frequencies]
             Lower frequencies to compute AAC on. If ``None``, all frequencies
             are used.
 
-        f2s : numpy.ndarray of float | None (default None), shape of [frequencies]
+        f2s : numpy.ndarray | None (default None), shape of [frequencies]
             Higher frequencies to compute AAC on. If ``None``, all frequencies
             are used.
 
@@ -92,7 +92,7 @@ class AAC(_ProcessFreqBase):
         -----
         AAC is computed as the Pearson correlation coefficient across times for
         each frequency in each epoch, with coupling being averaged across
-        epochs :footcite:`Giehl2020`.
+        epochs :footcite:`Giehl2021`.
 
         AAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
         any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``
@@ -168,23 +168,23 @@ def _compute_aac(
 
     PARAMETERS
     ----------
-    data : numpy.ndarray of float, shape of (epochs, 2, frequencies, times)
+    data : numpy.ndarray, shape of [epochs, 2, frequencies, times]
         Amplitude (power) of the time-frequency representation of data where
         the second dimension contains the data for the seed and target channel
         of a single connection, respectively.
 
-    freqs : numpy.ndarray of float, shape of (frequencies)
+    freqs : numpy.ndarray, shape of [frequencies]
         Frequencies in ``data``.
 
-    f1s : numpy.ndarray of float, shape of (frequencies)
+    f1s : numpy.ndarray, shape of [frequencies]
         Low frequencies to compute coupling for.
 
-    f2s : numpy.ndarray of float, shape of (frequencies)
+    f2s : numpy.ndarray, shape of [frequencies]
         High frequencies to compute coupling for.
 
     RETURNS
     -------
-    results : numpy.ndarray of float, shape of (f1s, f2s)
+    results : numpy.ndarray, shape of [f1s, f2s]
         AAC averaged across epochs for a single connection.
     """
     results = np.full(

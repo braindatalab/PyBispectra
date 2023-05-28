@@ -30,16 +30,19 @@ from pybispectra import compute_fft, PAC
 # :math:`\vec{y}`, and the angled brackets represent the averaged value over
 # epochs. The computation of PAC follows from this :footcite:`Kovach2018`:
 #
-# :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1)B_{xyy}(f_2)B_{xyy}^*(f_2+f_1)`.
+# :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1)B_{xyy}(f_2)
+# B_{xyy}^*(f_2+f_1)`.
 #
 # The four variations arise from the options for normalisation and
 # antisymmetrisation. The bispectrum can be normalised to the bicoherence,
 # :math:`\mathcal{B}`, using the threenorm, :math:`N`
 # :footcite:`Zandvoort2021`:
 #
-# :math:`\large N_{xyy}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{y}(f_2)|^3><|\vec{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+# :math:`\large N_{xyy}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{y}(f_2)|^3>
+# <|\vec{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
 #
-# :math:`\large \mathcal{B}_{xyy}(f_1,f_2)=\Large \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}`,
+# :math:`\large \mathcal{B}_{xyy}(f_1,f_2)=\Large
+# \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}`,
 #
 # where the resulting PAC results are this normalised by the power of the
 # corresponding frequencies. Furthermore, PAC can be antisymmetrised by
@@ -91,7 +94,7 @@ print(
 # %%
 
 pac = PAC(data=fft, freqs=freqs, sampling_freq=sfreq)  # initialise object
-pac.compute(indices=(np.array([0]), np.array([1])))  # compute PAC
+pac.compute(indices=([0], [1]))  # compute PAC
 
 pac_results = pac.results[0].get_results()  # return results as array
 

@@ -58,7 +58,7 @@ class _ProcessFreqBase(ABC):
 
         if self._n_freqs != len(freqs):
             raise ValueError(
-                "`data` and `freqs` should contain the same number of "
+                "`data` and `freqs` must contain the same number of "
                 "frequencies."
             )
 
@@ -70,7 +70,7 @@ class _ProcessFreqBase(ABC):
             )
 
         if not self._allow_neg_freqs and np.any(freqs < 0):
-            raise ValueError("Entries of `freqs` should be >= 0.")
+            raise ValueError("Entries of `freqs` must be >= 0.")
 
         max_freq_idx = np.where(freqs == np.abs(freqs).max())[0][0]
         if np.any(freqs[:max_freq_idx] != np.sort(freqs[:max_freq_idx])):
@@ -89,36 +89,42 @@ class _ProcessFreqBase(ABC):
         self.freqs = freqs.copy()
         self.sampling_freq = deepcopy(sampling_freq)
 
-    def _sort_indices(self, indices: tuple[np.ndarray] | None) -> None:
+    def _sort_indices(
+        self, indices: tuple[list[int], list[int]] | None
+    ) -> None:
         """Sort seed-target indices inputs."""
         indices = deepcopy(indices)
         if indices is None:
             indices = tuple(
                 [
-                    np.tile(range(self._n_chans), self._n_chans),
-                    np.repeat(range(self._n_chans), self._n_chans),
+                    np.tile(range(self._n_chans), self._n_chans).tolist(),
+                    np.repeat(range(self._n_chans), self._n_chans).tolist(),
                 ]
             )
         if not isinstance(indices, tuple):
-            raise TypeError("`indices` should be a tuple.")
+            raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
-            raise ValueError("`indices` should have a length of 2.")
+            raise ValueError("`indices` must have a length of 2.")
         self.indices = deepcopy(indices)
 
         seeds = indices[0]
         targets = indices[1]
         for group_idcs in (seeds, targets):
-            if not isinstance(group_idcs, np.ndarray):
-                raise TypeError("Entries of `indices` should be NumPy arrays.")
+            if not isinstance(group_idcs, list):
+                raise TypeError("Entries of `indices` must be lists.")
+            if any(not isinstance(idx, int) for idx in group_idcs):
+                raise TypeError(
+                    "Entries for seeds and targets in `indices` must be ints."
+                )
             if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
                 raise ValueError(
                     "`indices` contains indices for channels not present in "
                     "the data."
                 )
         if len(seeds) != len(targets):
-            raise ValueError("Entires of `indices` must have equal length.")
-        self._seeds = seeds
-        self._targets = targets
+            raise ValueError("Entries of `indices` must have equal length.")
+        self._seeds = deepcopy(seeds)
+        self._targets = deepcopy(targets)
 
         self._n_cons = len(seeds)
 
@@ -212,7 +218,7 @@ class _ProcessFreqBase(ABC):
 class _ProcessBispectrum(_ProcessFreqBase):
     """Base class for processing bispectrum-based results."""
 
-    def _sort_indices(self, indices: np.ndarray) -> None:
+    def _sort_indices(self, indices: tuple[list[int], list[int]]) -> None:
         """Sort seed-target indices inputs."""
         super()._sort_indices(indices)
 

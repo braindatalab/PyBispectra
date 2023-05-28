@@ -277,9 +277,9 @@ class SpatioSpectralFilter:
 
     def fit_transform_ssd(
         self,
-        signal_bounds: tuple[float],
-        noise_bounds: tuple[float],
-        signal_noise_gap: int = 1.0,
+        signal_bounds: tuple[int | float],
+        noise_bounds: tuple[int | float],
+        signal_noise_gap: int | float = 1.0,
         indices: tuple[int] | None = None,
         rank: int | None = None,
     ) -> None:
@@ -287,15 +287,15 @@ class SpatioSpectralFilter:
 
         Parameters
         ----------
-        signal_bounds : tuple of float, length of 2
+        signal_bounds : tuple of int or float, length of 2
             Lower and upper frequencies (in Hz), respectively, to treat as the
             signal of interest.
 
-        noise_bounds : tuple of float, length of 2
+        noise_bounds : tuple of int or float, length of 2
             Lower and upper frequencies (in Hz) to treat as the noise,
             excluding the frequencies in :attr:`signal_bounds`.
 
-        signal_noise_gap : float (default ``1.0``)
+        signal_noise_gap : int | float (default ``1.0``)
             Frequency count (in Hz) to treat as a transtition boundary between
             :attr:`signal_bounds` and :attr:`noise_bounds`. Used to reduce
             spectral leakage between he signal and noise frequencies.
@@ -338,9 +338,9 @@ class SpatioSpectralFilter:
 
     def _create_mne_filt_params(
         self,
-        signal_bounds: tuple[float],
-        noise_bounds: tuple[float],
-        signal_noise_gap: float,
+        signal_bounds: tuple[int | float],
+        noise_bounds: tuple[int | float],
+        signal_noise_gap: int | float,
     ) -> tuple[dict, dict]:
         """Create filter parameters for use with MNE's SSD implementation.
 
@@ -402,14 +402,14 @@ class SpatioSpectralFilter:
 
     def fit_transform_hpmax(
         self,
-        signal_bounds: tuple[float],
-        noise_bounds: tuple[float],
+        signal_bounds: tuple[int | float],
+        noise_bounds: tuple[int | float],
         n_harmonics: int = -1,
         indices: tuple[int] | None = None,
         rank: int | None = None,
         csd_method: str = "multitaper",
         n_fft: int | None = None,
-        mt_bandwidth: float = 5.0,
+        mt_bandwidth: int | float = 5.0,
         mt_adaptive: bool = True,
         mt_low_bias: bool = True,
         n_jobs: int = 1,
@@ -418,11 +418,11 @@ class SpatioSpectralFilter:
 
         Parameters
         ----------
-        signal_bounds : tuple of float, length of 2
+        signal_bounds : tuple of int or float, length of 2
             Lower and upper frequencies (in Hz), respectively, to treat as the
             signal of interest.
 
-        noise_bounds : tuple of float, length of 2
+        noise_bounds : tuple of int or float, length of 2
             Lower and upper frequencies (in Hz) to treat as the noise,
             excluding the frequencies in :attr:`signal_bounds`. For harmonics,
             the same number of frequency bins around the harmonic frequencies
@@ -449,7 +449,7 @@ class SpatioSpectralFilter:
             Number of samples in the FFT. If ``None``, the number of times in
             each epoch is used.
 
-        mt_bandwidth : float (default ``5.0``)
+        mt_bandwidth : int | float (default ``5.0``)
             Bandwidth of the multitaper windowing function (in Hz). Only used
             if :attr:`csd_method` is ``"multitaper"``.
 
@@ -517,7 +517,7 @@ class SpatioSpectralFilter:
         self,
         csd_method: str,
         n_fft: int | None,
-        mt_bandwidth: float,
+        mt_bandwidth: int | float,
         mt_adaptive: bool,
         mt_low_bias: bool,
         n_jobs: int,
@@ -690,12 +690,12 @@ class SpatioSpectralFilter:
         return cov_signal, cov_noise, projection
 
     @property
-    def transformed_data(self, min_ratio: float = 1.0) -> np.ndarray:
+    def transformed_data(self, min_ratio: int | float = 1.0) -> np.ndarray:
         """Return the transformed data.
 
         Parameters
         ----------
-        min_ratio : float (default ``1.0``)
+        min_ratio : int | float (default ``1.0``)
             Minimum required value of :attr:`ratios` to return the data
             transformed with the corresponding spatial filter.
 
@@ -710,8 +710,8 @@ class SpatioSpectralFilter:
         Raises a warning if no components have a signal:noise ratio >
         ``min_ratio`` and :attr:`verbose` is ``True``.
         """
-        if not isinstance(min_ratio, float):
-            raise TypeError("`min_ratio` must be a float")
+        if not isinstance(min_ratio, (int, float)):
+            raise TypeError("`min_ratio` must be an int or a float")
 
         data = self._transformed_data[:, np.where(self.ratios > min_ratio)[0]]
         if self.verbose and data.shape[1] == 0:

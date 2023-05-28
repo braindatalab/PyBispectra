@@ -17,10 +17,10 @@ class WaveShape(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        FFT coefficients.
+    data : numpy.ndarray, shape of [epochs, channels, frequencies]
+        Fourier coefficients.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : numpy.ndarray, shape of [frequencies]
         Frequencies in :attr:`data`.
 
     verbose : bool (default True)
@@ -31,19 +31,19 @@ class WaveShape(_ProcessBispectrum):
     results : tuple of ResultsWaveShape, shape of [channels, f1, f2]
         Bicoherence of the data.
 
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
+    data : numpy.ndarray, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : numpy.ndarray, shape of [frequencies]
         Frequencies in :attr:`data`.
 
-    indices : tuple of numpy.ndarray of int
+    indices : tuple of int
         1D array of channel indices most recently used with :meth:`compute`.
 
-    f1s : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray, shape of [frequencies]
         Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2s : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray, shape of [frequencies]
         High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
@@ -68,7 +68,7 @@ class WaveShape(_ProcessBispectrum):
 
     def compute(
         self,
-        indices: np.ndarray | None = None,
+        indices: tuple[int] | None = None,
         f1s: np.ndarray | None = None,
         f2s: np.ndarray | None = None,
         n_jobs: int = 1,
@@ -77,7 +77,7 @@ class WaveShape(_ProcessBispectrum):
 
         Parameters
         ----------
-        indices : numpy.ndarray of int | None (default None)
+        indices : tuple of int | None (default None)
             Indices of the channels to compute bicoherence within. If ``None``,
             bicoherence within all channels is computed.
 
@@ -98,7 +98,8 @@ class WaveShape(_ProcessBispectrum):
         Bicoherence, :math:`\mathcal{B}`, is the normalised version of the
         bispectrum, :math:`B`, which has the general form
 
-        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>`,
+        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*
+        (f_2+f_1)>`,
 
         where :math:`kmn` corresponds to the channels in the data, and the
         angled brackets represent the averaged value over epochs. For the
@@ -110,9 +111,11 @@ class WaveShape(_ProcessBispectrum):
         Normalisation of the bispectrum to bicoherence is achieved with the
         threenorm, :math:`N` :footcite:`Zandvoort2021`,
 
-        :math:`\large N_{xxx}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{x}(f_2)|^3><|\vec{x}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+        :math:`\large N_{xxx}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{x}(f_2)|^3>
+        <|\vec{x}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
 
-        :math:`\large \mathcal{B}_{xxx}(f_1,f_2)=\Large \frac{B_{xxx}(f_1,f_2)}{N_{xxx}(f_1,f_2)}`.
+        :math:`\large \mathcal{B}_{xxx}(f_1,f_2)=\Large
+        \frac{B_{xxx}(f_1,f_2)}{N_{xxx}(f_1,f_2)}`.
 
         The threenorm is a form of univariate normalisation, whereby the values
         of the bicoherence will be bound in the range :math:`[0, 1]` in a
@@ -126,7 +129,7 @@ class WaveShape(_ProcessBispectrum):
         References
         ----------
         .. footbibliography::
-        """  # noqa E501
+        """
         self._reset_attrs()
 
         self._sort_indices(indices)
@@ -215,7 +218,7 @@ class WaveShape(_ProcessBispectrum):
 
         Returns
         -------
-        threenorm : numpy.ndarray of float, shape of [channels, f1s, f2s]
+        threenorm : numpy.ndarray, shape of [channels, f1s, f2s]
             Complex-valued array containing the threenorm for each channel.
         """
         if self.verbose:

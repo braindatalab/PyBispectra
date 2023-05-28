@@ -20,7 +20,8 @@ from pybispectra import compute_tfr, AAC
 # :math:`f_1` and a higher frequency :math:`f_2` within a single signal, or
 # across different signals. This is computed as the Pearson correlation
 # coefficient between the power of the time-frequency representation (TFR) of
-# the signals at :math:`f_1` and :math:`f_2` across time, averaged over epochs.
+# the signals at :math:`f_1` and :math:`f_2` across time, averaged over epochs
+# :footcite:`Giehl2021` (i.e. it is not based in the bispectrum).
 
 ###############################################################################
 # Generating data and computing Fourier coefficients
@@ -76,11 +77,11 @@ print(
 aac = AAC(
     data=tfr, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
-aac.compute(indices=(np.array([0]), np.array([1])))  # compute AAC
+aac.compute(indices=([0], [1]))  # compute AAC
 aac_results = aac.results.get_results()  # return results as array
 
 print(
-    f"AAC results: [{aac_results.shape[0]} connections x "
+    f"AAC results: [{aac_results.shape[0]} connection(s) x "
     f"{aac_results.shape[1]} f1s x {aac_results.shape[2]} f2s]"
 )
 
@@ -96,12 +97,17 @@ print(
 # Plotting AAC
 # ------------
 # Let us now inspect the results. For this, we will plot the results for all
-# frequencies. If we wished, we could specify a subset of frequencies to
-# inspect. Note that the ``Figure`` and ``Axes`` objects can also be returned
-# for any desired manual adjustments of the plots.
+# frequencies, although we could specify a subset of frequencies to inspect.
 
 # %%
 
 fig, axes = aac.results.plot(major_tick_intervals=5.0)
+
+###############################################################################
+# As you can see, values for the lower right triangle of each plot are missing,
+# corresponding to the frequency combinations where :math:`f_1` is greater than
+# :math:`f_2`, and hence where PPC is not computed. Note that the ``Figure``
+# and ``Axes`` objects can also be returned for any desired manual adjustments
+# of the plots.
 
 # %%

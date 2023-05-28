@@ -21,10 +21,10 @@ class PAC(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        FFT coefficients.
+    data : numpy.ndarray, shape of [epochs, channels, frequencies]
+        Fourier coefficients.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     verbose : bool (default True)
@@ -70,7 +70,7 @@ class PAC(_ProcessBispectrum):
 
     def compute(
         self,
-        indices: tuple[np.ndarray] | None = None,
+        indices: tuple[tuple[int], tuple[int]] | None = None,
         f1s: np.ndarray | None = None,
         f2s: np.ndarray | None = None,
         symmetrise: str | list[str] = ["none", "antisym"],
@@ -81,16 +81,16 @@ class PAC(_ProcessBispectrum):
 
         Parameters
         ----------
-        indices : tuple of numpy.ndarray of int | None (default None), length of 2
+        indices : tuple of tuple of int | None (default None), length of 2
             Indices of the seed and target channels, respectively, to compute
             PAC between. If ``None``, coupling between all channels is
             computed.
 
-        f1s : numpy.ndarray of float | None (default None), shape of [frequencies]
+        f1s : numpy.ndarray | None (default None), shape of [frequencies]
             Lower frequencies to compute PAC on. If ``None``, all frequencies
             are used.
 
-        f2s : numpy.ndarray of float | None (default None), shape of [frequencies]
+        f2s : numpy.ndarray | None (default None), shape of [frequencies]
             Higher frequencies to compute PAC on. If ``None``, all frequencies
             are used.
 
@@ -114,23 +114,27 @@ class PAC(_ProcessBispectrum):
         :math:`\vec{x}` and :math:`\vec{y}` of the seeds and targets,
         respectively, which has the general form
 
-        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>`,
+        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*
+        (f_2+f_1)>`,
 
         where :math:`kmn` is a combination of channels :math:`\vec{x}` and
         :math:`\vec{y}`, and the angled brackets represent the averaged value
         over epochs. PAC between signals :math:`\vec{x}` and :math:`\vec{y}` is
         given as
 
-        :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1)B_{xyy}(f_2)B_{xyy}^*(f_2+f_1)`.
+        :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1)B_{xyy}(f_2)
+        B_{xyy}^*(f_2+f_1)`.
 
         Antisymmetrisaion is achieved by subtracting the PAC results from the
         transposed bispectrum, :math:`B_{xyx}` :footcite:`Chella2014`. The
         bispectrum can be normalised to the bicoherence, :math:`\mathcal{B}`,
         using the threenorm, :math:`N` :footcite:`Zandvoort2021`:
 
-        :math:`\large N_{xyy}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{y}(f_2)|^3><|\vec{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+        :math:`\large N_{xyy}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{y}(f_2)|^3>
+        <|\vec{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
 
-        :math:`\large \mathcal{B}_{xyy}(f_1,f_2)=\Large \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}`.
+        :math:`\large \mathcal{B}_{xyy}(f_1,f_2)=\Large
+        \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}`.
 
         The threenorm is a form of univariate normalisation, whereby the values
         of the bicoherence will be bound in the range :math:`[0, 1]` in a
@@ -148,7 +152,7 @@ class PAC(_ProcessBispectrum):
         References
         ----------
         .. footbibliography::
-        """  # noqa E501
+        """
         self._reset_attrs()
 
         self._sort_metrics(symmetrise, normalise)

@@ -19,7 +19,7 @@ def compute_fft(
     n_jobs: int = 1,
     verbose: bool = True,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Compute the FFT on real-valued data.
+    """Compute the fast Fourier transform (FFT) on real-valued data.
 
     As the data is assumed to be real-valued, only those values corresponding
     to the positive frequencies are returned by default (see
@@ -27,7 +27,7 @@ def compute_fft(
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs, channels, times]
+    data : numpy.ndarray, shape of [epochs, channels, times]
         Real-valued data to compute the FFT on.
 
     sampling_freq : int | float
@@ -35,7 +35,7 @@ def compute_fft(
 
     n_points : int | None (default ``None``)
         Number of points in the FFT. If ``None``, is equal to the number of
-        times.
+        timepoints in ``data``.
 
     window : str (default ``"hanning"``)
         Type of window to apply to ``data`` before computing the FFT.
@@ -54,11 +54,11 @@ def compute_fft(
 
     Returns
     -------
-    fft : numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        FFT coefficients of ``data``.
+    coeffs : numpy.ndarray, shape of [epochs, channels, frequencies]
+        Fourier coefficients of ``data``.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
-        Frequencies (in Hz) in ``fft``.
+    freqs : numpy.ndarray, shape of [frequencies]
+        Frequencies (in Hz) in ``coeffs``.
     """
     n_points, window_func, n_jobs = _compute_fft_input_checks(
         data,
@@ -85,7 +85,7 @@ def compute_fft(
         for chan_data in data.transpose(1, 0, 2)
     ]
 
-    fft = np.array(
+    coeffs = np.array(
         pqdm(
             args,
             sp.fft.fft,  # should be faster than NumPy for real-valued inputs
@@ -99,7 +99,7 @@ def compute_fft(
     if verbose:
         print("    [FFT computation finished]\n")
 
-    return fft[..., : len(freqs)], freqs
+    return coeffs[..., : len(freqs)], freqs
 
 
 def _compute_fft_input_checks(
@@ -174,17 +174,17 @@ def compute_tfr(
     n_jobs: int = 1,
     verbose: bool = True,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Compute the time-frequency representation (TFR) of data.
+    """Compute the amplitude time-frequency representation (TFR) of data.
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of (epochs, channels, times)
-        Real-valued data to compute the TFR of.
+    data : numpy.ndarray, shape of [epochs, channels, times]
+        Real-valued data to compute the amplitude TFR of.
 
     sampling_freq : int | float
         Sampling frequency of the data in Hz.
 
-    freqs : numpy.ndarray of ints or floats, shape of (frequencies)
+    freqs : numpy.ndarray, shape of [frequencies]
         Frequencies to return the TFR for in Hz.
 
     tfr_mode : str (default ``"morlet"``)
@@ -192,7 +192,7 @@ def compute_tfr(
         See :func:`mne.time_frequency.tfr_array_morlet` and
         :func:`mne.time_frequency.tfr_array_multitaper`.
 
-    n_cycles : numpy.ndarray, shape of (frequencies) | int | float (default ``7.0``)
+    n_cycles : numpy.ndarray, shape of [frequencies] | int | float (default ``7.0``)
         Number of cycles in the wavelet when computing the TFR. If an array,
         the number of cycles is given for each frequency, otherwise a fixed
         value across all frequencies is used.
@@ -204,7 +204,7 @@ def compute_tfr(
         ``tfr_mode``.
 
     use_fft : bool default (``True``)
-        Whether or not to use the FFT for convolutions.
+        Whether or not to use the fast Fourier transform for convolutions.
 
     multitaper_time_bandwidth : int | float (default ``4.0``)
         Product between the temporal window length (in seconds) and the
@@ -221,10 +221,10 @@ def compute_tfr(
 
     Returns
     -------
-    tfr : numpy.ndarray, shape of (epochs, channels, frequencies, times)
+    tfr : numpy.ndarray, shape of [epochs, channels, frequencies, times]
         Amplitude/power of the TFR of ``data``.
 
-    freqs : numpy.ndarray of float, shape of (frequencies)
+    freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in ``tfr``.
 
     Notes

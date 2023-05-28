@@ -17,13 +17,13 @@ class TDE(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        FFT coefficients. Must contain coefficients for the zero frequency, a
-        set of positive frequencies, and all corresponding negative
+    data : numpy.ndarray, shape of [epochs, channels, frequencies]
+        Fourier coefficients. Must contain coefficients for the zero frequency,
+        a set of positive frequencies, and all corresponding negative
         frequencies, like that obtained from :func:`utils.compute_fft` with
         ``return_neg_freqs=True``.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
@@ -38,14 +38,14 @@ class TDE(_ProcessBispectrum):
     results : tuple of ResultsTDE
         TDE results for each of the computed metrics.
 
-    indices : tuple of numpy.ndarray of int, length of 2
+    indices : tuple of tuple of int, length of 2
         Indices of the seed and target channels, respectively, most recently
         used with :meth:`compute`.
 
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
+    data : numpy.ndarray, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
@@ -121,7 +121,7 @@ class TDE(_ProcessBispectrum):
 
     def compute(
         self,
-        indices: tuple[np.ndarray] | None = None,
+        indices: tuple[list[int], list[int]] | None = None,
         symmetrise: str | list[str] = ["none", "antisym"],
         method: int | list[int] = [1, 2, 3, 4],
         n_jobs: int = 1,
@@ -130,7 +130,7 @@ class TDE(_ProcessBispectrum):
 
         Parameters
         ----------
-        indices : tuple of numpy.ndarray of int | None (default None), length of 2
+        indices : tuple of list of int, length of 2 | None (default None)
             Indices of the seed and target channels, respectively, to compute
             TDE between. If ``None``, coupling between all channels is
             computed.
@@ -153,7 +153,8 @@ class TDE(_ProcessBispectrum):
         :math:`\vec{x}` and :math:`\vec{y}` of the seeds and targets,
         respectively, which has the general form:
 
-        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>`,
+        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*
+        (f_2+f_1)>`,
 
         where :math:`kmn` is a combination of channels :math:`\vec{x}` and
         :math:`\vec{y}`, and the angled brackets represent the averaged value
@@ -163,27 +164,36 @@ class TDE(_ProcessBispectrum):
         bispectrum :footcite:`Nikias1988`. The fundamental equation is as
         follows:
 
-        :math:`\large TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}I(\vec{x}_{f_1},\vec{y}_{f_2})e^{-if_1\tau}df_1df_2`,
+        :math:`\large TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}I(
+        \vec{x}_{f_1},\vec{y}_{f_2})e^{-if_1\tau}df_1df_2`,
 
         where :math:`I` varies depending on the method, and :math:`\tau` is a
         given time delay. Phase information of the signals is extracted from
         the bispectrum in two variants used by the different methods:
 
-        :math:`\large \phi(\vec{x}_{f_1},\vec{y}_{f_2})=\varphi_{B_{xyx}}(f_1,f_2)-\varphi_{B_{xxx}}(f_1,f_2)`
+        :math:`\large \phi(\vec{x}_{f_1},\vec{y}_{f_2})=\varphi_{B_{xyx}}
+        (f_1,f_2)-\varphi_{B_{xxx}}(f_1,f_2)`
 
-        :math:`\large \phi'(\vec{x}_{f_1},\vec{y}_{f_2})=\varphi_{B_{xyx}}(f_1,f_2)-\frac{1}{2}(\varphi_{B_{xxx}}(f_1, f_2) + \varphi_{B_{yyy}}(f_1,f_2))`
+        :math:`\large \phi'(\vec{x}_{f_1},\vec{y}_{f_2})=\varphi_{B_{xyx}}
+        (f_1,f_2)-\frac{1}{2}(\varphi_{B_{xxx}}(f_1, f_2) + \varphi_{B_{yyy}}
+        (f_1,f_2))`
 
         **Method I**:
-        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=e^{i\phi(\vec{x}_{f_1},\vec{y}_{f_2})}`
+        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=e^{i\phi(\vec{x}_{f_1},
+        \vec{y}_{f_2})}`
 
         **Method II**:
-        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=e^{i\phi'(\vec{x}_{f_1},\vec{y}_{f_2})}`
+        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=e^{i\phi'(\vec{x}_{f_1},
+        \vec{y}_{f_2})}`
 
         **Method III**:
-        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{B_{xyx}(f_1,f_2)}{B_{xxx}(f_1,f_2)}`
+        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{B_{xyx}
+        (f_1,f_2)}{B_{xxx}(f_1,f_2)}`
 
         **Method IV**:
-        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{|B_{xyx}(f_1,f_2)|e^{i\phi'(\vec{x}_{f_1},\vec{y}_{f_2})}}{\sqrt{|B_{xxx}(f_1,f_2)||B_{yyy}(f_1,f_2)|}}`
+        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{|B_{xyx}
+        (f_1,f_2)|e^{i\phi'(\vec{x}_{f_1},\vec{y}_{f_2})}}{\sqrt{|B_{xxx}
+        (f_1,f_2)||B_{yyy}(f_1,f_2)|}}`
 
         where :math:`\varphi_{B}` is the phase of the bispectrum.
         Antisymmetrisation of the bispectrum is implemented as the replacement
@@ -196,7 +206,7 @@ class TDE(_ProcessBispectrum):
         References
         ----------
         .. footbibliography::
-        """  # noqa E501
+        """
         self._reset_attrs()
 
         self._sort_metrics(symmetrise, method)
@@ -274,33 +284,39 @@ class TDE(_ProcessBispectrum):
         if 4 in method:
             self._return_method_iv = True
 
-    def _sort_indices(self, indices: np.ndarray | None) -> None:
+    def _sort_indices(
+        self, indices: tuple[list[int], list[int]] | None
+    ) -> None:
         """Sort seed-target indices inputs."""
         indices = deepcopy(indices)
         if indices is None:
             seed_indices = np.reshape(
                 np.repeat(range(self._n_chans), self._n_chans),
                 (self._n_chans, self._n_chans),
-            )
+            ).tolist()
             target_indices = np.reshape(
                 np.tile(range(self._n_chans), self._n_chans),
                 (self._n_chans, self._n_chans),
-            )
+            ).tolist()
             indices = (
                 seed_indices[np.triu_indices(self._n_chans, 1)],
                 target_indices[np.triu_indices(self._n_chans, 1)],
             )
         if not isinstance(indices, tuple):
-            raise TypeError("`indices` should be a tuple.")
+            raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
-            raise ValueError("`indices` should have a length of 2.")
+            raise ValueError("`indices` must have a length of 2.")
         self.indices = deepcopy(indices)
 
         seeds = indices[0]
         targets = indices[1]
         for group_idcs in (seeds, targets):
-            if not isinstance(group_idcs, np.ndarray):
-                raise TypeError("Entries of `indices` should be NumPy arrays.")
+            if not isinstance(group_idcs, list):
+                raise TypeError("Entries of `indices` must be lists.")
+            if any(not isinstance(idx, int) for idx in group_idcs):
+                raise TypeError(
+                    "Entries for seeds and targets in `indices` must be ints."
+                )
             if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
                 raise ValueError(
                     "`indices` contains indices for channels not present in "
@@ -310,8 +326,8 @@ class TDE(_ProcessBispectrum):
             raise ValueError("Entires of `indices` must have equal length.")
         if any(seed == target for seed, target in zip(indices[0], indices[1])):
             raise ValueError(
-                "Seeds and targets in `indices` should not be the same "
-                "channel for any connection."
+                "Seeds and targets in `indices` must not be the same channel "
+                "for any connection."
             )
         self._seeds = seeds
         self._targets = targets
@@ -574,32 +590,32 @@ class TDE(_ProcessBispectrum):
 def _compute_bispectrum_tde(
     data: np.ndarray,
     hankel_freq_mask: np.ndarray,
-    kmn: tuple[tuple[int]],
+    kmn: tuple[list[int]],
 ) -> np.ndarray:
     """Compute the bispectrum for a single connection for use in TDE.
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
-        FFT coefficients, where the second dimension contains the data for the
-        seed and target channel of a single connection, respectively. Contains
-        coefficients for the zero frequency, the positive frequencies, and the
-        negative frequencies, respectively.
+    data : numpy.ndarray, shape of [epochs, 2, frequencies]
+        Fourier coefficients, where the second dimension contains the data for
+        the seed and target channel of a single connection, respectively.
+        Contains coefficients for the zero frequency, the positive frequencies,
+        and the negative frequencies, respectively.
 
-    hankel_freq_mask : numpy.ndarray of float, shape of [fs, fs]
+    hankel_freq_mask : numpy.ndarray, shape of [fs, fs]
         Hankel matrix to use as a frequency mask for the frequencies in channel
         n of ``data``, where ``fs`` is the zero and positive frequencies.
         Can be generated with ``scipy.linalg.hankel(c=numpy.arange(0, fs),
         r=(numpy.arange(fs-1 : fs*2))``.
 
-    kmn : tuple of tuple of int, shape of [x, 3]
-        Tuple of variable length (x) of tuples, where each sub-tuple contains
-        the k, m, and n channel indices in ``data``, respectively, to compute
-        the bispectrum for.
+    kmn : tuple of list of int, shape of [x, 3]
+        Tuple of variable length (x) of lists, where each list contains the k,
+        m, and n channel indices in ``data``, respectively, to compute the
+        bispectrum for.
 
     Returns
     -------
-    results : numpy.ndarray of complex float, shape of [x, epochs, fs, fs]
+    results : numpy.ndarray, shape of [x, epochs, fs, fs]
         Complex-valued array containing the bispectrum of a single connection,
         where the first dimension corresponds to the different channel indices
         given in ``kmn``.
@@ -644,15 +660,15 @@ def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray of complex float, shape of [fs, fs]
+    B_xyx : numpy.ndarray, shape of [fs, fs]
         Bispectrum for channel combination ``xyx``.
 
-    B_xxx : numpy.ndarray of complex float, shape of [fs, fs]
+    B_xxx : numpy.ndarray, shape of [fs, fs]
         Bispectrum for channel combination ``xxx``.
 
     Returns
     -------
-    tde : numpy.ndarray of float, shape of [frequencies]
+    tde : numpy.ndarray, shape of [frequencies]
         Time delay estimates.
 
     Notes
@@ -675,18 +691,18 @@ def _compute_tde_ii(
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray of complex float, shape of [fs, fs]
+    B_xyx : numpy.ndarray, shape of [fs, fs]
         Bispectrum for channel combination ``xyx``.
 
-    B_xxx : numpy.ndarray of complex float, shape of [fs, fs]
+    B_xxx : numpy.ndarray, shape of [fs, fs]
         Bispectrum for channel combination ``xxx``.
 
-    B_yyy : numpy.ndarray of complex float, shape of [fs, fs]
+    B_yyy : numpy.ndarray, shape of [fs, fs]
         Bispectrum for channel combination ``yyy``.
 
     Returns
     -------
-    tde : numpy.ndarray of float, shape of [frequencies]
+    tde : numpy.ndarray, shape of [frequencies]
         Time delay estimates.
 
     Notes
@@ -705,15 +721,15 @@ def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray of complex float, shape of [fs, fs]
+    B_xyx : numpy.ndarray, shape of [fs, fs]
         Bispectrum for channel combination ``xyx``.
 
-    B_xxx : numpy.ndarray of complex float, shape of [fs, fs]
+    B_xxx : numpy.ndarray, shape of [fs, fs]
         Bispectrum for channel combination ``xxx``.
 
     Returns
     -------
-    tde : numpy.ndarray of float, shape of [frequencies]
+    tde : numpy.ndarray, shape of [frequencies]
         Time delay estimates.
 
     Notes
@@ -735,18 +751,18 @@ def _compute_tde_iv(
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray of complex float, shape of [fs, fs]
+    B_xyx : numpy.ndarray, shape of [fs, fs]
         Bispectrum for channel combination ``xyx``.
 
-    B_xxx : numpy.ndarray of complex float, shape of [fs, fs]
+    B_xxx : numpy.ndarray, shape of [fs, fs]
         Bispectrum for channel combination ``xxx``.
 
-    B_yyy : numpy.ndarray of complex float, shape of [fs, fs]
+    B_yyy : numpy.ndarray, shape of [fs, fs]
         Bispectrum for channel combination ``yyy``.
 
     Returns
     -------
-    tde : numpy.ndarray of float, shape of [frequencies]
+    tde : numpy.ndarray, shape of [frequencies]
         Time delay estimates.
 
     Notes

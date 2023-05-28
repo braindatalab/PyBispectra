@@ -27,7 +27,7 @@ class _ResultsBase(ABC):
         self,
         data: np.ndarray,
         data_ndim: int,
-        indices: tuple[np.ndarray],
+        indices: tuple[list[int], list[int]],
         name: str,
     ) -> None:
         if not isinstance(data, np.ndarray):
@@ -40,60 +40,37 @@ class _ResultsBase(ABC):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
             raise ValueError("`indices` must have a length of 2.")
-        if not isinstance(indices[0], np.ndarray) or not isinstance(
-            indices[1], np.ndarray
-        ):
-            raise TypeError("Entries of `indices` must be NumPy arrays.")
-        if indices[0].ndim != 1 or indices[1].ndim != 1:
-            raise ValueError("Entries of `indices` must be 1D arrays.")
-        if len(indices[0]) != len(indices[1]):
-            raise ValueError("Entries of `indices` must have the same length.")
+
+        seeds = indices[0]
+        targets = indices[1]
+        for group_idcs in (seeds, targets):
+            if not isinstance(group_idcs, list):
+                raise TypeError("Entries of `indices` must be lists.")
+            if any(not isinstance(idx, int) for idx in group_idcs):
+                raise TypeError(
+                    "Entries for seeds and targets in `indices` must be ints."
+                )
+        if len(seeds) != len(targets):
+            raise ValueError("Entries of `indices` must have equal length.")
+        self._n_chans = len(np.unique([*seeds, *targets]))
+        for group_idcs in (seeds, targets):
+            if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
+                raise ValueError(
+                    "`indices` contains indices for channels not present in "
+                    "the data."
+                )
         self.indices = deepcopy(indices)
-        self._seeds = indices[0].copy()
-        self._targets = indices[1].copy()
-        self.n_cons = len(indices[0])
-        self._n_chans = len(np.unique([*self._seeds, *self._targets]))
+        self._seeds = deepcopy(seeds)
+        self._targets = deepcopy(targets)
+        self.n_cons = len(seeds)
 
         if not isinstance(name, str):
             raise TypeError("`name` must be a string.")
         self.name = deepcopy(name)
 
     @abstractmethod
-    def _sort_init_inputs(
-        self,
-        data: np.ndarray,
-        data_ndim: int,
-        indices: tuple[np.ndarray],
-        name: str,
-    ) -> None:
+    def _sort_init_inputs(self) -> None:
         """Sort inputs to the object."""
-        if not isinstance(data, np.ndarray):
-            raise TypeError("`data` must be a NumPy array.")
-        if data.ndim != data_ndim:
-            raise ValueError(f"`data` must be a {data_ndim}D array.")
-        self._data = data.copy()
-
-        if not isinstance(indices, tuple):
-            raise TypeError("`indices` must be a tuple.")
-        if len(indices) != 2:
-            raise ValueError("`indices` must have a length of 2.")
-        if not isinstance(indices[0], np.ndarray) or not isinstance(
-            indices[1], np.ndarray
-        ):
-            raise TypeError("Entries of `indices` must be NumPy arrays.")
-        if indices[0].ndim != 1 or indices[1].ndim != 1:
-            raise ValueError("Entries of `indices` must be 1D arrays.")
-        if len(indices[0]) != len(indices[1]):
-            raise ValueError("Entries of `indices` must have the same length.")
-        self.indices = deepcopy(indices)
-        self._seeds = indices[0].copy()
-        self._targets = indices[1].copy()
-        self.n_cons = len(indices[0])
-        self._n_chans = len(np.unique([*self._seeds, *self._targets]))
-
-        if not isinstance(name, str):
-            raise TypeError("`name` must be a string.")
-        self.name = deepcopy(name)
 
     def get_results(
         self, form: str = "raveled"
@@ -110,10 +87,10 @@ class _ResultsBase(ABC):
 
         Returns
         -------
-        results : numpy.ndarray of float
+        results : numpy.ndarray
             Spectral coupling results.
 
-        indices : tuple of numpy.ndarray of int
+        indices : tuple of tuple of int, length of 2
             Channel indices of the seeds and targets. Only returned if ``form``
             is ``"compact"``.
         """
@@ -134,17 +111,17 @@ class _ResultsBase(ABC):
 
         Parameters
         ----------
-        compact_results : numpy.ndarray of float
+        compact_results : numpy.ndarray
             Empty results array with shape ``[seeds, targets, ...]``, where
             ``...`` represents the data dimensions (e.g. frequencies, times).
 
         Returns
         -------
-        compact_results : numpy.ndarray of float
+        compact_results : numpy.ndarray
             Results array with shape ``[seeds, targets, ...]``, where ``...``
             represents the data dimensions (e.g. frequencies, times).
 
-        indices : tuple[numpy.ndarray] of int
+        indices : tuple of tuple of int
             Channel indices of ``compact_results`` for the seeds and targets,
             respectively.
         """
@@ -178,8 +155,8 @@ class _ResultsBase(ABC):
         connections: list[int] | None,
         n_rows: int,
         n_cols: int,
-        major_tick_intervals: float,
-        minor_tick_intervals: float,
+        major_tick_intervals: int | float,
+        minor_tick_intervals: int | float,
     ) -> list[int]:
         """Sort the plotting inputs.
 
@@ -205,12 +182,12 @@ class _ResultsBase(ABC):
         if n_rows < 1 or n_cols < 1:
             raise ValueError("`n_rows` and `n_cols` must be >= 1.")
 
-        if not isinstance(major_tick_intervals, float) or not isinstance(
-            minor_tick_intervals, float
-        ):
+        if not isinstance(
+            major_tick_intervals, (int, float)
+        ) or not isinstance(minor_tick_intervals, (int, float)):
             raise TypeError(
                 "`major_tick_intervals` and `minor_tick_intervals` should be "
-                "floats."
+                "ints or floats."
             )
 
         return connections
@@ -286,9 +263,9 @@ class ResultsCFC(_ResultsBase):
     name : str
         Name of the results.
 
-    indices : tuple of numpy.ndarray of int
+    indices : tuple of list of int
         Indices of the channels for each connection of the results. Contains
-        two 1D arrays of equal length for the seed and target indices,
+        two lists of equal length for the seed and target indices,
         respectively.
 
     n_cons : int
@@ -314,7 +291,7 @@ class ResultsCFC(_ResultsBase):
     def __init__(
         self,
         data: np.ndarray,
-        indices: tuple[np.ndarray],
+        indices: tuple[list[int], list[int]],
         f1s: np.ndarray,
         f2s: np.ndarray,
         name: str,
@@ -344,7 +321,7 @@ class ResultsCFC(_ResultsBase):
         compact_results : numpy.ndarray of float
             Results with shape ``[seeds, targets, f1s, f2s]``.
 
-        indices : tuple[numpy.ndarray] of int
+        indices : tuple of list of int, lenght of 2
             Channel indices of ``compact_results`` for the seeds and targets,
             respectively.
         """
@@ -581,15 +558,15 @@ class ResultsTDE(_ResultsBase):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [connections, times]
+    data : numpy.ndarray, shape of [connections, times]
         Results to store.
 
-    indices : tuple of numpy.ndarray of int
+    indices : tuple of list of int, length of 2
         Indices of the channels for each connection of :attr:`data`. Should
-        contain two 1D arrays of equal length for the seed and target indices,
+        contain two lists of equal length for the seed and target indices,
         respectively.
 
-    times : numpy.ndarray of float
+    times : numpy.ndarray
         1D array of timepoints in :attr:`data` (in ms).
 
     name : str
@@ -600,15 +577,15 @@ class ResultsTDE(_ResultsBase):
     name : str
         Name of the results.
 
-    indices : tuple of numpy.ndarray of int
+    indices : tuple of list of int, length of 2
         Indices of the channels for each connection of the results. Contains
-        two 1D arrays of equal length for the seed and target indices,
+        two lists of equal length for the seed and target indices,
         respectively.
 
     n_cons : str
         Number of connections in the results.
 
-    times : numpy.ndarray of float
+    times : numpy.ndarray
         1D array of timepoints in :attr:`data` (in ms).
     """
 
@@ -634,7 +611,7 @@ class ResultsTDE(_ResultsBase):
     def __init__(
         self,
         data: np.ndarray,
-        indices: tuple[np.ndarray],
+        indices: tuple[list[int], list[int]],
         times: np.ndarray,
         name: str,
     ) -> None:  # noqa D107
@@ -659,10 +636,10 @@ class ResultsTDE(_ResultsBase):
 
         Returns
         -------
-        compact_results : numpy.ndarray of float
+        compact_results : numpy.ndarray
             Results with shape ``[seeds, targets, times]``.
 
-        indices : tuple[numpy.ndarray] of int
+        indices : tuple of list of int, length of 2
             Channel indices of ``compact_results`` for the seeds and targets,
             respectively.
         """
@@ -679,8 +656,8 @@ class ResultsTDE(_ResultsBase):
         times: np.ndarray | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
-        major_tick_intervals: float = 500.0,
-        minor_tick_intervals: float = 100.0,
+        major_tick_intervals: int | float = 500.0,
+        minor_tick_intervals: int | float = 100.0,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
@@ -690,7 +667,7 @@ class ResultsTDE(_ResultsBase):
         connections : list of int | None (default None)
             Indices of connections to plot. If ``None``, plot all connections.
 
-        f1s : numpy.ndarray of float | None (default None)
+        f1s : numpy.ndarray | None (default None)
             Times of the results to plot. If ``None``, all times are plotted.
 
         n_rows : int (default ``1``)
@@ -699,11 +676,11 @@ class ResultsTDE(_ResultsBase):
         n_cols : int (default ``1``)
             Number of columns of subplots per figure.
 
-        major_tick_intervals : float (default ``500.0``)
+        major_tick_intervals : int | float (default ``500.0``)
             Intervals (in ms) at which the major ticks of the x- and y-axes
             should occur.
 
-        minor_tick_intervals : float (default ``100.0``)
+        minor_tick_intervals : int | float (default ``100.0``)
             Intervals (in ms) at which the minor ticks of the x- and y-axes
             should occur.
 
@@ -821,7 +798,7 @@ class ResultsTDE(_ResultsBase):
                     self._mark_delay(axis, times, self._data[con_i][time_idcs])
 
                     self._set_axis_ticks(
-                        axis, times, major_tick_intervals, minor_tick_intervals
+                        axis, major_tick_intervals, minor_tick_intervals
                     )
                     axis.grid(
                         which="major",
@@ -856,35 +833,9 @@ class ResultsTDE(_ResultsBase):
     def _set_axis_ticks(
         self,
         axis: plt.Axes,
-        times: np.ndarray,
         major_tick_intervals: float,
         minor_tick_intervals: float,
     ) -> None:
         """Set major and minor tick intervals of the x-axis."""
-        """
-        n_major_xticks = len(
-            np.arange(
-                times[0],
-                times[-1] + major_tick_intervals,
-                major_tick_intervals,
-            )
-        )
-
-        # MaxNLocator only cares about tens (e.g. 10 and 19 have same result)
-        n_minor_xticks = (
-            np.ceil(
-                len(
-                    np.arange(
-                        times[0],
-                        times[-1] + minor_tick_intervals,
-                        minor_tick_intervals,
-                    )
-                )
-                / 10
-            )
-            * 10
-        )
-        """
-
         axis.xaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
         axis.xaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))

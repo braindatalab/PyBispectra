@@ -17,7 +17,7 @@ class PPC(_ProcessFreqBase):
     Parameters
     ----------
     data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        FFT coefficients.
+        Fourier coefficients.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
@@ -36,7 +36,7 @@ class PPC(_ProcessFreqBase):
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
-    indices : tuple of numpy.ndarray of int, length of 2
+    indices : tuple of tuple of int, length of 2
         Indices of the seed and target channels, respectively, most recently
         used with :meth:`compute`.
 
@@ -54,7 +54,7 @@ class PPC(_ProcessFreqBase):
 
     def compute(
         self,
-        indices: tuple[np.ndarray] | None = None,
+        indices: tuple[tuple[int], tuple[int]] | None = None,
         f1s: np.ndarray | None = None,
         f2s: np.ndarray | None = None,
         n_jobs: int = 1,
@@ -63,16 +63,16 @@ class PPC(_ProcessFreqBase):
 
         Parameters
         ----------
-        indices : tuple of numpy.ndarray of int | None (default None), length of 2
+        indices : tuple of tuple of int, length of 2 | None (default None)
             Indices of the seed and target channels, respectively, to compute
             PPC between. If ``None``, coupling between all channels is
             computed.
 
-        f1s : numpy.ndarray of float | None (default None), shape of [frequencies]
+        f1s : numpy.ndarray | None (default None), shape of [frequencies]
             Lower frequencies to compute PPC on. If ``None``, all frequencies
             are used.
 
-        f2s : numpy.ndarray of float | None (default None), shape of [frequencies]
+        f2s : numpy.ndarray | None (default None), shape of [frequencies]
             Higher frequencies to compute PPC on. If ``None``, all frequencies
             are used.
 
@@ -84,11 +84,14 @@ class PPC(_ProcessFreqBase):
         -----
         PPC is computed as coherence between frequencies :footcite:`Giehl2021`:
 
-        :math:`\large PPC(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{|\langle \vec{a}_x(f_1)\vec{a}_y(f_2) e^{i(\vec{\varphi}_x(f_1)\frac{f_2}{f_1}-\vec{\varphi}_y(f_2))} \rangle|}{\langle \vec{a}_x(f_1)\vec{a}_y(f_2) \rangle}`,
+        :math:`\large PPC(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{|\langle
+        \vec{a}_x(f_1)\vec{a}_y(f_2) e^{i(\vec{\varphi}_x(f_1)\frac{f_2}{f_1}-
+        \vec{\varphi}_y(f_2))} \rangle|}{\langle \vec{a}_x(f_1)\vec{a}_y(f_2)
+        \rangle}`,
 
-        where :math:`\vec{a}(f)` and :math:`\vec{\varphi}(f)` are the amplitude and phase
-        of a signal at a given frequency, respectively, and the angled brackets
-        represent the average over epochs.
+        where :math:`\vec{a}(f)` and :math:`\vec{\varphi}(f)` are the amplitude
+        and phase of a signal at a given frequency, respectively, and the
+        angled brackets represent the average over epochs.
 
         PPC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
         any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``
@@ -97,7 +100,7 @@ class PPC(_ProcessFreqBase):
         References
         ----------
         .. footbibliography::
-        """  # noqa E501
+        """
         self._reset_attrs()
 
         self._sort_indices(indices)
@@ -164,22 +167,22 @@ def _compute_ppc(
 
     PARAMETERS
     ----------
-    data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
+    data : numpy.ndarray, shape of [epochs, 2, frequencies]
         FFT coefficients where the second dimension contains the data for the
         seed and target channel of a single connection, respectively.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : numpy.ndarray, shape of [frequencies]
         Frequencies in ``data``.
 
-    f1s : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray, shape of [frequencies]
         Low frequencies to compute coupling for.
 
-    f2s : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray, shape of [frequencies]
         High frequencies to compute coupling for.
 
     RETURNS
     -------
-    results : numpy.ndarray of float, shape of [f1s, f2s]
+    results : numpy.ndarray, shape of [f1s, f2s]
         PPC for a single connection.
     """
     results = np.full(
