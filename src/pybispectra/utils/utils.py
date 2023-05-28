@@ -400,37 +400,43 @@ def _fast_find_first(
     raise ValueError("`value` is not present in `vector`.")
 
 
-def _compute_pearsonr(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """Compute Pearson correlation between the last dimension of two arrays.
+@njit
+def _compute_pearsonr_2D(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """Compute Pearson correlation for epochs over time.
 
     Parameters
     ----------
-    x : numpy.ndarray, shape of [n, ..., k]
-        Array of values to compute correlation of with ``y``.
+    x : numpy.ndarray, shape of [epochs, times]
+        Array of time-series values to compute correlation of with ``y``.
 
-    y : numpy.ndarray, shape of [n, ..., k]
-        Array of values to compute correlation of with ``x``.
+    y : numpy.ndarray, shape of [epochs, times]
+        Array of time-series values to compute correlation of with ``x``.
 
     Returns
     -------
-    pearsonr : numpy.ndarray, shape of ``x.ndim[:-1]``
-        Correlation coefficient between ``x`` and ``y`` over the last
-        dimension.
+    pearsonr : numpy.ndarray, shape of [epochs]
+        Correlation coefficient between ``x`` and ``y`` over time for each
+        epoch.
 
     Notes
     -----
     Does not perform checks on inputs for speed.
     """
-    x_minus_mean = x - np.mean(x, axis=-1)[..., None]
-    y_minus_mean = y - np.mean(y, axis=-1)[..., None]
+    x_minus_mean = np.full(x.shape, fill_value=np.nan, dtype=np.float64)
+    y_minus_mean = np.full(y.shape, fill_value=np.nan, dtype=np.float64)
+    for idx in range(x.shape[0]):  # same as y.shape[0]
+        x_minus_mean[idx] = x[idx] - np.mean(x[idx])
+        y_minus_mean[idx] = y[idx] - np.mean(y[idx])
 
-    numerator = np.sum(x_minus_mean * y_minus_mean, axis=-1)
+    numerator = np.sum(np.multiply(x_minus_mean, y_minus_mean), axis=-1)
     denominator = np.sqrt(
-        np.sum(np.square(x_minus_mean), axis=-1)
-        * np.sum(np.square(y_minus_mean), axis=-1)
+        np.multiply(
+            np.sum(np.square(x_minus_mean), axis=-1),
+            np.sum(np.square(y_minus_mean), axis=-1),
+        )
     )
 
-    return numerator / denominator
+    return np.divide(numerator, denominator)
 
 
 def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
