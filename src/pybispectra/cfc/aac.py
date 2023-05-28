@@ -7,8 +7,8 @@ from numba import njit
 from pqdm.processes import pqdm
 
 from pybispectra.utils import ResultsCFC
-from pybispectra.utils.utils import _compute_pearsonr_2D, _fast_find_first
 from pybispectra.utils._process import _ProcessFreqBase
+from pybispectra.utils._utils import _compute_pearsonr_2d, _fast_find_first
 
 
 class AAC(_ProcessFreqBase):
@@ -157,7 +157,7 @@ class AAC(_ProcessFreqBase):
         return deepcopy(self._results)
 
 
-# @njit
+@njit
 def _compute_aac(
     data: np.ndarray,
     freqs: np.ndarray,
@@ -199,7 +199,7 @@ def _compute_aac(
                 f2_idx = _fast_find_first(freqs, f2, f2_idx)
 
                 results[f1_i, f2_i] = np.mean(
-                    _compute_pearsonr_2D(
+                    _compute_pearsonr_2d(
                         data[:, 0, f1_idx], data[:, 1, f2_idx]
                     )
                 )

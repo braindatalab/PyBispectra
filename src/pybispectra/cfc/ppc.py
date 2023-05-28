@@ -7,8 +7,8 @@ from numba import njit
 from pqdm.processes import pqdm
 
 from pybispectra.utils import ResultsCFC
-from pybispectra.utils.utils import _fast_find_first
 from pybispectra.utils._process import _ProcessFreqBase
+from pybispectra.utils._utils import _fast_find_first
 
 
 class PPC(_ProcessFreqBase):

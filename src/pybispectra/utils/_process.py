@@ -8,7 +8,7 @@ from warnings import warn
 from numba import njit
 import numpy as np
 
-from pybispectra.utils.utils import _fast_find_first
+from pybispectra.utils._utils import _fast_find_first
 
 
 class _ProcessFreqBase(ABC):

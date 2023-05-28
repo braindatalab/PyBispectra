@@ -10,7 +10,7 @@ from mne.decoding import SSD
 from mne.time_frequency import csd_array_fourier, csd_array_multitaper
 import scipy as sp
 
-from pybispectra.utils.utils import _create_mne_info
+from pybispectra.utils._utils import _create_mne_info
 
 
 class SpatioSpectralFilter:

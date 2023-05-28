@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 import numpy as np
 
-from pybispectra.utils.utils import _fast_find_first
+from pybispectra.utils._utils import _fast_find_first
 
 
 class _ResultsBase(ABC):

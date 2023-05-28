@@ -19,25 +19,31 @@ from pybispectra import compute_tfr, AAC
 # AAC quantifies the relationship between the amplitudes of a lower frequency
 # :math:`f_1` and a higher frequency :math:`f_2` within a single signal, or
 # across different signals. This is computed as the Pearson correlation
-# coefficient between the power of the signals at :math:`f_1` and :math:`f_2`.
+# coefficient between the power of the time-frequency representation (TFR) of
+# the signals at :math:`f_1` and :math:`f_2` across time, averaged over epochs.
 
 ###############################################################################
 # Generating data and computing Fourier coefficients
 # --------------------------------------------------
-# We will start by generating some data that we can compute AAC on, then
-# compute the Fourier coefficients of the data.
+# We will start by loading some data that we can compute AAC on, then compute
+# the amplitude TFR of the data (using Morlet wavelets in this example).
 
 # %%
 
 # load example data
-data = np.load(
-    "examples\\example_data_cfc.npy"
-)  # [epochs x channels x frequencies]
-sampling_freq = 200  # sampling frequency in Hz
+data = np.load("example_data_cfc.npy")  # [epochs x channels x frequencies]
+sampling_freq = 200  # Hz
 freqs = np.arange(1, 101, 1)
 
-# compute Fourier coeffs.
-tfr, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=6)
+# compute amplitude TFR
+tfr, freqs = compute_tfr(
+    data=data,
+    sampling_freq=sampling_freq,
+    freqs=freqs,
+    tfr_mode="morlet",
+    n_cycles=6,
+    verbose=False,
+)  # [epochs x channels x frequencies x times]
 
 print(
     f"TFR of data: [{tfr.shape[0]} epochs x {tfr.shape[1]} channels x "
@@ -46,30 +52,31 @@ print(
 )
 
 ###############################################################################
-# As you can see, we have FFT coefficients for 2 channels across 30 epochs,
-# with 101 frequencies ranging from 0 to 50 Hz with a frequency resolution of
-# 0.5 Hz. We will use these coefficients to compute AAC.
+# As you can see, we have the amplitude TFR for 2 channels for 30 epochs, with
+# frequencies ranging from 1 to 100 Hz (1 Hz resolution), and 2000 timepoints
+# per epoch. The amplitude TFR of the data will be used to compute AAC.
 #
 # Computing AAC
 # -------------
 # To compute AAC, we start by initialising the :class:`AAC` class object with
-# the FFT coefficients and the frequency information. To compute AAC, we call
-# the :meth:`compute` method. By default, AAC is computed between all channel
+# the amplitude TFR and the frequency information. To compute AAC, we call the
+# :meth:`compute` method. By default, AAC is computed between all channel
 # and frequency combinations, however we can also specify particular
 # combinations of interest.
 #
 # Here, we specify the :attr:`indices` to compute AAC on. :attr:`indices` is
 # expected to be a tuple containing two NumPy arrays for the indices of the
 # seed and target channels, respectively. The indices specified below mean that
-# AAC will only be computed across frequencies within each channel (i.e.
-# 0 -> 0; and 1 -> 1). By leaving the frequency arguments :attr:`f1s` and
-# :attr:`f2s` blank, we will look at all possible frequency combinations.
+# AAC will only be computed across frequencies between each channel (i.e. 0 ->
+# 1). By leaving the frequency arguments :attr:`f1s` and :attr:`f2s` blank, we
+# will look at all possible frequency combinations.
 
 # %%
 
-aac = AAC(tfr, freqs, sampling_freq)  # initialise object
+aac = AAC(
+    data=tfr, freqs=freqs, sampling_freq=sampling_freq, verbose=False
+)  # initialise object
 aac.compute(indices=(np.array([0]), np.array([1])))  # compute AAC
-
 aac_results = aac.results.get_results()  # return results as array
 
 print(
@@ -78,22 +85,20 @@ print(
 )
 
 ###############################################################################
-# We can see that AAC has been computed for 2 connections (0 -> 0; and 1 -> 1),
-# and all possible frequency combinations, averaged across our 30 epochs.
-# Whilst there are > 10,000 such frequency combinations in our [101 x 101]
-# matrices, AAC for the lower triangular matrices are naturally mirrors of the
-# upper triangular matrices. Accordingly, the values for these redundant
-# entries are left as ``numpy.nan`` (see the plotted results below for a visual
-# demonstration of this).
+# We can see that AAC has been computed for 1 connections (0 -> 1), and all
+# possible frequency combinations, averaged across our 30 epochs. Whilst there
+# are 10,000 such frequency combinations in our [100 x 100] matrix, AAC for the
+# lower triangular matrix is naturally a mirror of the upper triangular matrix.
+# Accordingly, the values for these redundant entries are left as ``numpy.nan``
+# (see the plotted results below for a visual demonstration of this).
 
 ###############################################################################
 # Plotting AAC
 # ------------
-# Let us now inspect the results. For this, we will plot the results for both
-# connections on the same plot. If we wished, we could plot this information on
-# separate plots, or specify a subset of frequencies to inspect. Note that the
-# ``Figure`` and ``Axes`` objects can also be returned for any desired manual
-# adjustments of the plots.
+# Let us now inspect the results. For this, we will plot the results for all
+# frequencies. If we wished, we could specify a subset of frequencies to
+# inspect. Note that the ``Figure`` and ``Axes`` objects can also be returned
+# for any desired manual adjustments of the plots.
 
 # %%
 
