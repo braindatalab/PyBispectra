@@ -5,6 +5,7 @@ from copy import deepcopy
 import numpy as np
 from pqdm.processes import pqdm
 
+from pybispectra.utils.results import ResultsWaveShape
 from pybispectra.utils._process import (
     _ProcessBispectrum,
     _compute_bispectrum,
@@ -38,7 +39,7 @@ class WaveShape(_ProcessBispectrum):
         Frequencies in :attr:`data`.
 
     indices : tuple of int
-        1D array of channel indices most recently used with :meth:`compute`.
+        Channel indices most recently used with :meth:`compute`.
 
     f1s : numpy.ndarray, shape of [frequencies]
         Low frequencies (in Hz) most recently used with :meth:`compute`.
@@ -183,7 +184,7 @@ class WaveShape(_ProcessBispectrum):
 
         args = [
             {
-                "data": self.data[:, channel],
+                "data": self.data[:, channel][:, None],
                 "freqs": self.freqs,
                 "f1s": self.f1s,
                 "f2s": self.f2s,
@@ -206,7 +207,7 @@ class WaveShape(_ProcessBispectrum):
             )
             .mean(axis=2)
             .transpose(1, 0, 2, 3)
-        )
+        )[0]
 
         if self.verbose:
             print("        ... Bispectrum computation finished\n")
@@ -226,7 +227,7 @@ class WaveShape(_ProcessBispectrum):
 
         args = [
             {
-                "data": self.data[:, channel],
+                "data": self.data[:, channel][:, None],
                 "freqs": self.freqs,
                 "f1s": self.f1s,
                 "f2s": self.f2s,
@@ -243,7 +244,7 @@ class WaveShape(_ProcessBispectrum):
                 desc="Processing connections...",
                 disable=not self.verbose,
             )
-        )
+        )[0]
 
         if self.verbose:
             print("        ... Threenorm computation finished\n")
@@ -251,4 +252,16 @@ class WaveShape(_ProcessBispectrum):
         return threenorm
 
     def _store_results(self) -> None:
-        """"""
+        """Store computed results in objects."""
+        self._results = ResultsWaveShape(
+            data=self._bicoherence,
+            indices=self.indices,
+            f1s=self.f1s,
+            f2s=self.f2s,
+            name="Wave Shape",
+        )
+
+    @property
+    def results(self) -> ResultsWaveShape:
+        """Return the results."""
+        return deepcopy(self._results)

@@ -3,25 +3,14 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
-from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 import numpy as np
 
-from pybispectra.utils._utils import _fast_find_first
+from pybispectra.utils._plot import _PlotCFC, _PlotTDE, _PlotWaveShape
 
 
 class _ResultsBase(ABC):
     """Base class for storing results."""
-
-    _data = None
-
-    indices = None
-    _seeds = None
-    _targets = None
-    n_cons = None
-    _n_chans = None
-
-    name = None
 
     def __init__(
         self,
@@ -62,7 +51,7 @@ class _ResultsBase(ABC):
         self.indices = deepcopy(indices)
         self._seeds = deepcopy(seeds)
         self._targets = deepcopy(targets)
-        self.n_cons = len(seeds)
+        self.n_nodes = len(seeds)
 
         if not isinstance(name, str):
             raise TypeError("`name` must be a string.")
@@ -75,20 +64,20 @@ class _ResultsBase(ABC):
     def get_results(
         self, form: str = "raveled"
     ) -> np.ndarray | tuple[np.ndarray, tuple[np.ndarray]]:
-        """Return a copy of the results as arrays.
+        """Return a copy of the results.
 
         Parameters
         ----------
         form : str (default ``"raveled"``)
             How the results should be returned: ``"raveled"`` - results have
-            shape `[connections, ...]`; ``"compact"`` - results have shape
+            shape `[nodes, ...]`; ``"compact"`` - results have shape
             ``[seeds, targets, ...]``, where ``...`` represents the data
             dimensions (e.g. frequencies, times).
 
         Returns
         -------
         results : numpy.ndarray
-            Spectral coupling results.
+            The results.
 
         indices : tuple of tuple of int, length of 2
             Channel indices of the seeds and targets. Only returned if ``form``
@@ -102,7 +91,6 @@ class _ResultsBase(ABC):
             return self._data.copy()
         return self._get_compact_results_child()
 
-    @abstractmethod
     def _get_compact_results_child(self) -> None:
         """Return a compacted form of the results."""
 
@@ -145,146 +133,56 @@ class _ResultsBase(ABC):
 
         return compact_results.copy(), indices
 
-    @abstractmethod
-    def plot(self) -> None:
-        """Plot the results."""
-
-    @abstractmethod
-    def _sort_plot_inputs(
-        self,
-        connections: list[int] | None,
-        n_rows: int,
-        n_cols: int,
-        major_tick_intervals: int | float,
-        minor_tick_intervals: int | float,
-    ) -> list[int]:
-        """Sort the plotting inputs.
-
-        Returns
-        -------
-        connections : list of int
-        """
-        if connections is None:
-            connections = np.arange(self.n_cons).tolist()
-        if not isinstance(connections, list) or not all(
-            isinstance(con, int) for con in connections
-        ):
-            raise TypeError("`connections` must be a list of integers.")
-        if any(con >= self.n_cons for con in connections) or any(
-            con < 0 for con in connections
-        ):
-            raise ValueError(
-                "The requested connection is not present in the results."
-            )
-
-        if not isinstance(n_rows, int) or not isinstance(n_cols, int):
-            raise TypeError("`n_rows` and `n_cols` must be integers.")
-        if n_rows < 1 or n_cols < 1:
-            raise ValueError("`n_rows` and `n_cols` must be >= 1.")
-
-        if not isinstance(
-            major_tick_intervals, (int, float)
-        ) or not isinstance(minor_tick_intervals, (int, float)):
-            raise TypeError(
-                "`major_tick_intervals` and `minor_tick_intervals` should be "
-                "ints or floats."
-            )
-
-        return connections
-
-    def _create_plots(
-        self, connections: list[int], n_rows: int, n_cols: int
-    ) -> tuple[list[Figure], list[np.ndarray]]:
-        """Create figures and subplots to fill with results.
-
-        Returns
-        -------
-        figures : list of matplotlib Figure
-            Figures for the results in a list of length
-            ``ceil(n_cons / (n_rows * n_cols))``.
-
-        axes : list of numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_cons / (n_rows * n_cols))`` where each entry is a 1D
-            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
-        """
-        figures = []
-        axes = []
-
-        plot_n = 0
-        for con_i in range(len(connections)):
-            if con_i == plot_n:
-                fig, axs = plt.subplots(n_rows, n_cols, layout="constrained")
-                figures.append(fig)
-                if n_rows * n_cols > 1:
-                    axs = np.ravel(axs)
-                else:
-                    axs = np.array([axs])
-                axes.append(axs)
-                plot_n += n_rows * n_cols
-            if plot_n >= len(connections):
-                break
-
-        return figures, axes
-
-    @abstractmethod
-    def _plot_results(self) -> None:
-        """Plot results on the relevant figures/subplots."""
-
-    @abstractmethod
-    def _set_axis_ticks(self) -> None:
-        """Set major and minor tick intervals of x- and y-axes."""
-
 
 class ResultsCFC(_ResultsBase):
     """Class for storing cross-frequency coupling (CFC) results.
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [connections, low frequencies, high frequencies]
+    data : numpy.ndarray, shape of [nodes, f1s, f2s]
         Results to store.
 
-    indices : tuple of numpy.ndarray of int
-        Indices of the channels for each connection of :attr:`data`. Should
-        contain two 1D arrays of equal length for the seed and target indices,
+    indices : tuple of list of int, length of 2
+        Indices of the channels for each connection of the results. Should
+        contain two lists of equal length for the seed and target indices,
         respectively.
 
-    f1s : numpy.ndarray of float, shape of [frequencies]
-        Low frequencies (in Hz) in :attr:`data`.
+    f1s : numpy.ndarray, shape of [frequencies]
+        Low frequencies (in Hz) in the results.
 
-    f2s : numpy.ndarray of float, shape of [frequencies]
-        High frequencies (in Hz) in :attr:`data`.
+    f2s : numpy.ndarray, shape of [frequencies]
+        High frequencies (in Hz) in the results.
 
     name : str
         Name of the results being stored.
 
     Attributes
     ----------
+    data : numpy.ndarray
+        The results.
+
     name : str
         Name of the results.
 
-    indices : tuple of list of int
-        Indices of the channels for each connection of the results. Contains
-        two lists of equal length for the seed and target indices,
+    indices : tuple of list of int, length of 2
+        Indices of the channels for each connection of the results. Should
+        contain two lists of equal length for the seed and target indices,
         respectively.
 
-    n_cons : int
-        Number of connections in the results.
+    n_nodes : int
+        Number of connections in the the results.
 
-    f1s : numpy.ndarray of float, shape of [frequencies]
-        Low frequencies (in Hz) in :attr:`data`.
+    f1s : numpy.ndarray, shape of [frequencies]
+        Low frequencies (in Hz) in the results.
 
-    f2s : numpy.ndarray of float, shape of [frequencies]
-        High frequencies (in Hz) in :attr:`data`.
-    """  # noqa E501
-
-    f1s = None
-    f2s = None
+    f2s : numpy.ndarray, shape of [frequencies]
+        High frequencies (in Hz) in the results.
+    """
 
     def __repr__(self) -> str:
         """Return printable represenation of the object."""
         return repr(
-            f"<Result: {self.name} | [{self.n_cons} connections, "
+            f"<Result: {self.name} | [{self.n_nodes} nodes, "
             f"{len(self.f1s)} f1s, {len(self.f2s)} f2s]>"
         )
 
@@ -299,6 +197,14 @@ class ResultsCFC(_ResultsBase):
         super().__init__(data, 3, indices, name)
         self._sort_init_inputs(f1s, f2s)
 
+        self._plotting = _PlotCFC(
+            data=self._data,
+            indices=self.indices,
+            f1s=self.f1s,
+            f2s=self.f2s,
+            name=self.name,
+        )
+
     def _sort_init_inputs(self, f1s: np.ndarray, f2s: np.ndarray) -> None:
         """Sort inputs to the object."""
         if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
@@ -308,12 +214,12 @@ class ResultsCFC(_ResultsBase):
         self.f1s = f1s.copy()
         self.f2s = f2s.copy()
 
-        if self._data.shape != (self.n_cons, len(f1s), len(f2s)):
-            raise ValueError("`data` must have shape [connections, f1s, f2s].")
+        if self._data.shape != (self.n_nodes, len(f1s), len(f2s)):
+            raise ValueError("`data` must have shape [nodes, f1s, f2s].")
 
     def _get_compact_results_child(
         self,
-    ) -> tuple[np.ndarray, tuple[np.ndarray]]:
+    ) -> tuple[np.ndarray, tuple[list[int]]]:
         """Return a compacted form of the results.
 
         Returns
@@ -321,7 +227,7 @@ class ResultsCFC(_ResultsBase):
         compact_results : numpy.ndarray of float
             Results with shape ``[seeds, targets, f1s, f2s]``.
 
-        indices : tuple of list of int, lenght of 2
+        indices : tuple of list of int, length of 2
             Channel indices of ``compact_results`` for the seeds and targets,
             respectively.
         """
@@ -341,27 +247,27 @@ class ResultsCFC(_ResultsBase):
 
     def plot(
         self,
-        connections: list[int] | None = None,
+        nodes: list[int] | None = None,
         f1s: np.ndarray | None = None,
         f2s: np.ndarray | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
-        major_tick_intervals: float = 5.0,
-        minor_tick_intervals: float = 1.0,
+        major_tick_intervals: int | float = 5.0,
+        minor_tick_intervals: int | float = 1.0,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
 
         Parameters
         ----------
-        connections : list of int | None (default None)
+        nodes : list of int | None (default None)
             Indices of connections to plot. If ``None``, plot all connections.
 
-        f1s : numpy.ndarray of float | None (default None)
+        f1s : numpy.ndarray | None (default None)
             Low frequencies of the results to plot. If ``None``, plot all low
             frequencies.
 
-        f2s : numpy.ndarray of float | None (default None)
+        f2s : numpy.ndarray | None (default None)
             High frequencies of the results to plot. If ``None``, plot all high
             frequencies.
 
@@ -371,11 +277,11 @@ class ResultsCFC(_ResultsBase):
         n_cols : int (default ``1``)
             Number of columns of subplots per figure.
 
-        major_tick_intervals : float (default ``5.0``)
+        major_tick_intervals : int | float (default ``5.0``)
             Intervals (in Hz) at which the major ticks of the x- and y-axes
             should occur.
 
-        minor_tick_intervals : float (default ``1.0``)
+        minor_tick_intervals : int | float (default ``1.0``)
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
@@ -386,11 +292,11 @@ class ResultsCFC(_ResultsBase):
         -------
         figures : list of matplotlib Figure
             Figures of the results in a list of length
-            ``ceil(n_cons / (n_rows * n_cols))``.
+            ``ceil(n_nodes / (n_rows * n_cols))``.
 
         axes : list of numpy.ndarray of matplotlib pyplot Axes
             Subplot axes for the results in a list of length
-            ``ceil(n_cons / (n_rows * n_cols))`` where each entry is a 1D
+            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
             ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
 
         Notes
@@ -398,159 +304,18 @@ class ResultsCFC(_ResultsBase):
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
         connection on a new figure.
         """
-        connections, f1s, f2s, f1_idcs, f2_idcs = self._sort_plot_inputs(
-            connections,
-            f1s,
-            f2s,
-            n_rows,
-            n_cols,
-            major_tick_intervals,
-            minor_tick_intervals,
+        figures, axes = self._plotting.plot(
+            nodes=nodes,
+            f1s=f1s,
+            f2s=f2s,
+            n_rows=n_rows,
+            n_cols=n_cols,
+            major_tick_intervals=major_tick_intervals,
+            minor_tick_intervals=minor_tick_intervals,
+            show=show,
         )
-        figures, axes = self._create_plots(connections, n_rows, n_cols)
-        self._plot_results(
-            figures,
-            axes,
-            connections,
-            f1s,
-            f2s,
-            f1_idcs,
-            f2_idcs,
-            n_rows,
-            n_cols,
-            major_tick_intervals,
-            minor_tick_intervals,
-        )
-
-        if show:
-            plt.show()
 
         return figures, axes
-
-    def _sort_plot_inputs(
-        self,
-        connections: list[int] | None,
-        f1s: np.ndarray | None,
-        f2s: np.ndarray | None,
-        n_rows: int,
-        n_cols: int,
-        major_tick_intervals: float,
-        minor_tick_intervals: float,
-    ) -> tuple[list[int], np.ndarray, np.ndarray, list[int], list[int]]:
-        """Sort the plotting inputs.
-
-        Returns
-        -------
-        connections : list of int
-
-        f1s : numpy.ndarray of float
-
-        f2s : numpy.ndarray of float
-
-        f1_idcs : list of int
-            Indices of ``f1s`` in the results.
-
-        f2_idcs : list of int
-            Indices of ``f2s`` in the results.
-        """
-        connections = super()._sort_plot_inputs(
-            connections,
-            n_rows,
-            n_cols,
-            major_tick_intervals,
-            minor_tick_intervals,
-        )
-
-        if f1s is None:
-            f1s = self.f1s.copy()
-        if f2s is None:
-            f2s = self.f2s.copy()
-        if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
-            raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
-        if f1s.ndim != 1 or f2s.ndim != 1:
-            raise ValueError("`f1s` and `f2s` must be 1D arrays.")
-        if any(freq not in self.f1s for freq in f1s) or any(
-            freq not in self.f2s for freq in f2s
-        ):
-            raise ValueError(
-                "Entries of `f1s` and `f2s` must be present in the results."
-            )
-        f1_idcs = [_fast_find_first(self.f1s, freq) for freq in f1s]
-        f2_idcs = [_fast_find_first(self.f2s, freq) for freq in f2s]
-
-        return connections, f1s, f2s, f1_idcs, f2_idcs
-
-    def _plot_results(
-        self,
-        figures: list[Figure],
-        axes: list[np.ndarray],
-        connections: list[int],
-        f1s: np.ndarray,
-        f2s: np.ndarray,
-        f1_idcs: list[int],
-        f2_idcs: list[int],
-        n_rows: int,
-        n_cols: int,
-        major_tick_intervals: float,
-        minor_tick_intervals: float,
-    ) -> None:
-        """Plot results on the relevant figures/subplots."""
-        fig_i = 0
-        plot_n = 0
-        fig_plot_n = 0
-        while fig_i < len(figures):
-            for _ in range(n_rows):
-                for _ in range(n_cols):
-                    con_i = connections[plot_n]
-                    axis = axes[fig_i][fig_plot_n]
-
-                    mesh = axis.pcolormesh(
-                        f1s, f2s, self._data[con_i][np.ix_(f1_idcs, f2_idcs)].T
-                    )
-
-                    plt.colorbar(
-                        mesh, ax=axis, label="Coupling (A.U.)", shrink=0.3
-                    )
-
-                    axis.set_aspect("equal")
-                    self._set_axis_ticks(
-                        axis,
-                        major_tick_intervals,
-                        minor_tick_intervals,
-                    )
-                    axis.grid(
-                        which="major",
-                        axis="both",
-                        linestyle="--",
-                        color=[0.7, 0.7, 0.7],
-                        alpha=0.7,
-                    )
-                    axis.set_xlabel("$f_1$ (Hz)")
-                    axis.set_ylabel("$f_2$ (Hz)")
-
-                    axis.set_title(
-                        f"Seed: {self._seeds[con_i]} | Target: "
-                        f"{self._targets[con_i]}"
-                    )
-
-                    plot_n += 1
-                    fig_plot_n += 1
-                    if fig_plot_n >= n_rows * n_cols:
-                        figures[fig_i].suptitle(self.name)
-                        fig_plot_n = 0
-                        fig_i += 1
-
-    def _set_axis_ticks(
-        self,
-        axis: plt.Axes,
-        major_tick_intervals: float,
-        minor_tick_intervals: float,
-    ) -> None:
-        """Set major and minor tick intervals of x- and y-axes."""
-        axis.xaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
-        axis.xaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
-        axis.yaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
-        axis.yaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
 
 
 class ResultsTDE(_ResultsBase):
@@ -558,53 +323,44 @@ class ResultsTDE(_ResultsBase):
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [connections, times]
+    data : numpy.ndarray, shape of [nodes, times]
         Results to store.
 
     indices : tuple of list of int, length of 2
-        Indices of the channels for each connection of :attr:`data`. Should
+        Indices of the channels for each connection of the results. Should
         contain two lists of equal length for the seed and target indices,
         respectively.
 
     times : numpy.ndarray
-        1D array of timepoints in :attr:`data` (in ms).
+        1D array of timepoints in the results (in ms).
 
     name : str
         Name of the results being stored.
 
     Attributes
     ----------
+    data : numpy.ndarray
+        The results
+
     name : str
         Name of the results.
 
     indices : tuple of list of int, length of 2
-        Indices of the channels for each connection of the results. Contains
+        Indices of the channels for each connection in the results. Contains
         two lists of equal length for the seed and target indices,
         respectively.
 
-    n_cons : str
+    n_nodes : str
         Number of connections in the results.
 
     times : numpy.ndarray
-        1D array of timepoints in :attr:`data` (in ms).
+        1D array of timepoints in the results (in ms).
     """
-
-    _data = None
-
-    indices = None
-    _seeds = None
-    _targets = None
-    n_cons = None
-    _n_chans = None
-
-    times = None
-
-    name = None
 
     def __repr__(self) -> str:
         """Return printable represenation of the object."""
         return repr(
-            f"<Result: {self.name} | [{self.n_cons} connections, "
+            f"<Result: {self.name} | [{self.n_nodes} nodes, "
             f"{len(self.times)} times]>"
         )
 
@@ -618,14 +374,21 @@ class ResultsTDE(_ResultsBase):
         super().__init__(data, 2, indices, name)
         self._sort_init_inputs(times)
 
+        self._plotting = _PlotTDE(
+            data=self._data,
+            indices=self.indices,
+            times=self.times,
+            name=self.name,
+        )
+
     def _sort_init_inputs(self, times: np.ndarray) -> None:
         """Sort inputs to the object."""
         if not isinstance(times, np.ndarray):
             raise TypeError("`times` must be a NumPy array.")
         if times.ndim != 1:
             raise ValueError("`times` must be a 1D array.")
-        if self._data.shape != (self.n_cons, times.shape[0]):
-            raise ValueError("`data` must have shape [connections, times].")
+        if self._data.shape != (self.n_nodes, times.shape[0]):
+            raise ValueError("`data` must have shape [nodes, times].")
 
         self.times = times.copy()
 
@@ -652,7 +415,7 @@ class ResultsTDE(_ResultsBase):
 
     def plot(
         self,
-        connections: list[int] | None = None,
+        nodes: list[int] | None = None,
         times: np.ndarray | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
@@ -664,7 +427,7 @@ class ResultsTDE(_ResultsBase):
 
         Parameters
         ----------
-        connections : list of int | None (default None)
+        nodes : list of int | None (default None)
             Indices of connections to plot. If ``None``, plot all connections.
 
         f1s : numpy.ndarray | None (default None)
@@ -691,11 +454,11 @@ class ResultsTDE(_ResultsBase):
         -------
         figures : list of matplotlib Figure
             Figures of the results in a list of length
-            ``ceil(n_cons / (n_rows * n_cols))``.
+            ``ceil(n_nodes / (n_rows * n_cols))``.
 
         axes : list of numpy.ndarray of matplotlib pyplot Axes
             Subplot axes for the results in a list of length
-            ``ceil(n_cons / (n_rows * n_cols))`` where each entry is a 1D
+            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
             ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
 
         Notes
@@ -703,139 +466,196 @@ class ResultsTDE(_ResultsBase):
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
         connection on a new figure.
         """
-        connections, times, time_idcs = self._sort_plot_inputs(
-            connections,
-            times,
-            n_rows,
-            n_cols,
-            major_tick_intervals,
-            minor_tick_intervals,
+        figures, axes = self._plotting.plot(
+            nodes=nodes,
+            times=times,
+            n_rows=n_rows,
+            n_cols=n_cols,
+            major_tick_intervals=major_tick_intervals,
+            minor_tick_intervals=minor_tick_intervals,
+            show=show,
         )
-        figures, axes = self._create_plots(connections, n_rows, n_cols)
-        self._plot_results(
-            figures,
-            axes,
-            connections,
-            times,
-            time_idcs,
-            n_rows,
-            n_cols,
-            major_tick_intervals,
-            minor_tick_intervals,
-        )
-
-        if show:
-            plt.show()
 
         return figures, axes
 
-    def _sort_plot_inputs(
+
+class ResultsWaveShape(_ResultsBase):
+    """Class for storing wave shape results.
+
+    Parameters
+    ----------
+    data : numpy.ndarray, shape of [nodes, f1s, f2s]
+        Results to store.
+
+    indices : tuple of int
+        Indices of the channels in the results.
+
+    f1s : numpy.ndarray, shape of [frequencies]
+        Low frequencies (in Hz) in the results.
+
+    f2s : numpy.ndarray, shape of [frequencies]
+        High frequencies (in Hz) in the results.
+
+    name : str
+        Name of the results being stored.
+
+    Attributes
+    ----------
+    name : str
+        Name of the results.
+
+    indices : tuple of int
+        Indices of the channels in the results.
+
+    n_nodes : int
+        Number of channels in the results.
+
+    f1s : numpy.ndarray, shape of [frequencies]
+        Low frequencies (in Hz) in the results.
+
+    f2s : numpy.ndarray, shape of [frequencies]
+        High frequencies (in Hz) in the results.
+    """
+
+    def __repr__(self) -> str:
+        """Return printable represenation of the object."""
+        return repr(
+            f"<Result: {self.name} | [{self.n_nodes} nodes, "
+            f"{len(self.f1s)} f1s, {len(self.f2s)} f2s]>"
+        )
+
+    def __init__(
         self,
-        connections: list[int] | None,
-        times: np.ndarray | None,
-        n_rows: int,
-        n_cols: int,
-        major_tick_intervals: float,
-        minor_tick_intervals: float,
-    ) -> tuple[list[int], np.ndarray, list[int]]:
-        """Sort the plotting inputs.
+        data: np.ndarray,
+        indices: tuple[int],
+        f1s: np.ndarray,
+        f2s: np.ndarray,
+        name: str,
+    ) -> None:  # noqa D107
+        if not isinstance(data, np.ndarray):
+            raise TypeError("`data` must be a NumPy array.")
+        if data.ndim != 3:
+            raise ValueError("`data` must be a 3D array.")
+        self._data = data.copy()
+
+        if not isinstance(indices, tuple):
+            raise TypeError("`indices` must be a tuple.")
+        if not all(isinstance(idx, int) for idx in indices):
+            raise TypeError("Entries of `indices` must be ints.")
+        self._n_chans = len(np.unique(indices))
+        if any(idx < 0 or idx >= self._n_chans for idx in indices):
+            raise ValueError(
+                "`indices` contains indices for channels not present in the "
+                "data."
+            )
+        self.indices = deepcopy(indices)
+        self.n_nodes = len(indices)
+
+        if not isinstance(name, str):
+            raise TypeError("`name` must be a string.")
+        self.name = deepcopy(name)
+
+        self._sort_init_inputs(f1s, f2s)
+
+        self._plotting = _PlotWaveShape(
+            data=self._data,
+            indices=self.indices,
+            f1s=self.f1s,
+            f2s=self.f2s,
+            name=self.name,
+        )
+
+    def _sort_init_inputs(self, f1s: np.ndarray, f2s: np.ndarray) -> None:
+        """Sort inputs to the object."""
+        if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
+            raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
+        if f1s.ndim != 1 or f2s.ndim != 1:
+            raise ValueError("`f1s` and `f2s` must be 1D arrays.")
+        self.f1s = f1s.copy()
+        self.f2s = f2s.copy()
+
+        if self._data.shape != (self.n_nodes, len(f1s), len(f2s)):
+            raise ValueError("`data` must have shape [nodes, f1s, f2s].")
+
+    def get_results(self) -> np.ndarray:
+        """Return a copy of the results.
 
         Returns
         -------
-        connections : list of int
-
-        times : numpy.ndarray of float
-
-        time_idcs : list of int
-            Indices of ``times`` in the results.
+        results : numpy.ndarray, shape of [nodes, f1s, f2s]
+            The results.
         """
-        connections = super()._sort_plot_inputs(
-            connections,
-            n_rows,
-            n_cols,
-            major_tick_intervals,
-            minor_tick_intervals,
+        return self._data.copy()
+
+    def plot(
+        self,
+        nodes: list[int] | None = None,
+        f1s: np.ndarray | None = None,
+        f2s: np.ndarray | None = None,
+        n_rows: int = 1,
+        n_cols: int = 1,
+        major_tick_intervals: int | float = 5.0,
+        minor_tick_intervals: int | float = 1.0,
+        show: bool = True,
+    ) -> tuple[list[Figure], list[np.ndarray]]:
+        """Plot the results.
+
+        Parameters
+        ----------
+        nodes : list of int | None (default None)
+            Indices of results of channels to plot. If ``None``, plot results
+            of all channels.
+
+        f1s : numpy.ndarray | None (default None)
+            Low frequencies of the results to plot. If ``None``, plot all low
+            frequencies.
+
+        f2s : numpy.ndarray | None (default None)
+            High frequencies of the results to plot. If ``None``, plot all high
+            frequencies.
+
+        n_rows : int (default ``1``)
+            Number of rows of subplots per figure.
+
+        n_cols : int (default ``1``)
+            Number of columns of subplots per figure.
+
+        major_tick_intervals : int | float (default ``5.0``)
+            Intervals (in Hz) at which the major ticks of the x- and y-axes
+            should occur.
+
+        minor_tick_intervals : int | float (default ``1.0``)
+            Intervals (in Hz) at which the minor ticks of the x- and y-axes
+            should occur.
+
+        show : bool (default ``True``)
+            Whether or not to show the plotted results.
+
+        Returns
+        -------
+        figures : list of matplotlib Figure
+            Figures of the results in a list of length
+            ``ceil(n_nodes / (n_rows * n_cols))``.
+
+        axes : list of numpy.ndarray of matplotlib pyplot Axes
+            Subplot axes for the results in a list of length
+            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
+            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
+
+        Notes
+        -----
+        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
+        channel on a new figure.
+        """
+        figures, axes = self._plotting.plot(
+            nodes=nodes,
+            f1s=f1s,
+            f2s=f2s,
+            n_rows=n_rows,
+            n_cols=n_cols,
+            major_tick_intervals=major_tick_intervals,
+            minor_tick_intervals=minor_tick_intervals,
+            show=show,
         )
 
-        if times is None:
-            times = self.times.copy()
-        if not isinstance(times, np.ndarray):
-            raise TypeError("`times` must be a NumPy array.")
-        if times.ndim != 1:
-            raise ValueError("`times`must be a 1D array.")
-        if any(time not in self.times for time in times):
-            raise ValueError(
-                "Entries of `times` must be present in the results."
-            )
-        time_idcs = [_fast_find_first(self.times, time) for time in times]
-
-        return connections, times, time_idcs
-
-    def _plot_results(
-        self,
-        figures: list[Figure],
-        axes: list[np.ndarray],
-        connections: list[int],
-        times: np.ndarray,
-        time_idcs: list[int],
-        n_rows: int,
-        n_cols: int,
-        major_tick_intervals: float,
-        minor_tick_intervals: float,
-    ) -> None:
-        """Plot results on the relevant figures/subplots."""
-        fig_i = 0
-        plot_n = 0
-        fig_plot_n = 0
-        while fig_i < len(figures):
-            for _ in range(n_rows):
-                for _ in range(n_cols):
-                    con_i = connections[plot_n]
-                    axis = axes[fig_i][fig_plot_n]
-
-                    axis.plot(times, self._data[con_i][time_idcs])
-
-                    self._mark_delay(axis, times, self._data[con_i][time_idcs])
-
-                    self._set_axis_ticks(
-                        axis, major_tick_intervals, minor_tick_intervals
-                    )
-                    axis.grid(
-                        which="major",
-                        axis="x",
-                        linestyle="-",
-                        color=[0.7, 0.7, 0.7],
-                        alpha=0.7,
-                    )
-                    axis.set_xlabel("Time (ms)")
-                    axis.set_ylabel("Estimate strength (A.U.)")
-
-                    axis.set_title(
-                        f"Seed: {self._seeds[con_i]} | Target: "
-                        f"{self._targets[con_i]}"
-                    )
-
-                    plot_n += 1
-                    fig_plot_n += 1
-                    if fig_plot_n >= n_rows * n_cols:
-                        figures[fig_i].suptitle(self.name)
-                        fig_plot_n = 0
-                        fig_i += 1
-
-    def _mark_delay(self, axis, times, results) -> None:
-        """Mark estimated delay on the plot."""
-        max_estimate_i = results.argmax()
-        axis.annotate(
-            f"Est. delay: {times[max_estimate_i]:.2f} ms",
-            xy=(max_estimate_i, results[max_estimate_i]),
-        )
-
-    def _set_axis_ticks(
-        self,
-        axis: plt.Axes,
-        major_tick_intervals: float,
-        minor_tick_intervals: float,
-    ) -> None:
-        """Set major and minor tick intervals of the x-axis."""
-        axis.xaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
-        axis.xaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
+        return figures, axes
