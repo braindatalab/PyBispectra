@@ -3,8 +3,35 @@ Motivation
 
 What is the bispectrum?
 -----------------------
+The bispectrum is a higher-order statistic, based on the Fourier transform of
+the third order moment :footcite:`Nikias1987`. Two forms of computing the
+bispectrum exist: the direct approach, in which the Fourier transform of the
+data is computed and then used to compute the bispectum; or the indirect
+approach, in which the third order moments of the data are computed first which
+are then used to compute the bispectrum. The approach implemented in
+PyBispectra is based on the direct method. The bispectrum, :math:`B`, has the
+form
 
-There are several possible used of the bispectrum and bicoherence for advanced
+:math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>` ,
+
+where :math:`kmn` is a combination of signals :math:`\vec{x}` and
+:math:`\vec{y}` - whose data has been Fourier transformed - and the angled
+brackets represent the average over epochs.
+
+A normalised form of the bispectrum also exists, termed the bicoherence.
+Several forms of normalisation exist, however a common form is the threenorm: a
+univariate normalisation whereby the values of the bicoherence will be bound in
+the range :math:`[0, 1]` in a manner that is independent of the coupling
+properties within or between signals :footcite:`Shahbazi2014`. The threenorm,
+:math:`N`, has the form
+
+:math:`\large N_{kmn}(f_1,f_2)=(<|\vec{k}(f_1)|^3><|\vec{m}(f_2)|^3><|\vec{n}(f_2+f_1)|^3>)^{\frac{1}{3}}` .
+
+The bicoherence, :math:`\mathcal{B}`, is then computed as
+
+:math:`\large \mathcal{B}_{kmn}(f_1,f_2)=\Large\frac{B_{kmn}(f_1,f_2)}{N_{kmn}(f_1,f_2)}` .
+
+There are several possible uses of the bispectrum and bicoherence for advanced
 signal analyses, including for phase-amplitude coupling (a form of
 cross-frequency coupling), waveform shape analysis, and time delay estimation.
 
@@ -24,6 +51,12 @@ Cross-frequency interactions have been posited as fundamental aspects of
 neuronal communication in the brain :footcite:`Canolty2010`, with alterations
 in these relationships implicated in diseases such as Parkinson's
 :footcite:`deHemptinne2013` and Alzheimer's :footcite:`Bazzigaluppi2018`.
+
+Additionally, aspects of a waveform's shape can also contain information of
+interest. For example, non-sinusoidal features of signals may reflect
+particular forms of interneuronal communication :footcite:`Sherman2016`, and
+have been shown to be correlated with symptoms of neurological diseases and
+altered by their treatments :footcite:`Cole2017`.
 
 On the other hand, time delay estimation methods allow us to analyse the
 interactions across signals and frequencies by estimating the time delay,
