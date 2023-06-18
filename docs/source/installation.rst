@@ -1,25 +1,22 @@
 Installation
 ============
 
-Install the package into the desired environment using pip:
+To install PyBispectra, activate the desired environment in which you want the
+package, then install it using pip:
 
 .. code-block:: console
     
     $ pip install pybispectra
 
-`See here for the list of requirements <_static/requirements.txt>`_.
+PyBispectra requires Python :math:`\ge` 3.10. Other requirements are listed
+`here <_static/requirements.txt>`_.
 
-Development
------------
-
-To install the package in editable mode for development, clone the `GitHub
-repository <https://github.com/braindatalab/PyBispectra/tree/main>`_ and
-navigate to the desired installation location, then install the package and its
-`development requirements
-<https://github.com/braindatalab/PyBispectra/tree/main/requirements_dev.txt>`_
-using pip:
+If you need to create an environment in which to install PyBispectra, you can
+do so using `conda <https://docs.conda.io/en/latest/>`_, after which you can
+install the package:
 
 .. code-block:: console
-    
-    $ pip install -e .
-    $ pip install -r requirements_dev.txt
+
+    $ conda create -n pybispectra_env
+    $ conda activate pybispectra_env
+    $ pip install pybispectra

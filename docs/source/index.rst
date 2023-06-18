@@ -37,3 +37,4 @@ performing wave shape analyses.
    installation
    examples
    api
+   development
