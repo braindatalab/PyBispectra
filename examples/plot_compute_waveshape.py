@@ -75,9 +75,7 @@ from pybispectra import compute_fft, WaveShape
 # %%
 
 # load example data
-data = np.load(
-    "examples\\example_data_cfc.npy"
-)  # [epochs x channels x frequencies]
+data = np.load("example_data_cfc.npy")  # [epochs x channels x frequencies]
 sampling_freq = 200  # Hz
 
 # compute Fourier coeffs.
