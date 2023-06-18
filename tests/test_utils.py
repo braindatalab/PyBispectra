@@ -6,22 +6,23 @@ import pytest
 import numpy as np
 
 from pybispectra.utils import (
-    Results,
+    ResultsCFC,
+    ResultsTDE,
+    ResultsWaveShape,
     compute_fft,
-    fast_find_first,
-    _generate_data,
 )
+from pybispectra.utils._utils import _fast_find_first, _generate_data
 
 
 def test_results() -> None:
-    """Test `Results`."""
+    """Test `ResultsCFC`."""
     n_cons = 9
     n_f1 = 50
     n_f2 = 50
     data = _generate_data(n_cons, n_f1, n_f2)
 
-    f1 = np.arange(n_f1)
-    f2 = np.arange(n_f2)
+    f1s = np.arange(n_f1)
+    f2s = np.arange(n_f2)
 
     n_unique_chans = 3
     indices = (
@@ -30,137 +31,142 @@ def test_results() -> None:
     )
 
     # check if it runs with correct inputs
-    results = Results(
+    results = ResultsCFC(
         data=data,
         indices=indices,
-        f1=f1,
-        f2=f2,
+        f1s=f1s,
+        f2s=f2s,
         name="test",
     )
 
     # check repr
     assert results.__repr__() == (
-        f"'<Result: test | [{n_cons} connections x {n_f1} f1 x {n_f2} f2]>'"
+        f"'<Result: test | [{n_cons} nodes x {n_f1} f1s x {n_f2} f2s]>'"
     )
 
     # check if it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        Results(
+        ResultsCFC(
             data=data.tolist(),
             indices=indices,
-            f1=f1,
-            f2=f2,
+            f1s=f1s,
+            f2s=f2s,
             name="test",
         )
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
-        Results(
+        ResultsCFC(
             data=data[:, :, 0],
             indices=indices,
-            f1=f1,
-            f2=f2,
+            f1s=f1s,
+            f2s=f2s,
             name="test",
         )
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
-        Results(
+        ResultsCFC(
             data=data,
             indices=list(indices),
-            f1=f1,
-            f2=f2,
+            f1s=f1s,
+            f2s=f2s,
             name="test",
         )
     with pytest.raises(ValueError, match="`indices` must have a length of 2."):
-        Results(
+        ResultsCFC(
             data=data,
             indices=(indices[0], indices[0], indices[1]),
-            f1=f1,
-            f2=f2,
+            f1s=f1s,
+            f2s=f2s,
             name="test",
         )
     with pytest.raises(
         TypeError, match="Entries of `indices` must be NumPy arrays."
     ):
-        Results(
+        ResultsCFC(
             data=data,
             indices=(indices[0][0], indices[1][0]),
-            f1=f1,
-            f2=f2,
+            f1s=f1s,
+            f2s=f2s,
             name="test",
         )
     with pytest.raises(
         ValueError, match="Entries of `indices` must be 1D arrays."
     ):
-        Results(
+        ResultsCFC(
             data=data,
             indices=(
                 np.vstack((indices[0], indices[0])),
                 np.vstack((indices[1], indices[1])),
             ),
-            f1=f1,
-            f2=f2,
+            f1s=f1s,
+            f2s=f2s,
             name="test",
         )
     with pytest.raises(
         ValueError, match="Entries of `indices` must have the same length."
     ):
-        Results(
+        ResultsCFC(
             data=data,
             indices=(indices[0], np.concatenate((indices[1], [1]))),
-            f1=f1,
-            f2=f2,
-            name="test",
-        )
-
-    with pytest.raises(TypeError, match="`f1` and `f2` must be NumPy arrays."):
-        Results(
-            data=data,
-            indices=indices,
-            f1=f1.tolist(),
-            f2=f2,
-            name="test",
-        )
-    with pytest.raises(TypeError, match="`f1` and `f2` must be NumPy arrays."):
-        Results(
-            data=data,
-            indices=indices,
-            f1=f1,
-            f2=f2.tolist(),
-            name="test",
-        )
-    with pytest.raises(ValueError, match="`f1` and `f2` must be 1D arrays."):
-        Results(
-            data=data,
-            indices=indices,
-            f1=np.vstack((f1, f1)),
-            f2=f2,
-            name="test",
-        )
-    with pytest.raises(ValueError, match="`f1` and `f2` must be 1D arrays."):
-        Results(
-            data=data,
-            indices=indices,
-            f1=f1,
-            f2=np.vstack((f2, f2)),
+            f1s=f1s,
+            f2s=f2s,
             name="test",
         )
 
     with pytest.raises(
-        ValueError, match=r"`data` must have shape \[connections x f1 x f2\]."
+        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
     ):
-        Results(
+        ResultsCFC(
+            data=data,
+            indices=indices,
+            f1s=f1s.tolist(),
+            f2s=f2s,
+            name="test",
+        )
+    with pytest.raises(
+        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
+    ):
+        ResultsCFC(
+            data=data,
+            indices=indices,
+            f1s=f1s,
+            f2s=f2s.tolist(),
+            name="test",
+        )
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
+        ResultsCFC(
+            data=data,
+            indices=indices,
+            f1s=np.vstack((f1s, f1s)),
+            f2s=f2s,
+            name="test",
+        )
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
+        ResultsCFC(
+            data=data,
+            indices=indices,
+            f1s=f1s,
+            f2s=np.vstack((f2s, f2s)),
+            name="test",
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=r"`data` must have shape \[nodes x f1s x f2s\].",
+    ):
+        ResultsCFC(
             data=data[1:, :, :],
             indices=indices,
-            f1=f1,
-            f2=f2,
+            f1s=f1s,
+            f2s=f2s,
             name="test",
         )
 
     with pytest.raises(TypeError, match="`name` must be a string."):
-        Results(
+        ResultsCFC(
             data=data,
             indices=indices,
-            f1=f1,
-            f2=f2,
+            f1s=f1s,
+            f2s=f2s,
             name=1,
         )
 
@@ -184,37 +190,37 @@ def test_results() -> None:
     assert len(axes) == 1
 
     # check if `plot` works with incorrect inputs
-    with pytest.raises(
-        TypeError, match="`connections` must be a list of integers."
-    ):
-        results.plot(connections=9, show=False)
-    with pytest.raises(
-        TypeError, match="`connections` must be a list of integers."
-    ):
-        results.plot(connections=[float(i) for i in range(n_cons)], show=False)
+    with pytest.raises(TypeError, match="`nodes` must be a list of integers."):
+        results.plot(nodes=9, show=False)
+    with pytest.raises(TypeError, match="`nodes` must be a list of integers."):
+        results.plot(nodes=[float(i) for i in range(n_cons)], show=False)
     with pytest.raises(
         ValueError, match="The requested connection is not present in the"
     ):
-        results.plot(connections=[-1], show=False)
-
-    with pytest.raises(TypeError, match="`f1` and `f2` must be NumPy arrays."):
-        results.plot(f1=0, show=False)
-    with pytest.raises(TypeError, match="`f1` and `f2` must be NumPy arrays."):
-        results.plot(f2=0, show=False)
-
-    with pytest.raises(ValueError, match="`f1` and `f2` must be 1D arrays."):
-        results.plot(f1=np.random.rand(2, 2), show=False)
-    with pytest.raises(ValueError, match="`f1` and `f2` must be 1D arrays."):
-        results.plot(f2=np.random.rand(2, 2), show=False)
+        results.plot(nodes=[-1], show=False)
 
     with pytest.raises(
-        ValueError, match="Entries of `f1` and `f2` must be present in the"
+        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
     ):
-        results.plot(f1=f1 + 1, show=False)
+        results.plot(f1s=0, show=False)
     with pytest.raises(
-        ValueError, match="Entries of `f1` and `f2` must be present in the"
+        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
     ):
-        results.plot(f2=f2 + 1, show=False)
+        results.plot(f2s=0, show=False)
+
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
+        results.plot(f1s=np.random.rand(2, 2), show=False)
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
+        results.plot(f2s=np.random.rand(2, 2), show=False)
+
+    with pytest.raises(
+        ValueError, match="Entries of `f1s` and `f2s` must be present in the"
+    ):
+        results.plot(f1s=f1s + 1, show=False)
+    with pytest.raises(
+        ValueError, match="Entries of `f1s` and `f2s` must be present in the"
+    ):
+        results.plot(f2s=f2s + 1, show=False)
 
     with pytest.raises(
         TypeError, match="`n_rows` and `n_cols` must be integers."
@@ -251,10 +257,12 @@ def test_compute_fft() -> None:
     n_chans = 3
     n_times = 100
     data = _generate_data(n_epochs, n_chans, n_times)
-    sfreq = 50
+    sampling_freq = 50
 
     # check it runs with correct inputs
-    fft, freqs = compute_fft(data=data, sfreq=sfreq, n_jobs=1, verbose=False)
+    fft, freqs = compute_fft(
+        data=data, sampling_freq=sampling_freq, n_jobs=1, verbose=False
+    )
     assert isinstance(fft, np.ndarray), "`fft` should be a NumPy array."
     assert fft.ndim == 3, "`fft` should have 3 dimensions."
     assert fft.shape[:2] == (n_epochs, n_chans), (
@@ -267,37 +275,42 @@ def test_compute_fft() -> None:
         fft.shape[2] == freqs.shape[0]
     ), "The 3rd dimension of `fft` should have the same length as `freqs`."
     assert (
-        freqs[-1] == sfreq / 2
+        freqs[-1] == sampling_freq / 2
     ), "The maximum of `freqs` should be the Nyquist frequency."
     assert freqs[0] != 0, "The zero frequency should not be included."
 
     # check it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        compute_fft(data=data.tolist(), sfreq=sfreq)
+        compute_fft(data=data.tolist(), sampling_freq=sampling_freq)
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
-        compute_fft(data=data[..., 0], sfreq=sfreq)
+        compute_fft(data=data[..., 0], sampling_freq=sampling_freq)
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
-        compute_fft(data=data, sfreq=sfreq, n_jobs=[])
+        compute_fft(data=data, sampling_freq=sampling_freq, n_jobs=[])
     with pytest.raises(ValueError, match="`n_jobs` must be >= 1."):
-        compute_fft(data=data, sfreq=sfreq, n_jobs=0)
+        compute_fft(data=data, sampling_freq=sampling_freq, n_jobs=0)
 
     # check it works with parallelisation (already tested without)
-    compute_fft(data=data, sfreq=sfreq, n_jobs=2, verbose=False)
+    compute_fft(
+        data=data, sampling_freq=sampling_freq, n_jobs=2, verbose=False
+    )
 
     # check a warning is raised if `data` is complex-valued
     with warnings.catch_warnings():
-        compute_fft(data=np.array(data, dtype=np.complex128) + 1j, sfreq=sfreq)
+        compute_fft(
+            data=np.array(data, dtype=np.complex128) + 1j,
+            sampling_freq=sampling_freq,
+        )
 
 
 def test_fast_find_first():
     """Test `fast_find_first`."""
     # test that a present value is found
-    index = fast_find_first(vector=np.array([-1, 0, 1, 2, 3, 1]), value=1)
+    index = _fast_find_first(vector=np.array([-1, 0, 1, 2, 3, 1]), value=1)
     assert index == 2, "The index of the value being found should be 2."
 
     # test that a missing value is not found
     with pytest.raises(
         ValueError, match="`value` is not present in `vector`."
     ):
-        fast_find_first(vector=np.array([-1, 0, 2, 2, 3, 4]), value=1)
+        _fast_find_first(vector=np.array([-1, 0, 2, 2, 3, 4]), value=1)
