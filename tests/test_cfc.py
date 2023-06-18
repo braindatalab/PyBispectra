@@ -12,34 +12,39 @@ from pybispectra.utils import ResultsCFC, compute_fft, _generate_data
 def test_ppc() -> None:
     """Test PPC."""
     n_chans = 3
+    sampling_freq = 50
     data = _generate_data(5, n_chans, 100)
 
-    fft, freqs = compute_fft(data=data, sfreq=50, verbose=False)
+    fft, freqs = compute_fft(
+        data=data, sampling_freq=sampling_freq, verbose=False
+    )
 
     # check it runs with correct inputs
-    ppc = PPC(data=fft, freqs=freqs)
+    ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
     ppc.compute()
-    ppc.compute(f1=freqs[:-1])
+    ppc.compute(f1s=freqs[:-1])
 
     ppc_copy = ppc.copy()
     del ppc_copy
 
     # check it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        PPC(data=fft.tolist(), freqs=freqs)
+        PPC(data=fft.tolist(), freqs=freqs, sampling_freq=sampling_freq)
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
-        PPC(data=np.random.rand(2, 2), freqs=freqs)
+        PPC(
+            data=np.random.rand(2, 2), freqs=freqs, sampling_freq=sampling_freq
+        )
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
-        PPC(data=fft, freqs=freqs.tolist())
+        PPC(data=fft, freqs=freqs.tolist(), sampling_freq=sampling_freq)
     with pytest.raises(ValueError, match="`freqs` must be a 1D array."):
-        PPC(data=fft, freqs=np.random.rand(2, 2))
+        PPC(data=fft, freqs=np.random.rand(2, 2), sampling_freq=sampling_freq)
 
     with pytest.raises(
         ValueError,
         match="`data` and `freqs` should contain the same number of",
     ):
-        PPC(data=fft[:, :, 1:], freqs=freqs)
+        PPC(data=fft[:, :, 1:], freqs=freqs, sampling_freq=sampling_freq)
 
     with pytest.raises(TypeError, match="`indices` should be a tuple."):
         ppc.compute(indices=[0, 1])
@@ -62,36 +67,36 @@ def test_ppc() -> None:
         ppc.compute(indices=(np.array([0]), np.array([1, 2])))
 
     with pytest.raises(
-        TypeError, match="`f1` and `f2` must be NumPy ndarrays."
+        TypeError, match="`f1s` and `f2s` must be NumPy ndarrays."
     ):
-        ppc.compute(f1=freqs[:-1].tolist())
+        ppc.compute(f1s=freqs[:-1].tolist())
     with pytest.raises(
-        TypeError, match="`f1` and `f2` must be NumPy ndarrays."
+        TypeError, match="`f1s` and `f2s` must be NumPy ndarrays."
     ):
-        ppc.compute(f2=freqs[1:].tolist())
+        ppc.compute(f2s=freqs[1:].tolist())
 
-    with pytest.raises(ValueError, match="`f1` and `f2` must be 1D arrays."):
-        ppc.compute(f1=np.random.rand(2, 2))
-    with pytest.raises(ValueError, match="`f1` and `f2` must be 1D arrays."):
-        ppc.compute(f2=np.random.rand(2, 2))
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
+        ppc.compute(f1s=np.random.rand(2, 2))
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
+        ppc.compute(f2s=np.random.rand(2, 2))
 
     with pytest.raises(
         ValueError,
-        match="All frequencies in `f1` and `f2` must be present in the data.",
+        match="All frequencies in `f1s` and `f2s` must be present in the ",
     ):
-        ppc.compute(f1=freqs[1:] + 10)
+        ppc.compute(f1s=freqs[1:] + 10)
     with pytest.raises(
         ValueError,
-        match="All frequencies in `f1` and `f2` must be present in the data.",
+        match="All frequencies in `f1s` and `f2s` must be present in the ",
     ):
-        ppc.compute(f2=freqs[:-1] + 10)
+        ppc.compute(f2s=freqs[:-1] + 10)
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         ppc.compute(n_jobs=0.5)
     with pytest.raises(ValueError, match="`n_jobs` must be >= 1."):
         ppc.compute(n_jobs=0)
 
-    # check a warning is raised if f1 and f2 overlap
+    # check a warning is raised if f1s and f2s overlap
     with warnings.catch_warnings():
         ppc.compute()
 
@@ -99,12 +104,15 @@ def test_ppc() -> None:
 def test_pac() -> None:
     """Test PAC."""
     n_chans = 3
+    sampling_freq = 50
     data = _generate_data(5, n_chans, 100)
 
-    fft, freqs = compute_fft(data=data, sfreq=50, verbose=False)
+    fft, freqs = compute_fft(
+        data=data, sampling_freq=sampling_freq, verbose=False
+    )
 
     # check it runs with correct inputs
-    pac = PAC(data=fft, freqs=freqs)
+    pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
     pac.compute()
 
     # check the returned results are of the correct type
@@ -117,15 +125,15 @@ def test_pac() -> None:
     assert (pac.results[i].name == result_types[i] for i in range(4))
 
     pac.compute(symmetrise="none", normalise="none")
-    assert isinstance(pac.results, Results)
+    assert isinstance(pac.results, ResultsCFC)
     assert pac.results.name == result_types[0]
 
     pac.compute(symmetrise="antisym", normalise="none")
-    assert isinstance(pac.results, Results)
+    assert isinstance(pac.results, ResultsCFC)
     assert pac.results.name == result_types[2]
 
     pac.compute(symmetrise="none", normalise="threenorm")
-    assert isinstance(pac.results, Results)
+    assert isinstance(pac.results, ResultsCFC)
     assert pac.results.name == result_types[1]
 
     pac.compute(symmetrise=["none", "antisym"], normalise="none")
