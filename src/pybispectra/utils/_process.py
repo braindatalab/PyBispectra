@@ -79,7 +79,9 @@ class _ProcessFreqBase(ABC):
                 "must be in ascending order."
             )
         if self._allow_neg_freqs:
-            if np.any(freqs[max_freq_idx:] != np.sort(freqs[max_freq_idx:])):
+            if np.any(
+                freqs[max_freq_idx + 1 :] != np.sort(freqs[max_freq_idx + 1 :])
+            ):
                 raise ValueError(
                     "Entries of `freqs` corresponding to negative frequencies "
                     "must be in ascending order."
