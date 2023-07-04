@@ -122,8 +122,8 @@ class PAC(_ProcessBispectrum):
         epochs. PAC between signals :math:`\vec{x}` and :math:`\vec{y}` is
         given as
 
-        :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=\vec{x}(f_1)\vec{y}(f_2)
-        \vec{y}^*(f_2+f_1)`.
+        :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1,f_2)=
+        <\vec{x}(f_1)\vec{y}(f_2)\vec{y}^*(f_2+f_1)>`.
 
         Antisymmetrisaion is achieved by subtracting the PAC results from the
         transposed bispectrum, :math:`B_{xyx}` :footcite:`Chella2014`. The

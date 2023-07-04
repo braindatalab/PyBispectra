@@ -32,8 +32,8 @@ from pybispectra import compute_fft, PAC
 # :math:`\vec{y}`, and the angled brackets represent the averaged value over
 # epochs. The computation of PAC follows from this :footcite:`Kovach2018`:
 #
-# :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=\vec{x}(f_1)\vec{y}(f_2)
-# \vec{y}^*(f_2+f_1)`.
+# :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1,f_2)=<\vec{x}(f_1)
+# \vec{y}(f_2)\vec{y}^*(f_2+f_1)>`.
 #
 # The four variations arise from the options for normalisation and
 # antisymmetrisation. The bispectrum can be normalised to the bicoherence,
@@ -148,13 +148,13 @@ fig, axes = pac.results.plot(
 # interactions within each signal in the presence of source mixing. To combat
 # this, we can employ antisymmetrisation :footcite:`Chella2014`. The example
 # below shows some such simulated data consisting of two independent sources,
-# with 10-60 Hz PAC within each source, as well as a mixing of the underlying
-# sources to produce 10-60 Hz PAC between the two signals. When appyling
-# antisymmetrisation, however, we see that the spurious across-signal PAC
-# arising from the source mixing is suppressed. Antisymmetrisation is
-# therefore a useful technique to differentiate genuine across-site coupling
-# from spurious coupling arising from the within-site interactions of
-# source-mixed signals.
+# with 10-60 Hz PAC within each source (top two plots), as well as a mixing of
+# the underlying sources to produce 10-60 Hz PAC between the two signals
+# (bottom left plot). When appyling antisymmetrisation, however, we see that
+# the spurious across-signal PAC arising from the source mixing is suppressed
+# (bottom right plot). Antisymmetrisation is therefore a useful technique to
+# differentiate genuine across-site coupling from spurious coupling arising
+# from the within-site interactions of source-mixed signals.
 
 # %%
 
