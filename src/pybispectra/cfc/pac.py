@@ -292,7 +292,7 @@ class PAC(_ProcessBispectrum):
             )
         )
 
-        self._bicoherence = self._bispectrum / threenorm
+        self._bicoherence = np.abs(self._bispectrum) / threenorm
 
         if self.verbose:
             print("        ... Bicoherence computation finished\n")

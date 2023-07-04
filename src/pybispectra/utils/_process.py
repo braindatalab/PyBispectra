@@ -370,6 +370,6 @@ def _compute_threenorm(
                     (np.abs(fft_f1) ** 3).mean()
                     * (np.abs(fft_f2) ** 3).mean()
                     * (np.abs(fft_fdiff) ** 3).mean()
-                ) ** 1 / 3
+                ) ** (1 / 3)
 
     return results
