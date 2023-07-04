@@ -52,7 +52,8 @@ from pybispectra import compute_fft, PAC
 # transposed bispectrum, :math:`B_{xyx}` :footcite:`Chella2014`. In the context
 # of analysing PAC between two signals, antisymmetrisation allows you to
 # correct for spurious estimates of coupling arising from interactions within
-# the signals themselves, providing a more robust connectivty metric.
+# the signals themselves in instances of source mixing, providing a more robust
+# connectivty metric.
 
 ###############################################################################
 # Generating data and computing Fourier coefficients
@@ -195,7 +196,7 @@ fig_standard, axes_standard = pac_standard.plot(
     cbar_range=[vmin, vmax],
     show=False,
 )
-fig_standard[0].set_size_inches(7, 3)
+fig_standard[0].set_size_inches(21, 9)
 fig_standard[0].show()
 
 # plot antisymmetrised PAC between signals
