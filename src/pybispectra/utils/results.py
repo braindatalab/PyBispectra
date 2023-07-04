@@ -254,6 +254,7 @@ class ResultsCFC(_ResultsBase):
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
         minor_tick_intervals: int | float = 1.0,
+        cbar_range: list[float] | tuple[list[float]] | None = None,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
@@ -285,6 +286,13 @@ class ResultsCFC(_ResultsBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
+        cbar_range : list of float | tuple of list of float | None (default ``None``)
+            Range (in units of the data) for the colourbars, consisting of the
+            lower and upper limits, respectively. If ``None``, the range is
+            computed automatically. If a list of float, this range is used for
+            all plots. If a tuple of list of float, the ranges are used for
+            each individual plot.
+
         show : bool (default ``True``)
             Whether or not to show the plotted results.
 
@@ -303,7 +311,7 @@ class ResultsCFC(_ResultsBase):
         -----
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
         connection on a new figure.
-        """
+        """  # noqa: E501
         figures, axes = self._plotting.plot(
             nodes=nodes,
             f1s=f1s,
@@ -312,6 +320,7 @@ class ResultsCFC(_ResultsBase):
             n_cols=n_cols,
             major_tick_intervals=major_tick_intervals,
             minor_tick_intervals=minor_tick_intervals,
+            cbar_range=cbar_range,
             show=show,
         )
 

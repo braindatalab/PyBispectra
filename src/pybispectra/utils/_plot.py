@@ -160,6 +160,7 @@ class _PlotCFC(_PlotBase):
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
         minor_tick_intervals: int | float = 1.0,
+        cbar_range: list[float] | tuple[list[float]] | None = None,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
@@ -191,6 +192,13 @@ class _PlotCFC(_PlotBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
+        cbar_range : list of float | tuple of list of float | None (default ``None``)
+            Range (in units of the data) for the colourbars, consisting of the
+            lower and upper limits, respectively. If ``None``, the range is
+            computed automatically. If a list of float, this range is used for
+            all plots. If a tuple of list of float, the ranges are used for
+            each individual plot.
+
         show : bool (default ``True``)
             Whether or not to show the plotted results.
 
@@ -210,7 +218,7 @@ class _PlotCFC(_PlotBase):
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
         connection on a new figure.
         """
-        nodes, f1s, f2s, f1_idcs, f2_idcs = self._sort_plot_inputs(
+        nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_range = self._sort_plot_inputs(
             nodes,
             f1s,
             f2s,
@@ -218,6 +226,7 @@ class _PlotCFC(_PlotBase):
             n_cols,
             major_tick_intervals,
             minor_tick_intervals,
+            cbar_range,
         )
         figures, axes = self._create_plots(nodes, n_rows, n_cols)
         self._plot_results(
@@ -232,6 +241,7 @@ class _PlotCFC(_PlotBase):
             n_cols,
             major_tick_intervals,
             minor_tick_intervals,
+            cbar_range,
         )
 
         if show:
@@ -248,7 +258,15 @@ class _PlotCFC(_PlotBase):
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
-    ) -> tuple[list[int], np.ndarray, np.ndarray, list[int], list[int]]:
+        cbar_range: list[float] | tuple[list[float]] | None,
+    ) -> tuple[
+        list[int],
+        np.ndarray,
+        np.ndarray,
+        list[int],
+        list[int],
+        tuple[list[float] | None],
+    ]:
         """Sort the plotting inputs.
 
         Returns
@@ -264,6 +282,8 @@ class _PlotCFC(_PlotBase):
 
         f2_idcs : list of int
             Indices of ``f2s`` in the results.
+
+        cbar_range : tuple of list of float or None
         """
         nodes = super()._sort_plot_inputs(
             nodes,
@@ -290,7 +310,24 @@ class _PlotCFC(_PlotBase):
         f1_idcs = [_fast_find_first(self.f1s, freq) for freq in f1s]
         f2_idcs = [_fast_find_first(self.f2s, freq) for freq in f2s]
 
-        return nodes, f1s, f2s, f1_idcs, f2_idcs
+        if not isinstance(cbar_range, (list, tuple, type(None))):
+            raise TypeError("`cbar_range` must be a list, tuple, or None.")
+        if isinstance(cbar_range, tuple):
+            if len(cbar_range) != len(nodes):
+                raise ValueError(
+                    "If `cbar_range` is a tuple, one entry must be provided "
+                    "for each node being plotted."
+                )
+        else:
+            fill = cbar_range if cbar_range is not None else [None, None]
+            cbar_range = [fill for _ in range(len(nodes))]
+        for entry in cbar_range:
+            if len(entry) != 2:
+                raise ValueError(
+                    "Limits in `cbar_range` must have length of 2."
+                )
+
+        return nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_range
 
     def _plot_results(
         self,
@@ -305,6 +342,7 @@ class _PlotCFC(_PlotBase):
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
+        cbar_range: tuple[list[float] | None],
     ) -> None:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0
@@ -320,6 +358,8 @@ class _PlotCFC(_PlotBase):
                         f1s,
                         f2s,
                         self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T,
+                        vmin=cbar_range[plot_n][0],
+                        vmax=cbar_range[plot_n][1],
                     )
 
                     plt.colorbar(
