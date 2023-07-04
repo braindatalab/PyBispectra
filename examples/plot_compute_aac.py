@@ -9,6 +9,8 @@ computed with PyBispectra.
 
 # %%
 
+import os
+
 import numpy as np
 
 from pybispectra import compute_tfr, AAC
@@ -32,19 +34,18 @@ from pybispectra import compute_tfr, AAC
 # %%
 
 # load example data
-data = np.load("example_data_cfc.npy")  # [epochs x channels x frequencies]
+data = np.load(os.path.join("data", "sim_data_aac.npy"))
 sampling_freq = 200  # Hz
-freqs = np.arange(1, 101, 1)
+freqs = np.arange(5, 101, 1)
 
 # compute amplitude TFR
 tfr, freqs = compute_tfr(
     data=data,
     sampling_freq=sampling_freq,
     freqs=freqs,
-    tfr_mode="morlet",
-    n_cycles=6,
-    verbose=False,
-)  # [epochs x channels x frequencies x times]
+    tfr_mode="multitaper",
+    n_cycles=7,
+)
 
 print(
     f"TFR of data: [{tfr.shape[0]} epochs x {tfr.shape[1]} channels x "
@@ -54,7 +55,7 @@ print(
 
 ###############################################################################
 # As you can see, we have the amplitude TFR for 2 channels for 30 epochs, with
-# frequencies ranging from 1 to 100 Hz (1 Hz resolution), and 2000 timepoints
+# frequencies ranging from 1 to 100 Hz (1 Hz resolution), and 400 timepoints
 # per epoch. The amplitude TFR of the data will be used to compute AAC.
 #
 # Computing AAC
@@ -77,7 +78,7 @@ print(
 aac = AAC(
     data=tfr, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
-aac.compute(indices=([0], [1]))  # compute AAC
+aac.compute(indices=([1], [0]))  # compute AAC
 aac_results = aac.results.get_results()  # return results as array
 
 print(
@@ -101,7 +102,7 @@ print(
 
 # %%
 
-fig, axes = aac.results.plot(major_tick_intervals=5.0)
+fig, axes = aac.results.plot()  # f1s=np.arange(5, 16), f2s=np.arange(55, 66))
 
 ###############################################################################
 # As you can see, values for the lower right triangle of each plot are missing,

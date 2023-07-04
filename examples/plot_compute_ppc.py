@@ -9,6 +9,8 @@ PyBispectra.
 
 # %%
 
+import os
+
 import numpy as np
 
 from pybispectra import compute_fft, PPC
@@ -46,15 +48,12 @@ from pybispectra import compute_fft, PPC
 # %%
 
 # generate data
-data = np.load("example_data_cfc.npy")  # [epochs x channels x frequencies]
-sampling_freq = 200  # Hz
+data = np.load(os.path.join("data", "sim_data_ppc.npy"))
+sampling_freq = 500  # Hz
 
 # compute Fourier coeffs.
 fft_coeffs, freqs = compute_fft(
-    data=data,
-    sampling_freq=sampling_freq,
-    n_points=sampling_freq,
-    verbose=False,
+    data=data, sampling_freq=sampling_freq, n_points=sampling_freq
 )
 
 print(
@@ -87,7 +86,7 @@ print(
 # %%
 
 ppc = PPC(
-    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
+    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq
 )  # initialise object
 ppc.compute(indices=([0], [1]))  # compute PPC
 ppc_results = ppc.results.get_results()  # return results as array
@@ -98,12 +97,11 @@ print(
 )
 
 ###############################################################################
-# We can see that PPC has been computed for 2 connections (0 -> 0; and 1 -> 1),
-# and all possible frequency combinations, averaged across our 30 epochs.
-# Whilst there are 10,000 such frequency combinations in our [100 x 100]
-# matrices, PPC for those entries where :math:`f1` would be higher than
-# :math:`f2` is not computed, in which case the values are ``numpy.nan`` (see
-# the plotted results below for a visual demonstration of this).
+# We can see that PPC has been computed for one connection (0 -> 1), and all
+# possible frequency combinations, averaged across our 30 epochs. Whilst there
+# are 10,000 such frequency combinations in our [100 x 100] matrices, PPC for
+# those entries where :math:`f1` would be higher than :math:`f2` is not
+# computed, in which case the values are ``numpy.nan``.
 
 ###############################################################################
 # Plotting PPC
@@ -113,7 +111,7 @@ print(
 
 # %%
 
-fig, axes = ppc.results.plot(major_tick_intervals=5.0)
+ppc.results.plot(f1s=np.arange(5, 16), f2s=np.arange(55, 66))
 
 ###############################################################################
 # As you can see, values for the lower right triangle of each plot are missing,

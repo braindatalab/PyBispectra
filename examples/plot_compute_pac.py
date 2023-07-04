@@ -70,13 +70,14 @@ data = np.load(os.path.join("data", "sim_data_pac_bivariate.npy"))
 sampling_freq = 200  # sampling frequency in Hz
 
 # compute Fourier coeffs.
-fft, freqs = compute_fft(
+fft_coeffs, freqs = compute_fft(
     data=data, sampling_freq=sampling_freq, n_points=sampling_freq
 )
 
 print(
-    f"FFT coeffs.: [{fft.shape[0]} epochs x {fft.shape[1]} channels x "
-    f"{fft.shape[2]} frequencies]\nFreq. range: {freqs[0]} - {freqs[-1]} Hz"
+    f"FFT coeffs.: [{fft_coeffs.shape[0]} epochs x {fft_coeffs.shape[1]} "
+    f"channels x {fft_coeffs.shape[2]} frequencies]\nFreq. range: {freqs[0]} "
+    f"- {freqs[-1]} Hz"
 )
 
 ###############################################################################
@@ -95,13 +96,15 @@ print(
 # Here, we specify the :attr:`indices` to compute PAC on. :attr:`indices` is
 # expected to be a tuple containing two NumPy arrays for the indices of the
 # seed and target channels, respectively. The indices specified below mean that
-# PAC will only be computed across frequencies between the channels (i.e.
-# 0 -> 1). By leaving the frequency arguments :attr:`f1s` and :attr:`f2s`
-# blank, we will look at all possible frequency combinations.
+# PAC will only be computed across frequencies between the channels (i.e. 0 ->
+# 1). By leaving the frequency arguments :attr:`f1s` and :attr:`f2s` blank, we
+# will look at all possible frequency combinations.
 
 # %%
 
-pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)  # initialise
+pac = PAC(
+    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq
+)  # initialise object
 pac.compute(indices=([0], [1]))  # compute PAC
 
 pac_results = pac.results.get_results()  # return results as array
@@ -112,13 +115,12 @@ print(
 )
 
 ###############################################################################
-# We can see that PAC has been computed for 1 connection (0 -> 1), and all
+# We can see that PAC has been computed for one connection (0 -> 1), and all
 # possible frequency combinations, averaged across our 30 epochs. Whilst there
 # are > 10,000 such frequency combinations in our [101 x 101] matrix, PAC for
 # those entries where :math:`f_1` would be higher than :math:`f_2`, as well as
 # where :math:`f_2 + f_1` exceeds the frequency bounds of our data, cannot be
-# computed. In such cases, the values are ``numpy.nan`` (see the upper right
-# corner of the plotted results below for a visual demonstration of this).
+# computed. In such cases, the values are ``numpy.nan``.
 
 ###############################################################################
 # Plotting PAC
@@ -128,16 +130,11 @@ print(
 # all frequencies. Note that the ``Figure`` and ``Axes`` objects can also be
 # returned for any desired manual adjustments of the plots. In this simulated
 # data example, we can see that the bispectrum indeed identifies the occurence
-# of 20-60 Hz PAC between our seed and target channels.
+# of 10-60 Hz PAC between our seed and target channels.
 
 # %%
 
-fig, axes = pac.results.plot(
-    f1s=np.arange(5, 16),
-    f2s=np.arange(55, 66),
-    major_tick_intervals=10.0,
-    minor_tick_intervals=2.0,
-)
+fig, axes = pac.results.plot(f1s=np.arange(5, 16), f2s=np.arange(55, 66))
 
 ###############################################################################
 # Antisymmetrisation for across-signal PAC
@@ -163,12 +160,12 @@ data = np.load(os.path.join("data", "sim_data_pac_univariate.npy"))
 sampling_freq = 200
 
 # compute Fourier coeffs.
-fft, freqs = compute_fft(
+fft_coeffs, freqs = compute_fft(
     data=data, sampling_freq=sampling_freq, n_points=sampling_freq
 )
 
 # compute PAC
-pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+pac = PAC(data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq)
 pac.compute(indices=([0, 1, 0], [0, 1, 1]), symmetrise=["none", "antisym"])
 pac_standard, pac_antisym = pac.results
 
@@ -187,11 +184,7 @@ vmax = np.max(
 
 # plot unsymmetrised PAC within & between signals
 fig_standard, axes_standard = pac_standard.plot(
-    f1s=np.arange(5, 16),
-    f2s=np.arange(55, 66),
-    major_tick_intervals=10.0,
-    minor_tick_intervals=2.0,
-    cbar_range=[vmin, vmax],
+    f1s=np.arange(5, 16), f2s=np.arange(55, 66), cbar_range=[vmin, vmax]
 )
 
 # plot antisymmetrised PAC between signals
@@ -199,8 +192,6 @@ fig_antisym, axes_antisym = pac_antisym.plot(
     nodes=[2],
     f1s=np.arange(5, 16),
     f2s=np.arange(55, 66),
-    major_tick_intervals=10.0,
-    minor_tick_intervals=2.0,
     cbar_range=[vmin, vmax],
 )
 
