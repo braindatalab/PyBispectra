@@ -9,6 +9,8 @@ with PyBispectra.
 
 # %%
 
+import os
+
 import numpy as np
 
 from pybispectra import compute_fft, PAC
@@ -44,27 +46,32 @@ from pybispectra import compute_fft, PAC
 # :math:`\large \mathcal{B}_{xyy}(f_1,f_2)=\Large
 # \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}`,
 #
-# where the resulting PAC results are this normalised by the power of the
-# corresponding frequencies. Furthermore, PAC can be antisymmetrised by
-# subtracting the results from those found using the transposed bispectrum,
-# :math:`B_{xyx}` :footcite:`Chella2014`. Antisymmetrisation allows you to
-# reduce spurious coupling resulting from artefacts of volume conduction,
-# giving you a more robust connectivty metric.
+# where the resulting PAC results are normalised to the range :math:`[0, 1]` by
+# the power of the corresponding frequencies. Furthermore, PAC can be
+# antisymmetrised by subtracting the results from those found using the
+# transposed bispectrum, :math:`B_{xyx}` :footcite:`Chella2014`. In the context
+# of analysing PAC between two signals, antisymmetrisation allows you to
+# correct for spurious estimates of coupling arising from interactions within
+# the signals themselves, providing a more robust connectivty metric.
 
 ###############################################################################
 # Generating data and computing Fourier coefficients
 # --------------------------------------------------
-# We will start by loading some example data that we can compute PAC on, then
-# compute the Fourier coefficients of the data.
+# We will start by loading some simulated data containing coupling between the
+# 10 Hz phase of one signal and the 60 Hz amplitude of another. We will then
+# compute the Fourier coefficients of the data, which will be used to compute
+# PAC.
 
 # %%
 
-# load example data
-data = np.load("example_data_cfc.npy")  # [epochs x channels x frequencies]
-sfreq = 200  # sampling frequency in Hz
+# load simulated data
+data = np.load(os.path.join("data", "sim_data_pac_bivariate.npy"))
+sampling_freq = 200  # sampling frequency in Hz
 
 # compute Fourier coeffs.
-fft, freqs = compute_fft(data=data, sampling_freq=sfreq, n_points=sfreq)
+fft, freqs = compute_fft(
+    data=data, sampling_freq=sampling_freq, n_points=sampling_freq
+)
 
 print(
     f"FFT coeffs.: [{fft.shape[0]} epochs x {fft.shape[1]} channels x "
@@ -93,38 +100,112 @@ print(
 
 # %%
 
-pac = PAC(data=fft, freqs=freqs, sampling_freq=sfreq)  # initialise object
+pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)  # initialise
 pac.compute(indices=([0], [1]))  # compute PAC
 
-pac_results = pac.results[0].get_results()  # return results as array
+pac_results = pac.results.get_results()  # return results as array
 
 print(
-    f"PPC results: [{pac_results.shape[0]} connections x "
+    f"PAC results: [{pac_results.shape[0]} connections x "
     f"{pac_results.shape[1]} f1s x {pac_results.shape[2]} f2s]"
 )
 
 ###############################################################################
-# We can see that PAC has been computed for 2 connections (0 -> 0; and 1 -> 1),
-# and all possible frequency combinations, averaged across our 30 epochs.
-# Whilst there are > 10,000 such frequency combinations in our [101 x 101]
-# matrices, PAC for those entries where :math:`f_1` would be higher than
-# :math:`f_2`, as well as where :math:`f_2 + f_1` exceeds the frequency bounds
-# of our data, cannot be computed. In such cases, the values are ``numpy.nan``
-# (see the plotted results below for a visual demonstration of this).
+# We can see that PAC has been computed for 1 connection (0 -> 1), and all
+# possible frequency combinations, averaged across our 30 epochs. Whilst there
+# are > 10,000 such frequency combinations in our [101 x 101] matrix, PAC for
+# those entries where :math:`f_1` would be higher than :math:`f_2`, as well as
+# where :math:`f_2 + f_1` exceeds the frequency bounds of our data, cannot be
+# computed. In such cases, the values are ``numpy.nan`` (see the upper right
+# corner of the plotted results below for a visual demonstration of this).
 
 ###############################################################################
 # Plotting PAC
 # ------------
-# Let us now inspect the results. For this, we will plot the results for both
-# connections on the same plot. If we wished, we could plot this information on
-# separate plots, or specify a subset of frequencies to inspect. Note that the
-# ``Figure`` and ``Axes`` objects can also be returned for any desired manual
-# adjustments of the plots.
+# Let us now inspect the results. Here, we specify a subset of frequencies to
+# inspect around the simulated interaction. If we wished, we could also plot
+# all frequencies. Note that the ``Figure`` and ``Axes`` objects can also be
+# returned for any desired manual adjustments of the plots. In this simulated
+# data example, we can see that the bispectrum indeed identifies the occurence
+# of 20-60 Hz PAC between our seed and target channels.
 
 # %%
 
-fig, axes = pac.results[0].plot(
-    f1s=np.arange(0, 51), major_tick_intervals=10.0, minor_tick_intervals=2.0
+fig, axes = pac.results.plot(
+    f1s=np.arange(5, 16),
+    f2s=np.arange(55, 66),
+    major_tick_intervals=10.0,
+    minor_tick_intervals=2.0,
+)
+
+###############################################################################
+# Antisymmetrisation for across-signal PAC
+# ----------------------------------------
+# In this simulated data example, interactions are only present between the
+# signals, and not within the signals themselves. This, however, is not always
+# the case, and estimates of across-site PAC can be corrupted by coupling
+# interactions within each signal in the presence of source mixing. To combat
+# this, we can employ antisymmetrisation :footcite:`Chella2014`. The example
+# below shows some such simulated data consisting of two independent sources,
+# with 10-60 Hz PAC within each source, as well as a mixing of the underlying
+# sources to produce 10-60 Hz PAC between the two signals. When appyling
+# antisymmetrisation, however, we see that the spurious across-signal PAC
+# arising from the source mixing is suppressed. Antisymmetrisation is
+# therefore a useful technique to differentiate genuine across-site coupling
+# from spurious coupling arising from the within-site interactions of
+# source-mixed signals.
+
+# %%
+
+# load real data
+data = np.load(os.path.join("data", "sim_data_pac_univariate.npy"))
+sampling_freq = 200
+
+# compute Fourier coeffs.
+fft, freqs = compute_fft(
+    data=data, sampling_freq=sampling_freq, n_points=sampling_freq
+)
+
+# compute PAC
+pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+pac.compute(indices=([0, 1, 0], [0, 1, 1]), symmetrise=["none", "antisym"])
+pac_standard, pac_antisym = pac.results
+
+vmin = np.min(
+    (
+        np.nanmin(pac_standard.get_results()),
+        np.nanmin(pac_antisym.get_results()),
+    )
+)
+vmax = np.max(
+    (
+        np.nanmax(pac_standard.get_results()),
+        np.nanmax(pac_antisym.get_results()),
+    )
+)
+
+# plot unsymmetrised PAC within & between signals
+fig_standard, axes_standard = pac_standard.plot(
+    f1s=np.arange(5, 16),
+    f2s=np.arange(55, 66),
+    n_rows=1,
+    n_cols=3,
+    major_tick_intervals=10.0,
+    minor_tick_intervals=2.0,
+    cbar_range=[vmin, vmax],
+    show=False,
+)
+fig_standard[0].set_size_inches(7, 3)
+fig_standard[0].show()
+
+# plot antisymmetrised PAC between signals
+fig_antisym, axes_antisym = pac_antisym.plot(
+    nodes=[2],
+    f1s=np.arange(5, 16),
+    f2s=np.arange(55, 66),
+    major_tick_intervals=10.0,
+    minor_tick_intervals=2.0,
+    cbar_range=[vmin, vmax],
 )
 
 ###############################################################################
