@@ -189,15 +189,11 @@ vmax = np.max(
 fig_standard, axes_standard = pac_standard.plot(
     f1s=np.arange(5, 16),
     f2s=np.arange(55, 66),
-    n_rows=1,
-    n_cols=3,
     major_tick_intervals=10.0,
     minor_tick_intervals=2.0,
     cbar_range=[vmin, vmax],
     show=False,
 )
-fig_standard[0].set_size_inches(21, 9)
-fig_standard[0].show()
 
 # plot antisymmetrised PAC between signals
 fig_antisym, axes_antisym = pac_antisym.plot(
