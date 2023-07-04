@@ -32,8 +32,8 @@ from pybispectra import compute_fft, PAC
 # :math:`\vec{y}`, and the angled brackets represent the averaged value over
 # epochs. The computation of PAC follows from this :footcite:`Kovach2018`:
 #
-# :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1)B_{xyy}(f_2)
-# B_{xyy}^*(f_2+f_1)`.
+# :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=\vec{x}(f_1)\vec{y}(f_2)
+# \vec{y}^*(f_2+f_1)`.
 #
 # The four variations arise from the options for normalisation and
 # antisymmetrisation. The bispectrum can be normalised to the bicoherence,
@@ -192,7 +192,6 @@ fig_standard, axes_standard = pac_standard.plot(
     major_tick_intervals=10.0,
     minor_tick_intervals=2.0,
     cbar_range=[vmin, vmax],
-    show=False,
 )
 
 # plot antisymmetrised PAC between signals
