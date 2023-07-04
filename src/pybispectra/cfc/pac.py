@@ -73,8 +73,8 @@ class PAC(_ProcessBispectrum):
         indices: tuple[tuple[int], tuple[int]] | None = None,
         f1s: np.ndarray | None = None,
         f2s: np.ndarray | None = None,
-        symmetrise: str | list[str] = ["none", "antisym"],
-        normalise: str | list[str] = ["none", "threenorm"],
+        symmetrise: str | list[str] = "none",
+        normalise: str | list[str] = "none",
         n_jobs: int = 1,
     ) -> None:
         r"""Compute PAC, averaged over epochs.
@@ -94,12 +94,12 @@ class PAC(_ProcessBispectrum):
             Higher frequencies to compute PAC on. If ``None``, all frequencies
             are used.
 
-        symmetrise : str | list of str (default ``["none", "antisym"]``)
+        symmetrise : str | list of str (default ``"none"``)
             Symmetrisation to perform when computing PAC. If ``"none"``, no
             symmetrisation is performed. If ``"antisym"``, antisymmetrisation
             is performed.
 
-        normalise : str | list of str (default ``["none", "threenorm"]``)
+        normalise : str | list of str (default ``"none"``)
             Normalisation to perform when computing PAC. If ``"none"``, no
             normalisation is performed. If ``"threenorm"``, the bispectrum is
             normalised to the bicoherence using a threenorm.
@@ -118,12 +118,12 @@ class PAC(_ProcessBispectrum):
         (f_2+f_1)>`,
 
         where :math:`kmn` is a combination of channels :math:`\vec{x}` and
-        :math:`\vec{y}`, and the angled brackets represent the averaged value
-        over epochs. PAC between signals :math:`\vec{x}` and :math:`\vec{y}` is
+        :math:`\vec{y}`, and the angled brackets represent the average over
+        epochs. PAC between signals :math:`\vec{x}` and :math:`\vec{y}` is
         given as
 
-        :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1)B_{xyy}(f_2)
-        B_{xyy}^*(f_2+f_1)`.
+        :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=\vec{x}(f_1)\vec{y}(f_2)
+        \vec{y}^*(f_2+f_1)`.
 
         Antisymmetrisaion is achieved by subtracting the PAC results from the
         transposed bispectrum, :math:`B_{xyx}` :footcite:`Chella2014`. The
@@ -381,6 +381,16 @@ class PAC(_ProcessBispectrum):
         self._results = tuple(results)
 
     @property
-    def results(self) -> tuple[ResultsCFC]:
-        """Return the results."""
+    def results(self) -> ResultsCFC | tuple[ResultsCFC]:
+        """Return the results.
+
+        Returns
+        -------
+        results : ResultsCFC | tuple of ResultsCFC
+            The results of the PAC computation returned as a single results
+            object (if only one PAC variant was computed) or a tuple of results
+            objects.
+        """
+        if len(self._results) == 1:
+            return deepcopy(self._results[0])
         return deepcopy(self._results)

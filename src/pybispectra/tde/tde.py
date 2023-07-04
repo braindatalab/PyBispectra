@@ -122,8 +122,8 @@ class TDE(_ProcessBispectrum):
     def compute(
         self,
         indices: tuple[list[int], list[int]] | None = None,
-        symmetrise: str | list[str] = ["none", "antisym"],
-        method: int | list[int] = [1, 2, 3, 4],
+        symmetrise: str | list[str] = "none",
+        method: int | list[int] = 1,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute TDE, averaged over epochs.
@@ -135,13 +135,14 @@ class TDE(_ProcessBispectrum):
             TDE between. If ``None``, coupling between all channels is
             computed.
 
-        symmetrise : str | list of str (default ``["none", "antisym"]``)
+        symmetrise : str | list of str (default ``"none"``)
             Symmetrisation to perform when computing TDE. If "none", no
             symmetrisation is performed. If "antisym", antisymmetrisation is
             performed.
 
-        method : int | list of int (default ``[1, 2, 3, 4]``)
-            The method to use to compute TDE :footcite:`Nikias1988`.
+        method : int | list of int (default ``1``)
+            The method to use to compute TDE :footcite:`Nikias1988`. Can
+            include ``[1, 2, 3, 4]``.
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available
