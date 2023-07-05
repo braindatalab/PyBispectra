@@ -304,7 +304,7 @@ def test_compute_fft() -> None:
 
 
 def test_fast_find_first():
-    """Test `fast_find_first`."""
+    """Test `_fast_find_first`."""
     # test that a present value is found
     index = _fast_find_first(vector=np.array([-1, 0, 1, 2, 3, 1]), value=1)
     assert index == 2, "The index of the value being found should be 2."

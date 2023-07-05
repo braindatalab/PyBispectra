@@ -69,18 +69,19 @@ print(
 #
 # Computing PPC
 # -------------
-# To compute PPC, we start by initialising the :class:`PPC` class object with
-# the FFT coefficients and the frequency information. To compute PPC, we call
-# the :meth:`compute` method. By default, PPC is computed between all channel
-# and frequency combinations, however we can also specify particular
-# combinations of interest.
+# To compute PPC, we start by initialising the :class:`~pybispectra.cfc.PPC`
+# class object with the FFT coefficients and the frequency information. To
+# compute PPC, we call the :meth:`~pybispectra.cfc.PPC.compute` method. By
+# default, PPC is computed between all channel and frequency combinations,
+# however we can also specify particular combinations of interest.
 #
-# Here, we specify the :attr:`indices` to compute PPC on. :attr:`indices` is
-# expected to be a tuple containing two NumPy arrays for the indices of the
-# seed and target channels, respectively. The indices specified below mean that
-# PPC will only be computed across frequencies between channels (i.e. 0 -> 1).
-# By leaving the frequency arguments :attr:`f1s <pybispcetra.ppc.f1s>` and
-# :attr:`f2s <pybispcetra.ppc.f2s>` blank, we will look at all possible
+# Here, we specify the :attr:`~pybispectra.cfc.PPC.indices` to compute PPC on.
+# :attr:`~pybispectra.cfc.PPC.indices` is expected to be a tuple containing two
+# NumPy arrays for the indices of the seed and target channels, respectively.
+# The indices specified below mean that PPC will only be computed across
+# frequencies between channels (i.e. 0 -> 1). By leaving the frequency
+# arguments :attr:`~pybispectra.cfc.PPC.f1s` and
+# :attr:`~pybispectra.cfc.PPC.f2s` blank, we will look at all possible
 # frequency combinations.
 
 # %%

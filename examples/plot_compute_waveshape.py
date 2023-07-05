@@ -91,22 +91,24 @@ print(
 ###############################################################################
 # As you can see, we have FFT coefficients for 2 channels across 30 epochs,
 # with 101 frequencies ranging from 0 to 100 Hz with a frequency resolution of
-# 1 Hz. We will use these coefficients to compute PAC.
+# 1 Hz. We will use these coefficients to compute wave shape.
 #
 # Computing PAC
 # -------------
-# To compute PAC, we start by initialising the :class:`PAC` class object with
-# the FFT coefficients and the frequency information. To compute PAC, we call
-# the :meth:`compute` method. By default, PAC is computed between all channel
-# and frequency combinations, however we can also specify particular
-# combinations of interest.
+# To compute wave shape, we start by initialising the
+# :class:`~pybispectra.waveshape.WaveShape` class object with the FFT
+# coefficients and the frequency information. To compute wave shape, we call
+# the :meth:`~pybispectra.waveshape.WaveShape.compute` method. By default, wave
+# shape is computed for all channels and all frequency combinations, however we
+# can also specify particular channels and combinations of interest.
 #
-# Here, we specify the :attr:`indices` to compute PAC on. :attr:`indices` is
-# expected to be a tuple containing two NumPy arrays for the indices of the
-# seed and target channels, respectively. The indices specified below mean that
-# PAC will only be computed across frequencies between the channels (i.e.
-# 0 -> 1). By leaving the frequency arguments :attr:`f1s` and :attr:`f2s`
-# blank, we will look at all possible frequency combinations.
+# Here, we specify the :attr:`~pybispectra.waveshape.indices` to compute wave
+# shape on. :attr:`~pybispectra.waveshape.WaveShape.indices` is expected to be
+# a tuple for the indices of the channels. The indices specified below mean
+# that waveshape will only be computed across frequencies for channel 0.. By
+# leaving the frequency arguments :attr:`~pybispectra.waveshape.WaveShape.f1s`
+# and :attr:`~pybispectra.waveshape.WaveShape.f2s` blank, we will look at all
+# possible frequency combinations.
 
 # %%
 
@@ -123,7 +125,7 @@ print(
 )
 
 ###############################################################################
-# We can see that PAC has been computed for 2 connections (0 -> 0; and 1 -> 1),
+# We can see that PAC has been computed for a single channel,
 # and all possible frequency combinations, averaged across our 30 epochs.
 # Whilst there are > 10,000 such frequency combinations in our [101 x 101]
 # matrices, PAC for those entries where :math:`f_1` would be higher than
@@ -147,8 +149,6 @@ fig, axes = waveshape.results.plot(
     major_tick_intervals=10.0,
     minor_tick_intervals=2.0,
 )
-
-print("jeff")
 
 ###############################################################################
 # References

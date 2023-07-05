@@ -87,19 +87,20 @@ print(
 #
 # Computing PAC
 # -------------
-# To compute PAC, we start by initialising the :class:`PAC <pybispectra.PAC>`
+# To compute PAC, we start by initialising the :class:`~pybispectra.cfc.PAC`
 # class object with the FFT coefficients and the frequency information. To
-# compute PAC, we call the :meth:`compute <pybispectra.PAC.compute>` method. By
+# compute PAC, we call the :meth:`~pybispectra.cfc.PAC.compute` method. By
 # default, PAC is computed between all channel and frequency combinations,
 # however we can also specify particular combinations of interest.
 #
-# Here, we specify the :attr:`indices <pybispectra.PAC.indices>` to compute PAC
-# on. :attr:`indices` is expected to be a tuple containing two NumPy arrays for
-# the indices of the
-# seed and target channels, respectively. The indices specified below mean that
-# PAC will only be computed across frequencies between the channels (i.e. 0 ->
-# 1). By leaving the frequency arguments :attr:`f1s` and :attr:`f2s` blank, we
-# will look at all possible frequency combinations.
+# Here, we specify the :attr:`~pybispectra.cfc.PAC.indices` to compute PAC on.
+# :attr:`~pybispectra.cfc.PAC.indices` is expected to be a tuple containing two
+# NumPy arrays for the indices of the seed and target channels, respectively.
+# The indices specified below mean that PAC will only be computed across
+# frequencies between the channels (i.e. 0 -> 1). By leaving the frequency
+# arguments :attr:`~pybispectra.cfc.PAC.f1s` and
+# :attr:`~pybispectra.cfc.PAC.f2s` blank, we will look at all possible
+# frequency combinations.
 
 # %%
 
@@ -128,10 +129,11 @@ print(
 # ------------
 # Let us now inspect the results. Here, we specify a subset of frequencies to
 # inspect around the simulated interaction. If we wished, we could also plot
-# all frequencies. Note that the ``Figure`` and ``Axes`` objects can also be
-# returned for any desired manual adjustments of the plots. In this simulated
-# data example, we can see that the bispectrum indeed identifies the occurence
-# of 10-60 Hz PAC between our seed and target channels.
+# all frequencies. Note that the :class:`~matplotlib.figure.Figure` and
+# :class:`~matplotlib.axes.Axes` objects can also be returned for any desired
+# manual adjustments of the plots. In this simulated data example, we can see
+# that the bispectrum indeed identifies the occurence of 10-60 Hz PAC between
+# our seed and target channels.
 
 # %%
 

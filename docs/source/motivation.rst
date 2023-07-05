@@ -75,7 +75,7 @@ For phase-amplitude coupling, common methods such as the modulation index can
 be practically challenging, requiring a precise set of filters to be applied to
 the data to extract the true underlying interactions (which are not readily
 apparent) as well as being computationally expensive (due to the requirement of
-Hilbert transforming the data) :foorvite:`Zandvoort2021`. Furthermore, when
+Hilbert transforming the data) :footcite:`Zandvoort2021`. Furthermore, when
 analysing coupling between separate signals, the modulation index can perform
 poorly at distinguishing genuine across-site coupling from within-site coupling
 in the presence of source mixing :footcite:`Chella2014`. The bispectrum,

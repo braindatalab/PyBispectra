@@ -15,11 +15,12 @@ Utilities
 
     ResultsCFC
     ResultsTDE
+    ResultsWaveShape
     SpatioSpectralFilter
 
 .. autosummary::
     :toctree: generated/
     
     compute_fft
+    compute_tfr
     compute_rank
-    fast_find_first

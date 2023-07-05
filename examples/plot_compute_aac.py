@@ -60,18 +60,20 @@ print(
 #
 # Computing AAC
 # -------------
-# To compute AAC, we start by initialising the :class:`AAC` class object with
-# the amplitude TFR and the frequency information. To compute AAC, we call the
-# :meth:`compute` method. By default, AAC is computed between all channel
-# and frequency combinations, however we can also specify particular
-# combinations of interest.
+# To compute AAC, we start by initialising the :class:`~pybispectra.cfc.AAC`
+# class object with the amplitude TFR and the frequency information. To compute
+# AAC, we call the :meth:`~pybispectra.cfc.AAC.compute` method. By default, AAC
+# is computed between all channel and frequency combinations, however we can
+# also specify particular combinations of interest.
 #
-# Here, we specify the :attr:`indices` to compute AAC on. :attr:`indices` is
-# expected to be a tuple containing two NumPy arrays for the indices of the
-# seed and target channels, respectively. The indices specified below mean that
-# AAC will only be computed across frequencies between each channel (i.e. 0 ->
-# 1). By leaving the frequency arguments :attr:`f1s` and :attr:`f2s` blank, we
-# will look at all possible frequency combinations.
+# Here, we specify the :attr:`~pybispectra.cfc.AAC.indices` to compute AAC on.
+# :attr:`~pybispectra.cfc.AAC.indices` is expected to be a tuple containing two
+# NumPy arrays for the indices of the seed and target channels, respectively.
+# The indices specified below mean that AAC will only be computed across
+# frequencies between each channel (i.e. 0 -> 1). By leaving the frequency
+# arguments :attr:`~pybispectra.cfc.AAC.f1s` and
+# :attr:`~pybispectra.cfc.AAC.f2s` blank, we will look at all possible
+# frequency combinations.
 
 # %%
 

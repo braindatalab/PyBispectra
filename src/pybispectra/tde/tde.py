@@ -582,8 +582,18 @@ class TDE(_ProcessBispectrum):
         self._results = tuple(results)
 
     @property
-    def results(self) -> tuple[ResultsTDE]:
-        """Return a copy of the results."""
+    def results(self) -> ResultsTDE | tuple[ResultsTDE]:
+        """Return the results.
+
+        Returns
+        -------
+        results : ResultsTDE | tuple of ResultsTDE
+            The results of the TDE computation returned as a single results
+            object (if only one TDE variant was computed) or a tuple of results
+            objects.
+        """
+        if len(self._results) == 1:
+            return deepcopy(self._results[0])
         return deepcopy(self._results)
 
 

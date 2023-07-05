@@ -383,6 +383,8 @@ class ResultsTDE(_ResultsBase):
         super().__init__(data, 2, indices, name)
         self._sort_init_inputs(times)
 
+        self._compute_tau()
+
         self._plotting = _PlotTDE(
             data=self._data,
             indices=self.indices,
@@ -486,6 +488,18 @@ class ResultsTDE(_ResultsBase):
         )
 
         return figures, axes
+
+    def _compute_tau(self) -> None:
+        """Compute the time delay estimates for each connection."""
+        self._tau = []
+        for node_i in range(self.n_nodes):
+            self._tau.append(self.times[self._data[node_i].argmax()])
+        self._tau = tuple(self._tau)
+
+    @property
+    def tau(self) -> tuple[float]:
+        """Return the estimated time delay for each connection."""
+        return self._tau
 
 
 class ResultsWaveShape(_ResultsBase):
