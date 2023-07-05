@@ -56,8 +56,8 @@ from pybispectra import compute_fft, PAC
 # connectivty metric.
 
 ###############################################################################
-# Generating data and computing Fourier coefficients
-# --------------------------------------------------
+# Loading data and computing Fourier coefficients
+# -----------------------------------------------
 # We will start by loading some simulated data containing coupling between the
 # 10 Hz phase of one signal and the 60 Hz amplitude of another. We will then
 # compute the Fourier coefficients of the data, which will be used to compute
@@ -87,14 +87,15 @@ print(
 #
 # Computing PAC
 # -------------
-# To compute PAC, we start by initialising the :class:`PAC` class object with
-# the FFT coefficients and the frequency information. To compute PAC, we call
-# the :meth:`compute` method. By default, PAC is computed between all channel
-# and frequency combinations, however we can also specify particular
-# combinations of interest.
+# To compute PAC, we start by initialising the :class:`PAC <pybispectra.PAC>`
+# class object with the FFT coefficients and the frequency information. To
+# compute PAC, we call the :meth:`compute <pybispectra.PAC.compute>` method. By
+# default, PAC is computed between all channel and frequency combinations,
+# however we can also specify particular combinations of interest.
 #
-# Here, we specify the :attr:`indices` to compute PAC on. :attr:`indices` is
-# expected to be a tuple containing two NumPy arrays for the indices of the
+# Here, we specify the :attr:`indices <pybispectra.PAC.indices>` to compute PAC
+# on. :attr:`indices` is expected to be a tuple containing two NumPy arrays for
+# the indices of the
 # seed and target channels, respectively. The indices specified below mean that
 # PAC will only be computed across frequencies between the channels (i.e. 0 ->
 # 1). By leaving the frequency arguments :attr:`f1s` and :attr:`f2s` blank, we
