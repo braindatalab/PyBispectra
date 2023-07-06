@@ -9,7 +9,10 @@ PyBispectra.
 
 # %%
 
+import os
+
 import numpy as np
+from matplotlib import pyplot as plt
 
 from pybispectra import compute_fft, WaveShape
 
@@ -69,32 +72,66 @@ from pybispectra import compute_fft, WaveShape
 ###############################################################################
 # Generating data and computing Fourier coefficients
 # --------------------------------------------------
-# We will start by loading some example data that we can compute PAC on, then
-# compute the Fourier coefficients of the data.
+# We will start by loading some example data and computing the Fourier
+# coefficients using the :func:`~pybispectra.utils.compute_fft` function. This
+# data consists of sawtooth waves (information will be captured in the
+# rise-decay asymmetry) and waves with a dominance of peaks or troughs
+# (information will be captured in the peak-trough asymmetry), all simulated at
+# 20 Hz.
 
 # %%
 
 # load example data
-data = np.load("example_data_cfc.npy")  # [epochs x channels x frequencies]
+data_sawtooths = np.load(
+    os.path.join("data", "sim_data_waveshape_sawtooths.npy")
+)
+data_peaks_troughs = np.load(
+    os.path.join("data", "sim_data_waveshape_peaks_troughs.npy")
+)
 sampling_freq = 200  # Hz
 
-# compute Fourier coeffs.
-fft, freqs = compute_fft(
-    data=data, sampling_freq=sampling_freq, n_points=sampling_freq
+# plot timeseries data
+times = np.linspace(
+    0,
+    (data_sawtooths.shape[2] / sampling_freq) / 4,
+    data_sawtooths.shape[2] // 4,
 )
+fig, axes = plt.subplots(2, 2)
+axes[0, 0].plot(times, data_sawtooths[0, 0, : times.shape[0]])
+axes[0, 1].plot(times, data_sawtooths[0, 1, : times.shape[0]])
+axes[1, 0].plot(times, data_peaks_troughs[0, 0, : times.shape[0]])
+axes[1, 1].plot(times, data_peaks_troughs[0, 1, : times.shape[0]])
+titles = [
+    "Steepness: rise > decay",
+    "Steepness: decay > rise",
+    "Dominance: peaks",
+    "Dominance: troughs",
+]
+for ax, title in zip(axes.flatten(), titles):
+    ax.set_title(title)
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Amplitude (A.U.)")
+fig.tight_layout()
 
-print(
-    f"FFT coeffs.: [{fft.shape[0]} epochs x {fft.shape[1]} channels x "
-    f"{fft.shape[2]} frequencies]\nFreq. range: {freqs[0]} - {freqs[-1]} Hz"
+# compute Fourier coeffs.
+fft_coeffs_sawtooths, freqs = compute_fft(
+    data=data_sawtooths, sampling_freq=sampling_freq, n_points=sampling_freq
+)
+fft_coeffs_peaks_troughs, _ = compute_fft(
+    data=data_peaks_troughs,
+    sampling_freq=sampling_freq,
+    n_points=sampling_freq,
 )
 
 ###############################################################################
-# As you can see, we have FFT coefficients for 2 channels across 30 epochs,
-# with 101 frequencies ranging from 0 to 100 Hz with a frequency resolution of
-# 1 Hz. We will use these coefficients to compute wave shape.
+# Plotting the data, we see that the sawtooth waves consist of a signal where
+# the rise steepness is greater than the decay steepness and a signal where the
+# decay steepness is greater than the rise steepness. Additionally, the peak
+# and trough waves consist of a signal where peaks are most dominant, and a
+# signal where troughs are most dominant.
 #
-# Computing PAC
-# -------------
+# Computing wave shape features
+# -----------------------------
 # To compute wave shape, we start by initialising the
 # :class:`~pybispectra.waveshape.WaveShape` class object with the FFT
 # coefficients and the frequency information. To compute wave shape, we call
@@ -102,22 +139,29 @@ print(
 # shape is computed for all channels and all frequency combinations, however we
 # can also specify particular channels and combinations of interest.
 #
-# Here, we specify the :attr:`~pybispectra.waveshape.indices` to compute wave
-# shape on. :attr:`~pybispectra.waveshape.WaveShape.indices` is expected to be
-# a tuple for the indices of the channels. The indices specified below mean
-# that waveshape will only be computed across frequencies for channel 0.. By
-# leaving the frequency arguments :attr:`~pybispectra.waveshape.WaveShape.f1s`
-# and :attr:`~pybispectra.waveshape.WaveShape.f2s` blank, we will look at all
-# possible frequency combinations.
+# Here, we specify the frequency arguments
+# :attr:`~pybispectra.waveshape.WaveShape.f1s` and
+# :attr:`~pybispectra.waveshape.WaveShape.f2s` to compute wave shape on in the
+# range 15-25 Hz (around the frequency at which the signal features were
+# simulated). By leaving the indices argument blank, we will look at all
+# channels in the data.
 
 # %%
 
-waveshape = WaveShape(
-    data=fft, freqs=freqs, sampling_freq=sampling_freq
+# sawtooth waves
+waveshape_sawtooths = WaveShape(
+    data=fft_coeffs_sawtooths, freqs=freqs, sampling_freq=sampling_freq
 )  # initialise object
-waveshape.compute(indices=tuple([0]))  # compute PAC
+waveshape_sawtooths.compute()  # compute wave shape
 
-waveshape_results = waveshape.results.get_results()  # return results as array
+# peaks and troughs
+waveshape_peaks_troughs = WaveShape(
+    data=fft_coeffs_peaks_troughs, freqs=freqs, sampling_freq=sampling_freq
+)
+waveshape_peaks_troughs.compute()
+
+# return results as an array
+waveshape_results = waveshape_sawtooths.results.get_results()
 
 print(
     f"Wave shape results: [{waveshape_results.shape[0]} channels x "
@@ -125,17 +169,17 @@ print(
 )
 
 ###############################################################################
-# We can see that PAC has been computed for a single channel,
-# and all possible frequency combinations, averaged across our 30 epochs.
-# Whilst there are > 10,000 such frequency combinations in our [101 x 101]
-# matrices, PAC for those entries where :math:`f_1` would be higher than
+# We can see that wave shape features have been computed for both channels and
+# the specified frequency combinations, averaged across our 5 epochs. Given the
+# nature of the bispectrum, entries where :math:`f_1` would be higher than
 # :math:`f_2`, as well as where :math:`f_2 + f_1` exceeds the frequency bounds
-# of our data, cannot be computed. In such cases, the values are ``numpy.nan``
-# (see the plotted results below for a visual demonstration of this).
+# of our data, cannot be computed. Although this does not apply here given the
+# limited frequency ranges, in such cases, the values corresponding to those
+# 'bad' frequency combinations are ``numpy.nan``.
 
 ###############################################################################
-# Plotting PAC
-# ------------
+# Plotting wave shape features
+# ----------------------------
 # Let us now inspect the results. For this, we will plot the results for both
 # connections on the same plot. If we wished, we could plot this information on
 # separate plots, or specify a subset of frequencies to inspect. Note that the
@@ -144,11 +188,10 @@ print(
 
 # %%
 
-fig, axes = waveshape.results.plot(
-    f1s=np.arange(0, 51),
-    major_tick_intervals=10.0,
-    minor_tick_intervals=2.0,
+fig, axes = waveshape_sawtooths.results.plot(
+    f1s=np.arange(0, 51), f2s=np.arange(0, 51), major_tick_intervals=10
 )
+fig, axes = waveshape_peaks_troughs.results.plot()
 
 ###############################################################################
 # References

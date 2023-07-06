@@ -35,7 +35,9 @@ class _ResultsBase(ABC):
         for group_idcs in (seeds, targets):
             if not isinstance(group_idcs, list):
                 raise TypeError("Entries of `indices` must be lists.")
-            if any(not isinstance(idx, int) for idx in group_idcs):
+            if any(
+                not isinstance(idx, (int, np.integer)) for idx in group_idcs
+            ):
                 raise TypeError(
                     "Entries for seeds and targets in `indices` must be ints."
                 )
@@ -564,7 +566,7 @@ class ResultsWaveShape(_ResultsBase):
 
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
-        if not all(isinstance(idx, int) for idx in indices):
+        if not all(isinstance(idx, (int, np.integer)) for idx in indices):
             raise TypeError("Entries of `indices` must be ints.")
         self._n_chans = len(np.unique(indices))
         if any(idx < 0 or idx >= self._n_chans for idx in indices):

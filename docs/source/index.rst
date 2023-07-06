@@ -25,11 +25,10 @@ results are also provided.
 
 Parallel processing and `Numba <https://numba.pydata.org/>`_ optimisation are
 implemented to reduce computation times. There is a minor reliance on the
-`MNE <https://mne.tools/stable/index.html>`_ signal procressing toolbox for
-performing wave shape analyses.
+`MNE <https://mne.tools/stable/index.html>`_ signal processing toolbox.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :titlesonly:
    :caption: Contents:
 
