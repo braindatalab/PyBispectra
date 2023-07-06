@@ -110,7 +110,7 @@ from pybispectra import compute_fft, TDE
 # %%
 
 # load simulated data
-data = np.load(os.path.join("data", "sim_data_tde_independent.npy"))
+data = np.load(os.path.join("data", "sim_data_tde_independent_noise.npy"))
 sampling_freq = 200  # sampling frequency in Hz
 n_times = data.shape[2]  # number of timepoints in the data
 
@@ -204,5 +204,55 @@ fig, axes = tde.results.plot()
 ###############################################################################
 # Handling artefacts from volume conduction
 # -----------------------------------------
+# In the example above, we looked at simulated data from two signals with
+# independent noise sources, giving a clean TDE result at the true delay. In
+# real data, however, sources of noise in the data are often correlated across
+# signals, such as due to volume conduction, resulting in a bias of TDE methods
+# towards zero time delay. To mitigate such bias, we can employ
+# antisymmetrisation of the bispectrum :footcite:`JurharInPrep`. To demonstrate
+# this, we will now look at simulated data (still with a 250 ms delay) with the
+# addition of a common underlying noise source between the signals.
+#
+# As you can see, the TDE result without antisymmetrisation consists of two
+# distinct peaks: a larger one at time zero; and a smaller one at the genuine
+# time delay (250 ms). As the estimate at time zero is largest, :math:`\tau` is
+# therefore incorrectly determined to be 0 ms. In contrast, antisymmetrisation
+# suppresses the spurious peak at time zero, leaving only a clear peak at the
+# genuine time delay and the correct estimation of :math:`\tau`. Accordingly,
+# in instances where there is a risk of correlated noise sources between the
+# signals (e.g. with volume conduction), applying antisymmetrisation when
+# estimating time delays is recommended.
+
+# %%
+
+# load simulated data
+data = np.load(os.path.join("data", "sim_data_tde_correlated_noise.npy"))
+sampling_freq = 200  # sampling frequency in Hz
+n_times = data.shape[2]  # number of timepoints in the data
+
+# compute Fourier coeffs.
+fft_coeffs, freqs = compute_fft(
+    data=data,
+    sampling_freq=sampling_freq,
+    n_points=2 * n_times + 1,
+    window="hamming",
+    return_neg_freqs=True,
+)
+
+# compute TDE
+tde = TDE(data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq)
+tde.compute(indices=([0], [1]), symmetrise=["none", "antisym"], method=1)
+tde_standard, tde_antisym = tde.results
+
+print(
+    "The estimated time delay without antisymmetrisation is "
+    f"{tde_standard.tau[0]:.0f} ms.\n"
+    "The estimated time delay with antisymmetrisation is "
+    f"{tde_antisym.tau[0]:.0f} ms."
+)
+
+# plot results
+tde_standard.plot()
+tde_antisym.plot()
 
 # %%
