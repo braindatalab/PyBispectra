@@ -387,6 +387,7 @@ class ResultsTDE(_ResultsBase):
 
         self._plotting = _PlotTDE(
             data=self._data,
+            tau=self.tau,
             indices=self.indices,
             times=self.times,
             name=self.name,

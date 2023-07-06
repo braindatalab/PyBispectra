@@ -191,9 +191,9 @@ print(
 
 print(
     "The estimated time delay between signals 0 and 1 is "
-    f"{tde_times[tde_results[0].argmax()] :.0f} ms.\n"
+    f"{tde_times[tde_results[0].argmax()]:.0f} ms.\n"
     "The estimated time delay between signals 1 and 0 is "
-    f"{tde_times[tde_results[1].argmax()] :.0f} ms."
+    f"{tde_times[tde_results[1].argmax()]:.0f} ms."
 )
 
 for con_i in range(tde_results.shape[0]):

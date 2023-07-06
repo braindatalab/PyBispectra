@@ -413,18 +413,20 @@ class _PlotTDE(_PlotBase):
     def __init__(
         self,
         data: np.ndarray,
+        tau: tuple[float],
         indices: tuple[list[int], list[int]],
         times: np.ndarray,
         name: str,
     ) -> None:  # noqa D107
         super().__init__(data, indices, name)
 
+        self.tau = deepcopy(tau)
         self.times = times.copy()
 
     def plot(
         self,
         nodes: list[int] | None = None,
-        times: np.ndarray | None = None,
+        times: list[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 500.0,
@@ -437,6 +439,10 @@ class _PlotTDE(_PlotBase):
         ----------
         nodes : list of int | None (default None)
             Indices of connections to plot. If ``None``, plot all connections.
+
+        times : list of float | None (default None)
+            Start and end times of the results to plot, respectively. If
+            ``None``, all times are plotted.
 
         f1s : numpy.ndarray | None (default None)
             Times of the results to plot. If ``None``, all times are plotted.
@@ -503,7 +509,7 @@ class _PlotTDE(_PlotBase):
     def _sort_plot_inputs(
         self,
         nodes: list[int] | None,
-        times: np.ndarray | None,
+        times: list[float] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,
@@ -515,7 +521,8 @@ class _PlotTDE(_PlotBase):
         -------
         nodes : list of int
 
-        times : numpy.ndarray of float
+        times : numpy ndarray
+            Times of the results to plot nearest to the requested times.
 
         time_idcs : list of int
             Indices of ``times`` in the results.
@@ -528,17 +535,17 @@ class _PlotTDE(_PlotBase):
             minor_tick_intervals,
         )
 
+        time_idcs = None
         if times is None:
-            times = self.times.copy()
-        if not isinstance(times, np.ndarray):
-            raise TypeError("`times` must be a NumPy array.")
-        if times.ndim != 1:
-            raise ValueError("`times`must be a 1D array.")
-        if any(time not in self.times for time in times):
-            raise ValueError(
-                "Entries of `times` must be present in the results."
-            )
-        time_idcs = [_fast_find_first(self.times, time) for time in times]
+            time_idcs = [0, self.times.shape[0] - 1]
+        else:
+            if not isinstance(times, list):
+                raise TypeError("`times` must be a list of float.")
+            if len(times) != 2:
+                raise ValueError("`times` must have a length of two.")
+        if time_idcs is None:
+            time_idcs = [np.abs(self.times - time).argmin() for time in times]
+        times = self.times[time_idcs[0] : time_idcs[1] + 1]
 
         return nodes, times, time_idcs
 
@@ -564,10 +571,16 @@ class _PlotTDE(_PlotBase):
                     node_i = nodes[plot_n]
                     axis = axes[fig_i][fig_plot_n]
 
-                    axis.plot(times, self._data[node_i][time_idcs])
+                    axis.plot(
+                        times,
+                        self._data[node_i][time_idcs[0] : time_idcs[1] + 1],
+                    )
 
                     self._mark_delay(
-                        axis, times, self._data[node_i][time_idcs]
+                        axis,
+                        times,
+                        self.tau[node_i],
+                        self._data[node_i][time_idcs[0] : time_idcs[1] + 1],
                     )
 
                     self._set_axis_ticks(
@@ -596,14 +609,25 @@ class _PlotTDE(_PlotBase):
                         fig_i += 1
 
     def _mark_delay(
-        self, axis: plt.Axes, times: np.ndarray, results: np.ndarray
+        self,
+        axis: plt.Axes,
+        times: np.ndarray,
+        tau: float,
+        results: np.ndarray,
     ) -> None:
         """Mark estimated delay on the plot."""
-        max_estimate_i = results.argmax()
-        axis.annotate(
-            f"Est. delay: {times[max_estimate_i]:.2f} ms",
-            xy=(max_estimate_i, results[max_estimate_i]),
-        )
+        if tau not in times:
+            xlim = axis.get_xlim()
+            ylim = axis.get_ylim()
+            xrange = xlim[1] - xlim[0]
+            yrange = ylim[1] - ylim[0]
+            annot_xy = ((xrange / 2) + xlim[0], ylim[1] - yrange * 0.05)
+            alignment = "center"
+        else:
+            tau_idx = np.where(times == tau)[0][0]
+            annot_xy = (tau, results[tau_idx])
+            alignment = "left"
+        axis.annotate(f"$\\tau$ = {tau:.2f} ms", xy=annot_xy, ha=alignment)
 
     def _set_axis_ticks(
         self,
