@@ -189,9 +189,21 @@ print(
 # %%
 
 fig, axes = waveshape_sawtooths.results.plot(
-    f1s=np.arange(0, 51), f2s=np.arange(0, 51), major_tick_intervals=10
+    f1s=np.arange(15, 26),
+    f2s=np.arange(15, 26),
+    cbar_range_abs=[0, 1],
+    cbar_range_real=[-1, 1],
+    cbar_range_imag=[-1, 1],
+    cbar_range_phase=[-1, 1],
 )
-fig, axes = waveshape_peaks_troughs.results.plot()
+fig, axes = waveshape_peaks_troughs.results.plot(
+    f1s=np.arange(15, 26),
+    f2s=np.arange(15, 26),
+    cbar_range_abs=[0, 1],
+    cbar_range_real=[-1, 1],
+    cbar_range_imag=[-1, 1],
+    cbar_range_phase=[-1, 1],
+)
 
 ###############################################################################
 # References

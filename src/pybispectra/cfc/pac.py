@@ -277,6 +277,7 @@ class PAC(_ProcessBispectrum):
                 "freqs": self.freqs,
                 "f1s": self.f1s,
                 "f2s": self.f2s,
+                "kmn": np.array([np.array([0, 1, 1])]),
             }
             for seed, target in zip(self._seeds, self._targets)
         ]

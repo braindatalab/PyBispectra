@@ -231,6 +231,7 @@ class WaveShape(_ProcessBispectrum):
                 "freqs": self.freqs,
                 "f1s": self.f1s,
                 "f2s": self.f2s,
+                "kmn": np.array([np.array([0, 0, 0])]),
             }
             for channel in self.indices
         ]
@@ -244,7 +245,7 @@ class WaveShape(_ProcessBispectrum):
                 desc="Processing connections...",
                 disable=not self.verbose,
             )
-        )[0]
+        ).transpose(1, 0, 2, 3)[0]
 
         if self.verbose:
             print("        ... Threenorm computation finished\n")

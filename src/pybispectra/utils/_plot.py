@@ -265,7 +265,7 @@ class _PlotCFC(_PlotBase):
         np.ndarray,
         list[int],
         list[int],
-        tuple[list[float] | None],
+        tuple[list[float | None]],
     ]:
         """Sort the plotting inputs.
 
@@ -342,7 +342,7 @@ class _PlotCFC(_PlotBase):
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
-        cbar_range: tuple[list[float] | None],
+        cbar_range: tuple[list[float | None]],
     ) -> None:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0
@@ -665,6 +665,10 @@ class _PlotWaveShape(_PlotBase):
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
         minor_tick_intervals: int | float = 1.0,
+        cbar_range_abs: list[float] | tuple[list[float]] | None = None,
+        cbar_range_real: list[float] | tuple[list[float]] | None = None,
+        cbar_range_imag: list[float] | tuple[list[float]] | None = None,
+        cbar_range_phase: list[float] | tuple[list[float]] | None = None,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
@@ -696,6 +700,38 @@ class _PlotWaveShape(_PlotBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
+        cbar_range_abs : list of float | tuple of list of float | None (default ``None``)
+            Range (in units of the data) for the colourbars of the absolute
+            value of the results, consisting of the lower and upper limits,
+            respectively. If ``None``, the range is computed automatically. If
+            a list of float, this range is used for all plots. If a tuple of
+            list of float, the ranges are used for each individual plot. Note
+            that results should be limited to the range [0, 1].
+
+        cbar_range_real : list of float | tuple of list of float | None (default ``None``)
+            Range (in units of the data) for the colourbars of the real value
+            of the results, consisting of the lower and upper limits,
+            respectively. If ``None``, the range is computed automatically. If
+            a list of float, this range is used for all plots. If a tuple of
+            list of float, the ranges are used for each individual plot. Note
+            that results should be limited to the range [-1, 1].
+
+        cbar_range_imag : list of float | tuple of list of float | None (default ``None``)
+            Range (in units of the data) for the colourbars of the imaginary
+            value of the results, consisting of the lower and upper limits,
+            respectively. If ``None``, the range is computed automatically. If
+            a list of float, this range is used for all plots. If a tuple of
+            list of float, the ranges are used for each individual plot. Note
+            that results should be limited to the range [-1, 1].
+
+        cbar_range_phase : list of float | tuple of list of float | None (default ``None``)
+            Range (in units of the data) for the colourbars of the phase of the
+            results, consisting of the lower and upper limits, respectively. If
+            ``None``, the range is computed automatically. If a list of float,
+            this range is used for all plots. If a tuple of list of float, the
+            ranges are used for each individual plot. Note that results should
+            be limited to the range (-pi, pi].
+
         show : bool (default ``True``)
             Whether or not to show the plotted results.
 
@@ -714,8 +750,15 @@ class _PlotWaveShape(_PlotBase):
         -----
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
         connection on a new figure.
-        """
-        nodes, f1s, f2s, f1_idcs, f2_idcs = self._sort_plot_inputs(
+        """  # noqa: E501
+        (
+            nodes,
+            f1s,
+            f2s,
+            f1_idcs,
+            f2_idcs,
+            cbar_ranges,
+        ) = self._sort_plot_inputs(
             nodes,
             f1s,
             f2s,
@@ -723,6 +766,10 @@ class _PlotWaveShape(_PlotBase):
             n_cols,
             major_tick_intervals,
             minor_tick_intervals,
+            cbar_range_abs,
+            cbar_range_real,
+            cbar_range_imag,
+            cbar_range_phase,
         )
         figures, subfigures, axes = self._create_plots(nodes, n_rows, n_cols)
         self._plot_results(
@@ -738,6 +785,7 @@ class _PlotWaveShape(_PlotBase):
             n_cols,
             major_tick_intervals,
             minor_tick_intervals,
+            cbar_ranges,
         )
 
         if show:
@@ -754,7 +802,18 @@ class _PlotWaveShape(_PlotBase):
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
-    ) -> tuple[list[int], np.ndarray, np.ndarray, list[int], list[int]]:
+        cbar_range_abs: list[float] | tuple[list[float]] | None,
+        cbar_range_real: list[float] | tuple[list[float]] | None,
+        cbar_range_imag: list[float] | tuple[list[float]] | None,
+        cbar_range_phase: list[float] | tuple[list[float]] | None,
+    ) -> tuple[
+        list[int],
+        np.ndarray,
+        np.ndarray,
+        list[int],
+        list[int],
+        list[tuple[list[float | None]]],
+    ]:
         """Sort the plotting inputs.
 
         Returns
@@ -770,6 +829,10 @@ class _PlotWaveShape(_PlotBase):
 
         f2_idcs : list of int
             Indices of ``f2s`` in the results.
+
+        cbar_ranges : list of tuple of list of float or None
+            Colourbar ranges for the absolute, real, imaginary, and phase
+            plots, respectively.
         """
         nodes = super()._sort_plot_inputs(
             nodes,
@@ -796,7 +859,41 @@ class _PlotWaveShape(_PlotBase):
         f1_idcs = [_fast_find_first(self.f1s, freq) for freq in f1s]
         f2_idcs = [_fast_find_first(self.f2s, freq) for freq in f2s]
 
-        return nodes, f1s, f2s, f1_idcs, f2_idcs
+        cbar_ranges = [
+            cbar_range_abs,
+            cbar_range_real,
+            cbar_range_imag,
+            cbar_range_phase,
+        ]
+        cbar_names = ["abs", "real", "imag", "phase"]
+        cbar_idx = 0
+        for cbar_range, cbar_name in zip(
+            cbar_ranges,
+            cbar_names,
+        ):
+            if not isinstance(cbar_range, (list, tuple, type(None))):
+                raise TypeError(
+                    f"`cbar_range_{cbar_name}` must be a list, tuple, or None."
+                )
+            if isinstance(cbar_range, tuple):
+                if len(cbar_range) != len(nodes):
+                    raise ValueError(
+                        f"If `cbar_range_{cbar_name}` is a tuple, one entry "
+                        "must be provided for each node being plotted."
+                    )
+            else:
+                fill = cbar_range if cbar_range is not None else [None, None]
+                cbar_range = [fill for _ in range(len(nodes))]
+            for entry in cbar_range:
+                if len(entry) != 2:
+                    raise ValueError(
+                        f"Limits in `cbar_range_{cbar_name}` must have length "
+                        "of 2."
+                    )
+            cbar_ranges[cbar_idx] = cbar_range
+            cbar_idx += 1
+
+        return (nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_ranges)
 
     def _create_plots(
         self, nodes: list[int], n_rows: int, n_cols: int
@@ -859,6 +956,7 @@ class _PlotWaveShape(_PlotBase):
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
+        cbar_ranges: list[tuple[list[float | None]]],
     ) -> None:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0
@@ -890,24 +988,33 @@ class _PlotWaveShape(_PlotBase):
                         axis_title,
                         cmap,
                         cbar_title,
+                        cbar_range,
                     ) in zip(
                         axes[fig_i][fig_plot_n],
                         data_funcs,
                         axes_titles,
                         cmaps,
                         cbar_titles,
+                        cbar_ranges,
                     ):
                         data = data_func(
                             self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T
                         )
 
                         if axis_title == "Phase":
-                            data /= np.pi  # normalise to [-1, 1]
+                            data /= np.pi  # normalise to (-1, 1]
                             format_ = StrMethodFormatter(r"{x} $\pi$")
                         else:
                             format_ = ScalarFormatter()
 
-                        mesh = axis.pcolormesh(f1s, f2s, data, cmap=cmap)
+                        mesh = axis.pcolormesh(
+                            f1s,
+                            f2s,
+                            data,
+                            cmap=cmap,
+                            vmin=cbar_range[plot_n][0],
+                            vmax=cbar_range[plot_n][1],
+                        )
 
                         plt.colorbar(
                             mesh,

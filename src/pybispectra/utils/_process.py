@@ -268,27 +268,27 @@ def _compute_bispectrum(
 
     Parameters
     ----------
-    data : np.ndarray of float, shape of [epochs, 2, frequencies]
+    data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
         FFT coefficients, where the second dimension contains the data for the
         seed and target channel of a single connection, respectively.
 
-    freqs : np.ndarray of float, shape of [frequencies]
+    freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies in ``data``.
 
-    f1s : np.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray of float, shape of [frequencies]
         Low frequencies to compute the bispectrum for.
 
-    f2s : np.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray of float, shape of [frequencies]
         High frequencies to compute the bispectrum for.
 
-    kmn : np.ndarray of int, shape of [x, 3]
+    kmn : numpy.ndarray of int, shape of [x, 3]
         Array of variable length (x) of arrays, where each sub-array contains
         the k, m, and n channel indices in ``data``, respectively, to compute
         the bispectrum for.
 
     Returns
     -------
-    results : np.ndarray of complex float, shape of [x, epochs, f1s, f2s]
+    results : numpy.ndarray of complex float, shape of [x, epochs, f1s, f2s]
         Complex-valued array containing the bispectrum of a single connection,
         where the first dimension corresponds to the different channel indices
         given in ``kmn``.
@@ -305,14 +305,14 @@ def _compute_bispectrum(
         fill_value=np.nan,
         dtype=np.complex128,
     )
-    f1_idx = 0  # starting index to find f1s
+    f1_loc = 0  # starting index to find f1s
     for f1_i, f1 in enumerate(f1s):
-        f2_idx = 0  # starting index to find f2s
+        f2_loc = 0  # starting index to find f2s
         for f2_i, f2 in enumerate(f2s):
             if f1 < f2 and (f2 + f1) in freqs:
-                f1_loc = _fast_find_first(freqs, f1, f1_idx)
-                f2_loc = _fast_find_first(freqs, f2, f2_idx)
-                fdiff_loc = _fast_find_first(freqs, f2 + f1, f2_idx)
+                f1_loc = _fast_find_first(freqs, f1, f1_loc)
+                f2_loc = _fast_find_first(freqs, f2, f2_loc)
+                fdiff_loc = _fast_find_first(freqs, f2 + f1, f2_loc)
                 for kmn_i, (k, m, n) in enumerate(kmn):
                     for epoch_i, epoch_data in enumerate(data):
                         results[kmn_i, epoch_i, f1_i, f2_i] = (
@@ -330,6 +330,7 @@ def _compute_threenorm(
     freqs: np.ndarray,
     f1s: np.ndarray,
     f2s: np.ndarray,
+    kmn: np.ndarray,
 ) -> np.ndarray:
     """Compute threenorm for a single connection across epochs.
 
@@ -348,28 +349,38 @@ def _compute_threenorm(
     f2s : numpy.ndarray of float, shape of [frequencies]
         High frequencies to compute the threenorm for.
 
+    kmn : numpy.ndarray of int, shape of [x, 3]
+        Array of variable length (x) of arrays, where each sub-array contains
+        the k, m, and n channel indices in ``data``, respectively, to compute
+        the threenorm for.
+
     RETURNS
     -------
-    results : numpy.ndarray of float, shape of [f1s, f2s]
-        Threenorm of a single connection averaged across epochs.
+    results : numpy.ndarray of float, shape of [x, f1s, f2s]
+        Threenorm of a single connection, where the first dimension corresponds
+        to the different channel indices given in ``kmn``.
     """
     results = np.full(
-        (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
+        (len(kmn), f1s.shape[0], f2s.shape[0]),
+        fill_value=np.nan,
+        dtype=np.float64,
     )
-    f1_idx = 0  # starting index to find f1s
+    f1_loc = 0  # starting index to find f1s
     for f1_i, f1 in enumerate(f1s):
-        f2_idx = 0  # starting index to find f2s
+        f2_loc = 0  # starting index to find f2s
         for f2_i, f2 in enumerate(f2s):
             if f1 < f2 and (f2 + f1) in freqs:
-                fft_f1 = data[:, 0, _fast_find_first(freqs, f1, f1_idx)]
-                fft_f2 = data[:, 1, _fast_find_first(freqs, f2, f2_idx)]
-                fft_fdiff = data[
-                    :, 1, _fast_find_first(freqs, f2 + f1, f2_idx)
-                ]
-                results[f1_i, f2_i] = (
-                    (np.abs(fft_f1) ** 3).mean()
-                    * (np.abs(fft_f2) ** 3).mean()
-                    * (np.abs(fft_fdiff) ** 3).mean()
-                ) ** (1 / 3)
+                f1_loc = _fast_find_first(freqs, f1, f1_loc)
+                f2_loc = _fast_find_first(freqs, f2, f2_loc)
+                fdiff_loc = _fast_find_first(freqs, f2 + f1, f2_loc)
+                for kmn_i, (k, m, n) in enumerate(kmn):
+                    fft_f1 = data[:, k, f1_loc]
+                    fft_f2 = data[:, m, f2_loc]
+                    fft_fdiff = data[:, n, fdiff_loc]
+                    results[kmn_i, f1_i, f2_i] = (
+                        (np.abs(fft_f1) ** 3).mean()
+                        * (np.abs(fft_f2) ** 3).mean()
+                        * (np.abs(fft_fdiff) ** 3).mean()
+                    ) ** (1 / 3)
 
     return results
