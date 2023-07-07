@@ -622,6 +622,7 @@ class ResultsWaveShape(_ResultsBase):
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
         minor_tick_intervals: int | float = 1.0,
+        plot_absolute: bool = True,
         cbar_range_abs: list[float] | tuple[list[float]] | None = None,
         cbar_range_real: list[float] | tuple[list[float]] | None = None,
         cbar_range_imag: list[float] | tuple[list[float]] | None = None,
@@ -657,6 +658,10 @@ class ResultsWaveShape(_ResultsBase):
         minor_tick_intervals : int | float (default ``1.0``)
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
+
+        plot_absolute : bool (default ``True``)
+            Whether or not to plot the absolute values of the real and
+            imaginary parts of the results.
 
         cbar_range_abs : list of float | tuple of list of float | None (default ``None``)
             Range (in units of the data) for the colourbars of the absolute
@@ -717,6 +722,7 @@ class ResultsWaveShape(_ResultsBase):
             n_cols=n_cols,
             major_tick_intervals=major_tick_intervals,
             minor_tick_intervals=minor_tick_intervals,
+            plot_absolute=plot_absolute,
             cbar_range_abs=cbar_range_abs,
             cbar_range_real=cbar_range_real,
             cbar_range_imag=cbar_range_imag,

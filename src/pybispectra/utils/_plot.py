@@ -665,6 +665,7 @@ class _PlotWaveShape(_PlotBase):
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
         minor_tick_intervals: int | float = 1.0,
+        plot_absolute: bool = True,
         cbar_range_abs: list[float] | tuple[list[float]] | None = None,
         cbar_range_real: list[float] | tuple[list[float]] | None = None,
         cbar_range_imag: list[float] | tuple[list[float]] | None = None,
@@ -700,6 +701,10 @@ class _PlotWaveShape(_PlotBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
+        plot_absolute : bool (default ``True``)
+            Whether or not to plot the absolute values of the real and
+            imaginary parts of the results.
+
         cbar_range_abs : list of float | tuple of list of float | None (default ``None``)
             Range (in units of the data) for the colourbars of the absolute
             value of the results, consisting of the lower and upper limits,
@@ -725,12 +730,12 @@ class _PlotWaveShape(_PlotBase):
             that results should be limited to the range [-1, 1].
 
         cbar_range_phase : list of float | tuple of list of float | None (default ``None``)
-            Range (in units of the data) for the colourbars of the phase of the
+            Range (in units of pi) for the colourbars of the phase of the
             results, consisting of the lower and upper limits, respectively. If
             ``None``, the range is computed automatically. If a list of float,
             this range is used for all plots. If a tuple of list of float, the
             ranges are used for each individual plot. Note that results should
-            be limited to the range (-pi, pi].
+            be limited to the range :math:`(0, 2$\\pi$]`.
 
         show : bool (default ``True``)
             Whether or not to show the plotted results.
@@ -766,6 +771,7 @@ class _PlotWaveShape(_PlotBase):
             n_cols,
             major_tick_intervals,
             minor_tick_intervals,
+            plot_absolute,
             cbar_range_abs,
             cbar_range_real,
             cbar_range_imag,
@@ -785,6 +791,7 @@ class _PlotWaveShape(_PlotBase):
             n_cols,
             major_tick_intervals,
             minor_tick_intervals,
+            plot_absolute,
             cbar_ranges,
         )
 
@@ -802,6 +809,7 @@ class _PlotWaveShape(_PlotBase):
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
+        plot_absolute: bool,
         cbar_range_abs: list[float] | tuple[list[float]] | None,
         cbar_range_real: list[float] | tuple[list[float]] | None,
         cbar_range_imag: list[float] | tuple[list[float]] | None,
@@ -858,6 +866,9 @@ class _PlotWaveShape(_PlotBase):
             )
         f1_idcs = [_fast_find_first(self.f1s, freq) for freq in f1s]
         f2_idcs = [_fast_find_first(self.f2s, freq) for freq in f2s]
+
+        if not isinstance(plot_absolute, bool):
+            raise TypeError("`plot_absolute` must be a bool.")
 
         cbar_ranges = [
             cbar_range_abs,
@@ -956,6 +967,7 @@ class _PlotWaveShape(_PlotBase):
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
+        plot_absolute: bool,
         cbar_ranges: list[tuple[list[float | None]]],
     ) -> None:
         """Plot results on the relevant figures/subplots."""
@@ -1000,9 +1012,18 @@ class _PlotWaveShape(_PlotBase):
                         data = data_func(
                             self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T
                         )
+                        if plot_absolute and axis_title in [
+                            "Real",
+                            "Imaginary",
+                        ]:
+                            data = np.abs(data)
+                            axis_title = f"|{axis_title}|"
 
                         if axis_title == "Phase":
-                            data /= np.pi  # normalise to (-1, 1]
+                            # np.angle returns values in range (-pi, pi]
+                            # nice to convert range to (0, 2*pi]
+                            data[data < 0] += 2 * np.pi
+                            data /= np.pi  # normalise units of the data
                             format_ = StrMethodFormatter(r"{x} $\pi$")
                         else:
                             format_ = ScalarFormatter()

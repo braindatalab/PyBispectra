@@ -12,6 +12,7 @@ PyBispectra.
 import os
 
 import numpy as np
+from numpy.random import RandomState
 from matplotlib import pyplot as plt
 
 from pybispectra import compute_fft, WaveShape
@@ -76,8 +77,8 @@ from pybispectra import compute_fft, WaveShape
 # coefficients using the :func:`~pybispectra.utils.compute_fft` function. This
 # data consists of sawtooth waves (information will be captured in the
 # rise-decay asymmetry) and waves with a dominance of peaks or troughs
-# (information will be captured in the peak-trough asymmetry), all simulated at
-# 20 Hz.
+# (information will be captured in the peak-trough asymmetry), all simulated as
+# bursting oscillators at 10 Hz.
 
 # %%
 
@@ -88,22 +89,20 @@ data_sawtooths = np.load(
 data_peaks_troughs = np.load(
     os.path.join("data", "sim_data_waveshape_peaks_troughs.npy")
 )
-sampling_freq = 200  # Hz
+sampling_freq = 1000  # Hz
 
 # plot timeseries data
 times = np.linspace(
-    0,
-    (data_sawtooths.shape[2] / sampling_freq) / 4,
-    data_sawtooths.shape[2] // 4,
+    0, (data_sawtooths.shape[2] / sampling_freq), data_sawtooths.shape[2]
 )
 fig, axes = plt.subplots(2, 2)
-axes[0, 0].plot(times, data_sawtooths[0, 0, : times.shape[0]])
-axes[0, 1].plot(times, data_sawtooths[0, 1, : times.shape[0]])
-axes[1, 0].plot(times, data_peaks_troughs[0, 0, : times.shape[0]])
-axes[1, 1].plot(times, data_peaks_troughs[0, 1, : times.shape[0]])
+axes[0, 0].plot(times, data_sawtooths[15, 0])
+axes[0, 1].plot(times, data_sawtooths[15, 1])
+axes[1, 0].plot(times, data_peaks_troughs[15, 0])
+axes[1, 1].plot(times, data_peaks_troughs[15, 1])
 titles = [
-    "Steepness: rise > decay",
     "Steepness: decay > rise",
+    "Steepness: rise > decay",
     "Dominance: peaks",
     "Dominance: troughs",
 ]
@@ -113,9 +112,20 @@ for ax, title in zip(axes.flatten(), titles):
     ax.set_ylabel("Amplitude (A.U.)")
 fig.tight_layout()
 
+# add noise for numerical stability and to demonstrate use case with low SNR
+random = RandomState(44)
+snr = 0.25
+datasets = [data_sawtooths, data_peaks_troughs]
+for data_idx, data in enumerate(datasets):
+    datasets[data_idx] = snr * data + (1 - snr) * random.rand(*data.shape)
+data_sawtooths = datasets[0]
+data_peaks_troughs = datasets[1]
+
 # compute Fourier coeffs.
 fft_coeffs_sawtooths, freqs = compute_fft(
-    data=data_sawtooths, sampling_freq=sampling_freq, n_points=sampling_freq
+    data=data_sawtooths,
+    sampling_freq=sampling_freq,
+    n_points=sampling_freq,
 )
 fft_coeffs_peaks_troughs, _ = compute_fft(
     data=data_peaks_troughs,
@@ -125,10 +135,13 @@ fft_coeffs_peaks_troughs, _ = compute_fft(
 
 ###############################################################################
 # Plotting the data, we see that the sawtooth waves consist of a signal where
-# the rise steepness is greater than the decay steepness and a signal where the
-# decay steepness is greater than the rise steepness. Additionally, the peak
-# and trough waves consist of a signal where peaks are most dominant, and a
-# signal where troughs are most dominant.
+# the decay steepness is greater than the rise steepness and a signal where
+# the rise steepness is greater than the decay steepness. Additionally, the
+# peak and trough waves consist of a signal where peaks are most dominant, and
+# a signal where troughs are most dominant. After loading the data, we add some
+# noise for numerical stability as well as to demonstrate the fact that the
+# bispectrum is able to recover wave shape even in low signal-to-noise ratio
+# settings (explored further in :footcite:`Bartz2019`).
 #
 # Computing wave shape features
 # -----------------------------
@@ -142,7 +155,7 @@ fft_coeffs_peaks_troughs, _ = compute_fft(
 # Here, we specify the frequency arguments
 # :attr:`~pybispectra.waveshape.WaveShape.f1s` and
 # :attr:`~pybispectra.waveshape.WaveShape.f2s` to compute wave shape on in the
-# range 15-25 Hz (around the frequency at which the signal features were
+# range 0-36 Hz (around the frequency at which the signal features were
 # simulated). By leaving the indices argument blank, we will look at all
 # channels in the data.
 
@@ -150,15 +163,19 @@ fft_coeffs_peaks_troughs, _ = compute_fft(
 
 # sawtooth waves
 waveshape_sawtooths = WaveShape(
-    data=fft_coeffs_sawtooths, freqs=freqs, sampling_freq=sampling_freq
+    data=fft_coeffs_sawtooths,
+    freqs=freqs,
+    sampling_freq=sampling_freq,
 )  # initialise object
-waveshape_sawtooths.compute()  # compute wave shape
+waveshape_sawtooths.compute(
+    f1s=np.arange(0, 36), f2s=np.arange(0, 36)
+)  # compute wave shape
 
 # peaks and troughs
 waveshape_peaks_troughs = WaveShape(
     data=fft_coeffs_peaks_troughs, freqs=freqs, sampling_freq=sampling_freq
 )
-waveshape_peaks_troughs.compute()
+waveshape_peaks_troughs.compute(f1s=np.arange(0, 36), f2s=np.arange(0, 36))
 
 # return results as an array
 waveshape_results = waveshape_sawtooths.results.get_results()
@@ -170,40 +187,89 @@ print(
 
 ###############################################################################
 # We can see that wave shape features have been computed for both channels and
-# the specified frequency combinations, averaged across our 5 epochs. Given the
+# the specified frequency combinations, averaged across our epochs. Given the
 # nature of the bispectrum, entries where :math:`f_1` would be higher than
 # :math:`f_2`, as well as where :math:`f_2 + f_1` exceeds the frequency bounds
-# of our data, cannot be computed. Although this does not apply here given the
-# limited frequency ranges, in such cases, the values corresponding to those
-# 'bad' frequency combinations are ``numpy.nan``.
+# of our data, cannot be computed. In such cases, the values corresponding to
+# those 'bad' frequency combinations are ``numpy.nan``.
 
 ###############################################################################
 # Plotting wave shape features
 # ----------------------------
-# Let us now inspect the results. For this, we will plot the results for both
-# connections on the same plot. If we wished, we could plot this information on
-# separate plots, or specify a subset of frequencies to inspect. Note that the
-# ``Figure`` and ``Axes`` objects can also be returned for any desired manual
-# adjustments of the plots.
+# Let us now inspect the results. Information about the different wave shape
+# features are encoded in different aspects of the complex-valued bicoherence,
+# with peak-trough asymmetry encoded in the real part, and rise-decay asymmetry
+# encoded in the imaginary part. We can therefore additionally examine the
+# absolute value of the bicoherence (i.e. the magnitude) as well as the phase
+# angle to get a overall picture of the combination of peak-trough and
+# rise-decay asymmetries.
+#
+# For the sawtooth waves, we therefore expect the real part of bicoherence to
+# be ~0 and the imaginary part to be non-zero at the simulated 10 Hz frequency.
+# From the plots, we see that this is indeed the case. However, we also see
+# that the imaginary values at the 10 Hz higher harmonics (i.e. 20 and 30 Hz)
+# are also non-zero. The strength of the harmonics varies based on the signal
+# strength. It is also worth noting that the sign of the imaginary values
+# varies for the different sawtooth varieties, with a steeper decay vs. rise
+# resulting in positive values, and a steeper rise vs. decay resulting in
+# negative values. Information about the direction of the connectivity is
+# encoded not only in the sign of the bicoherence values, but also in its
+# phase. As in Bartz _et al._ :footcite:`Bartz2019`, we represent the phase in
+# the range :math:`(0, 2\pi]` (travelling counter-clockwise from the positive
+# real axis). Accordingly, a phase of :math:`\frac{1}{2}\pi` is seen at 10 Hz
+# and its higher harmonics for the steeper decay vs. rise sawtooth, with a
+# phase of :math:`\frac{3}{2}\pi` for the steeper rise vs. decay sawtooth. The
+# phases and absolute values (i.e. the magnitude) therefore combine information
+# from both the real and imaginary components.
+#
+# In contrast, we expect the real part of the bicoherence to be non-zero for
+# signals with peak-trough asymmetry, and the imaginary part to be ~0. Again,
+# this is indeed what we see. Similarly to before, the sign of the real values
+# is positive for the peaks-dominant signal, and negative for the
+# troughs-dominant signal, which is also reflected in the phases (~0 or
+# :math:`2\pi` for the peaks-dominant signal, and ~:math:`\pi` for the
+# troughs-dominant signal).
+#
+# Here, we plotted the real and imaginary parts of the bicoherence without
+# taking the absolute value. If the particular direction of asymmetry is of
+# less interest, the absolute values can be plotted instead (by setting
+# ``plot_absolute=True``) to show the overall degree of asymmetry. In any case,
+# the direction of asymmetry can be inferred from the phases.
+#
+# Finally, note that the ``Figure`` and ``Axes`` objects can also be returned
+# for any desired manual adjustments of the plots.
 
 # %%
 
-fig, axes = waveshape_sawtooths.results.plot(
-    f1s=np.arange(15, 26),
-    f2s=np.arange(15, 26),
+figs, axes = waveshape_sawtooths.results.plot(
+    major_tick_intervals=10,
+    minor_tick_intervals=2,
     cbar_range_abs=[0, 1],
     cbar_range_real=[-1, 1],
     cbar_range_imag=[-1, 1],
-    cbar_range_phase=[-1, 1],
+    cbar_range_phase=[0, 2],
+    plot_absolute=False,
+    show=False,
 )
-fig, axes = waveshape_peaks_troughs.results.plot(
-    f1s=np.arange(15, 26),
-    f2s=np.arange(15, 26),
+titles = ["decay > rise", "rise > decay"]
+for fig, title in zip(figs, titles):
+    fig.suptitle(f"Sawtooth Waves\nSteepness: {title}")
+    fig.show()
+
+figs, axes = waveshape_peaks_troughs.results.plot(
+    major_tick_intervals=10,
+    minor_tick_intervals=2,
     cbar_range_abs=[0, 1],
     cbar_range_real=[-1, 1],
     cbar_range_imag=[-1, 1],
-    cbar_range_phase=[-1, 1],
+    cbar_range_phase=[0, 2],
+    plot_absolute=False,
+    show=False,
 )
+titles = ["peaks", "troughs"]
+for fig, title in zip(figs, titles):
+    fig.suptitle(f"Peaks & Troughs\nDominance: {title}")
+    fig.show()
 
 ###############################################################################
 # References
