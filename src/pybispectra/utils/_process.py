@@ -309,7 +309,7 @@ def _compute_bispectrum(
     for f1_i, f1 in enumerate(f1s):
         f2_loc = 0  # starting index to find f2s
         for f2_i, f2 in enumerate(f2s):
-            if f1 < f2 and (f2 + f1) in freqs:
+            if f1 <= f2 and (f2 + f1) in freqs:
                 f1_loc = _fast_find_first(freqs, f1, f1_loc)
                 f2_loc = _fast_find_first(freqs, f2, f2_loc)
                 fdiff_loc = _fast_find_first(freqs, f2 + f1, f2_loc)
@@ -369,7 +369,7 @@ def _compute_threenorm(
     for f1_i, f1 in enumerate(f1s):
         f2_loc = 0  # starting index to find f2s
         for f2_i, f2 in enumerate(f2s):
-            if f1 < f2 and (f2 + f1) in freqs:
+            if f1 <= f2 and (f2 + f1) in freqs:
                 f1_loc = _fast_find_first(freqs, f1, f1_loc)
                 f2_loc = _fast_find_first(freqs, f2, f2_loc)
                 fdiff_loc = _fast_find_first(freqs, f2 + f1, f2_loc)
