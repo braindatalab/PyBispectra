@@ -60,7 +60,7 @@ from pybispectra import compute_fft, WaveShape
 # such :math:`k=m=n`.
 #
 # Furthermore, we can normalise the bispectrum to the bicoherence,
-# :math:`\mathcal{B}` whose values lie in the range :math:`[-1, 1]`. This
+# :math:`\mathcal{B}`, whose values lie in the range :math:`[-1, 1]`. This
 # normalisation can be performed using the threenorm, :math:`N`
 # :footcite:`Zandvoort2021`:
 #
@@ -71,8 +71,8 @@ from pybispectra import compute_fft, WaveShape
 # \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}` .
 
 ###############################################################################
-# Generating data and computing Fourier coefficients
-# --------------------------------------------------
+# Loading data and computing Fourier coefficients
+# -----------------------------------------------
 # We will start by loading some example data and computing the Fourier
 # coefficients using the :func:`~pybispectra.utils.compute_fft` function. This
 # data consists of sawtooth waves (information will be captured in the
@@ -101,10 +101,10 @@ axes[0, 1].plot(times, data_sawtooths[15, 1])
 axes[1, 0].plot(times, data_peaks_troughs[15, 0])
 axes[1, 1].plot(times, data_peaks_troughs[15, 1])
 titles = [
-    "Steepness: decay > rise",
-    "Steepness: rise > decay",
-    "Dominance: peaks",
-    "Dominance: troughs",
+    "Ramp up sawtooth",
+    "Ramp down sawtooth",
+    "Peak dominance",
+    "Trough dominance",
 ]
 for ax, title in zip(axes.flatten(), titles):
     ax.set_title(title)
@@ -112,7 +112,7 @@ for ax, title in zip(axes.flatten(), titles):
     ax.set_ylabel("Amplitude (A.U.)")
 fig.tight_layout()
 
-# add noise for numerical stability and to demonstrate use case with low SNR
+# add noise for numerical stability
 random = RandomState(44)
 snr = 0.25
 datasets = [data_sawtooths, data_peaks_troughs]
@@ -135,13 +135,11 @@ fft_coeffs_peaks_troughs, _ = compute_fft(
 
 ###############################################################################
 # Plotting the data, we see that the sawtooth waves consist of a signal where
-# the decay steepness is greater than the rise steepness and a signal where
-# the rise steepness is greater than the decay steepness. Additionally, the
-# peak and trough waves consist of a signal where peaks are most dominant, and
-# a signal where troughs are most dominant. After loading the data, we add some
-# noise for numerical stability as well as to demonstrate the fact that the
-# bispectrum is able to recover wave shape even in low signal-to-noise ratio
-# settings (explored further in :footcite:`Bartz2019`).
+# the decay steepness is greater than the rise steepness (ramp up sawtooth) and
+# a signal where the rise steepness is greater than the decay steepness (ramp
+# down sawtooth). Additionally, the peak and trough waves consist of a signal
+# where peaks are most dominant, and a signal where troughs are most dominant.
+# After loading the data, we add some noise for numerical stability.
 #
 # Computing wave shape features
 # -----------------------------
@@ -201,7 +199,7 @@ print(
 # with peak-trough asymmetry encoded in the real part, and rise-decay asymmetry
 # encoded in the imaginary part. We can therefore additionally examine the
 # absolute value of the bicoherence (i.e. the magnitude) as well as the phase
-# angle to get a overall picture of the combination of peak-trough and
+# angle to get an overall picture of the combination of peak-trough and
 # rise-decay asymmetries.
 #
 # For the sawtooth waves, we therefore expect the real part of bicoherence to
@@ -210,29 +208,30 @@ print(
 # that the imaginary values at the 10 Hz higher harmonics (i.e. 20 and 30 Hz)
 # are also non-zero. The strength of the harmonics varies based on the signal
 # strength. It is also worth noting that the sign of the imaginary values
-# varies for the different sawtooth varieties, with a steeper decay vs. rise
-# resulting in positive values, and a steeper rise vs. decay resulting in
-# negative values. Information about the direction of the connectivity is
-# encoded not only in the sign of the bicoherence values, but also in its
-# phase. As in Bartz _et al._ :footcite:`Bartz2019`, we represent the phase in
-# the range :math:`(0, 2\pi]` (travelling counter-clockwise from the positive
-# real axis). Accordingly, a phase of :math:`\frac{1}{2}\pi` is seen at 10 Hz
-# and its higher harmonics for the steeper decay vs. rise sawtooth, with a
-# phase of :math:`\frac{3}{2}\pi` for the steeper rise vs. decay sawtooth. The
-# phases and absolute values (i.e. the magnitude) therefore combine information
-# from both the real and imaginary components.
+# varies for the different sawtooth varieties, with a ramp down sawtooth
+# resulting in positive values, and a ramp up sawtooth resulting in negative
+# values.
+#
+# Information about the direction of the asymmetry is encoded not only in the
+# sign of the bicoherence values, but also in its phase. As in Bartz *et al.*
+# :footcite:`Bartz2019`, we represent phase in the range :math:`(0, 2\pi]`
+# (travelling counter-clockwise from the positive real axis). Accordingly, a
+# phase of :math:`\frac{1}{2}\pi` is seen at 10 Hz and its higher harmonics for
+# the ramp down sawtooth, with a phase of :math:`\frac{3}{2}\pi` for the ramp
+# up sawtooth. The phases and absolute values (i.e. the magnitude) therefore
+# combine information from both the real and imaginary components.
 #
 # In contrast, we expect the real part of the bicoherence to be non-zero for
 # signals with peak-trough asymmetry, and the imaginary part to be ~0. Again,
-# this is indeed what we see. Similarly to before, the sign of the real values
-# is positive for the peaks-dominant signal, and negative for the
+# this is indeed what we see. Similarly to before, the signs of the real values
+# are positive for the peaks-dominant signal, and negative for the
 # troughs-dominant signal, which is also reflected in the phases (~0 or
-# :math:`2\pi` for the peaks-dominant signal, and ~:math:`\pi` for the
+# 2 :math:`\pi` for the peaks-dominant signal, and :math:`\pi` for the
 # troughs-dominant signal).
 #
 # Here, we plotted the real and imaginary parts of the bicoherence without
-# taking the absolute value. If the particular direction of asymmetry is of
-# less interest, the absolute values can be plotted instead (by setting
+# taking the absolute value. If the particular direction of asymmetry is not of
+# interest, the absolute values can be plotted instead (by setting
 # ``plot_absolute=True``) to show the overall degree of asymmetry. In any case,
 # the direction of asymmetry can be inferred from the phases.
 #
@@ -251,9 +250,10 @@ figs, axes = waveshape_sawtooths.results.plot(
     plot_absolute=False,
     show=False,
 )
-titles = ["decay > rise", "rise > decay"]
+titles = ["Ramp down", "Ramp up"]
 for fig, title in zip(figs, titles):
-    fig.suptitle(f"Sawtooth Waves\nSteepness: {title}")
+    fig.suptitle(f"{title} sawtooth")
+    fig.set_size_inches(6, 6)
     fig.show()
 
 figs, axes = waveshape_peaks_troughs.results.plot(
@@ -266,10 +266,24 @@ figs, axes = waveshape_peaks_troughs.results.plot(
     plot_absolute=False,
     show=False,
 )
-titles = ["peaks", "troughs"]
+titles = ["Peak", "Trough"]
 for fig, title in zip(figs, titles):
-    fig.suptitle(f"Peaks & Troughs\nDominance: {title}")
+    fig.suptitle(f"{title} dominance")
+    fig.set_size_inches(6, 6)
     fig.show()
+
+###############################################################################
+# Analysing wave shape in low signal-to-noise ratio data
+# ------------------------------------------------------
+# Depending on the degree of signal-to-noise ratio as well as the colour of the
+# noise, the ability of the bispectrum to extract information about the true
+# underlying wave shape features can vary. To alleviate this, Bartz *et al.*
+# :footcite:`Bartz2019` propose utilising spatio-spectral filtering to enhance
+# the signal-to-noise ratio of the data at a frequency band of interest (which
+# has the added benefit of enabling multivariate signal analysis). Details of
+# how spatio-spectral filtering can be incorporated into wave shape analysis
+# are presented in the following example:
+# :doc:`plot_compute_waveshape_noisy_data`.
 
 ###############################################################################
 # References

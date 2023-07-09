@@ -20,7 +20,7 @@ class SpatioSpectralFilter:
     ----------
     data : numpy.ndarray, shape of [epochs, channels, times]
 
-    sampling_freq : float
+    sampling_freq : int | float
         Sampling frequency of :attr:`data` (in Hz).
 
     verbose : bool (default True)
@@ -140,7 +140,7 @@ class SpatioSpectralFilter:
     def __init__(
         self,
         data: np.ndarray,
-        sampling_freq: float,
+        sampling_freq: int | float,
         verbose: bool = True,
     ) -> None:  # noqa D107
         self.verbose = deepcopy(verbose)
@@ -155,8 +155,8 @@ class SpatioSpectralFilter:
         if data.ndim != 3:
             raise ValueError("`data` must be a 3D array.")
 
-        if not isinstance(sampling_freq, float):
-            raise TypeError("`sampling_freq` must be a float.")
+        if not isinstance(sampling_freq, (int, float)):
+            raise TypeError("`sampling_freq` must be an int or a float.")
         self.sampling_freq = deepcopy(sampling_freq)
 
         self._n_epochs, self._n_chans, self._n_times = data.shape
@@ -165,21 +165,25 @@ class SpatioSpectralFilter:
 
     def _sort_freq_bounds(
         self,
-        signal_bounds: tuple[float],
-        noise_bounds: tuple[float],
-        signal_noise_gap: float,
+        signal_bounds: tuple[int | float],
+        noise_bounds: tuple[int | float],
+        signal_noise_gap: int | float,
     ) -> None:
         """Sort frequency bound inputs."""
         if not isinstance(signal_bounds, tuple) or not all(
-            isinstance(entry, float) for entry in signal_bounds
+            isinstance(entry, (int, float)) for entry in signal_bounds
         ):
-            raise TypeError("`signal_bounds` must be a tuple of floats.")
+            raise TypeError(
+                "`signal_bounds` must be a tuple of ints or floats."
+            )
         if not isinstance(noise_bounds, tuple) or not all(
-            isinstance(entry, float) for entry in noise_bounds
+            isinstance(entry, (int, float)) for entry in noise_bounds
         ):
-            raise TypeError("`noise_bounds` must be a tuple of floats.")
-        if not isinstance(signal_noise_gap, float):
-            raise TypeError("`signal_noise_gap` must be a float.")
+            raise TypeError(
+                "`noise_bounds` must be a tuple of ints or floats."
+            )
+        if not isinstance(signal_noise_gap, (int, float)):
+            raise TypeError("`signal_noise_gap` must be an int or a float.")
 
         if len(signal_bounds) != 2 or len(noise_bounds) != 2:
             raise ValueError(
@@ -238,7 +242,7 @@ class SpatioSpectralFilter:
             indices = tuple(np.arange(self._n_chans))
 
         if not isinstance(indices, tuple) or not all(
-            isinstance(entry, int) for entry in indices
+            isinstance(entry, (int, np.integer)) for entry in indices
         ):
             raise TypeError("`indices` must be a tuple of ints.")
 
@@ -542,8 +546,8 @@ class SpatioSpectralFilter:
                 X=self.data[:, self.indices],
                 sfreq=self.sampling_freq,
                 t0=0,
-                fmin=fmin,
-                fmax=fmax,
+                fmin=np.max((fmin - 1, 0)),
+                fmax=np.min((fmax + 1, self.sampling_freq)),
                 tmin=None,
                 tmax=None,
                 ch_names=None,
@@ -560,8 +564,8 @@ class SpatioSpectralFilter:
                 X=self.data[:, self.indices],
                 sfreq=self.sampling_freq,
                 t0=0,
-                fmin=fmin,
-                fmax=fmax,
+                fmin=np.max((fmin - 1, 0)),
+                fmax=np.min((fmax + 1, self.sampling_freq)),
                 tmin=None,
                 tmax=None,
                 ch_names=None,
@@ -603,13 +607,13 @@ class SpatioSpectralFilter:
         eigvals, eigvects = sp.linalg.eigh(cov_signal, cov_noise)
         ix = np.argsort(eigvals)[::-1]  # sort in descending order
 
-        self._transformed_data = np.einsum(
-            "ijk,jl->ilk", self.data[:, self.indices], self.filters
-        )
-
         self.filters = projection @ eigvects[:, ix]  # project to sensor space
         self.patterns = np.linalg.pinv(self.filters)
         self.ratios = eigvals[ix]
+
+        self._transformed_data = np.einsum(
+            "ijk,jl->ilk", self.data[:, self.indices], self.filters
+        )
 
         if self.verbose:
             print("        ... HPMax filter computation finished\n")
@@ -696,18 +700,18 @@ class SpatioSpectralFilter:
         Parameters
         ----------
         min_ratio : int | float (default ``1.0``)
-            Minimum required value of :attr:`ratios` to return the data
-            transformed with the corresponding spatial filter.
+            Only returns the transformed data for those spatial filters whose
+            :attr:`ratios` values is greater than this value.
 
         Returns
         -------
         transformed_data : numpy.ndarray, shape of [epochs, components, times]
             Transformed data with only those components created with filters
-            whose signal:noise ratios are > ``min_ratio``.
+            whose signal-to-noise ratios are > ``min_ratio``.
 
         Notes
         -----
-        Raises a warning if no components have a signal:noise ratio >
+        Raises a warning if no components have a signal-to-noise ratio >
         ``min_ratio`` and :attr:`verbose` is ``True``.
         """
         if not isinstance(min_ratio, (int, float)):
@@ -716,7 +720,7 @@ class SpatioSpectralFilter:
         data = self._transformed_data[:, np.where(self.ratios > min_ratio)[0]]
         if self.verbose and data.shape[1] == 0:
             warn(
-                "No signal:noise ratios are greater than the requested "
+                "No signal-to-noise ratios are greater than the requested "
                 "minimum; returning an empty array.",
                 UserWarning,
             )
