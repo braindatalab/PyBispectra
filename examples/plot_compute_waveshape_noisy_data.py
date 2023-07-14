@@ -15,6 +15,7 @@ import numpy as np
 
 from pybispectra import (
     compute_fft,
+    compute_rank,
     SpatioSpectralFilter,
     WaveShape,
     ResultsWaveShape,
@@ -88,13 +89,25 @@ data = np.load(os.path.join("data", "sim_data_waveshape_noisy.npy"))
 sampling_freq = 1000  # Hz
 
 # perform spatio-spectral filtering
-ssf = SpatioSpectralFilter(data=data, sampling_freq=sampling_freq)
+ssf = SpatioSpectralFilter(
+    data=data, sampling_freq=sampling_freq, verbose=False
+)
 ssf.fit_transform_hpmax(
     signal_bounds=(18, 22), noise_bounds=(15, 25), n_harmonics=2
 )
 
 # return the first component of the filtered data
 transformed_data = (ssf.transformed_data[:, 0])[:, np.newaxis, :]
+
+print(
+    f"Original timeseries data: [{data.shape[0]} epochs x {data.shape[1]} "
+    f"channel(s) x {data.shape[2]} times]"
+)
+print(
+    f"Transformed timeseries data: [{transformed_data.shape[0]} epochs x "
+    f"{transformed_data.shape[1]} channel(s) x {transformed_data.shape[2]} "
+    "times]"
+)
 
 ###############################################################################
 # As SSD and HPMax are based on generalised eigendecomposition, the data for
@@ -103,22 +116,25 @@ transformed_data = (ssf.transformed_data[:, 0])[:, np.newaxis, :]
 # :meth:`~pybispectra.utils.SpatioSpectralFilter.fit_transform_ssd` and
 # :meth:`~pybispectra.utils.SpatioSpectralFilter.fit_transform_hpmax` methods
 # have a `rank` argument where the rank of the data can be specified, according
-# to which the data will be projected to. The code below shows one way of
-# determining the rank of some (epoched) timeseries data. The ``cutoff``
-# variable determines which singular values are considered non-zero, relative
-# to the largest singular value.
+# to which the data will be projected to. If the rank is not specified, it will
+# be computed automatically using the :func:`~pybispectra.utils.compute_rank`
+# function. Here, the rank is determined based on the number of non-zero
+# singular values. Non-zero singular values are defined as those which are
+# greater than the largest singular values multiplied by a tolerance value
+# specified by the `sv_tol` argument (:math:`1e^{-5}` by default). Below we see
+# that our original timeseries data of 20 channels has a rank of 20, and is
+# therefore full rank. Although the rank of the data is automatically computed,
+# the option of specifying the rank subspace to project the data to is still
+# provided, as a rank projection less than that of the data's rank may be
+# desired when dealing with a large number of channels to prevent the
+# overfitting of filters.
 
 # %%
 
-cutoff = 1e-5  # non-zero criteria relative to largest singular value
-# gets the singular values of the data
-s = np.linalg.svd(data, compute_uv=False)
-# finds how many singular values are 'non-zero'
-rank = np.min(
-    [
-        np.count_nonzero(s[epoch_idx] >= s[epoch_idx, 0] * cutoff)
-        for epoch_idx in range(s.shape[0])
-    ]
+rank = compute_rank(data, sv_tol=1e-5)
+print(
+    f"The original timeseries data ({data.shape[1]} channels) has a rank of "
+    f"{rank}."
 )
 
 ###############################################################################
@@ -143,10 +159,16 @@ rank = np.min(
 
 # transformed data
 fft_coeffs_transformed, freqs = compute_fft(
-    data=transformed_data, sampling_freq=sampling_freq, n_points=sampling_freq
+    data=transformed_data,
+    sampling_freq=sampling_freq,
+    n_points=sampling_freq,
+    verbose=False,
 )
 waveshape_transformed = WaveShape(
-    data=fft_coeffs_transformed, freqs=freqs, sampling_freq=sampling_freq
+    data=fft_coeffs_transformed,
+    freqs=freqs,
+    sampling_freq=sampling_freq,
+    verbose=False,
 )
 waveshape_transformed.compute(f1s=np.arange(10, 71), f2s=np.arange(10, 71))
 fig, axes = waveshape_transformed.results.plot(
@@ -162,10 +184,16 @@ fig[0].set_size_inches(6, 6)
 
 # noisy data
 fft_coeffs_noisy, freqs = compute_fft(
-    data=data, sampling_freq=sampling_freq, n_points=sampling_freq
+    data=data,
+    sampling_freq=sampling_freq,
+    n_points=sampling_freq,
+    verbose=False,
 )
 waveshape_noisy = WaveShape(
-    data=fft_coeffs_noisy, freqs=freqs, sampling_freq=sampling_freq
+    data=fft_coeffs_noisy,
+    freqs=freqs,
+    sampling_freq=sampling_freq,
+    verbose=False,
 )
 waveshape_noisy.compute(f1s=np.arange(10, 71), f2s=np.arange(10, 71))
 noisy_results = waveshape_noisy.results.get_results()

@@ -121,6 +121,7 @@ fft_coeffs, freqs = compute_fft(
     n_points=2 * n_times + 1,
     window="hamming",
     return_neg_freqs=True,
+    verbose=False,
 )
 
 print(
@@ -145,7 +146,7 @@ print(
 # %%
 
 tde = TDE(
-    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq
+    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
 tde.compute(indices=([0, 1], [1, 0]), method=1)  # compute TDE
 tde_times = tde.results.times
@@ -237,10 +238,13 @@ fft_coeffs, freqs = compute_fft(
     n_points=2 * n_times + 1,
     window="hamming",
     return_neg_freqs=True,
+    verbose=False,
 )
 
 # compute TDE
-tde = TDE(data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq)
+tde = TDE(
+    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
+)
 tde.compute(indices=([0], [1]), symmetrise=["none", "antisym"], method=1)
 tde_standard, tde_antisym = tde.results
 

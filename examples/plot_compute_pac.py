@@ -71,7 +71,10 @@ sampling_freq = 200  # sampling frequency in Hz
 
 # compute Fourier coeffs.
 fft_coeffs, freqs = compute_fft(
-    data=data, sampling_freq=sampling_freq, n_points=sampling_freq
+    data=data,
+    sampling_freq=sampling_freq,
+    n_points=sampling_freq,
+    verbose=False,
 )
 
 print(
@@ -105,7 +108,7 @@ print(
 # %%
 
 pac = PAC(
-    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq
+    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
 pac.compute(indices=([0], [1]))  # compute PAC
 
@@ -164,11 +167,16 @@ sampling_freq = 200
 
 # compute Fourier coeffs.
 fft_coeffs, freqs = compute_fft(
-    data=data, sampling_freq=sampling_freq, n_points=sampling_freq
+    data=data,
+    sampling_freq=sampling_freq,
+    n_points=sampling_freq,
+    verbose=False,
 )
 
 # compute PAC
-pac = PAC(data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq)
+pac = PAC(
+    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
+)
 pac.compute(indices=([0, 1, 0], [0, 1, 1]), symmetrise=["none", "antisym"])
 pac_standard, pac_antisym = pac.results
 

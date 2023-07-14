@@ -53,7 +53,10 @@ sampling_freq = 500  # Hz
 
 # compute Fourier coeffs.
 fft_coeffs, freqs = compute_fft(
-    data=data, sampling_freq=sampling_freq, n_points=sampling_freq
+    data=data,
+    sampling_freq=sampling_freq,
+    n_points=sampling_freq,
+    verbose=False,
 )
 
 print(
@@ -87,7 +90,7 @@ print(
 # %%
 
 ppc = PPC(
-    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq
+    data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
 ppc.compute(indices=([0], [1]))  # compute PPC
 ppc_results = ppc.results.get_results()  # return results as array

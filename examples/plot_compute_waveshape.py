@@ -126,11 +126,13 @@ fft_coeffs_sawtooths, freqs = compute_fft(
     data=data_sawtooths,
     sampling_freq=sampling_freq,
     n_points=sampling_freq,
+    verbose=False,
 )
 fft_coeffs_peaks_troughs, _ = compute_fft(
     data=data_peaks_troughs,
     sampling_freq=sampling_freq,
     n_points=sampling_freq,
+    verbose=False,
 )
 
 ###############################################################################
@@ -164,6 +166,7 @@ waveshape_sawtooths = WaveShape(
     data=fft_coeffs_sawtooths,
     freqs=freqs,
     sampling_freq=sampling_freq,
+    verbose=False,
 )  # initialise object
 waveshape_sawtooths.compute(
     f1s=np.arange(0, 36), f2s=np.arange(0, 36)
@@ -171,7 +174,10 @@ waveshape_sawtooths.compute(
 
 # peaks and troughs
 waveshape_peaks_troughs = WaveShape(
-    data=fft_coeffs_peaks_troughs, freqs=freqs, sampling_freq=sampling_freq
+    data=fft_coeffs_peaks_troughs,
+    freqs=freqs,
+    sampling_freq=sampling_freq,
+    verbose=False,
 )
 waveshape_peaks_troughs.compute(f1s=np.arange(0, 36), f2s=np.arange(0, 36))
 

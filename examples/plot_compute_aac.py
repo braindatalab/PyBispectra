@@ -45,6 +45,7 @@ tfr, freqs = compute_tfr(
     freqs=freqs,
     tfr_mode="multitaper",
     n_cycles=7,
+    verbose=False,
 )
 
 print(
