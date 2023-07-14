@@ -10,6 +10,7 @@ from mne.decoding import SSD
 from mne.time_frequency import csd_array_fourier, csd_array_multitaper
 import scipy as sp
 
+from pybispectra.utils.utils import compute_rank
 from pybispectra.utils._utils import _create_mne_info
 
 
@@ -128,6 +129,8 @@ class SpatioSpectralFilter:
 
     n_harmonics = None
 
+    bandpass_filter = None
+
     rank = None
 
     filters = None
@@ -207,6 +210,11 @@ class SpatioSpectralFilter:
             self.noise_bounds[1] - self.signal_bounds[1],
         ]
 
+    def _sort_bandpass_filter(self, bandpass_filter: bool) -> None:
+        """Sort bandpass filter input."""
+        if not isinstance(bandpass_filter, bool):
+            raise TypeError("`bandpass_filter` must be a bool.")
+
     def _sort_n_harmonics(self, n_harmonics: int) -> None:
         """Sort harmonic use input."""
         if not isinstance(n_harmonics, int):
@@ -260,7 +268,7 @@ class SpatioSpectralFilter:
         rank = deepcopy(rank)
 
         if rank is None:
-            rank = deepcopy(self._use_n_chans)
+            rank = compute_rank(self.data)
 
         if not isinstance(rank, int):
             raise TypeError("`rank` must be an int.")
@@ -284,6 +292,7 @@ class SpatioSpectralFilter:
         signal_bounds: tuple[int | float],
         noise_bounds: tuple[int | float],
         signal_noise_gap: int | float = 1.0,
+        bandpass_filter: bool = False,
         indices: tuple[int] | None = None,
         rank: int | None = None,
     ) -> None:
@@ -302,15 +311,19 @@ class SpatioSpectralFilter:
         signal_noise_gap : int | float (default ``1.0``)
             Frequency count (in Hz) to treat as a transtition boundary between
             :attr:`signal_bounds` and :attr:`noise_bounds`. Used to reduce
-            spectral leakage between he signal and noise frequencies.
+            spectral leakage between the signal and noise frequencies.
+
+        bandpass_filter : bool (default ``False``)
+            Whether or not to bandpass filter the data before transforming with
+            the SSD filters.
 
         indices : tuple of int | None (default None)
             Channel indices to fit the filters to. If ``None``, all channels
             are used.
 
         rank : int | None (default None)
-            Rank subspace to project the data to. If ``None``, no projection is
-            performed.
+            Rank subspace to project the data to. If ``None``, the rank of the
+            data is automatically computed and projected to.
 
         Notes
         -----
@@ -322,6 +335,7 @@ class SpatioSpectralFilter:
         .. footbibliography::
         """
         self._sort_freq_bounds(signal_bounds, noise_bounds, signal_noise_gap)
+        self._sort_bandpass_filter(bandpass_filter)
         self._sort_indices(indices)
         self._sort_rank(rank)
 
@@ -395,7 +409,7 @@ class SpatioSpectralFilter:
             n_components=None,
             picks=None,
             sort_by_spectral_ratio=False,
-            return_filtered=False,
+            return_filtered=self.bandpass_filter,
             rank=self.rank,
         )
         self._transformed_data = ssd.fit_transform(self.data[:, self.indices])
@@ -442,8 +456,8 @@ class SpatioSpectralFilter:
             are used.
 
         rank : int | None (default None)
-            Rank subspace to project the data to. If ``None``, no projection is
-            performed.
+            Rank subspace to project the data to. If ``None``, the rank of the
+            data is automatically computed and projected to.
 
         csd_method : str (default ``"multitaper"``)
             Method to use when computing the CSD. Can be ``"multitaper"`` or
@@ -605,11 +619,11 @@ class SpatioSpectralFilter:
         )
 
         eigvals, eigvects = sp.linalg.eigh(cov_signal, cov_noise)
-        ix = np.argsort(eigvals)[::-1]  # sort in descending order
+        eig_idx = np.argsort(eigvals)[::-1]  # sort in descending order
 
-        self.filters = projection @ eigvects[:, ix]  # project to sensor space
+        self.filters = projection @ eigvects[:, eig_idx]  # project to sensors
         self.patterns = np.linalg.pinv(self.filters)
-        self.ratios = eigvals[ix]
+        self.ratios = eigvals[eig_idx]
 
         self._transformed_data = np.einsum(
             "ijk,jl->ilk", self.data[:, self.indices], self.filters
@@ -679,9 +693,9 @@ class SpatioSpectralFilter:
         """
         if self.rank < self._use_n_chans:
             eigvals, eigvects = sp.linalg.eigh(cov_signal)
-            ix = np.argsort(eigvals)[::-1]  # sort in descending order
-            eigvals = eigvals[ix]
-            eigvects = eigvects[:, ix]
+            eig_idx = np.argsort(eigvals)[::-1]  # sort in descending order
+            eigvals = eigvals[eig_idx]
+            eigvects = eigvects[:, eig_idx]
             projection = eigvects[:, : self.rank] @ (
                 np.eye(self.rank) * eigvals[: self.rank] ** -0.5
             )
