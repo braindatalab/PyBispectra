@@ -60,7 +60,13 @@ def compute_fft(
     freqs : numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in ``coeffs``.
     """
-    n_points, window_func, n_jobs = _compute_fft_input_checks(
+    (
+        n_points,
+        fft_func,
+        fft_freq_func,
+        window_func,
+        n_jobs,
+    ) = _compute_fft_input_checks(
         data,
         sampling_freq,
         n_points,
@@ -73,10 +79,7 @@ def compute_fft(
     if verbose:
         print("Computing FFT on the data...")
 
-    freqs = sp.fft.fftfreq(n=n_points, d=1 / sampling_freq)
-    if not return_neg_freqs:
-        freqs = np.abs(freqs)
-        freqs = freqs[: freqs.argmax() + 1]
+    freqs = fft_freq_func(n=n_points, d=1 / sampling_freq)
 
     window = window_func(data.shape[2])
 
@@ -88,7 +91,7 @@ def compute_fft(
     coeffs = np.array(
         pqdm(
             args,
-            sp.fft.fft,  # should be faster than NumPy for real-valued inputs
+            fft_func,
             n_jobs,
             argument_type="kwargs",
             desc="Processing channels...",
@@ -110,12 +113,18 @@ def _compute_fft_input_checks(
     return_neg_freqs: bool,
     n_jobs: int,
     verbose: bool,
-) -> tuple[int, Callable, int]:
+) -> tuple[int, Callable, Callable, Callable, int]:
     """Check inputs for computing FFT.
 
     Returns
     -------
     n_points : int
+
+    fft_func : Callable
+        Function to use to compute the FFT.
+
+    fft_freq_func : Callable
+        Function to use to compute the FFT frequencies.
 
     window_func : Callable
         Function to use to window the data.
@@ -153,13 +162,19 @@ def _compute_fft_input_checks(
 
     if not isinstance(return_neg_freqs, bool):
         raise TypeError("`return_neg_freqs` must be a bool.")
+    if return_neg_freqs:
+        fft_func = sp.fft.fft
+        fft_freq_func = sp.fft.fftfreq
+    else:
+        fft_func = sp.fft.rfft
+        fft_freq_func = sp.fft.rfftfreq
 
     if not isinstance(verbose, bool):
         raise TypeError("`verbose` must be a bool.")
     if verbose and not np.isreal(data).all():
         warn("`data` is expected to be real-valued.", UserWarning)
 
-    return n_points, window_func, n_jobs
+    return n_points, fft_func, fft_freq_func, window_func, n_jobs
 
 
 def compute_tfr(
@@ -377,7 +392,9 @@ def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
 
     sv_tol : int | float (default ``1e-5``)
         Tolerance to use to define non-zero singular values, based on the
-        largest singular value.
+        largest singular value. Singular values greater than the largest
+        singular value multiplied by the tolerance are considered to be
+        non-zero.
 
     Returns
     -------
