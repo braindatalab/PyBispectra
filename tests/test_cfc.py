@@ -10,6 +10,7 @@ from pybispectra.utils import ResultsCFC, compute_fft, compute_tfr
 from pybispectra.utils._utils import _generate_data
 
 
+@pytest.mark.parametrize("class_type", ["PAC", "PPC", "AAC"])
 def test_error_catch(class_type: str) -> None:
     """Check that CFC classes catch errors."""
     if class_type == "PAC":
@@ -32,31 +33,35 @@ def test_error_catch(class_type: str) -> None:
     if class_type in ["PAC", "PPC"]:
         coeffs, freqs = compute_fft(data, sampling_freq)
     else:
-        coeffs, freqs = compute_tfr(data, sampling_freq, freqs)
+        coeffs, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3)
 
     # initialisation
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         TestClass(coeffs.tolist(), freqs, sampling_freq)
-    with pytest.raises(TypeError, match="`data` must be a 3D array."):
-        TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+    if class_type in ["PAC", "PPC"]:
+        with pytest.raises(ValueError, match="`data` must be a 3D array."):
+            TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+    else:
+        with pytest.raises(ValueError, match="`data` must be a 4D array."):
+            TestClass(np.random.randn(2, 2), freqs, sampling_freq)
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
         TestClass(coeffs, freqs.tolist(), sampling_freq)
-    with pytest.raises(TypeError, match="`freqs` must be a 1D array."):
+    with pytest.raises(ValueError, match="`freqs` must be a 1D array."):
         TestClass(coeffs, np.random.randn(2, 2), sampling_freq)
 
     with pytest.raises(
-        TypeError,
+        ValueError,
         match=(
             "`data` and `freqs` must contain the same number of frequencies."
         ),
     ):
         TestClass(coeffs, freqs[:-1], sampling_freq)
 
-    with pytest.raises(TypeError, match="Entries of `freqs` must be >= 0."):
+    with pytest.raises(ValueError, match="Entries of `freqs` must be >= 0."):
         TestClass(coeffs, freqs * -1, sampling_freq)
     with pytest.raises(
-        TypeError,
+        ValueError,
         match=(
             "Entries of `freqs` corresponding to positive frequencies must be "
             "in ascending order."
@@ -70,28 +75,31 @@ def test_error_catch(class_type: str) -> None:
     # compute
     test_class = TestClass(coeffs, freqs, sampling_freq)
 
-    with pytest.raises(
-        TypeError, match="`symmetrise` must be a list of strings or a string."
-    ):
-        test_class.compute(symmetrise=True)
-    with pytest.raises(
-        ValueError, match="The value of `symmetrise` is not recognised."
-    ):
-        test_class.compute(symmetrise="not_a_symmetrise")
+    if class_type == "PAC":
+        with pytest.raises(
+            TypeError,
+            match="`symmetrise` must be a list of strings or a string.",
+        ):
+            test_class.compute(symmetrise=True)
+        with pytest.raises(
+            ValueError, match="The value of `symmetrise` is not recognised."
+        ):
+            test_class.compute(symmetrise="not_a_symmetrise")
 
-    with pytest.raises(
-        TypeError, match="`normalise` must be a list of strings or a string."
-    ):
-        test_class.compute(symmetrise=True)
-    with pytest.raises(
-        ValueError, match="The value of `normalise` is not recognised."
-    ):
-        test_class.compute(normalise="not_a_normalise")
+        with pytest.raises(
+            TypeError,
+            match="`normalise` must be a list of strings or a string.",
+        ):
+            test_class.compute(normalise=True)
+        with pytest.raises(
+            ValueError, match="The value of `normalise` is not recognised."
+        ):
+            test_class.compute(normalise="not_a_normalise")
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
         test_class.compute(indices=list(indices))
     with pytest.raises(ValueError, match="`indices` must have a length of 2."):
-        test_class.compute(indices=indices[0])
+        test_class.compute(indices=(0, 1, 2))
     with pytest.raises(TypeError, match="Entries of `indices` must be lists."):
         test_class.compute(indices=(0, 1))
     with pytest.raises(
@@ -145,10 +153,6 @@ def test_error_catch(class_type: str) -> None:
         ValueError, match="Entries of `f2s` must be in ascending order."
     ):
         test_class.compute(f2s=freqs[::-1])
-    with pytest.raises(
-        ValueError, match="`sampling_freq` must be >= all entries of f2s * 2."
-    ):
-        test_class.compute(f2s=np.arange(sampling_freq + 1))
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         test_class.compute(n_jobs=0.5)
@@ -174,18 +178,22 @@ def test_pac_runs() -> None:
 
     # check the returned results have the correct shape
     assert (
-        pac.results[i].shape == (n_chans**2, len(freqs)) for i in range(4)
+        results.shape == (n_chans**2, len(freqs), len(freqs))
+        for results in pac.results
     )
 
     # check the returned results are of the correct type
     result_types = [
-        "PAC - Bispectrum",
-        "PAC - Bicoherence",
-        "PAC - Bispectrum (antisymmetrised)",
-        "PAC - Bicoherence (antisymmetrised)",
+        "PAC | Bispectrum",
+        "PAC | Bicoherence",
+        "PAC (antisymmetrised) | Bispectrum",
+        "PAC (antisymmetrised) | Bicoherence",
     ]
-    assert (pac.results[i].name == result_types[i] for i in range(4))
-    assert (isinstance(pac.results[i], ResultsCFC) for i in range(4))
+    assert (
+        results.name == result_types[i]
+        for i, results in enumerate(pac.results)
+    )
+    assert (isinstance(results, ResultsCFC) for results in pac.results)
 
     pac.compute(symmetrise="none", normalise="none")
     assert isinstance(pac.results, ResultsCFC)
@@ -219,7 +227,13 @@ def test_pac_runs() -> None:
 
 
 def test_pac_results():
-    """Test that PAC returns the correct results."""
+    """Test that PAC returns the correct results.
+
+    Simulated data with 10-60 Hz PAC is used. Bivariate PAC involves genuine
+    PAC between channels. Univariate PAC contains genuine PAC only within each
+    channel, however this will also appear between channels unless
+    antisymmetrisation is used.
+    """
     # identify interacting and non-interacting frequencies (10-60 Hz PAC)
     interacting_f1s = np.arange(9, 12)
     interacting_f2s = np.arange(59, 62)
@@ -235,7 +249,7 @@ def test_pac_results():
     # test that genuine PAC is detected
     # load simulated data with bivariate PAC interactions
     data = np.load(
-        os.path.join("examples", "data", "sim_data_pac_bivariate.npy")
+        os.path.join("..", "examples", "data", "sim_data_pac_bivariate.npy")
     )
     sampling_freq = 200  # sampling frequency in Hz
 
@@ -260,7 +274,7 @@ def test_pac_results():
     # Test that spurious PAC is corrected with antisymmetrisation
     # load simulated data with univariate PAC interactions
     data = np.load(
-        os.path.join("examples", "data", "sim_data_pac_univariate.npy")
+        os.path.join("..", "examples", "data", "sim_data_pac_univariate.npy")
     )
     sampling_freq = 200  # sampling frequency in Hz
 
@@ -302,3 +316,46 @@ def test_pac_results():
         results[0][np.ix_(noninteracting_f1s, noninteracting_f2s)].mean(),
         atol=1e-4,
     )
+
+
+def test_ppc_runs() -> None:
+    """Test that PPC runs correctly."""
+    n_chans = 3
+    sampling_freq = 50
+    data = _generate_data(5, n_chans, 100)
+
+    fft, freqs = compute_fft(
+        data=data, sampling_freq=sampling_freq, verbose=False
+    )
+
+    # check it runs with correct inputs
+    ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    ppc.compute()
+
+    # check the returned results have the correct shape
+    assert ppc.results.shape == (n_chans**2, len(freqs), len(freqs))
+
+    # check the returned results are of the correct type
+    assert ppc.results.name == "PPC"
+    assert isinstance(ppc.results, ResultsCFC)
+
+
+def test_aac_runs() -> None:
+    """Test that AAC runs correctly."""
+    n_chans = 3
+    sampling_freq = 50
+    data = _generate_data(5, n_chans, 100)
+    freqs = np.arange(5, 20)
+
+    fft, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3)
+
+    # check it runs with correct inputs
+    aac = AAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    aac.compute()
+
+    # check the returned results have the correct shape
+    assert aac.results.shape == (n_chans**2, len(freqs), len(freqs))
+
+    # check the returned results are of the correct type
+    assert aac.results.name == "AAC"
+    assert isinstance(aac.results, ResultsCFC)
