@@ -516,7 +516,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_i_nosym,
                     self.indices,
                     self._times,
-                    "Unsymmetrised TDE | Method I",
+                    "TDE | Method I",
                 )
             )
         if self._tde_ii_nosym is not None:
@@ -525,7 +525,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_ii_nosym,
                     self.indices,
                     self._times,
-                    "Unsymmetrised TDE | Method II",
+                    "TDE | Method II",
                 )
             )
         if self._tde_iii_nosym is not None:
@@ -534,7 +534,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iii_nosym,
                     self.indices,
                     self._times,
-                    "Unsymmetrised TDE | Method III",
+                    "TDE | Method III",
                 )
             )
         if self._tde_iv_nosym is not None:
@@ -543,7 +543,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iv_nosym,
                     self.indices,
                     self._times,
-                    "Unsymmetrised TDE | Method IV",
+                    "TDE | Method IV",
                 )
             )
 
@@ -553,7 +553,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_i_antisym,
                     self.indices,
                     self._times,
-                    "Antisymmetrised TDE | Method I",
+                    "TDE (antisymmetrised) | Method I",
                 )
             )
         if self._tde_ii_antisym is not None:
@@ -562,7 +562,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_ii_antisym,
                     self.indices,
                     self._times,
-                    "Antisymmetrised TDE | Method II",
+                    "TDE (antisymmetrised) | Method II",
                 )
             )
         if self._tde_iii_antisym is not None:
@@ -571,7 +571,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iii_antisym,
                     self.indices,
                     self._times,
-                    "Antisymmetrised TDE | Method III",
+                    "TDE (antisymmetrised) | Method III",
                 )
             )
         if self._tde_iv_antisym is not None:
@@ -580,7 +580,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iv_antisym,
                     self.indices,
                     self._times,
-                    "Antisymmetrised TDE | Method IV",
+                    "TDE (antisymmetrised) | Method IV",
                 )
             )
 

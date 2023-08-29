@@ -347,7 +347,7 @@ class PAC(_ProcessBispectrum):
                     self.indices,
                     self.f1s,
                     self.f2s,
-                    "PAC - Bispectrum",
+                    "PAC | Bispectrum",
                 )
             )
 
@@ -358,7 +358,7 @@ class PAC(_ProcessBispectrum):
                     self.indices,
                     self.f1s,
                     self.f2s,
-                    "PAC - Bicoherence",
+                    "PAC | Bicoherence",
                 )
             )
 
@@ -369,7 +369,7 @@ class PAC(_ProcessBispectrum):
                     self.indices,
                     self.f1s,
                     self.f2s,
-                    "PAC - Bispectrum (antisymmetrised)",
+                    "PAC (antisymmetrised) | Bispectrum",
                 )
             )
 
@@ -380,7 +380,7 @@ class PAC(_ProcessBispectrum):
                     self.indices,
                     self.f1s,
                     self.f2s,
-                    "PAC - Bicoherence (antisymmetrised)",
+                    "PAC (antisymmetrised) | Bicoherence",
                 )
             )
 
