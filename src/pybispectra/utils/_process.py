@@ -75,8 +75,18 @@ class _ProcessFreqBase(ABC):
         if not self._allow_neg_freqs and np.any(freqs < 0):
             raise ValueError("Entries of `freqs` must be >= 0.")
 
+        if self._allow_neg_freqs:
+            max_freq_idx = np.argmax(freqs)
+            if np.any(freqs[: max_freq_idx + 1] < 0):
+                raise ValueError(
+                    "Entries of `freqs` must have the form positive "
+                    "frequencies, then negative frequencies."
+                )
+
         max_freq_idx = np.where(freqs == np.abs(freqs).max())[0][0]
-        if np.any(freqs[:max_freq_idx] != np.sort(freqs[:max_freq_idx])):
+        if max_freq_idx == 0 or np.any(
+            freqs[:max_freq_idx] != np.sort(freqs[:max_freq_idx])
+        ):
             raise ValueError(
                 "Entries of `freqs` corresponding to positive frequencies "
                 "must be in ascending order."
@@ -159,16 +169,10 @@ class _ProcessFreqBase(ABC):
                 "data."
             )
 
-        if np.all(f1s != np.sort(f1s)):
+        if np.any(f1s != np.sort(f1s)):
             raise ValueError("Entries of `f1s` must be in ascending order.")
-        if np.all(f2s != np.sort(f2s)):
+        if np.any(f2s != np.sort(f2s)):
             raise ValueError("Entries of `f2s` must be in ascending order.")
-
-        if self.sampling_freq is not None:
-            if self.sampling_freq < f2s[-1] * 2:
-                raise ValueError(
-                    "`sampling_freq` must be >= all entries of f2s * 2."
-                )
 
         if self.verbose:
             if f1s.max() >= f2s.min():
