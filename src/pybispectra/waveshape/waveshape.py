@@ -165,7 +165,9 @@ class WaveShape(_ProcessBispectrum):
         if indices is None:
             indices = tuple(np.arange(self._n_chans))
         if not isinstance(indices, tuple):
-            raise TypeError("`indices` should be a tuple.")
+            raise TypeError("`indices` must be a tuple.")
+        if any(not isinstance(idx, (int, np.integer)) for idx in indices):
+            raise TypeError("Entries of `indices` must be ints.")
 
         if any(idx < 0 or idx >= self._n_chans for idx in indices):
             raise ValueError(

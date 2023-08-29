@@ -594,6 +594,7 @@ class ResultsWaveShape(_ResultsBase):
         if data.ndim != 3:
             raise ValueError("`data` must be a 3D array.")
         self._data = data.copy()
+        self.shape = data.shape
 
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
