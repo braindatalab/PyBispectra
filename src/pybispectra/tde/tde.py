@@ -296,17 +296,8 @@ class TDE(_ProcessBispectrum):
         """Sort seed-target indices inputs."""
         indices = deepcopy(indices)
         if indices is None:
-            seed_indices = np.reshape(
-                np.repeat(range(self._n_chans), self._n_chans),
-                (self._n_chans, self._n_chans),
-            ).tolist()
-            target_indices = np.reshape(
-                np.tile(range(self._n_chans), self._n_chans),
-                (self._n_chans, self._n_chans),
-            ).tolist()
-            indices = (
-                seed_indices[np.triu_indices(self._n_chans, 1)],
-                target_indices[np.triu_indices(self._n_chans, 1)],
+            indices = tuple(
+                np.array(np.triu_indices(self._n_chans, 1)).tolist(),
             )
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
