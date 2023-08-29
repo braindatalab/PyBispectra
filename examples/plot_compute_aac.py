@@ -10,10 +10,14 @@ computed with PyBispectra.
 # %%
 
 import os
+from pathlib import Path
 
 import numpy as np
 
+import pybispectra
 from pybispectra import compute_tfr, AAC
+
+data_dir = os.path.join(Path(pybispectra.__file__).parent, "data")
 
 ###############################################################################
 # Background
@@ -32,9 +36,9 @@ from pybispectra import compute_tfr, AAC
 # the amplitude TFR of the data (using Morlet wavelets in this example).
 
 # %%
-"""
+
 # load example data
-data = np.load(os.path.join("..", "data", "sim_data_aac.npy"))
+data = np.load(os.path.join(data_dir, "sim_data_aac.npy"))
 sampling_freq = 200  # Hz
 freqs = np.arange(5, 101, 1)
 
@@ -53,7 +57,6 @@ print(
     f"{tfr.shape[2]} frequencies x {tfr.shape[3]} times]\nFreq. range: "
     f"{freqs[0]} - {freqs[-1]} Hz"
 )
-"""
 
 ###############################################################################
 # As you can see, we have the amplitude TFR for 2 channels for 30 epochs, with
@@ -78,7 +81,7 @@ print(
 # frequency combinations.
 
 # %%
-"""
+
 aac = AAC(
     data=tfr, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
@@ -89,7 +92,6 @@ print(
     f"AAC results: [{aac_results.shape[0]} connection(s) x "
     f"{aac_results.shape[1]} f1s x {aac_results.shape[2]} f2s]"
 )
-"""
 
 ###############################################################################
 # We can see that AAC has been computed for 1 connections (0 -> 1), and all
@@ -106,9 +108,9 @@ print(
 # frequencies, although we could specify a subset of frequencies to inspect.
 
 # %%
-"""
+
 fig, axes = aac.results.plot()  # f1s=np.arange(5, 16), f2s=np.arange(55, 66))
-"""
+
 ###############################################################################
 # As you can see, values for the lower right triangle of each plot are missing,
 # corresponding to the frequency combinations where :math:`f_1` is greater than
