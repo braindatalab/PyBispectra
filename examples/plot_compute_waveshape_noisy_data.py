@@ -85,7 +85,11 @@ from pybispectra import (
 # %%
 
 # load example data
-data = np.load(os.path.join("data", "sim_data_waveshape_noisy.npy"))
+data = np.load(
+    os.path.join(
+        os.path.dirname(__file__), "data", "sim_data_waveshape_noisy.npy"
+    )
+)
 sampling_freq = 1000  # Hz
 
 # perform spatio-spectral filtering
