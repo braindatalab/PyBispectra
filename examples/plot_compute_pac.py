@@ -10,16 +10,10 @@ with PyBispectra.
 # %%
 
 import os
-import pathlib
 
 import numpy as np
 
-import pybispectra
 from pybispectra import compute_fft, PAC
-
-data_dir = os.path.join(
-    pathlib.Path(pybispectra.__file__).parent.parent.parent, "examples", "data"
-)
 
 ###############################################################################
 # Background
