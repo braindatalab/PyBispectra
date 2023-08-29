@@ -25,6 +25,11 @@ class PPC(_ProcessFreqBase):
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
+    Methods
+    -------
+    compute
+        Compute PPC, averaged over epochs.
+
     Attributes
     ----------
     results : tuple of pybispectra.ResultsCFC
@@ -165,7 +170,7 @@ def _compute_ppc(
 ) -> np.ndarray:
     """Compute PPC for a single connection across epochs.
 
-    PARAMETERS
+    Parameters
     ----------
     data : numpy.ndarray, shape of [epochs, 2, frequencies]
         FFT coefficients where the second dimension contains the data for the
@@ -180,7 +185,7 @@ def _compute_ppc(
     f2s : numpy.ndarray, shape of [frequencies]
         High frequencies to compute coupling for.
 
-    RETURNS
+    Returns
     -------
     results : numpy.ndarray, shape of [f1s, f2s]
         PPC for a single connection.

@@ -28,6 +28,11 @@ class AAC(_ProcessFreqBase):
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
+    Methods
+    -------
+    compute
+        Compute AAC, averaged over epochs.
+
     Attributes
     ----------
     results : tuple of pybispectra.ResultsCFC
@@ -166,7 +171,7 @@ def _compute_aac(
 ) -> np.ndarray:
     """Compute AAC for a single connection across epochs.
 
-    PARAMETERS
+    Parameters
     ----------
     data : numpy.ndarray, shape of [epochs, 2, frequencies, times]
         Amplitude (power) of the time-frequency representation of data where
@@ -182,7 +187,7 @@ def _compute_aac(
     f2s : numpy.ndarray, shape of [frequencies]
         High frequencies to compute coupling for.
 
-    RETURNS
+    Returns
     -------
     results : numpy.ndarray, shape of [f1s, f2s]
         AAC averaged across epochs for a single connection.

@@ -33,6 +33,11 @@ class TDE(_ProcessBispectrum):
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
+    Methods
+    -------
+    compute
+        Compute TDE, averaged over epochs.
+
     Attributes
     ----------
     results : tuple of ResultsTDE
@@ -324,7 +329,7 @@ class TDE(_ProcessBispectrum):
                     "the data."
                 )
         if len(seeds) != len(targets):
-            raise ValueError("Entires of `indices` must have equal length.")
+            raise ValueError("Entries of `indices` must have equal length.")
         if any(seed == target for seed, target in zip(indices[0], indices[1])):
             raise ValueError(
                 "Seeds and targets in `indices` must not be the same channel "

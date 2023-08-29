@@ -24,6 +24,7 @@ class _ResultsBase(ABC):
         if data.ndim != data_ndim:
             raise ValueError(f"`data` must be a {data_ndim}D array.")
         self._data = data.copy()
+        self.shape = data.shape
 
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
@@ -158,11 +159,16 @@ class ResultsCFC(_ResultsBase):
     name : str
         Name of the results being stored.
 
+    Methods
+    -------
+    plot
+        Plot the results.
+
+    get_results
+        Return a copy of the results.
+
     Attributes
     ----------
-    data : numpy.ndarray
-        The results.
-
     name : str
         Name of the results.
 
@@ -170,6 +176,9 @@ class ResultsCFC(_ResultsBase):
         Indices of the channels for each connection of the results. Should
         contain two lists of equal length for the seed and target indices,
         respectively.
+
+    shape : tuple of int
+        Shape of the results i.e. [n_nodes, f1s, f2s].
 
     n_nodes : int
         Number of connections in the the results.
@@ -348,11 +357,16 @@ class ResultsTDE(_ResultsBase):
     name : str
         Name of the results being stored.
 
+    Methods
+    -------
+    plot
+        Plot the results.
+
+    get_results
+        Return a copy of the results.
+
     Attributes
     ----------
-    data : numpy.ndarray
-        The results
-
     name : str
         Name of the results.
 
@@ -361,11 +375,17 @@ class ResultsTDE(_ResultsBase):
         two lists of equal length for the seed and target indices,
         respectively.
 
+    shape : tuple of int
+        Shape of the results i.e. [n_nodes, n_times].
+
     n_nodes : str
         Number of connections in the results.
 
     times : numpy.ndarray
         1D array of timepoints in the results (in ms).
+
+    tau : tuple of float
+        Estimated time delay for each connection (in ms).
     """
 
     def __repr__(self) -> str:
@@ -501,7 +521,7 @@ class ResultsTDE(_ResultsBase):
 
     @property
     def tau(self) -> tuple[float]:
-        """Return the estimated time delay for each connection."""
+        """Return the estimated time delay for each connection (in ms)."""
         return self._tau
 
 
@@ -525,6 +545,14 @@ class ResultsWaveShape(_ResultsBase):
     name : str
         Name of the results being stored.
 
+    Methods
+    -------
+    plot
+        Plot the results.
+
+    get_results
+        Return a copy of the results.
+
     Attributes
     ----------
     name : str
@@ -532,6 +560,9 @@ class ResultsWaveShape(_ResultsBase):
 
     indices : tuple of int
         Indices of the channels in the results.
+
+    shape : tuple of int
+        Shape of the results i.e. [n_nodes, f1s, f2s].
 
     n_nodes : int
         Number of channels in the results.

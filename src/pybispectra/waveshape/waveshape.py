@@ -27,9 +27,14 @@ class WaveShape(_ProcessBispectrum):
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
+    Methods
+    -------
+    compute
+        Compute bicoherence within channels, averaged over epochs.
+
     Attributes
     ----------
-    results : tuple of ResultsWaveShape, shape of [channels, f1, f2]
+    results : tuple of ResultsWaveShape
         Bicoherence of the data.
 
     data : numpy.ndarray, shape of [epochs, channels, frequencies]
@@ -58,7 +63,7 @@ class WaveShape(_ProcessBispectrum):
     as it can enhance the signal-to-noise ratio of your data as well as
     mitigate the risks of source-mixing in the sensor space compromising the
     bicoherence patterns of the data :footcite:`Bartz2019`. Filtering can be
-    performed with :class:`pybispectra.SpatioSpectralFilter`.
+    performed with :class:`pybispectra.utils.SpatioSpectralFilter`.
 
     References
     ----------

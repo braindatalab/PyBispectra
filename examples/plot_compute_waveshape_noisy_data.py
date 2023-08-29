@@ -50,7 +50,7 @@ from pybispectra import (
 # Two forms of spatio-spectral filtering are available in PyBispectra:
 # spatio-spectral decomposition (SSD) :footcite:`Nikulin2011`; and harmonic
 # power maximisation (HPMax) :footcite:`Bartz2019`. Both methods are based on
-# generalised eigendecomposition :footcite:`Cohen2021`. In SSD, a frequency
+# generalised eigendecomposition :footcite:`Cohen2022`. In SSD, a frequency
 # band of interest is chosen as the signal, and the flanking frequencies are
 # designated as the noise. The data is filtered in these signal and noise
 # ranges, and the covariance matrices of the corresponding data are used to
