@@ -37,11 +37,14 @@ class _ProcessFreqBase(ABC):
         sampling_freq: int | float,
         verbose: bool = True,
     ) -> None:
-        self.verbose = deepcopy(verbose)
-        self._sort_init_inputs(data, freqs, sampling_freq)
+        self._sort_init_inputs(data, freqs, sampling_freq, verbose)
 
     def _sort_init_inputs(
-        self, data: np.ndarray, freqs: np.ndarray, sampling_freq: int | float
+        self,
+        data: np.ndarray,
+        freqs: np.ndarray,
+        sampling_freq: int | float,
+        verbose: bool,
     ) -> None:
         """Check init. inputs are appropriate."""
         if not isinstance(data, np.ndarray):
@@ -87,9 +90,13 @@ class _ProcessFreqBase(ABC):
                     "must be in ascending order."
                 )
 
+        if not isinstance(verbose, bool):
+            raise TypeError("`verbose` must be a bool.")
+
         self.data = data.copy()
         self.freqs = freqs.copy()
         self.sampling_freq = deepcopy(sampling_freq)
+        self.verbose = deepcopy(verbose)
 
     def _sort_indices(
         self, indices: tuple[list[int], list[int]] | None

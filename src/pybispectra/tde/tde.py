@@ -338,7 +338,7 @@ class TDE(_ProcessBispectrum):
     def _compute_bispectra(self) -> None:
         """Compute bispectra between f1s and f2s of seeds and targets."""
         if self.verbose:
-            print("    Computing bispectra...")
+            print("    Computing bispectrum...")
 
         self._xyz = deepcopy(self._kmn)
         if not self._return_method_ii and not self._return_method_iv:
@@ -379,7 +379,7 @@ class TDE(_ProcessBispectrum):
         )
 
         if self.verbose:
-            print("        ... Bispectra computation finished\n")
+            print("        ... Bispectrum computation finished\n")
 
     def _compute_tde(self) -> None:
         """Compute TDE results from bispectra."""

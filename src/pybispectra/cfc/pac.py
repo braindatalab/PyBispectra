@@ -264,7 +264,7 @@ class PAC(_ProcessBispectrum):
         )
 
         if self.verbose:
-            print("        ... Bispectra computation finished\n")
+            print("        ... Bispectrum computation finished\n")
 
     def _compute_bicoherence(self) -> None:
         """Compute bicoherence from the bispectrum using the threenorm."""
@@ -342,7 +342,7 @@ class PAC(_ProcessBispectrum):
                     self.indices,
                     self.f1s,
                     self.f2s,
-                    "PAC - Unsymmetrised Bispectra",
+                    "PAC - Bispectrum",
                 )
             )
 
@@ -353,7 +353,7 @@ class PAC(_ProcessBispectrum):
                     self.indices,
                     self.f1s,
                     self.f2s,
-                    "PAC - Unsymmetrised Bicoherence",
+                    "PAC - Bicoherence",
                 )
             )
 
@@ -364,7 +364,7 @@ class PAC(_ProcessBispectrum):
                     self.indices,
                     self.f1s,
                     self.f2s,
-                    "PAC - Antisymmetrised Bispectra",
+                    "PAC - Bispectrum (antisymmetrised)",
                 )
             )
 
@@ -375,7 +375,7 @@ class PAC(_ProcessBispectrum):
                     self.indices,
                     self.f1s,
                     self.f2s,
-                    "PAC - Antisymmetrised Bicoherence",
+                    "PAC - Bicoherence (antisymmetrised)",
                 )
             )
 
