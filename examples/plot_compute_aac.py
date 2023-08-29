@@ -17,9 +17,7 @@ import numpy as np
 import pybispectra
 from pybispectra import compute_tfr, AAC
 
-data_dir = os.path.join(
-    Path(pybispectra.__file__).parent.parent.parent, "examples"
-)
+data_dir = os.path.join(Path(pybispectra.__file__), "examples")
 
 ###############################################################################
 # Background
