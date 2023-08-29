@@ -40,7 +40,7 @@ def test_results() -> None:
     )
 
     # check repr
-    assert results.__repr__() == (
+    assert repr(results) == (
         f"'<Result: test | [{n_cons} nodes x {n_f1} f1s x {n_f2} f2s]>'"
     )
 
