@@ -10,14 +10,10 @@ computed with PyBispectra.
 # %%
 
 import os
-from pathlib import Path
 
 import numpy as np
 
-import pybispectra
 from pybispectra import compute_tfr, AAC
-
-data_dir = os.path.join(Path(pybispectra.__file__).parent, "data")
 
 ###############################################################################
 # Background
@@ -38,7 +34,7 @@ data_dir = os.path.join(Path(pybispectra.__file__).parent, "data")
 # %%
 
 # load example data
-data = np.load(os.path.join(data_dir, "sim_data_aac.npy"))
+data = np.load(os.path.join(os.getcwd(), "data", "sim_data_aac.npy"))
 sampling_freq = 200  # Hz
 freqs = np.arange(5, 101, 1)
 
