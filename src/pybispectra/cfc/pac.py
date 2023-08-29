@@ -276,13 +276,20 @@ class PAC(_ProcessBispectrum):
         if self.verbose:
             print("    Computing bicoherence...")
 
+        if self._return_antisym:
+            # kmm, mkm
+            kmn = np.array([np.array([0, 1, 1]), np.array([1, 0, 1])])
+        else:
+            # kmm
+            kmn = np.array([np.array([0, 1, 1])])
+
         args = [
             {
                 "data": self.data[:, (seed, target)],
                 "freqs": self.freqs,
                 "f1s": self.f1s,
                 "f2s": self.f2s,
-                "kmn": np.array([np.array([0, 1, 1])]),
+                "kmn": kmn,
             }
             for seed, target in zip(self._seeds, self._targets)
         ]
@@ -296,7 +303,7 @@ class PAC(_ProcessBispectrum):
                 desc="Processing connections...",
                 disable=not self.verbose,
             )
-        )
+        ).transpose(1, 0, 2, 3)
 
         self._bicoherence = np.abs(self._bispectrum) / threenorm
 
