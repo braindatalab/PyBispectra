@@ -85,12 +85,12 @@ from pybispectra import compute_fft, WaveShape
 # load example data
 data_sawtooths = np.load(
     os.path.join(
-        os.path.dirname(__file__), "data", "sim_data_waveshape_sawtooths.npy"
+        os.path.abspath(""), "data", "sim_data_waveshape_sawtooths.npy"
     )
 )
 data_peaks_troughs = np.load(
     os.path.join(
-        os.path.dirname(__file__),
+        os.path.abspath(""),
         "data",
         "sim_data_waveshape_peaks_troughs.npy",
     )

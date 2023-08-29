@@ -112,7 +112,7 @@ from pybispectra import compute_fft, TDE
 # load simulated data
 data = np.load(
     os.path.join(
-        os.path.dirname(__file__), "data", "sim_data_tde_independent_noise.npy"
+        os.path.abspath(""), "data", "sim_data_tde_independent_noise.npy"
     )
 )
 sampling_freq = 200  # sampling frequency in Hz
@@ -233,7 +233,7 @@ fig, axes = tde.results.plot()
 # load simulated data
 data = np.load(
     os.path.join(
-        os.path.dirname(__file__), "data", "sim_data_tde_correlated_noise.npy"
+        os.path.abspath(""), "data", "sim_data_tde_correlated_noise.npy"
     )
 )
 sampling_freq = 200  # sampling frequency in Hz

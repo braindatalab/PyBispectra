@@ -86,9 +86,7 @@ from pybispectra import (
 
 # load example data
 data = np.load(
-    os.path.join(
-        os.path.dirname(__file__), "data", "sim_data_waveshape_noisy.npy"
-    )
+    os.path.join(os.path.abspath(""), "data", "sim_data_waveshape_noisy.npy")
 )
 sampling_freq = 1000  # Hz
 
