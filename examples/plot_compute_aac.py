@@ -34,7 +34,9 @@ from pybispectra import compute_tfr, AAC
 
 # %%
 
-data_dir = os.path.join(Path(os.getcwd()).parent.parent, "examples", "data")
+data_dir = os.path.join(
+    Path(os.getcwd()).parent.parent.parent, "examples", "data"
+)
 
 # load example data
 data = np.load(os.path.join(data_dir, "sim_data_aac.npy"))
