@@ -85,7 +85,7 @@ from pybispectra import (
 
 # %%
 
-data_dir = os.path.abspath("data")
+data_dir = os.path.abspath(os.path.join("..", "data"))
 
 # load example data
 data = np.load(os.path.join(data_dir, "sim_data_waveshape_noisy.npy"))
