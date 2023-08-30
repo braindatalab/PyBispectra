@@ -10,6 +10,7 @@ PyBispectra.
 # %%
 
 import os
+from pathlib import Path
 
 import numpy as np
 
@@ -46,6 +47,10 @@ from pybispectra import compute_fft, PPC
 # the Fourier coefficients of the data.
 
 # %%
+
+data_dir = os.path.join(
+    Path(os.getcwd()).parent.parent.parent, "examples", "data"
+)
 
 # generate data
 data = np.load(os.path.join("data", "sim_data_ppc.npy"))

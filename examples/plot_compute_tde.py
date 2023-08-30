@@ -10,6 +10,7 @@ PyBispectra.
 # %%
 
 import os
+from pathlib import Path
 
 import numpy as np
 
@@ -108,6 +109,10 @@ from pybispectra import compute_fft, TDE
 # will obtain delay estimates at a resolution of 5 ms.
 
 # %%
+
+data_dir = os.path.join(
+    Path(os.getcwd()).parent.parent.parent, "examples", "data"
+)
 
 # load simulated data
 data = np.load(os.path.join("data", "sim_data_tde_independent_noise.npy"))
@@ -227,7 +232,7 @@ fig, axes = tde.results.plot()
 # %%
 
 # load simulated data
-data = np.load(os.path.join("data", "sim_data_tde_correlated_noise.npy"))
+data = np.load(os.path.join(data_dir, "sim_data_tde_correlated_noise.npy"))
 sampling_freq = 200  # sampling frequency in Hz
 n_times = data.shape[2]  # number of timepoints in the data
 
