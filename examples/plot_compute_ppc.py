@@ -48,9 +48,8 @@ from pybispectra import compute_fft, PPC
 
 # %%
 
-data_dir = os.path.abspath(
-    os.path.join("..", "..", "..", "..", "..", "examples", "data")
-)
+data_dir = os.path.abspath(os.path.join("..", "..", "..", "examples", "data"))
+
 # generate data
 data = np.load(os.path.join(data_dir, "sim_data_ppc.npy"))
 sampling_freq = 500  # Hz
