@@ -48,7 +48,7 @@ from pybispectra import compute_fft, PPC
 # %%
 
 # generate data
-data = np.load(os.path.join("..", "data", "sim_data_ppc.npy"))
+data = np.load(os.path.join("data", "sim_data_ppc.npy"))
 sampling_freq = 500  # Hz
 
 # compute Fourier coeffs.

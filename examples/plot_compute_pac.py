@@ -66,7 +66,7 @@ from pybispectra import compute_fft, PAC
 # %%
 
 # load simulated data
-data = np.load(os.path.join("..", "data", "sim_data_pac_bivariate.npy"))
+data = np.load(os.path.join("data", "sim_data_pac_bivariate.npy"))
 sampling_freq = 200  # sampling frequency in Hz
 
 # compute Fourier coeffs.
@@ -162,7 +162,7 @@ fig, axes = pac.results.plot(f1s=np.arange(5, 16), f2s=np.arange(55, 66))
 # %%
 
 # load real data
-data = np.load(os.path.join("..", "data", "sim_data_pac_univariate.npy"))
+data = np.load(os.path.join("data", "sim_data_pac_univariate.npy"))
 sampling_freq = 200
 
 # compute Fourier coeffs.

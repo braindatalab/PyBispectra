@@ -84,14 +84,10 @@ from pybispectra import compute_fft, WaveShape
 
 # load example data
 data_sawtooths = np.load(
-    os.path.join("..", "data", "sim_data_waveshape_sawtooths.npy")
+    os.path.join("data", "sim_data_waveshape_sawtooths.npy")
 )
 data_peaks_troughs = np.load(
-    os.path.join(
-        "..",
-        "data",
-        "sim_data_waveshape_peaks_troughs.npy",
-    )
+    os.path.join("data", "sim_data_waveshape_peaks_troughs.npy")
 )
 sampling_freq = 1000  # Hz
 
