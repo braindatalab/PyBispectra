@@ -43,6 +43,7 @@ sphinx_gallery_conf = {
     "examples_dirs": "../../examples",
     "gallery_dirs": "auto_examples",
 }
+nbsphinx_allow_errors = True
 
 templates_path = ["_templates"]
 exclude_patterns = []
