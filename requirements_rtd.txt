@@ -4,7 +4,9 @@ numba
 mne
 pqdm
 matplotlib
+jupyter
 ipykernel
+ipywidgets
 sphinx
 numpydoc
 nbsphinx
