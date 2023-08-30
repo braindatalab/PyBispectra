@@ -34,6 +34,7 @@ dev = [
     "codespell",
     "pydocstyle",
     "pycodestyle",
+    "ipykernel",
     "sphinx",
     "numpydoc",
     "nbsphinx",
