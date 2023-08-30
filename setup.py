@@ -9,7 +9,6 @@ setup(
     packages=[
         "pybispectra",
         "pybispectra.cfc",
-        "pybispectra.data",
         "pybispectra.tde",
         "pybispectra.utils",
         "pybispectra.waveshape",
