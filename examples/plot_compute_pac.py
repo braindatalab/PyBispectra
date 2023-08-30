@@ -66,7 +66,7 @@ from pybispectra import compute_fft, PAC
 
 # %%
 
-data_dir = os.path.join(os.path.abspath(".."), "data")
+data_dir = "data"
 
 
 # load simulated data
