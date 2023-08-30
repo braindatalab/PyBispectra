@@ -110,8 +110,9 @@ from pybispectra import compute_fft, TDE
 
 # %%
 
-data_dir = os.path.abspath(os.path.join("..", "examples", "data"))
-
+data_dir = os.path.abspath(
+    os.path.join("..", "..", "..", "..", "..", "examples", "data")
+)
 # load simulated data
 data = np.load(os.path.join(data_dir, "sim_data_tde_independent_noise.npy"))
 sampling_freq = 200  # sampling frequency in Hz
