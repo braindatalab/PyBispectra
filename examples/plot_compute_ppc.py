@@ -9,12 +9,9 @@ PyBispectra.
 
 # %%
 
-import os
-from pathlib import Path
-
 import numpy as np
 
-from pybispectra import compute_fft, PPC
+from pybispectra import compute_fft, get_example_data_paths, PPC
 
 ###############################################################################
 # Background
@@ -51,7 +48,7 @@ from pybispectra import compute_fft, PPC
 data_dir = "data"
 
 # generate data
-data = np.load(os.path.join(data_dir, "sim_data_ppc.npy"))
+data = np.load(get_example_data_paths("sim_data_ppc"))
 sampling_freq = 500  # Hz
 
 # compute Fourier coeffs.

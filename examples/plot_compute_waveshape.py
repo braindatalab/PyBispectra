@@ -9,14 +9,11 @@ PyBispectra.
 
 # %%
 
-import os
-from pathlib import Path
-
 import numpy as np
 from numpy.random import RandomState
 from matplotlib import pyplot as plt
 
-from pybispectra import compute_fft, WaveShape
+from pybispectra import compute_fft, get_example_data_paths, WaveShape
 
 ###############################################################################
 # Background
@@ -83,14 +80,12 @@ from pybispectra import compute_fft, WaveShape
 
 # %%
 
-data_dir = "data"
-
 # load example data
 data_sawtooths = np.load(
-    os.path.join(data_dir, "sim_data_waveshape_sawtooths.npy")
+    get_example_data_paths("sim_data_waveshape_sawtooths")
 )
 data_peaks_troughs = np.load(
-    os.path.join(data_dir, "sim_data_waveshape_peaks_troughs.npy")
+    get_example_data_paths("sim_data_waveshape_peaks_troughs")
 )
 sampling_freq = 1000  # Hz
 

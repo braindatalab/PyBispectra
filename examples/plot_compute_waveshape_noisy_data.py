@@ -9,14 +9,12 @@ into wave shape analysis with PyBispectra.
 
 # %%
 
-import os
-from pathlib import Path
-
 import numpy as np
 
 from pybispectra import (
     compute_fft,
     compute_rank,
+    get_example_data_paths,
     SpatioSpectralFilter,
     WaveShape,
     ResultsWaveShape,
@@ -85,10 +83,8 @@ from pybispectra import (
 
 # %%
 
-data_dir = "data"
-
 # load example data
-data = np.load(os.path.join(data_dir, "sim_data_waveshape_noisy.npy"))
+data = np.load(get_example_data_paths("sim_data_waveshape_noisy"))
 sampling_freq = 1000  # Hz
 
 # perform spatio-spectral filtering

@@ -9,12 +9,9 @@ PyBispectra.
 
 # %%
 
-import os
-from pathlib import Path
-
 import numpy as np
 
-from pybispectra import compute_fft, TDE
+from pybispectra import compute_fft, get_example_data_paths, TDE
 
 ###############################################################################
 # Background
@@ -110,11 +107,8 @@ from pybispectra import compute_fft, TDE
 
 # %%
 
-data_dir = "data"
-
-
 # load simulated data
-data = np.load(os.path.join(data_dir, "sim_data_tde_independent_noise.npy"))
+data = np.load(get_example_data_paths("sim_data_tde_independent_noise"))
 sampling_freq = 200  # sampling frequency in Hz
 n_times = data.shape[2]  # number of timepoints in the data
 
@@ -231,7 +225,7 @@ fig, axes = tde.results.plot()
 # %%
 
 # load simulated data
-data = np.load(os.path.join(data_dir, "sim_data_tde_correlated_noise.npy"))
+data = np.load(get_example_data_paths("sim_data_tde_correlated_noise"))
 sampling_freq = 200  # sampling frequency in Hz
 n_times = data.shape[2]  # number of timepoints in the data
 

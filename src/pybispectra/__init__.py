@@ -14,3 +14,4 @@ from .utils import (
     compute_tfr,
     compute_rank,
 )
+from .data import get_example_data_paths

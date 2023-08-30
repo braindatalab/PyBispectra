@@ -9,12 +9,9 @@ with PyBispectra.
 
 # %%
 
-import os
-from pathlib import Path
-
 import numpy as np
 
-from pybispectra import compute_fft, PAC
+from pybispectra import compute_fft, get_example_data_paths, PAC
 
 ###############################################################################
 # Background
@@ -66,11 +63,8 @@ from pybispectra import compute_fft, PAC
 
 # %%
 
-data_dir = "data"
-
-
 # load simulated data
-data = np.load(os.path.join(data_dir, "sim_data_pac_bivariate.npy"))
+data = np.load(get_example_data_paths("sim_data_pac_bivariate"))
 sampling_freq = 200  # sampling frequency in Hz
 
 # compute Fourier coeffs.
@@ -166,7 +160,7 @@ fig, axes = pac.results.plot(f1s=np.arange(5, 16), f2s=np.arange(55, 66))
 # %%
 
 # load real data
-data = np.load(os.path.join(data_dir, "sim_data_pac_univariate.npy"))
+data = np.load(get_example_data_paths("sim_data_pac_univariate"))
 sampling_freq = 200
 
 # compute Fourier coeffs.
