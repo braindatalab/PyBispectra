@@ -34,8 +34,9 @@ from pybispectra import compute_tfr, AAC
 
 # %%
 
-data_dir = os.path.join("..", "_static", "data")
-
+data_dir = os.path.join(
+    os.path.abspath(Path(os.getcwd().parent)), "_static", "data"
+)
 # load example data
 data = np.load(os.path.join(data_dir, "sim_data_aac.npy"))
 sampling_freq = 200  # Hz
