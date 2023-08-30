@@ -42,8 +42,11 @@ bibtex_bibfiles = ["refs.bib"]
 sphinx_gallery_conf = {
     "examples_dirs": "../../examples",
     "gallery_dirs": "auto_examples",
+    "reference_url": {
+        # The module you locally document uses None
+        "sphinx_gallery": None,
+    },
 }
-nbsphinx_allow_errors = False
 
 templates_path = ["_templates"]
 exclude_patterns = []
