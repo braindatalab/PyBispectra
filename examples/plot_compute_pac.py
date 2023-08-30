@@ -66,7 +66,8 @@ from pybispectra import compute_fft, PAC
 
 # %%
 
-data_dir = os.path.join(os.path.abspath(".."), "examples", "data")
+data_dir = os.path.join(os.path.abspath(".."), "data")
+
 
 # load simulated data
 data = np.load(os.path.join(data_dir, "sim_data_pac_bivariate.npy"))
