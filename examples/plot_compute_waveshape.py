@@ -83,7 +83,7 @@ from pybispectra import compute_fft, WaveShape
 
 # %%
 
-data_dir = os.path.join(os.path.abspath(".."), "_static", "data")
+data_dir = os.path.join(os.path.abspath(".."), "examples", "data")
 
 # load example data
 data_sawtooths = np.load(
