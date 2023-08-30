@@ -48,9 +48,7 @@ from pybispectra import compute_fft, PPC
 
 # %%
 
-data_dir = os.path.join(
-    os.path.abspath(Path(os.getcwd()).parent), "_static", "data"
-)
+data_dir = os.path.join(os.path.abspath(Path(os.getcwd())), "_static", "data")
 
 # generate data
 data = np.load(os.path.join(data_dir, "sim_data_ppc.npy"))
