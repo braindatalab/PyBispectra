@@ -49,7 +49,7 @@ from pybispectra import compute_fft, PPC
 # %%
 
 data_dir = os.path.join(
-    os.path.abspath(Path(os.getcwd().parent)), "_static", "data"
+    os.path.abspath(Path(os.getcwd()).parent), "_static", "data"
 )
 
 # generate data

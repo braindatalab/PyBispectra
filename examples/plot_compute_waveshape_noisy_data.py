@@ -86,7 +86,7 @@ from pybispectra import (
 # %%
 
 data_dir = os.path.join(
-    os.path.abspath(Path(os.getcwd().parent)), "_static", "data"
+    os.path.abspath(Path(os.getcwd()).parent), "_static", "data"
 )
 
 # load example data
