@@ -110,9 +110,7 @@ from pybispectra import compute_fft, TDE
 
 # %%
 
-data_dir = os.path.join(
-    Path(os.getcwd()).parent.parent.parent, "examples", "data"
-)
+data_dir = os.path.join(Path(os.getcwd()).parent.parent, "_static", "data")
 
 # load simulated data
 data = np.load(os.path.join(data_dir, "sim_data_tde_independent_noise.npy"))
