@@ -18,12 +18,17 @@ classifiers = [
 ]
 
 dependencies = [
+    "pip",
     "numpy",
     "scipy",
     "numba",
     "mne",
     "pqdm",
-    "matplotlib"
+    "matplotlib",
+    "notebook",
+    "ipykernel",
+    "ipywidgets",
+    "ipython"
 ]
 
 [project.optional-dependencies]
@@ -34,16 +39,16 @@ dev = [
     "codespell",
     "pydocstyle",
     "pycodestyle",
-    "jupyter",
-    "ipykernel",
-    "ipywidgets",
+    "docutils<0.19",
     "sphinx",
     "numpydoc",
     "nbsphinx",
     "nbsphinx_link",
     "sphinxcontrib-bibtex",
     "sphinx-gallery",
-    "pydata-sphinx-theme"
+    "pydata-sphinx-theme",
+    "pypandoc",
+    "pandoc"
 ]
 
 [project.urls]

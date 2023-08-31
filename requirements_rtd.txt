@@ -4,8 +4,9 @@ numba
 mne
 pqdm
 matplotlib
-notebook
 ipykernel
+notebook
+ipython
 ipywidgets
 docutils<0.19
 sphinx
