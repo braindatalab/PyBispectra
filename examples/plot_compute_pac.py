@@ -18,8 +18,8 @@ from pybispectra import compute_fft, get_example_data_paths, PAC
 # ----------
 # PAC quantifies the relationship between the phases of a lower frequency
 # :math:`f_1` and the amplitude of a higher frequency :math:`f_2` within a
-# single signal, :math:`vec{x}`, or across different signals, :math:`vec{x}`
-# and :math:`vec{y}`.
+# single signal, :math:`\vec{x}`, or across different signals, :math:`\vec{x}`
+# and :math:`\vec{y}`.
 #
 # The method available in PyBispectra is based on the bispectrum, :math:`B`,
 # with four variations available. The bispectrum has the general form:
