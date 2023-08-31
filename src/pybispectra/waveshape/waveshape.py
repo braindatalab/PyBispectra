@@ -29,7 +29,7 @@ class WaveShape(_ProcessBispectrum):
 
     Methods
     -------
-    compute
+    compute:
         Compute bicoherence within channels, averaged over epochs.
 
     Attributes
