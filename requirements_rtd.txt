@@ -4,7 +4,7 @@ numba
 mne
 pqdm
 matplotlib
-jupyter
+notebook
 ipykernel
 ipywidgets
 docutils<0.19
@@ -15,5 +15,5 @@ nbsphinx_link
 sphinxcontrib-bibtex
 sphinx-gallery
 pydata-sphinx-theme
-pandoc
 pypandoc
+pandoc
