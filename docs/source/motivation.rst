@@ -10,7 +10,7 @@ data is computed and then used to compute the bispectum; or the indirect
 approach, in which the third order moments of the data are computed first which
 are then used to compute the bispectrum. The approach implemented in
 PyBispectra is based on the direct method. The bispectrum, :math:`B`, has the
-form
+form :class:`~pybispectra.cfc.PAC`
 
 :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>` ,
 
