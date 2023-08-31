@@ -96,7 +96,7 @@ intersphinx_mapping = {
 # NumPyDoc configuration -----------------------------------------------------
 
 # Define what extra methods numpydoc will document
-numpydoc_class_members_toctree = True
+numpydoc_class_members_toctree = False
 numpydoc_attributes_as_param_list = True
 numpydoc_xref_param_type = True
 numpydoc_xref_aliases = {
