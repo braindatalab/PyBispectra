@@ -161,10 +161,10 @@ class ResultsCFC(_ResultsBase):
 
     Methods
     -------
-    plot
+    plot:
         Plot the results.
 
-    get_results
+    get_results:
         Return a copy of the results.
 
     Attributes
@@ -359,10 +359,10 @@ class ResultsTDE(_ResultsBase):
 
     Methods
     -------
-    plot
+    plot:
         Plot the results.
 
-    get_results
+    get_results:
         Return a copy of the results.
 
     Attributes
@@ -547,10 +547,10 @@ class ResultsWaveShape(_ResultsBase):
 
     Methods
     -------
-    plot
+    plot:
         Plot the results.
 
-    get_results
+    get_results:
         Return a copy of the results.
 
     Attributes

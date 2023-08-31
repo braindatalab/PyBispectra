@@ -45,7 +45,8 @@ dev = [
     "notebook",
     "ipykernel",
     "ipywidgets",
-    "ipython"
+    "ipython",
+    "pypandoc"
 ]
 
 [project.urls]

@@ -27,7 +27,7 @@ class PPC(_ProcessFreqBase):
 
     Methods
     -------
-    compute
+    compute:
         Compute PPC, averaged over epochs.
 
     Attributes

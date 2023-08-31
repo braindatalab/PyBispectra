@@ -16,3 +16,4 @@ nbsphinx_link
 sphinxcontrib-bibtex
 sphinx-gallery
 pydata-sphinx-theme
+pypandoc

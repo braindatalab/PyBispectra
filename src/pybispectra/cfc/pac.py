@@ -30,6 +30,11 @@ class PAC(_ProcessBispectrum):
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
+    Methods
+    -------
+    compute:
+        Compute PAC, averaged over epochs.
+
     Attributes
     ----------
     results : tuple of pybispectra.ResultsCFC

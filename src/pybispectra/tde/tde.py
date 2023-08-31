@@ -35,7 +35,7 @@ class TDE(_ProcessBispectrum):
 
     Methods
     -------
-    compute
+    compute:
         Compute TDE, averaged over epochs.
 
     Attributes

@@ -30,7 +30,7 @@ class AAC(_ProcessFreqBase):
 
     Methods
     -------
-    compute
+    compute:
         Compute AAC, averaged over epochs.
 
     Attributes

@@ -27,6 +27,14 @@ class SpatioSpectralFilter:
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
+    Methods
+    -------
+    fit_transform_ssd:
+        Fit SSD filters and transform the data.
+
+    fit_transform_hpmax:
+        Fit HPMax filters and transform the data.
+
     Attributes
     ----------
     transformed_data : numpy.ndarray, shape of [epochs, rank, times]
