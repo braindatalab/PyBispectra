@@ -7,8 +7,8 @@ matplotlib
 jupyter
 ipykernel
 ipywidgets
-pandoc >= 2.14.2
-docutils < 0.19
+pandoc>=2.14.2
+docutils<0.19
 sphinx
 numpydoc
 nbsphinx
