@@ -35,7 +35,6 @@ extensions = [
     "nbsphinx_link",
     "sphinxcontrib.bibtex",
     "sphinx_gallery.gen_gallery",
-    "pandoc",
 ]
 
 bibtex_bibfiles = ["refs.bib"]
