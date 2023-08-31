@@ -4,9 +4,10 @@ black
 codespell
 pydocstyle
 pycodestyle
-jupyter
+notebook
 ipykernel
 ipywidgets
+ipython
 sphinx
 numpydoc
 nbsphinx
