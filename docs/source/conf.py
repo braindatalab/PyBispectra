@@ -42,10 +42,6 @@ bibtex_bibfiles = ["refs.bib"]
 sphinx_gallery_conf = {
     "examples_dirs": "../../examples",
     "gallery_dirs": "auto_examples",
-    "reference_url": {
-        # The module you locally document uses None
-        "sphinx_gallery": None,
-    },
 }
 
 templates_path = ["_templates"]
