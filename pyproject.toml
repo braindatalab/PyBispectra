@@ -47,8 +47,7 @@ dev = [
     "sphinxcontrib-bibtex",
     "sphinx-gallery",
     "pydata-sphinx-theme",
-    "pypandoc",
-    "pandoc"
+    "pypandoc"
 ]
 
 [project.urls]
