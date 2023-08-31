@@ -58,6 +58,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "numpydoc",
     "nbsphinx",
+    "nbsphinx_link",
     "sphinxcontrib.bibtex",
     "sphinx_gallery.gen_gallery",
 ]
