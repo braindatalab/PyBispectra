@@ -8,13 +8,11 @@
 
 import os
 import sys
-
-from pypandoc.pandoc_download import download_pandoc
+from inspect import getsourcefile
 
 import pybispectra
 from pybispectra.utils._docs import linkcode_resolve
 
-download_pandoc()
 
 project = "PyBispectra"
 copyright = "2023, Thomas Samuel Binns"
@@ -25,6 +23,31 @@ release = "1.0.0dev"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 sys.path.insert(0, os.path.abspath("../../"))
+
+# Get path to directory containing this file, conf.py.
+DOCS_DIRECTORY = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
+
+
+def ensure_pandoc_installed(_):
+    import pypandoc
+
+    # Download pandoc if necessary. If pandoc is already installed and on
+    # the PATH, the installed version will be used. Otherwise, we will
+    # download a copy of pandoc into docs/bin/ and add that to our PATH.
+    pandoc_dir = os.path.join(DOCS_DIRECTORY, "bin")
+    # Add dir containing pandoc binary to the PATH environment variable
+    if pandoc_dir not in os.environ["PATH"].split(os.pathsep):
+        os.environ["PATH"] += os.pathsep + pandoc_dir
+    pypandoc.ensure_pandoc_installed(
+        targetfolder=pandoc_dir,
+        version="3.1.6.2",
+        delete_installer=True,
+    )
+
+
+def setup(app):
+    app.connect("builder-inited", ensure_pandoc_installed)
+
 
 extensions = [
     "sphinx.ext.mathjax",
@@ -43,8 +66,10 @@ extensions = [
 bibtex_bibfiles = ["refs.bib"]
 
 sphinx_gallery_conf = {
+    "doc_module": ("pybispectra",),
     "examples_dirs": "../../examples",
     "gallery_dirs": "auto_examples",
+    "reference_url": {"pybispectra": None},
 }
 
 templates_path = ["_templates"]
