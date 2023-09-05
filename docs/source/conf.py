@@ -40,7 +40,7 @@ def ensure_pandoc_installed(_):
         os.environ["PATH"] += os.pathsep + pandoc_dir
     pypandoc.ensure_pandoc_installed(
         targetfolder=pandoc_dir,
-        version="3.1.6.2",
+        version="3.1.7",
         delete_installer=True,
     )
 
