@@ -135,21 +135,16 @@ def _compute_fft_input_checks(
         raise TypeError("`data` must be a NumPy array.")
     if data.ndim != 3:
         raise ValueError("`data` must be a 3D array.")
+    if not np.isreal(data).all():
+        raise ValueError("`data` must be real-valued.")
+
+    if not isinstance(sampling_freq, (int, float)):
+        raise TypeError("`sampling_freq` must be an int or a float.")
 
     if n_points is None:
         n_points = data.shape[2]
     if not isinstance(n_points, int):
         raise TypeError("`n_points` must be an integer")
-
-    if not isinstance(n_jobs, int):
-        raise TypeError("`n_jobs` must be an integer.")
-    if n_jobs < 1 and n_jobs != -1:
-        raise ValueError("`n_jobs` must be >= 1 or -1.")
-    if n_jobs == -1:
-        n_jobs = cpu_count()
-
-    if not isinstance(sampling_freq, (int, float)):
-        raise TypeError("`sampling_freq` must be an int or a float.")
 
     if not isinstance(window, str):
         raise TypeError("`window` must be a str.")
@@ -169,10 +164,15 @@ def _compute_fft_input_checks(
         fft_func = sp.fft.rfft
         fft_freq_func = sp.fft.rfftfreq
 
+    if not isinstance(n_jobs, int):
+        raise TypeError("`n_jobs` must be an integer.")
+    if n_jobs < 1 and n_jobs != -1:
+        raise ValueError("`n_jobs` must be >= 1 or -1.")
+    if n_jobs == -1:
+        n_jobs = cpu_count()
+
     if not isinstance(verbose, bool):
         raise TypeError("`verbose` must be a bool.")
-    if verbose and not np.isreal(data).all():
-        warn("`data` is expected to be real-valued.", UserWarning)
 
     return n_points, fft_func, fft_freq_func, window_func, n_jobs
 
@@ -320,7 +320,7 @@ def _compute_tfr_input_checks(
         raise TypeError("`freqs` must be a NumPy array.")
     if freqs.ndim != 1:
         raise ValueError("`freqs` must be a 1D array.")
-    if freqs.min() < 0 or freqs.max() > sampling_freq / 2:
+    if freqs.min() < 0 or freqs.max() > sampling_freq * 0.5:
         raise ValueError(
             "Entries of `freqs` must lie in the range [0, Nyquist frequency]."
         )

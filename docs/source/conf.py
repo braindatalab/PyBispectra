@@ -63,17 +63,17 @@ extensions = [
     "sphinx_gallery.gen_gallery",
 ]
 
+source_suffix = [".rst", ".md"]
+
 bibtex_bibfiles = ["refs.bib"]
 
 sphinx_gallery_conf = {
-    "doc_module": ("pybispectra",),
     "examples_dirs": "../../examples",
     "gallery_dirs": "auto_examples",
-    "reference_url": {"pybispectra": None},
 }
 
 templates_path = ["_templates"]
-exclude_patterns = []
+exclude_patterns = ["_build"]
 
 
 # -- Options for HTML output -------------------------------------------------
