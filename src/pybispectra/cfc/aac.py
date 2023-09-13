@@ -168,7 +168,7 @@ def _compute_aac(
     freqs: np.ndarray,
     f1s: np.ndarray,
     f2s: np.ndarray,
-) -> np.ndarray:
+) -> np.ndarray:  # pragma: no cover
     """Compute AAC for a single connection across epochs.
 
     Parameters

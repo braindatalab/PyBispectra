@@ -35,11 +35,11 @@ class SpatioSpectralFilter:
     fit_transform_hpmax:
         Fit HPMax filters and transform the data.
 
+    get_transformed_data:
+        Return the transformed data.
+
     Attributes
     ----------
-    transformed_data : numpy.ndarray, shape of [epochs, rank, times]
-        :attr:`data` transformed with :attr:`filters`.
-
     filters : numpy.ndarray, shape of [channels, rank]
         Spatial filters (eigenvectors of the eigendecomposition). Sorted in
         descending order according to the size of the signal:noise ratios of
@@ -223,6 +223,8 @@ class SpatioSpectralFilter:
         if not isinstance(bandpass_filter, bool):
             raise TypeError("`bandpass_filter` must be a bool.")
 
+        self.bandpass_filter = True
+
     def _sort_n_harmonics(self, n_harmonics: int) -> None:
         """Sort harmonic use input."""
         if not isinstance(n_harmonics, int):
@@ -250,19 +252,19 @@ class SpatioSpectralFilter:
 
         self.n_harmonics = deepcopy(n_harmonics)
 
-    def _sort_indices(self, indices: tuple[int] | None) -> None:
+    def _sort_indices(self, indices: list[int] | None) -> None:
         """Sort channel indices input."""
         indices = deepcopy(indices)
 
         if indices is None:
-            indices = tuple(np.arange(self._n_chans))
+            indices = np.arange(self._n_chans, dtype=np.int32).tolist()
 
-        if not isinstance(indices, tuple) or not all(
+        if not isinstance(indices, list) or not all(
             isinstance(entry, (int, np.integer)) for entry in indices
         ):
-            raise TypeError("`indices` must be a tuple of ints.")
+            raise TypeError("`indices` must be a list of ints.")
 
-        if np.min(indices) < 0 or np.max(indices) >= self._n_chans:
+        if min(indices) < 0 or max(indices) >= self._n_chans:
             raise ValueError(
                 "`indices` can only contain channel indices >= 0 or < the "
                 "number of channels in the data."
@@ -301,7 +303,7 @@ class SpatioSpectralFilter:
         noise_bounds: tuple[int | float],
         signal_noise_gap: int | float = 1.0,
         bandpass_filter: bool = False,
-        indices: tuple[int] | None = None,
+        indices: list[int] | None = None,
         rank: int | None = None,
     ) -> None:
         """Fit SSD filters and transform the data.
@@ -325,7 +327,7 @@ class SpatioSpectralFilter:
             Whether or not to bandpass filter the data before transforming with
             the SSD filters.
 
-        indices : tuple of int | None (default None)
+        indices : list of int | None (default None)
             Channel indices to fit the filters to. If ``None``, all channels
             are used.
 
@@ -409,6 +411,10 @@ class SpatioSpectralFilter:
         self, info: Info, filt_params_signal: dict, filt_params_noise: dict
     ) -> None:
         """Compute SSD on data using the MNE implementation."""
+        assert all(ch_type == "eeg" for ch_type in info.get_channel_types()), (
+            "PyBispectra Internal Error: channel types in `info` should all "
+            "be 'eeg'. Please contact the PyBispectra developers."
+        )
         ssd = SSD(
             info,
             filt_params_signal,
@@ -418,7 +424,7 @@ class SpatioSpectralFilter:
             picks=None,
             sort_by_spectral_ratio=False,
             return_filtered=self.bandpass_filter,
-            rank=self.rank,
+            rank={"eeg": self.rank},
         )
         self._transformed_data = ssd.fit_transform(self.data[:, self.indices])
 
@@ -431,7 +437,7 @@ class SpatioSpectralFilter:
         signal_bounds: tuple[int | float],
         noise_bounds: tuple[int | float],
         n_harmonics: int = -1,
-        indices: tuple[int] | None = None,
+        indices: list[int] | None = None,
         rank: int | None = None,
         csd_method: str = "multitaper",
         n_fft: int | None = None,
@@ -459,7 +465,7 @@ class SpatioSpectralFilter:
             computing the filters. If ``0``, no harmonics are used. If ``-1``,
             all harmonics are used.
 
-        indices : tuple of int | None (default None)
+        indices : list of int | None (default None)
             Channel indices to fit the filters to. If ``None``, all channels
             are used.
 
@@ -715,15 +721,14 @@ class SpatioSpectralFilter:
 
         return cov_signal, cov_noise, projection
 
-    @property
-    def transformed_data(self, min_ratio: int | float = 1.0) -> np.ndarray:
+    def get_transformed_data(self, min_ratio: int | float = 1.0) -> np.ndarray:
         """Return the transformed data.
 
         Parameters
         ----------
         min_ratio : int | float (default ``1.0``)
             Only returns the transformed data for those spatial filters whose
-            :attr:`ratios` values is greater than this value.
+            :attr:`ratios` values is greater or equal to this value.
 
         Returns
         -------
@@ -739,8 +744,8 @@ class SpatioSpectralFilter:
         if not isinstance(min_ratio, (int, float)):
             raise TypeError("`min_ratio` must be an int or a float")
 
-        data = self._transformed_data[:, np.where(self.ratios > min_ratio)[0]]
-        if self.verbose and data.shape[1] == 0:
+        data = self._transformed_data[:, np.where(self.ratios >= min_ratio)[0]]
+        if self.verbose and data.size == 0:
             warn(
                 "No signal-to-noise ratios are greater than the requested "
                 "minimum; returning an empty array.",

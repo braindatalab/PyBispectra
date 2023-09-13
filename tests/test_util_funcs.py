@@ -1,17 +1,14 @@
-"""Tests for toolbox utilities."""
+"""Tests for toolbox utility functions."""
+
+import os
 
 import pytest
 import numpy as np
 import scipy as sp
 from mne import Info
 
-from pybispectra.utils import (
-    ResultsCFC,
-    ResultsTDE,
-    ResultsWaveShape,
-    compute_fft,
-    compute_tfr,
-)
+from pybispectra.data import get_example_data_paths, DATASETS
+from pybispectra.utils import compute_fft, compute_tfr, compute_rank
 from pybispectra.utils._utils import (
     _compute_pearsonr_2d,
     _create_mne_info,
@@ -20,246 +17,8 @@ from pybispectra.utils._utils import (
 )
 
 
-def test_results() -> None:
-    """Test `ResultsCFC`."""
-    n_cons = 9
-    n_f1 = 50
-    n_f2 = 50
-    data = _generate_data(n_cons, n_f1, n_f2)
-
-    f1s = np.arange(n_f1)
-    f2s = np.arange(n_f2)
-
-    n_unique_chans = 3
-    indices = (
-        np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist(),
-        np.tile(np.arange(n_unique_chans), n_unique_chans).tolist(),
-    )
-
-    # check if it runs with correct inputs
-    results = ResultsCFC(
-        data=data,
-        indices=indices,
-        f1s=f1s,
-        f2s=f2s,
-        name="test",
-    )
-
-    # check repr
-    assert repr(results) == (
-        f"'<Result: test | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s]>'"
-    )
-
-    # check if it catches incorrect inputs
-    with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        ResultsCFC(
-            data=data.tolist(),
-            indices=indices,
-            f1s=f1s,
-            f2s=f2s,
-            name="test",
-        )
-    with pytest.raises(ValueError, match="`data` must be a 3D array."):
-        ResultsCFC(
-            data=data[:, :, 0],
-            indices=indices,
-            f1s=f1s,
-            f2s=f2s,
-            name="test",
-        )
-
-    with pytest.raises(TypeError, match="`indices` must be a tuple."):
-        ResultsCFC(
-            data=data,
-            indices=list(indices),
-            f1s=f1s,
-            f2s=f2s,
-            name="test",
-        )
-    with pytest.raises(ValueError, match="`indices` must have a length of 2."):
-        ResultsCFC(
-            data=data,
-            indices=(indices[0], indices[0], indices[1]),
-            f1s=f1s,
-            f2s=f2s,
-            name="test",
-        )
-    with pytest.raises(
-        TypeError, match="Entries of `indices` must be NumPy arrays."
-    ):
-        ResultsCFC(
-            data=data,
-            indices=(indices[0][0], indices[1][0]),
-            f1s=f1s,
-            f2s=f2s,
-            name="test",
-        )
-    with pytest.raises(
-        ValueError, match="Entries of `indices` must be 1D arrays."
-    ):
-        ResultsCFC(
-            data=data,
-            indices=(
-                np.vstack((indices[0], indices[0])),
-                np.vstack((indices[1], indices[1])),
-            ),
-            f1s=f1s,
-            f2s=f2s,
-            name="test",
-        )
-    with pytest.raises(
-        ValueError, match="Entries of `indices` must have the same length."
-    ):
-        ResultsCFC(
-            data=data,
-            indices=(indices[0], np.concatenate((indices[1], [1]))),
-            f1s=f1s,
-            f2s=f2s,
-            name="test",
-        )
-
-    with pytest.raises(
-        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
-    ):
-        ResultsCFC(
-            data=data,
-            indices=indices,
-            f1s=f1s.tolist(),
-            f2s=f2s,
-            name="test",
-        )
-    with pytest.raises(
-        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
-    ):
-        ResultsCFC(
-            data=data,
-            indices=indices,
-            f1s=f1s,
-            f2s=f2s.tolist(),
-            name="test",
-        )
-    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
-        ResultsCFC(
-            data=data,
-            indices=indices,
-            f1s=np.vstack((f1s, f1s)),
-            f2s=f2s,
-            name="test",
-        )
-    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
-        ResultsCFC(
-            data=data,
-            indices=indices,
-            f1s=f1s,
-            f2s=np.vstack((f2s, f2s)),
-            name="test",
-        )
-
-    with pytest.raises(
-        ValueError,
-        match=r"`data` must have shape \[nodes, f1s, f2s\].",
-    ):
-        ResultsCFC(
-            data=data[1:, :, :],
-            indices=indices,
-            f1s=f1s,
-            f2s=f2s,
-            name="test",
-        )
-
-    with pytest.raises(TypeError, match="`name` must be a string."):
-        ResultsCFC(
-            data=data,
-            indices=indices,
-            f1s=f1s,
-            f2s=f2s,
-            name=1,
-        )
-
-    # check if `get_results` works with correct inputs
-    output = results.get_results(form="raveled")
-    assert output.shape == (n_cons, n_f1, n_f2)
-    output = results.get_results(form="compact")
-    assert output[0].shape == (n_unique_chans, n_unique_chans, n_f1, n_f2)
-    assert (idcs == np.arange(n_unique_chans) for idcs in output[1])
-
-    # check if `get_results` catches incorrect inputs
-    with pytest.raises(ValueError, match="`form` is not recognised."):
-        results.get_results(form="notaform")
-
-    # check if `plot` works with correct inputs
-    figures, axes = results.plot(show=False)
-    assert len(figures) == n_cons
-    assert len(axes) == n_cons
-    figures, axes = results.plot(n_rows=3, n_cols=3, show=True)
-    assert len(figures) == 1
-    assert len(axes) == 1
-
-    # check if `plot` works with incorrect inputs
-    with pytest.raises(TypeError, match="`nodes` must be a list of integers."):
-        results.plot(nodes=9, show=False)
-    with pytest.raises(TypeError, match="`nodes` must be a list of integers."):
-        results.plot(nodes=[float(i) for i in range(n_cons)], show=False)
-    with pytest.raises(
-        ValueError, match="The requested connection is not present in the"
-    ):
-        results.plot(nodes=[-1], show=False)
-
-    with pytest.raises(
-        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
-    ):
-        results.plot(f1s=0, show=False)
-    with pytest.raises(
-        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
-    ):
-        results.plot(f2s=0, show=False)
-
-    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
-        results.plot(f1s=np.random.rand(2, 2), show=False)
-    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
-        results.plot(f2s=np.random.rand(2, 2), show=False)
-
-    with pytest.raises(
-        ValueError, match="Entries of `f1s` and `f2s` must be present in the"
-    ):
-        results.plot(f1s=f1s + 1, show=False)
-    with pytest.raises(
-        ValueError, match="Entries of `f1s` and `f2s` must be present in the"
-    ):
-        results.plot(f2s=f2s + 1, show=False)
-
-    with pytest.raises(
-        TypeError, match="`n_rows` and `n_cols` must be integers."
-    ):
-        results.plot(n_rows=0.5, show=False)
-    with pytest.raises(
-        TypeError, match="`n_rows` and `n_cols` must be integers."
-    ):
-        results.plot(n_cols=0.5, show=False)
-
-    with pytest.raises(
-        ValueError, match="`n_rows` and `n_cols` must be >= 1."
-    ):
-        results.plot(n_rows=0, show=False)
-    with pytest.raises(
-        ValueError, match="`n_rows` and `n_cols` must be >= 1."
-    ):
-        results.plot(n_cols=0, show=False)
-
-    with pytest.raises(
-        TypeError, match="`major_tick_intervals` and `minor_tick_intervals`"
-    ):
-        results.plot(major_tick_intervals="5", show=False)
-
-    with pytest.raises(
-        TypeError, match="`major_tick_intervals` and `minor_tick_intervals`"
-    ):
-        results.plot(minor_tick_intervals="1", show=False)
-
-
-@pytest.mark.parametrize(
-    "window", ["hanning", "hamming"], "return_neg_freqs", [True, False]
-)
+@pytest.mark.parametrize("window", ["hanning", "hamming"])
+@pytest.mark.parametrize("return_neg_freqs", [True, False])
 def test_compute_fft(window: str, return_neg_freqs: bool) -> None:
     """Test `compute_fft`."""
     n_epochs = 5
@@ -287,11 +46,35 @@ def test_compute_fft(window: str, return_neg_freqs: bool) -> None:
     assert (
         fft.shape[2] == freqs.shape[0]
     ), "The 3rd dimension of `fft` should have the same length as `freqs`."
+    assert freqs[0] == 0, "The first entry of `freqs` should be 0."
+    max_freq_idx = np.where(freqs == freqs.max())[0][0]
+    assert max_freq_idx != 0 and np.all(
+        freqs[:max_freq_idx] == np.sort(freqs[:max_freq_idx])
+    ), (
+        "Entries of `freqs` corresponding to positive frequencies must be in "
+        "ascending order."
+    )
     assert (
-        freqs[-1] == sampling_freq / 2
-    ), "The maximum of `freqs` should be the Nyquist frequency."
-
-    # NEED TO TEST FOR BEHAVIOUR WOTH RETURN_NEG_FREQS
+        max(freqs) <= sampling_freq / 2
+    ), "The maximum of `freqs` should be <= the Nyquist frequency."
+    if return_neg_freqs:
+        assert np.all(freqs[: max_freq_idx + 1] >= 0), (
+            "Entries of `freqs` must have the form positive frequencies, then "
+            "negative frequencies."
+        )
+        assert np.all(
+            freqs[max_freq_idx + 1 :] == np.sort(freqs[max_freq_idx + 1 :])
+        ), (
+            "Entries of `freqs` corresponding to negative frequencies must be "
+            "in ascending order."
+        )
+        assert (
+            min(freqs) >= -sampling_freq / 2
+        ), "The minimum of `freqs` should be >= the Nyquist frequency."
+    else:
+        assert (
+            freqs[-1] == sampling_freq / 2
+        ), "The maximum of `freqs` should be the Nyquist frequency."
 
     # check it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
@@ -322,7 +105,7 @@ def test_compute_fft(window: str, return_neg_freqs: bool) -> None:
         compute_fft(data=data, sampling_freq=sampling_freq, window=True)
 
     with pytest.raises(
-        TypeError, match="The requested `window` type is not recognised."
+        ValueError, match="The requested `window` type is not recognised."
     ):
         compute_fft(
             data=data, sampling_freq=sampling_freq, window="not_a_window"
@@ -363,7 +146,8 @@ def test_compute_fft(window: str, return_neg_freqs: bool) -> None:
 
 
 @pytest.mark.parametrize("tfr_mode", ["morlet", "multitaper"])
-def test_compute_tfr(tfr_mode: str) -> None:
+@pytest.mark.parametrize("zero_mean_wavelets", [True, False, None])
+def test_compute_tfr(tfr_mode: str, zero_mean_wavelets: bool | None) -> None:
     """Test `compute_tfr`."""
     n_epochs = 5
     n_chans = 3
@@ -378,6 +162,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
         sampling_freq=sampling_freq,
         freqs=freqs_in,
         tfr_mode=tfr_mode,
+        zero_mean_wavelets=zero_mean_wavelets,
         n_jobs=1,
     )
     assert isinstance(tfr, np.ndarray), "`tfr` should be a NumPy array."
@@ -400,6 +185,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
         compute_tfr(
@@ -407,6 +193,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
         )
 
     with pytest.raises(
@@ -417,6 +204,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=[sampling_freq],
             freqs=freqs_in,
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
         )
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
@@ -425,6 +213,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in.tolist(),
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(ValueError, match="`freqs` must be a 1D array."):
         compute_tfr(
@@ -432,6 +221,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in[:, np.newaxis],
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(
         ValueError, match="Entries of `freqs` must lie in the range"
@@ -441,6 +231,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=np.arange(-1, sampling_freq * 0.5),
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(
         ValueError, match="Entries of `freqs` must lie in the range"
@@ -450,6 +241,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=np.arange(0, sampling_freq),
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(
         ValueError, match="Entries of `freqs` must be in ascending order."
@@ -459,6 +251,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in[::-1],
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
         )
 
     with pytest.raises(TypeError, match="`tfr_mode` must be a str."):
@@ -467,6 +260,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in,
             tfr_mode=[tfr_mode],
+            zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(ValueError, match="`tfr_mode` must be one of"):
         compute_tfr(
@@ -474,6 +268,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in,
             tfr_mode="not_a_mode",
+            zero_mean_wavelets=zero_mean_wavelets,
         )
 
     with pytest.raises(
@@ -486,6 +281,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             n_cycles=[3],
+            zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(
         ValueError,
@@ -500,6 +296,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             n_cycles=np.array([3]),
+            zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(ValueError, match="`n_cycles` must be > 0."):
         compute_tfr(
@@ -508,6 +305,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             n_cycles=0,
+            zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(ValueError, match="Entries of `n_cycles` must be > 0."):
         compute_tfr(
@@ -516,6 +314,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             n_cycles=np.zeros(len(freqs_in)),
+            zero_mean_wavelets=zero_mean_wavelets,
         )
 
     with pytest.raises(
@@ -535,6 +334,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
             use_fft="true",
         )
 
@@ -548,6 +348,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
                 sampling_freq=sampling_freq,
                 freqs=freqs_in,
                 tfr_mode=tfr_mode,
+                zero_mean_wavelets=zero_mean_wavelets,
                 multitaper_time_bandwidth=[3],
             )
 
@@ -557,6 +358,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
             n_jobs=[],
         )
     with pytest.raises(ValueError, match="`n_jobs` must be >= 1."):
@@ -565,6 +367,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
             n_jobs=0,
         )
 
@@ -574,6 +377,7 @@ def test_compute_tfr(tfr_mode: str) -> None:
             sampling_freq=sampling_freq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
             verbose="true",
         )
 
@@ -583,7 +387,16 @@ def test_compute_tfr(tfr_mode: str) -> None:
         sampling_freq=sampling_freq,
         freqs=freqs_in,
         tfr_mode=tfr_mode,
+        zero_mean_wavelets=zero_mean_wavelets,
         n_jobs=2,
+    )
+    compute_tfr(
+        data=data,
+        sampling_freq=sampling_freq,
+        freqs=freqs_in,
+        tfr_mode=tfr_mode,
+        zero_mean_wavelets=zero_mean_wavelets,
+        n_jobs=-1,
     )
 
     with pytest.warns(
@@ -595,6 +408,31 @@ def test_compute_tfr(tfr_mode: str) -> None:
             freqs=freqs_in,
             tfr_mode=tfr_mode,
         )
+
+
+def test_compute_rank() -> None:
+    """Test `compute_rank`."""
+    n_epochs = 5
+    n_chans = 3
+    n_times = 100
+    data = _generate_data(n_epochs, n_chans, n_times)
+
+    # test it works with correct inputs
+    rank = compute_rank(data=data)
+    assert isinstance(rank, int), "`rank` should be an int."
+    non_full_rank_data = data.copy()
+    non_full_rank_data[:, 1] = non_full_rank_data[:, 0]
+    rank = compute_rank(data=non_full_rank_data)
+    assert rank == n_chans - 1, "`rank` should be equal to n_chans - 1."
+
+    # test it catches incorrect inputs
+    with pytest.raises(TypeError, match="`data` must be a NumPy array."):
+        compute_rank(data=data.tolist())
+    with pytest.raises(ValueError, match="`data` must be a 3D array."):
+        compute_rank(data=data[0])
+
+    with pytest.raises(TypeError, match="`sv_tol` must be a float or an int."):
+        compute_rank(data=data, sv_tol=None)
 
 
 def test_fast_find_first() -> None:
@@ -668,3 +506,19 @@ def test_create_mne_info() -> None:
     assert info.get_channel_types() == [
         "eeg" for _ in range(n_chans)
     ], "Channels in `info` should be marked as EEG channels."
+
+
+def test_get_example_data_paths() -> None:
+    """Test `get_example_data_paths`."""
+    # test it works with correct inputs
+    for name, file in DATASETS.items():
+        path = get_example_data_paths(name=name)
+        assert isinstance(path, str), "`path` should be a str."
+        assert path.endswith(
+            file
+        ), "`path` should end with the name of the dataset."
+        assert os.path.exists(path), "`path` should point to an existing file."
+
+    # test it catches incorrect inputs
+    with pytest.raises(ValueError, match="`name` must be one of"):
+        get_example_data_paths(name="not_a_name")

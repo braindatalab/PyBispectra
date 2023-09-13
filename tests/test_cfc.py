@@ -1,11 +1,10 @@
 """Tests for CFC tools."""
 
-import os
-
 import pytest
 import numpy as np
 
 from pybispectra.cfc import AAC, PAC, PPC
+from pybispectra.data import get_example_data_paths
 from pybispectra.utils import ResultsCFC, compute_fft, compute_tfr
 from pybispectra.utils._utils import _generate_data
 
@@ -17,10 +16,8 @@ def test_error_catch(class_type: str) -> None:
         TestClass = PAC
     elif class_type == "PPC":
         TestClass = PPC
-    elif class_type == "AAC":
-        TestClass = AAC
     else:
-        raise ValueError("`class_type` must be a CFC class.")
+        TestClass = AAC
 
     n_chans = 3
     n_epochs = 5
@@ -62,6 +59,13 @@ def test_error_catch(class_type: str) -> None:
         TestClass(coeffs, freqs * -1, sampling_freq)
     with pytest.raises(
         ValueError,
+        match="At least one entry of `freqs` is > the Nyquist frequency.",
+    ):
+        bad_freqs = freqs.copy()
+        bad_freqs[-1] = sampling_freq / 2 + 1
+        TestClass(coeffs, bad_freqs, sampling_freq)
+    with pytest.raises(
+        ValueError,
         match=(
             "Entries of `freqs` corresponding to positive frequencies must be "
             "in ascending order."
@@ -69,12 +73,18 @@ def test_error_catch(class_type: str) -> None:
     ):
         TestClass(coeffs, freqs[::-1], sampling_freq)
 
+    with pytest.raises(
+        TypeError, match="`sampling_freq` must be an int or a float."
+    ):
+        TestClass(coeffs, freqs, None)
+
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
         TestClass(coeffs, freqs, sampling_freq, "verbose")
 
     # compute
     test_class = TestClass(coeffs, freqs, sampling_freq)
 
+    # test that errors for incorrect inputs are caught
     if class_type == "PAC":
         with pytest.raises(
             TypeError,
@@ -225,6 +235,18 @@ def test_pac_runs() -> None:
         for i, type_i in enumerate((0, 3))
     )
 
+    # test it runs with parallelisation
+    pac.compute(n_jobs=2)
+    pac.compute(n_jobs=-1)
+
+    # test copying works
+    pac_copy = pac.copy()
+    attrs = pac.__dict__.keys()
+    for attr in attrs:
+        if not attr.startswith("_"):
+            assert np.all(getattr(pac, attr) == getattr(pac_copy, attr))
+    assert pac is not pac_copy
+
 
 def test_pac_results():
     """Test that PAC returns the correct results.
@@ -248,9 +270,7 @@ def test_pac_results():
 
     # test that genuine PAC is detected
     # load simulated data with bivariate PAC interactions
-    data = np.load(
-        os.path.join("..", "examples", "data", "sim_data_pac_bivariate.npy")
-    )
+    data = np.load(get_example_data_paths("sim_data_pac_bivariate"))
     sampling_freq = 200  # sampling frequency in Hz
 
     # compute FFT
@@ -273,9 +293,7 @@ def test_pac_results():
 
     # Test that spurious PAC is corrected with antisymmetrisation
     # load simulated data with univariate PAC interactions
-    data = np.load(
-        os.path.join("..", "examples", "data", "sim_data_pac_univariate.npy")
-    )
+    data = np.load(get_example_data_paths("sim_data_pac_univariate"))
     sampling_freq = 200  # sampling frequency in Hz
 
     # compute FFT
@@ -339,6 +357,18 @@ def test_ppc_runs() -> None:
     assert ppc.results.name == "PPC"
     assert isinstance(ppc.results, ResultsCFC)
 
+    # test it runs with parallelisation
+    ppc.compute(n_jobs=2)
+    ppc.compute(n_jobs=-1)
+
+    # test copying works
+    ppc_copy = ppc.copy()
+    attrs = ppc.__dict__.keys()
+    for attr in attrs:
+        if not attr.startswith("_"):
+            assert np.all(getattr(ppc, attr) == getattr(ppc_copy, attr))
+    assert ppc is not ppc_copy
+
 
 def test_aac_runs() -> None:
     """Test that AAC runs correctly."""
@@ -359,3 +389,15 @@ def test_aac_runs() -> None:
     # check the returned results are of the correct type
     assert aac.results.name == "AAC"
     assert isinstance(aac.results, ResultsCFC)
+
+    # test it runs with parallelisation
+    aac.compute(n_jobs=2)
+    aac.compute(n_jobs=-1)
+
+    # test copying works
+    aac_copy = aac.copy()
+    attrs = aac.__dict__.keys()
+    for attr in attrs:
+        if not attr.startswith("_"):
+            assert np.all(getattr(aac, attr) == getattr(aac_copy, attr))
+    assert aac is not aac_copy

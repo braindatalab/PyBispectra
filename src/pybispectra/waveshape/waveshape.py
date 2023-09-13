@@ -43,7 +43,7 @@ class WaveShape(_ProcessBispectrum):
     freqs : numpy.ndarray, shape of [frequencies]
         Frequencies in :attr:`data`.
 
-    indices : tuple of int
+    indices : list of int
         Channel indices most recently used with :meth:`compute`.
 
     f1s : numpy.ndarray, shape of [frequencies]
@@ -74,7 +74,7 @@ class WaveShape(_ProcessBispectrum):
 
     def compute(
         self,
-        indices: tuple[int] | None = None,
+        indices: list[int] | None = None,
         f1s: np.ndarray | None = None,
         f2s: np.ndarray | None = None,
         n_jobs: int = 1,
@@ -83,7 +83,7 @@ class WaveShape(_ProcessBispectrum):
 
         Parameters
         ----------
-        indices : tuple of int | None (default None)
+        indices : list of int | None (default None)
             Indices of the channels to compute bicoherence within. If ``None``,
             bicoherence within all channels is computed.
 
@@ -159,13 +159,13 @@ class WaveShape(_ProcessBispectrum):
 
         self._bicoherence = None
 
-    def _sort_indices(self, indices: tuple) -> None:
+    def _sort_indices(self, indices: list[int]) -> None:
         """Sort channel indices inputs."""
         indices = deepcopy(indices)
         if indices is None:
-            indices = tuple(np.arange(self._n_chans))
-        if not isinstance(indices, tuple):
-            raise TypeError("`indices` must be a tuple.")
+            indices = np.arange(self._n_chans).tolist()
+        if not isinstance(indices, list):
+            raise TypeError("`indices` must be a list.")
         if any(not isinstance(idx, (int, np.integer)) for idx in indices):
             raise TypeError("Entries of `indices` must be ints.")
 

@@ -533,7 +533,7 @@ class ResultsWaveShape(_ResultsBase):
     data : numpy.ndarray, shape of [nodes, f1s, f2s]
         Results to store.
 
-    indices : tuple of int
+    indices : list of int
         Indices of the channels in the results.
 
     f1s : numpy.ndarray, shape of [frequencies]
@@ -558,7 +558,7 @@ class ResultsWaveShape(_ResultsBase):
     name : str
         Name of the results.
 
-    indices : tuple of int
+    indices : list of int
         Indices of the channels in the results.
 
     shape : tuple of int
@@ -584,7 +584,7 @@ class ResultsWaveShape(_ResultsBase):
     def __init__(
         self,
         data: np.ndarray,
-        indices: tuple[int],
+        indices: list[int],
         f1s: np.ndarray,
         f2s: np.ndarray,
         name: str,
@@ -596,8 +596,8 @@ class ResultsWaveShape(_ResultsBase):
         self._data = data.copy()
         self.shape = data.shape
 
-        if not isinstance(indices, tuple):
-            raise TypeError("`indices` must be a tuple.")
+        if not isinstance(indices, list):
+            raise TypeError("`indices` must be a list.")
         if not all(isinstance(idx, (int, np.integer)) for idx in indices):
             raise TypeError("Entries of `indices` must be ints.")
         self._n_chans = len(np.unique(indices))

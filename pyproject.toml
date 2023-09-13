@@ -29,6 +29,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "coverage",
     "flake8",
     "black",
     "codespell",
@@ -52,3 +53,10 @@ dev = [
 [project.urls]
 "Homepage" = "https://github.com/braindatalab/PyBispectra"
 "Bug Tracker" = "https://github.com/braindatalab/PyBispectra/issues"
+
+[tool.coverage.run]
+omit = [
+    "tests/*",
+    "__init__.py",
+    "src/pybispectra/utils/_docs.py"
+]

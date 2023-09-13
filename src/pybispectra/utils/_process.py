@@ -274,7 +274,7 @@ def _compute_bispectrum(
     f1s: np.ndarray,
     f2s: np.ndarray,
     kmn: np.ndarray,
-) -> np.ndarray:
+) -> np.ndarray:  # pragma: no cover
     """Compute the bispectrum for a single connection.
 
     Parameters
@@ -342,7 +342,7 @@ def _compute_threenorm(
     f1s: np.ndarray,
     f2s: np.ndarray,
     kmn: np.ndarray,
-) -> np.ndarray:
+) -> np.ndarray:  # pragma: no cover
     """Compute threenorm for a single connection across epochs.
 
     PARAMETERS

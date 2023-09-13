@@ -23,7 +23,7 @@ class _PlotBase(ABC):
     def __init__(
         self,
         data: np.ndarray,
-        indices: tuple,
+        indices: tuple | list,
         name: str,
     ) -> None:
         self._data = data.copy()
@@ -646,7 +646,7 @@ class _PlotWaveShape(_PlotBase):
     def __init__(
         self,
         data: np.ndarray,
-        indices: tuple[list[int], list[int]],
+        indices: tuple[list[int], list[int]] | list[int],
         f1s: np.ndarray,
         f2s: np.ndarray,
         name: str,

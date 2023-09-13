@@ -598,7 +598,7 @@ def _compute_bispectrum_tde(
     data: np.ndarray,
     hankel_freq_mask: np.ndarray,
     kmn: tuple[list[int]],
-) -> np.ndarray:
+) -> np.ndarray:  # pragma: no cover
     """Compute the bispectrum for a single connection for use in TDE.
 
     Parameters

@@ -1,11 +1,10 @@
 """Tests for wave shape tools."""
 
-import os
-
 import pytest
 import numpy as np
 from numpy.random import RandomState
 
+from pybispectra.data import get_example_data_paths
 from pybispectra.waveshape import WaveShape
 from pybispectra.utils import ResultsWaveShape, compute_fft
 from pybispectra.utils._utils import _generate_data
@@ -18,7 +17,7 @@ def test_error_catch() -> None:
     n_times = 100
     sampling_freq = 50
     data = _generate_data(n_epochs, n_chans, n_times)
-    indices = ([0, 1, 2], [0, 1, 2])
+    indices = [0, 1, 2]
 
     coeffs, freqs = compute_fft(data, sampling_freq)
 
@@ -32,6 +31,13 @@ def test_error_catch() -> None:
         WaveShape(coeffs, freqs.tolist(), sampling_freq)
     with pytest.raises(ValueError, match="`freqs` must be a 1D array."):
         WaveShape(coeffs, np.random.randn(2, 2), sampling_freq)
+    with pytest.raises(
+        ValueError,
+        match="At least one entry of `freqs` is > the Nyquist frequency.",
+    ):
+        bad_freqs = freqs.copy()
+        bad_freqs[-1] = sampling_freq / 2 + 1
+        WaveShape(coeffs, bad_freqs, sampling_freq)
 
     with pytest.raises(
         ValueError,
@@ -52,23 +58,28 @@ def test_error_catch() -> None:
     ):
         WaveShape(coeffs, freqs[::-1], sampling_freq)
 
+    with pytest.raises(
+        TypeError, match="`sampling_freq` must be an int or a float."
+    ):
+        WaveShape(coeffs, freqs, None)
+
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
         WaveShape(coeffs, freqs, sampling_freq, "verbose")
 
     # compute
     waveshape = WaveShape(coeffs, freqs, sampling_freq)
 
-    with pytest.raises(TypeError, match="`indices` must be a tuple."):
-        waveshape.compute(indices=list(indices))
+    with pytest.raises(TypeError, match="`indices` must be a list."):
+        waveshape.compute(indices=tuple(indices))
     with pytest.raises(TypeError, match="Entries of `indices` must be ints."):
-        waveshape.compute(indices=(0.0, 1.0))
+        waveshape.compute(indices=[0.0, 1.0])
     with pytest.raises(
         ValueError,
         match=(
             "`indices` contains indices for channels not present in the data."
         ),
     ):
-        waveshape.compute(indices=(0, 99))
+        waveshape.compute(indices=[0, 99])
 
     with pytest.raises(
         TypeError, match="`f1s` and `f2s` must be NumPy arrays."
@@ -130,6 +141,20 @@ def test_waveshape_runs() -> None:
     assert waveshape.results.name == "Wave Shape"
     assert isinstance(waveshape.results, ResultsWaveShape)
 
+    # test it runs with parallelisation
+    waveshape.compute(n_jobs=2)
+    waveshape.compute(n_jobs=-1)
+
+    # test copying works
+    waveshape_copy = waveshape.copy()
+    attrs = waveshape.__dict__.keys()
+    for attr in attrs:
+        if not attr.startswith("_"):
+            assert np.all(
+                getattr(waveshape, attr) == getattr(waveshape_copy, attr)
+            )
+    assert waveshape is not waveshape_copy
+
 
 def test_waveshape_results():
     """Test that WaveShape returns the correct results.
@@ -148,14 +173,10 @@ def test_waveshape_results():
     # test that genuine PAC is detected
     # load simulated data with bivariate PAC interactions
     data_sawtooths = np.load(
-        os.path.join(
-            "..", "examples", "data", "sim_data_waveshape_sawtooths.npy"
-        )
+        get_example_data_paths("sim_data_waveshape_sawtooths")
     )
     data_peaks_troughs = np.load(
-        os.path.join(
-            "..", "examples", "data", "sim_data_waveshape_peaks_troughs.npy"
-        )
+        get_example_data_paths("sim_data_waveshape_peaks_troughs")
     )
     sampling_freq = 1000  # sampling frequency in Hz
 

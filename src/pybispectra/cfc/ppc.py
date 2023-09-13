@@ -167,7 +167,7 @@ def _compute_ppc(
     freqs: np.ndarray,
     f1s: np.ndarray,
     f2s: np.ndarray,
-) -> np.ndarray:
+) -> np.ndarray:  # pragma: no cover
     """Compute PPC for a single connection across epochs.
 
     Parameters

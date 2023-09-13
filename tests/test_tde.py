@@ -1,10 +1,9 @@
 """Tests for TDE tools."""
 
-import os
-
 import pytest
 import numpy as np
 
+from pybispectra.data import get_example_data_paths
 from pybispectra.tde import TDE
 from pybispectra.utils import ResultsTDE, compute_fft
 from pybispectra.utils._utils import _generate_data
@@ -67,6 +66,13 @@ def test_error_catch() -> None:
     ):
         TDE(coeffs, freqs[:-1], sampling_freq)
 
+    with pytest.raises(
+        ValueError,
+        match="At least one entry of `freqs` is > the Nyquist frequency.",
+    ):
+        bad_freqs = freqs.copy()
+        bad_freqs[np.argmax(bad_freqs)] = sampling_freq / 2 + 1
+        TDE(coeffs, bad_freqs, sampling_freq)
     max_freq_i = np.argwhere(freqs == np.max(freqs))[0][0]
     with pytest.raises(
         ValueError,
@@ -104,6 +110,11 @@ def test_error_catch() -> None:
         ),
     ):
         TDE(coeffs, freqs[::-1], sampling_freq)
+
+    with pytest.raises(
+        TypeError, match="`sampling_freq` must be an int or a float."
+    ):
+        TDE(coeffs, freqs, None)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
         TDE(coeffs, freqs, sampling_freq, "verbose")
@@ -225,6 +236,18 @@ def test_tde_runs() -> None:
                 == f"TDE {symmetrise_name}| Method {method_name}"
             )
 
+    # test it runs with parallelisation
+    tde.compute(n_jobs=2)
+    tde.compute(n_jobs=-1)
+
+    # test copying works
+    tde_copy = tde.copy()
+    attrs = tde.__dict__.keys()
+    for attr in attrs:
+        if not attr.startswith("_"):
+            assert np.all(getattr(tde, attr) == getattr(tde_copy, attr))
+    assert tde is not tde_copy
+
 
 def test_tde_results():
     """Test that TDE returns the correct results.
@@ -238,11 +261,7 @@ def test_tde_results():
 
     # test that TDE is detected at 250 ms with independent noise
     # load simulated data with independent noise
-    data = np.load(
-        os.path.join(
-            "..", "examples", "data", "sim_data_tde_independent_noise.npy"
-        )
-    )
+    data = np.load(get_example_data_paths("sim_data_tde_independent_noise"))
     sampling_freq = 200  # Hz
     n_times = data.shape[2]
 
@@ -265,11 +284,7 @@ def test_tde_results():
 
     # test that TDE is detected at 250 ms with correlated noise (with antisym.)
     # load simulated data with correlated noise
-    data = np.load(
-        os.path.join(
-            "..", "examples", "data", "sim_data_tde_correlated_noise.npy"
-        )
-    )
+    data = np.load(get_example_data_paths("sim_data_tde_correlated_noise"))
     sampling_freq = 200  # Hz
     n_times = data.shape[2]
 

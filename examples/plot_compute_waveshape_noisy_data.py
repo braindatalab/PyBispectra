@@ -96,7 +96,7 @@ ssf.fit_transform_hpmax(
 )
 
 # return the first component of the filtered data
-transformed_data = (ssf.transformed_data[:, 0])[:, np.newaxis, :]
+transformed_data = (ssf.get_transformed_data()[:, 0])[:, np.newaxis, :]
 
 print(
     f"Original timeseries data: [{data.shape[0]} epochs x {data.shape[1]} "
@@ -105,7 +105,8 @@ print(
 print(
     f"Transformed timeseries data: [{transformed_data.shape[0]} epochs x "
     f"{transformed_data.shape[1]} channel(s) x {transformed_data.shape[2]} "
-    "times]"
+    "times]\nSignal-to-noise ratio of transformed data's first component: "
+    f"{ssf.ratios[0] :.2f}"
 )
 
 ###############################################################################
@@ -199,7 +200,7 @@ noisy_results = waveshape_noisy.results.get_results()
 noisy_results = noisy_results.mean(axis=0)[np.newaxis, :, :]
 noisy_results = ResultsWaveShape(
     data=noisy_results,
-    indices=tuple([0]),
+    indices=[0],
     f1s=waveshape_noisy.results.f1s,
     f2s=waveshape_noisy.results.f2s,
     name=waveshape_noisy.results.name,

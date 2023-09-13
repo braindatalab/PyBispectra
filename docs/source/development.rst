@@ -36,13 +36,12 @@ the package, consider submitting a `pull request
 <https://github.com/braindatalab/PyBispectra/pulls>`_. When submitting a pull
 request, please check that the existing test suite passes, and if you add new
 features, please make sure that these are covered in the unit tests. The tests
-can be run by navigating to the ``/tests`` directory and calling `pytest
-<https://docs.pytest.org/en/7.3.x/>`_:
+can be run by calling `coverage <https://coverage.readthedocs.io/en/>`_ with
+`pytest <https://docs.pytest.org/en/>`_ in the base directory:
 
 .. code-block:: console
     
-    $ pytest test_cfc.py
-    $ pytest test_utils.py
+    $ coverage run --source=pybispectra -m pytest -v tests && coverage report -m
 
 Please also check that the documentation can be built following any changes,
 which can be done using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ in

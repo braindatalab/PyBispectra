@@ -8,7 +8,7 @@ import numpy as np
 @njit
 def _fast_find_first(
     vector: np.ndarray, value: int | float, start_idx: int = 0
-) -> int:
+) -> int:  # pragma: no cover
     """Quickly find the first index of a value in a 1D array using Numba.
 
     Parameters
@@ -38,7 +38,9 @@ def _fast_find_first(
 
 
 @njit
-def _compute_pearsonr_2d(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+def _compute_pearsonr_2d(
+    x: np.ndarray, y: np.ndarray
+) -> np.ndarray:  # pragma: no cover
     """Compute Pearson correlation for epochs over time.
 
     Parameters
