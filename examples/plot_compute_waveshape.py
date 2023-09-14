@@ -212,8 +212,8 @@ print(
 # that the imaginary values at the 10 Hz higher harmonics (i.e. 20 and 30 Hz)
 # are also non-zero. The strength of the harmonics varies based on the signal
 # strength. It is also worth noting that the sign of the imaginary values
-# varies for the different sawtooth varieties, with a ramp down sawtooth
-# resulting in positive values, and a ramp up sawtooth resulting in negative
+# varies for the different sawtooth varieties, with a ramp up sawtooth
+# resulting in positive values, and a ramp down sawtooth resulting in negative
 # values.
 #
 # Information about the direction of the asymmetry is encoded not only in the
@@ -221,8 +221,8 @@ print(
 # :footcite:`Bartz2019`, we represent phase in the range :math:`(0, 2\pi]`
 # (travelling counter-clockwise from the positive real axis). Accordingly, a
 # phase of :math:`\frac{1}{2}\pi` is seen at 10 Hz and its higher harmonics for
-# the ramp down sawtooth, with a phase of :math:`\frac{3}{2}\pi` for the ramp
-# up sawtooth. The phases and absolute values (i.e. the magnitude) therefore
+# the ramp up sawtooth, with a phase of :math:`\frac{3}{2}\pi` for the ramp
+# down sawtooth. The phases and absolute values (i.e. the magnitude) therefore
 # combine information from both the real and imaginary components.
 #
 # In contrast, we expect the real part of the bicoherence to be non-zero for
@@ -254,7 +254,7 @@ figs, axes = waveshape_sawtooths.results.plot(
     plot_absolute=False,
     show=False,
 )
-titles = ["Ramp down", "Ramp up"]
+titles = ["Ramp up", "Ramp down"]
 for fig, title in zip(figs, titles):
     fig.suptitle(f"{title} sawtooth")
     fig.set_size_inches(6, 6)
