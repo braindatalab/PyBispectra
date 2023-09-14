@@ -28,25 +28,20 @@ sys.path.insert(0, os.path.abspath("../../"))
 DOCS_DIRECTORY = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
 
 
-def ensure_pandoc_installed(_):
+def install_pandoc(_):
     import pypandoc
 
-    # Download pandoc if necessary. If pandoc is already installed and on
-    # the PATH, the installed version will be used. Otherwise, we will
-    # download a copy of pandoc into docs/bin/ and add that to our PATH.
     pandoc_dir = os.path.join(DOCS_DIRECTORY, "bin")
     # Add dir containing pandoc binary to the PATH environment variable
     if pandoc_dir not in os.environ["PATH"].split(os.pathsep):
         os.environ["PATH"] += os.pathsep + pandoc_dir
-    pypandoc.ensure_pandoc_installed(
-        targetfolder=pandoc_dir,
-        version="3.1.7",
-        delete_installer=True,
+    pypandoc.download_pandoc(
+        targetfolder=pandoc_dir, version="3.1.7", delete_installer=True
     )
 
 
 def setup(app):
-    app.connect("builder-inited", ensure_pandoc_installed)
+    app.connect("builder-inited", install_pandoc)
 
 
 extensions = [
@@ -55,6 +50,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.linkcode",
+    "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "numpydoc",
     "nbsphinx",
@@ -67,13 +63,15 @@ source_suffix = [".rst", ".md"]
 
 bibtex_bibfiles = ["refs.bib"]
 
+PYDEVD_DISABLE_FILE_VALIDATION = 1
+
 sphinx_gallery_conf = {
     "examples_dirs": "../../examples",
     "gallery_dirs": "auto_examples",
 }
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build"]
+exclude_patterns = ["_build", "_templates"]
 
 
 # -- Options for HTML output -------------------------------------------------
