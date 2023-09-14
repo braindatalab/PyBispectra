@@ -33,8 +33,8 @@ def compute_fft(
     sampling_freq : int | float
         Sampling frequency of the data in Hz.
 
-    n_points : int | None (default ``None``)
-        Number of points in the FFT. If ``None``, is equal to the number of
+    n_points : int | None (default None)
+        Number of points in the FFT. If :obj:`None`, is equal to the number of
         timepoints in ``data``.
 
     window : str (default ``"hanning"``)
@@ -213,7 +213,7 @@ def compute_tfr(
         value across all frequencies is used.
 
     zero_mean_wavelets : bool | None (default None)
-        Whether or not to use wavelets with a mean of 0. If ``None``, the
+        Whether or not to use wavelets with a mean of 0. If :obj:`None`, the
         default argument of :func:`mne.time_frequency.tfr_array_morlet` and
         :func:`mne.time_frequency.tfr_array_multitaper` is used according to
         ``tfr_mode``.

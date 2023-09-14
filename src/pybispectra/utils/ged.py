@@ -328,12 +328,12 @@ class SpatioSpectralFilter:
             the SSD filters.
 
         indices : list of int | None (default None)
-            Channel indices to fit the filters to. If ``None``, all channels
+            Channel indices to fit the filters to. If :obj:`None`, all channels
             are used.
 
         rank : int | None (default None)
-            Rank subspace to project the data to. If ``None``, the rank of the
-            data is automatically computed and projected to.
+            Rank subspace to project the data to. If :obj:`None`, the rank of
+            the data is automatically computed and projected to.
 
         Notes
         -----
@@ -466,20 +466,20 @@ class SpatioSpectralFilter:
             all harmonics are used.
 
         indices : list of int | None (default None)
-            Channel indices to fit the filters to. If ``None``, all channels
+            Channel indices to fit the filters to. If :obj:`None`, all channels
             are used.
 
         rank : int | None (default None)
-            Rank subspace to project the data to. If ``None``, the rank of the
-            data is automatically computed and projected to.
+            Rank subspace to project the data to. If :obj:`None`, the rank of
+            the data is automatically computed and projected to.
 
         csd_method : str (default ``"multitaper"``)
             Method to use when computing the CSD. Can be ``"multitaper"`` or
             ``"fourier"``.
 
         n_fft : int | None (default None)
-            Number of samples in the FFT. If ``None``, the number of times in
-            each epoch is used.
+            Number of samples in the FFT. If :obj:`None`, the number of times
+            in each epoch is used.
 
         mt_bandwidth : int | float (default ``5.0``)
             Bandwidth of the multitaper windowing function (in Hz). Only used

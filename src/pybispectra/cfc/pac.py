@@ -21,10 +21,10 @@ class PAC(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
         Fourier coefficients.
 
-    freqs : numpy.ndarray, shape of [frequencies]
+    freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     verbose : bool (default True)
@@ -32,28 +32,31 @@ class PAC(_ProcessBispectrum):
 
     Methods
     -------
-    compute:
+    compute :
         Compute PAC, averaged over epochs.
+
+    copy :
+        Return a copy of the object.
 
     Attributes
     ----------
-    results : tuple of pybispectra.ResultsCFC
+    results : tuple of ~pybispectra.utils.ResultsCFC
         PAC results for each of the computed metrics.
 
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : ~numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
-    indices : tuple of numpy.ndarray of int, length of 2
+    indices : tuple of ~numpy.ndarray of int, length of 2
         Indices of the seed and target channels, respectively, most recently
         used with :meth:`compute`.
 
-    f1s : numpy.ndarray of float, shape of [frequencies]
+    f1s : ~numpy.ndarray of float, shape of [frequencies]
         Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2s : numpy.ndarray of float, shape of [frequencies]
+    f2s : ~numpy.ndarray of float, shape of [frequencies]
         High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
@@ -88,16 +91,16 @@ class PAC(_ProcessBispectrum):
         ----------
         indices : tuple of tuple of int | None (default None), length of 2
             Indices of the seed and target channels, respectively, to compute
-            PAC between. If ``None``, coupling between all channels is
+            PAC between. If :obj:`None`, coupling between all channels is
             computed.
 
-        f1s : numpy.ndarray | None (default None), shape of [frequencies]
-            Lower frequencies to compute PAC on. If ``None``, all frequencies
-            are used.
+        f1s : ~numpy.ndarray | None (default None), shape of [frequencies]
+            Lower frequencies to compute PAC on. If :obj:`None`, all
+            frequencies are used.
 
-        f2s : numpy.ndarray | None (default None), shape of [frequencies]
-            Higher frequencies to compute PAC on. If ``None``, all frequencies
-            are used.
+        f2s : ~numpy.ndarray | None (default None), shape of [frequencies]
+            Higher frequencies to compute PAC on. If :obj:`None`, all
+            frequencies are used.
 
         symmetrise : str | list of str (default ``"none"``)
             Symmetrisation to perform when computing PAC. If ``"none"``, no
@@ -147,11 +150,11 @@ class PAC(_ProcessBispectrum):
         signals :footcite:`Shahbazi2014`.
 
         If the seed and target for a given connection is the same channel and
-        antisymmetrisation is being performed, ``numpy.nan`` values are
+        antisymmetrisation is being performed, :obj:`numpy.nan` values are
         returned.
 
         PAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
-        any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``
+        any value of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan`
         value is returned.
 
         References
@@ -399,11 +402,11 @@ class PAC(_ProcessBispectrum):
 
         Returns
         -------
-        results : ResultsCFC | tuple of ResultsCFC
+        results : ~pybispectra.utils.ResultsCFC | tuple of ~pybispectra.utils.ResultsCFC
             The results of the PAC computation returned as a single results
             object (if only one PAC variant was computed) or a tuple of results
             objects.
-        """
+        """  # noqa: E501
         if len(self._results) == 1:
             return deepcopy(self._results[0])
         return deepcopy(self._results)

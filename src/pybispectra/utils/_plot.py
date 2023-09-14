@@ -168,15 +168,16 @@ class _PlotCFC(_PlotBase):
         Parameters
         ----------
         nodes : list of int | None (default None)
-            Indices of connections to plot. If ``None``, plot all connections.
+            Indices of connections to plot. If :obj:`None`, plot all
+            connections.
 
         f1s : numpy.ndarray | None (default None)
-            Low frequencies of the results to plot. If ``None``, plot all low
-            frequencies.
+            Low frequencies of the results to plot. If :obj:`None`, plot all
+            low frequencies.
 
         f2s : numpy.ndarray | None (default None)
-            High frequencies of the results to plot. If ``None``, plot all high
-            frequencies.
+            High frequencies of the results to plot. If :obj:`None`, plot all
+            high frequencies.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -192,9 +193,9 @@ class _PlotCFC(_PlotBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
-        cbar_range : list of float | tuple of list of float | None (default ``None``)
+        cbar_range : list of float | tuple of list of float | None (default None)
             Range (in units of the data) for the colourbars, consisting of the
-            lower and upper limits, respectively. If ``None``, the range is
+            lower and upper limits, respectively. If :obj:`None`, the range is
             computed automatically. If a list of float, this range is used for
             all plots. If a tuple of list of float, the ranges are used for
             each individual plot.
@@ -217,7 +218,7 @@ class _PlotCFC(_PlotBase):
         -----
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
         connection on a new figure.
-        """
+        """  # noqa: E501
         nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_range = self._sort_plot_inputs(
             nodes,
             f1s,
@@ -438,14 +439,16 @@ class _PlotTDE(_PlotBase):
         Parameters
         ----------
         nodes : list of int | None (default None)
-            Indices of connections to plot. If ``None``, plot all connections.
+            Indices of connections to plot. If :obj:`None`, plot all
+            connections.
 
         times : list of float | None (default None)
             Start and end times of the results to plot, respectively. If
-            ``None``, all times are plotted.
+            :obj:`None`, all times are plotted.
 
         f1s : numpy.ndarray | None (default None)
-            Times of the results to plot. If ``None``, all times are plotted.
+            Times of the results to plot. If :obj:`None`, all times are
+            plotted.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -677,15 +680,15 @@ class _PlotWaveShape(_PlotBase):
         Parameters
         ----------
         nodes : list of int | None (default None)
-            Indices of channels to plot. If ``None``, plot all channels.
+            Indices of channels to plot. If :obj:`None`, plot all channels.
 
         f1s : numpy.ndarray | None (default None)
-            Low frequencies of the results to plot. If ``None``, plot all low
-            frequencies.
+            Low frequencies of the results to plot. If :obj:`None`, plot all
+            low frequencies.
 
         f2s : numpy.ndarray | None (default None)
-            High frequencies of the results to plot. If ``None``, plot all high
-            frequencies.
+            High frequencies of the results to plot. If :obj:`None`, plot all
+            high frequencies.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -705,37 +708,37 @@ class _PlotWaveShape(_PlotBase):
             Whether or not to plot the absolute values of the real and
             imaginary parts of the results.
 
-        cbar_range_abs : list of float | tuple of list of float | None (default ``None``)
+        cbar_range_abs : list of float | tuple of list of float | None (default None)
             Range (in units of the data) for the colourbars of the absolute
             value of the results, consisting of the lower and upper limits,
-            respectively. If ``None``, the range is computed automatically. If
-            a list of float, this range is used for all plots. If a tuple of
+            respectively. If :obj:`None`, the range is computed automatically.
+            If a list of float, this range is used for all plots. If a tuple of
             list of float, the ranges are used for each individual plot. Note
             that results should be limited to the range [0, 1].
 
-        cbar_range_real : list of float | tuple of list of float | None (default ``None``)
+        cbar_range_real : list of float | tuple of list of float | None (default None)
             Range (in units of the data) for the colourbars of the real value
             of the results, consisting of the lower and upper limits,
-            respectively. If ``None``, the range is computed automatically. If
-            a list of float, this range is used for all plots. If a tuple of
+            respectively. If :obj:`None`, the range is computed automatically.
+            If a list of float, this range is used for all plots. If a tuple of
             list of float, the ranges are used for each individual plot. Note
             that results should be limited to the range [-1, 1].
 
-        cbar_range_imag : list of float | tuple of list of float | None (default ``None``)
+        cbar_range_imag : list of float | tuple of list of float | None (default None)
             Range (in units of the data) for the colourbars of the imaginary
             value of the results, consisting of the lower and upper limits,
-            respectively. If ``None``, the range is computed automatically. If
-            a list of float, this range is used for all plots. If a tuple of
+            respectively. If :obj:`None`, the range is computed automatically.
+            If a list of float, this range is used for all plots. If a tuple of
             list of float, the ranges are used for each individual plot. Note
             that results should be limited to the range [-1, 1].
 
-        cbar_range_phase : list of float | tuple of list of float | None (default ``None``)
+        cbar_range_phase : list of float | tuple of list of float | None (default None)
             Range (in units of pi) for the colourbars of the phase of the
             results, consisting of the lower and upper limits, respectively. If
-            ``None``, the range is computed automatically. If a list of float,
-            this range is used for all plots. If a tuple of list of float, the
-            ranges are used for each individual plot. Note that results should
-            be limited to the range :math:`(0, 2$\\pi$]`.
+            :obj:`None`, the range is computed automatically. If a list of
+            float, this range is used for all plots. If a tuple of list of
+            float, the ranges are used for each individual plot. Note that
+            results should be limited to the range :math:`(0, 2$\\pi$]`.
 
         show : bool (default ``True``)
             Whether or not to show the plotted results.

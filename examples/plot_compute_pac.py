@@ -123,7 +123,7 @@ print(
 # are > 10,000 such frequency combinations in our [101 x 101] matrix, PAC for
 # those entries where :math:`f_1` would be higher than :math:`f_2`, as well as
 # where :math:`f_2 + f_1` exceeds the frequency bounds of our data, cannot be
-# computed. In such cases, the values are ``numpy.nan``.
+# computed. In such cases, the values are :obj:`numpy.nan`.
 
 ###############################################################################
 # Plotting PAC

@@ -29,27 +29,30 @@ class WaveShape(_ProcessBispectrum):
 
     Methods
     -------
-    compute:
+    compute :
         Compute bicoherence within channels, averaged over epochs.
+
+    copy :
+        Return a copy of the object.
 
     Attributes
     ----------
-    results : tuple of ResultsWaveShape
+    results : tuple of ~pybispectra.utils.ResultsWaveShape
         Bicoherence of the data.
 
-    data : numpy.ndarray, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
-    freqs : numpy.ndarray, shape of [frequencies]
+    freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies in :attr:`data`.
 
     indices : list of int
         Channel indices most recently used with :meth:`compute`.
 
-    f1s : numpy.ndarray, shape of [frequencies]
+    f1s : ~numpy.ndarray, shape of [frequencies]
         Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2s : numpy.ndarray, shape of [frequencies]
+    f2s : ~numpy.ndarray, shape of [frequencies]
         High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
@@ -63,7 +66,7 @@ class WaveShape(_ProcessBispectrum):
     as it can enhance the signal-to-noise ratio of your data as well as
     mitigate the risks of source-mixing in the sensor space compromising the
     bicoherence patterns of the data :footcite:`Bartz2019`. Filtering can be
-    performed with :class:`pybispectra.utils.SpatioSpectralFilter`.
+    performed with :class:`~pybispectra.utils.SpatioSpectralFilter`.
 
     References
     ----------
@@ -84,16 +87,16 @@ class WaveShape(_ProcessBispectrum):
         Parameters
         ----------
         indices : list of int | None (default None)
-            Indices of the channels to compute bicoherence within. If ``None``,
-            bicoherence within all channels is computed.
+            Indices of the channels to compute bicoherence within. If
+            :obj:`None`, bicoherence within all channels is computed.
 
-        f1s : numpy.ndarray of float | None (default None)
+        f1s : ~numpy.ndarray of float | None (default None)
             A 1D array of the lower frequencies to compute bicoherence for. If
-            ``None``, all frequencies are used.
+            :obj:`None`, all frequencies are used.
 
-        f2s : numpy.ndarray of float | None (default None)
+        f2s : ~numpy.ndarray of float | None (default None)
             A 1D array of the higher frequencies to compute bicoherence for. If
-            ``None``, all frequencies are used.
+            :obj:`None`, all frequencies are used.
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available
@@ -129,8 +132,8 @@ class WaveShape(_ProcessBispectrum):
         signals :footcite:`Shahbazi2014`.
 
         Bicoherence is computed for all values of :attr:`f1s` and :attr:`f2s`.
-        If any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``
-        value is returned.
+        If any value of :attr:`f1s` is higher than :attr:`f2s`, a
+        :obj:`numpy.nan` value is returned.
 
         References
         ----------
@@ -271,5 +274,11 @@ class WaveShape(_ProcessBispectrum):
 
     @property
     def results(self) -> ResultsWaveShape:
-        """Return the results."""
+        """Return the results.
+
+        Returns
+        -------
+        results : ~pybispectra.utils.ResultsWaveShape
+            The results of the wave shape computation.
+        """
         return deepcopy(self._results)

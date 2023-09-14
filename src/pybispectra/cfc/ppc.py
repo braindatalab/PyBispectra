@@ -16,10 +16,10 @@ class PPC(_ProcessFreqBase):
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
         Fourier coefficients.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : ~numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     verbose : bool (default True)
@@ -27,28 +27,31 @@ class PPC(_ProcessFreqBase):
 
     Methods
     -------
-    compute:
+    compute :
         Compute PPC, averaged over epochs.
+
+    copy :
+        Return a copy of the object.
 
     Attributes
     ----------
-    results : tuple of pybispectra.ResultsCFC
+    results : tuple of ~pybispectra.utils.ResultsCFC
         PPC results for each of the computed metrics.
 
-    data : numpy.ndarray of float, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : ~numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     indices : tuple of tuple of int, length of 2
         Indices of the seed and target channels, respectively, most recently
         used with :meth:`compute`.
 
-    f1s : numpy.ndarray of float, shape of [frequencies]
+    f1s : ~numpy.ndarray of float, shape of [frequencies]
         Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2s : numpy.ndarray of float, shape of [frequencies]
+    f2s : ~numpy.ndarray of float, shape of [frequencies]
         High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
@@ -70,16 +73,16 @@ class PPC(_ProcessFreqBase):
         ----------
         indices : tuple of tuple of int, length of 2 | None (default None)
             Indices of the seed and target channels, respectively, to compute
-            PPC between. If ``None``, coupling between all channels is
+            PPC between. If :obj:`None`, coupling between all channels is
             computed.
 
-        f1s : numpy.ndarray | None (default None), shape of [frequencies]
-            Lower frequencies to compute PPC on. If ``None``, all frequencies
-            are used.
+        f1s : ~numpy.ndarray | None (default None), shape of [frequencies]
+            Lower frequencies to compute PPC on. If :obj:`None`, all
+            frequencies are used.
 
-        f2s : numpy.ndarray | None (default None), shape of [frequencies]
-            Higher frequencies to compute PPC on. If ``None``, all frequencies
-            are used.
+        f2s : ~numpy.ndarray | None (default None), shape of [frequencies]
+            Higher frequencies to compute PPC on. If :obj:`None`, all
+            frequencies are used.
 
         n_jobs : int (default ``1``)
             Number of jobs to run in parallel. If ``-1``, all available CPUs
@@ -99,7 +102,7 @@ class PPC(_ProcessFreqBase):
         angled brackets represent the average over epochs.
 
         PPC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
-        any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``
+        any value of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan`
         value is returned.
 
         References
@@ -156,8 +159,14 @@ class PPC(_ProcessFreqBase):
         )
 
     @property
-    def results(self) -> tuple[ResultsCFC]:
-        """Return the results."""
+    def results(self) -> ResultsCFC:
+        """Return the results.
+
+        Returns
+        -------
+        results : ~pybispectra.utils.ResultsCFC
+            The results of the PPC computation.
+        """  # noqa: E501
         return deepcopy(self._results)
 
 

@@ -17,13 +17,13 @@ class TDE(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
         Fourier coefficients. Must contain coefficients for the zero frequency,
         a set of positive frequencies, and all corresponding negative
-        frequencies, like that obtained from :func:`utils.compute_fft` with
-        ``return_neg_freqs=True``.
+        frequencies, like that obtained from
+        :func:`~pybispectra.utils.compute_fft` with ``return_neg_freqs=True``.
 
-    freqs : numpy.ndarray, shape of [frequencies]
+    freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
@@ -35,22 +35,25 @@ class TDE(_ProcessBispectrum):
 
     Methods
     -------
-    compute:
+    compute :
         Compute TDE, averaged over epochs.
+
+    copy :
+        Return a copy of the object.
 
     Attributes
     ----------
-    results : tuple of ResultsTDE
+    results : tuple of ~pybispectra.utils.ResultsTDE
         TDE results for each of the computed metrics.
 
     indices : tuple of tuple of int, length of 2
         Indices of the seed and target channels, respectively, most recently
         used with :meth:`compute`.
 
-    data : numpy.ndarray, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
         FFT coefficients.
 
-    freqs : numpy.ndarray, shape of [frequencies]
+    freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
@@ -137,7 +140,7 @@ class TDE(_ProcessBispectrum):
         ----------
         indices : tuple of list of int, length of 2 | None (default None)
             Indices of the seed and target channels, respectively, to compute
-            TDE between. If ``None``, coupling between all channels is
+            TDE between. If :obj:`None`, coupling between all channels is
             computed.
 
         symmetrise : str | list of str (default ``"none"``)
@@ -583,11 +586,11 @@ class TDE(_ProcessBispectrum):
 
         Returns
         -------
-        results : ResultsTDE | tuple of ResultsTDE
+        results : ~pybispectra.utils.ResultsTDE | tuple of ~pybispectra.utils.ResultsTDE
             The results of the TDE computation returned as a single results
             object (if only one TDE variant was computed) or a tuple of results
             objects.
-        """
+        """  # noqa: E501
         if len(self._results) == 1:
             return deepcopy(self._results[0])
         return deepcopy(self._results)

@@ -16,10 +16,10 @@ class AAC(_ProcessFreqBase):
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs, channels, frequencies, times]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies, times]
         Amplitude (power) of the time-frequency representation of data.
 
-    freqs : numpy.ndarray, shape of [frequencies]
+    freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
@@ -30,18 +30,21 @@ class AAC(_ProcessFreqBase):
 
     Methods
     -------
-    compute:
+    compute :
         Compute AAC, averaged over epochs.
+
+    copy :
+        Return a copy of the object.
 
     Attributes
     ----------
-    results : tuple of pybispectra.ResultsCFC
+    results : tuple of ~pybispectra.utils.ResultsCFC
         AAC results.
 
-    data : numpy.ndarray, shape of [epochs, channels, frequencies, times]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies, times]
         Amplitude (power) of the time-frequency representation of data.
 
-    freqs : numpy.ndarray, shape of [frequencies]
+    freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
@@ -51,10 +54,10 @@ class AAC(_ProcessFreqBase):
         Indices of the seed and target channels, respectively, most recently
         used with :meth:`compute`.
 
-    f1s : numpy.ndarray, shape of [frequencies]
+    f1s : ~numpy.ndarray, shape of [frequencies]
         Low frequencies (in Hz) most recently used with :meth:`compute`.
 
-    f2s : numpy.ndarray, shape of [frequencies]
+    f2s : ~numpy.ndarray, shape of [frequencies]
         High frequencies (in Hz) most recently used with :meth:`compute`.
 
     verbose : bool
@@ -78,16 +81,16 @@ class AAC(_ProcessFreqBase):
         ----------
         indices : tuple of list of int, length of 2 | None (default None)
             Indices of the seed and target channels, respectively, to compute
-            AAC between. If ``None``, coupling between all channels is
+            AAC between. If :obj:`None`, coupling between all channels is
             computed.
 
-        f1s : numpy.ndarray | None (default None), shape of [frequencies]
-            Lower frequencies to compute AAC on. If ``None``, all frequencies
-            are used.
+        f1s : ~numpy.ndarray | None (default None), shape of [frequencies]
+            Lower frequencies to compute AAC on. If :obj:`None`, all
+            frequencies are used.
 
-        f2s : numpy.ndarray | None (default None), shape of [frequencies]
-            Higher frequencies to compute AAC on. If ``None``, all frequencies
-            are used.
+        f2s : ~numpy.ndarray | None (default None), shape of [frequencies]
+            Higher frequencies to compute AAC on. If :obj:`None`, all
+            frequencies are used.
 
         n_jobs : int (default ``1``)
             Number of jobs to run in parallel. If ``-1``, all available CPUs
@@ -100,7 +103,7 @@ class AAC(_ProcessFreqBase):
         epochs :footcite:`Giehl2021`.
 
         AAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
-        any value of :attr:`f1s` is higher than :attr:`f2s`, a ``numpy.nan``
+        any value of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan`
         value is returned.
 
         References
@@ -157,8 +160,14 @@ class AAC(_ProcessFreqBase):
         )
 
     @property
-    def results(self) -> tuple[ResultsCFC]:
-        """Return the results."""
+    def results(self) -> ResultsCFC:
+        """Return the results.
+
+        Returns
+        -------
+        results : ~pybispectra.utils.ResultsCFC
+            The results of the AAC computation.
+        """
         return deepcopy(self._results)
 
 

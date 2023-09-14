@@ -193,7 +193,7 @@ print(
 # nature of the bispectrum, entries where :math:`f_1` would be higher than
 # :math:`f_2`, as well as where :math:`f_2 + f_1` exceeds the frequency bounds
 # of our data, cannot be computed. In such cases, the values corresponding to
-# those 'bad' frequency combinations are ``numpy.nan``.
+# those 'bad' frequency combinations are :obj:`numpy.nan`.
 
 ###############################################################################
 # Plotting wave shape features
@@ -239,8 +239,9 @@ print(
 # ``plot_absolute=True``) to show the overall degree of asymmetry. In any case,
 # the direction of asymmetry can be inferred from the phases.
 #
-# Finally, note that the ``Figure`` and ``Axes`` objects can also be returned
-# for any desired manual adjustments of the plots.
+# Finally, note that the :class:`~matplotlib.figure.Figure` and
+# :class:`~matplotlib.axes.Axes` objects can also be returned for any desired
+# manual adjustments of the plots.
 
 # %%
 
