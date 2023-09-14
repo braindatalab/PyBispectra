@@ -9,10 +9,10 @@ bispectrum exist: the direct approach, in which the Fourier transform of the
 data is computed and then used to compute the bispectum; or the indirect
 approach, in which the third order moments of the data are computed first which
 are then used to compute the bispectrum. The approach implemented in
-PyBispectra is based on the direct method. The bispectrum, :math:`B`, has the
-form
+PyBispectra is based on the direct method. The bispectrum, :math:`\textbf{B}`,
+has the form
 
-:math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>` ,
+:math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)\textbf{n}^*(f_2+f_1)>`,
 
 where :math:`kmn` is a combination of signals - whose data has been Fourier
 transformed - and the angled brackets represent the average over epochs.
@@ -22,13 +22,13 @@ Several forms of normalisation exist, however a common form is the threenorm: a
 univariate normalisation whereby the values of the bicoherence will be bound in
 the range :math:`[0, 1]` in a manner that is independent of the coupling
 properties within or between signals :footcite:`Shahbazi2014`. The threenorm,
-:math:`N`, has the form
+:math:`\textbf{N}`, has the form
 
-:math:`\large N_{kmn}(f_1,f_2)=(<|\vec{k}(f_1)|^3><|\vec{m}(f_2)|^3><|\vec{n}(f_2+f_1)|^3>)^{\frac{1}{3}}` .
+:math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{y}(f_2)|^3><|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`.
 
-The bicoherence, :math:`\mathcal{B}`, is then computed as
+The bicoherence, :math:`\boldsymbol{\mathcal{B}}`, is then computed as
 
-:math:`\large \mathcal{B}_{kmn}(f_1,f_2)=\Large\frac{B_{kmn}(f_1,f_2)}{N_{kmn}(f_1,f_2)}` .
+:math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large\frac{\textbf{B}_{xyy}(f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}`.
 
 There are several possible uses of the bispectrum and bicoherence for advanced
 signal analyses, including for phase-amplitude coupling (a form of

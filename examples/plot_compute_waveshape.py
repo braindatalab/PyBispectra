@@ -47,26 +47,27 @@ from pybispectra import compute_fft, get_example_data_paths, WaveShape
 # bispectrum) and peak-trough asymmetry (encoded in the real part of the
 # bispectrum) :footcite:`Bartz2019`.
 #
-# The bispectrum, :math:`B`, has the general form:
+# The bispectrum, :math:`\textbf{B}`, has the general form:
 #
-# :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>`,
+# :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)\textbf{n}^*
+# (f_2+f_1)>`,
 #
 # where :math:`kmn` is a combination of the fourier coefficients of channels
-# :math:`\vec{x}` and :math:`\vec{y}`, :math:`f` represents a given frequency,
-# and the angled brackets represent the averaged value over epochs. When
-# analysing waveform shape, we are interested in only a single signal, and as
-# such :math:`k=m=n`.
+# :math:`\textbf{x}` and :math:`\textbf{y}`, :math:`f` represents a given
+# frequency, and the angled brackets represent the averaged value over epochs.
+# When analysing waveform shape, we are interested in only a single signal, and
+# as such :math:`k=m=n`.
 #
 # Furthermore, we can normalise the bispectrum to the bicoherence,
-# :math:`\mathcal{B}`, whose values lie in the range :math:`[-1, 1]`. This
-# normalisation can be performed using the threenorm, :math:`N`
-# :footcite:`Zandvoort2021`:
+# :math:`\boldsymbol{\mathcal{B}}`, whose values lie in the range :math:`[-1,
+# 1]`. This normalisation can be performed using the threenorm,
+# :math:`\textbf{N}` :footcite:`Zandvoort2021`:
 #
-# :math:`\large N_{xyy}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{y}(f_2)|^3>
-# <|\vec{y}(f_2+f_1)|^3>)^{\frac{1}{3}}` ,
+# :math:`\textbf{N}_{xxx}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{x}(f_2)|^3>
+# <|\textbf{x}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
 #
-# :math:`\large \mathcal{B}_{xyy}(f_1,f_2)=\Large
-# \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}` .
+# :math:`\boldsymbol{\mathcal{B}}_{xxx}(f_1,f_2)=\Large\frac{\textbf{B}_{xxx}(
+# f_1,f_2)}{\textbf{N}_{xxx}(f_1,f_2)}`.
 
 ###############################################################################
 # Loading data and computing Fourier coefficients

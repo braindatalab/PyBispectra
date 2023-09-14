@@ -104,27 +104,28 @@ class WaveShape(_ProcessBispectrum):
 
         Notes
         -----
-        Bicoherence, :math:`\mathcal{B}`, is the normalised version of the
-        bispectrum, :math:`B`, which has the general form
+        Bicoherence, :math:`\boldsymbol{\mathcal{B}}`, is the normalised
+        version of the bispectrum, :math:`\textbf{B}`, which has the general
+        form
 
-        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*
-        (f_2+f_1)>`,
+        :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)
+        \textbf{n}^*(f_2+f_1)>`,
 
         where :math:`kmn` corresponds to the channels in the data, and the
         angled brackets represent the averaged value over epochs. For the
         purposes of waveshape analyses, bicoherence is only computed within a
-        single signal, :math:`\vec{x}`, such that
+        single signal, :math:`\textbf{x}`, such that
 
-        :math:`B_{kmn}(f_1,f_2) := B_{xxx}(f_1,f_2)`.
+        :math:`\textbf{B}_{kmn}(f_1,f_2) := \textbf{B}_{xxx}(f_1,f_2)`.
 
         Normalisation of the bispectrum to bicoherence is achieved with the
-        threenorm, :math:`N` :footcite:`Zandvoort2021`,
+        threenorm, :math:`\textbf{N}` :footcite:`Zandvoort2021`,
 
-        :math:`\large N_{xxx}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{x}(f_2)|^3>
-        <|\vec{x}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+        :math:`\textbf{N}_{xxx}(f_1,f_2)=(<|\textbf{x}(f_1)|^3>
+        <|\textbf{x}(f_2)|^3><|\textbf{x}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
 
-        :math:`\large \mathcal{B}_{xxx}(f_1,f_2)=\Large
-        \frac{B_{xxx}(f_1,f_2)}{N_{xxx}(f_1,f_2)}`.
+        :math:`\boldsymbol{\mathcal{B}}_{xxx}(f_1,f_2)=\Large
+        \frac{\textbf{B}_{xxx}(f_1,f_2)}{\textbf{N}_{xxx}(f_1,f_2)}`.
 
         The threenorm is a form of univariate normalisation, whereby the values
         of the bicoherence will be bound in the range :math:`[0, 1]` in a

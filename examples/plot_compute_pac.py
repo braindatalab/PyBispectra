@@ -18,40 +18,42 @@ from pybispectra import compute_fft, get_example_data_paths, PAC
 # ----------
 # PAC quantifies the relationship between the phases of a lower frequency
 # :math:`f_1` and the amplitude of a higher frequency :math:`f_2` within a
-# single signal, :math:`\vec{x}`, or across different signals, :math:`\vec{x}`
-# and :math:`\vec{y}`.
+# single signal, :math:`\textbf{x}`, or across different signals,
+# :math:`\textbf{x}` and :math:`\textbf{y}`.
 #
-# The method available in PyBispectra is based on the bispectrum, :math:`B`,
-# with four variations available. The bispectrum has the general form:
+# The method available in PyBispectra is based on the bispectrum,
+# :math:`\textbf{B}`, with four variations available. The bispectrum has the
+# general form:
 #
-# :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>`,
+# :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)\textbf{n}^*
+# (f_2+f_1)>`,
 #
-# where :math:`kmn` is a combination of channels :math:`\vec{x}` and
-# :math:`\vec{y}`, and the angled brackets represent the averaged value over
+# where :math:`kmn` is a combination of channels :math:`\textbf{x}` and
+# :math:`\textbf{y}`, and the angled brackets represent the averaged value over
 # epochs. The computation of PAC follows from this :footcite:`Kovach2018`:
 #
-# :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1,f_2)=<\vec{x}(f_1)
-# \vec{y}(f_2)\vec{y}^*(f_2+f_1)>`.
+# :math:`PAC(\textbf{x}_{f_1},\textbf{y}_{f_2})=\textbf{B}_{xyy}(f_1,f_2)=<
+# \textbf{x}(f_1)\textbf{y}(f_2)\textbf{y}^*(f_2+f_1)>`.
 #
 # The four variations arise from the options for normalisation and
 # antisymmetrisation. The bispectrum can be normalised to the bicoherence,
-# :math:`\mathcal{B}`, using the threenorm, :math:`N`
+# :math:`\boldsymbol{\mathcal{B}}`, using the threenorm, :math:`\textbf{N}`
 # :footcite:`Zandvoort2021`:
 #
-# :math:`\large N_{xyy}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{y}(f_2)|^3>
-# <|\vec{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+# :math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{y}(f_2)|^3>
+# <|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
 #
-# :math:`\large \mathcal{B}_{xyy}(f_1,f_2)=\Large
-# \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}`,
+# :math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large\frac{\textbf{B}_{xyy}
+# (f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}`,
 #
 # where the resulting PAC results are normalised to the range :math:`[0, 1]` by
 # the power of the corresponding frequencies. Furthermore, PAC can be
 # antisymmetrised by subtracting the results from those found using the
-# transposed bispectrum, :math:`B_{xyx}` :footcite:`Chella2014`. In the context
-# of analysing PAC between two signals, antisymmetrisation allows you to
-# correct for spurious estimates of coupling arising from interactions within
-# the signals themselves in instances of source mixing, providing a more robust
-# connectivty metric.
+# transposed bispectrum, :math:`\textbf{B}_{xyx}` :footcite:`Chella2014`. In the
+# context of analysing PAC between two signals, antisymmetrisation allows you
+# to correct for spurious estimates of coupling arising from interactions
+# within the signals themselves in instances of source mixing, providing a more
+# robust connectivty metric.
 
 ###############################################################################
 # Loading data and computing Fourier coefficients

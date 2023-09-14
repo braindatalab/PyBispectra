@@ -19,7 +19,7 @@ class SpatioSpectralFilter:
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs, channels, times]
+    data : ~numpy.ndarray, shape of [epochs, channels, times]
 
     sampling_freq : int | float
         Sampling frequency of :attr:`data` (in Hz).
@@ -29,28 +29,28 @@ class SpatioSpectralFilter:
 
     Methods
     -------
-    fit_transform_ssd:
+    fit_transform_ssd :
         Fit SSD filters and transform the data.
 
-    fit_transform_hpmax:
+    fit_transform_hpmax :
         Fit HPMax filters and transform the data.
 
-    get_transformed_data:
+    get_transformed_data :
         Return the transformed data.
 
     Attributes
     ----------
-    filters : numpy.ndarray, shape of [channels, rank]
+    filters : ~numpy.ndarray, shape of [channels, rank]
         Spatial filters (eigenvectors of the eigendecomposition). Sorted in
-        descending order according to the size of the signal:noise ratios of
+        descending order according to the size of the signal-to-noise ratios of
         :attr:`ratios`.
 
-    patterns : numpy.ndarray, shape of [rank, channels]
+    patterns : ~numpy.ndarray, shape of [rank, channels]
         Spatial patterns for each of the spatial filters.
 
-    ratios : numpy.ndarray, shape of [rank]
-        Signal:noise ratios for each of the spatial filters (eigenvalues of the
-        eigendecomposition). Sorted in descending order.
+    ratios : ~numpy.ndarray, shape of [rank]
+        Signal-to-noise ratios for each of the spatial filters (eigenvalues of
+        the eigendecomposition). Sorted in descending order.
 
     Notes
     -----
@@ -100,20 +100,21 @@ class SpatioSpectralFilter:
 
     Generalised eigendecompositions have the general form:
 
-    :math:`\large NW \Lambda=SW`,
+    :math:`\textbf{NW} \boldsymbol{\Lambda}=\textbf{SW}`,
 
     which can also be represented in the ratio form:
 
-    :math:`\large \Lambda=\frac{W^TSW}{W^TNW}`,
+    :math:`\boldsymbol{\Lambda}=\frac{\textbf{W}^T\textbf{SW}}{\textbf{W}^T
+    \textbf{NW}}`,
 
-    where :math:`S` and :math:`N` are the covariance matrices for the signal
-    and noise information in the data, respectively, :math:`W` is a common set
-    of spatial filters (which, when applied to the data, will maximise signal
-    information content and minimise noise information content), and
-    :math:`\Lambda` is a diagonal matrix of eigenvalues representing the ratio
-    of signal:noise information content in the data transformed with each
-    spatial filter. Accordingly, spatial filters for with an SNR > 1 are
-    generally of interest.
+    where :math:`\textbf{S}` and :math:`\textbf{N}` are the covariance matrices
+    for the signal and noise information in the data, respectively,
+    :math:`\textbf{W}` is a common set of spatial filters (which, when applied
+    to the data, will maximise signal information content and minimise noise
+    information content), and :math:`\boldsymbol{\Lambda}` is a diagonal matrix
+    of eigenvalues representing the ratio of signal-to-noise information
+    content in the data transformed with each spatial filter. Accordingly,
+    spatial filters for with an SNR > 1 are generally of interest.
 
     References
     ----------
@@ -732,7 +733,7 @@ class SpatioSpectralFilter:
 
         Returns
         -------
-        transformed_data : numpy.ndarray, shape of [epochs, components, times]
+        transformed_data : ~numpy.ndarray, shape of [epochs, components, times]
             Transformed data with only those components created with filters
             whose signal-to-noise ratios are > ``min_ratio``.
 

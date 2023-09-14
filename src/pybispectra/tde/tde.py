@@ -158,56 +158,60 @@ class TDE(_ProcessBispectrum):
 
         Notes
         -----
-        TDE can be computed from the bispectrum, :math:`B`, of signals
-        :math:`\vec{x}` and :math:`\vec{y}` of the seeds and targets,
+        TDE can be computed from the bispectrum, :math:`\textbf{B}`, of signals
+        :math:`\textbf{x}` and :math:`\textbf{y}` of the seeds and targets,
         respectively, which has the general form:
 
-        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*
-        (f_2+f_1)>`,
+        :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)
+        \textbf{n}^*(f_2+f_1)>`,
 
-        where :math:`kmn` is a combination of channels :math:`\vec{x}` and
-        :math:`\vec{y}`, and the angled brackets represent the averaged value
-        over epochs. When computing TDE, information from :math:`\vec{n}` is
-        taken not only from the positive frequencies, but also the negative
-        frequencies. Four methods exist for computing TDE based on the
-        bispectrum :footcite:`Nikias1988`. The fundamental equation is as
-        follows:
+        where :math:`kmn` is a combination of channels :math:`\textbf{x}` and
+        :math:`\textbf{y}`, and the angled brackets represent the averaged
+        value over epochs. When computing TDE, information from
+        :math:`\textbf{n}` is taken not only from the positive frequencies, but
+        also the negative frequencies. Four methods exist for computing TDE
+        based on the bispectrum :footcite:`Nikias1988`. The fundamental
+        equation is as follows:
 
-        :math:`\large TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}I(
-        \vec{x}_{f_1},\vec{y}_{f_2})e^{-if_1\tau}df_1df_2`,
+        :math:`TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}\textbf{I}(
+        \textbf{x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2`,
 
-        where :math:`I` varies depending on the method, and :math:`\tau` is a
-        given time delay. Phase information of the signals is extracted from
-        the bispectrum in two variants used by the different methods:
+        where :math:`\textbf{I}` varies depending on the method, and
+        :math:`\tau` is a given time delay. Phase information of the signals is
+        extracted from the bispectrum in two variants used by the different
+        methods:
 
-        :math:`\large \phi(\vec{x}_{f_1},\vec{y}_{f_2})=\varphi_{B_{xyx}}
-        (f_1,f_2)-\varphi_{B_{xxx}}(f_1,f_2)`
+        :math:`\boldsymbol{\phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})
+        \boldsymbol{\varphi}_{\textbf{B}_{xyx}} (f_1,f_2)-\boldsymbol{
+        \varphi}_{\textbf{B}_{xxx}}(f_1,f_2)`
 
-        :math:`\large \phi'(\vec{x}_{f_1},\vec{y}_{f_2})=\varphi_{B_{xyx}}
-        (f_1,f_2)-\frac{1}{2}(\varphi_{B_{xxx}}(f_1, f_2) + \varphi_{B_{yyy}}
-        (f_1,f_2))`
+        :math:`\boldsymbol{\phi}'(\textbf{x}_{f_1},\textbf{y}_{f_2})=
+        \boldsymbol{\varphi}_{\textbf{B}_{xyx}}(f_1,f_2)-\frac{1}{2}(
+        \boldsymbol{\varphi}_{\textbf{B}_{xxx}}(f_1,f_2) + \boldsymbol{
+        \varphi}_{\textbf{B}_{yyy}}(f_1,f_2))`
 
         **Method I**:
-        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=e^{i\phi(\vec{x}_{f_1},
-        \vec{y}_{f_2})}`
+        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=e^{i\boldsymbol{
+        \phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})}`
 
         **Method II**:
-        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=e^{i\phi'(\vec{x}_{f_1},
-        \vec{y}_{f_2})}`
+        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=e^{i\boldsymbol{
+        \phi}'(\textbf{x}_{f_1},\textbf{y}_{f_2})}`
 
         **Method III**:
-        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{B_{xyx}
-        (f_1,f_2)}{B_{xxx}(f_1,f_2)}`
+        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{
+        \textbf{B}_{xyx}(f_1,f_2)}{\textbf{B}_{xxx}(f_1,f_2)}`
 
         **Method IV**:
-        :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{|B_{xyx}
-        (f_1,f_2)|e^{i\phi'(\vec{x}_{f_1},\vec{y}_{f_2})}}{\sqrt{|B_{xxx}
-        (f_1,f_2)||B_{yyy}(f_1,f_2)|}}`
+        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{
+        |\textbf{B}_{xyx}(f_1,f_2)|e^{i\boldsymbol{\phi}'(\textbf{x}_{f_1},
+        \textbf{y}_{f_2})}}{\sqrt{|\textbf{B}_{xxx}(f_1,f_2)||\textbf{B}_{yyy}
+        (f_1,f_2)|}}`
 
-        where :math:`\varphi_{B}` is the phase of the bispectrum.
-        Antisymmetrisation of the bispectrum is implemented as the replacement
-        of :math:`B_{xyx}` with :math:`(B_{xxy} - B_{yxx})` in the above
-        equations :footcite:`JurharInPrep`.
+        where :math:`\boldsymbol{\varphi}_{\textbf{B}}` is the phase of the
+        bispectrum. Antisymmetrisation of the bispectrum is implemented as the
+        replacement of :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xxy} -
+        \textbf{B}_{yxx})` in the above equations :footcite:`JurharInPrep`.
 
         If the seed and target for a given connection is the same channel, an
         error is raised.

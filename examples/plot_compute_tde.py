@@ -20,64 +20,71 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # information between two signals, in terms of both the direction and the
 # particular time lag between them, known as TDE.
 #
-# The method available in PyBispectra is based on the bispectrum, :math:`B`,
-# which has the general form:
+# The method available in PyBispectra is based on the bispectrum,
+# :math:`\textbf{B}`, which has the general form:
 #
-# :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*(f_2+f_1)>`,
+# :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)\textbf{n}^*
+# (f_2+f_1)>`,
 #
-# where :math:`kmn` is a combination of channels :math:`\vec{x}` and
-# :math:`\vec{y}`, and the angled brackets represent the averaged value over
-# epochs. When computing TDE, information from :math:`\vec{n}` is taken not
+# where :math:`kmn` is a combination of channels :math:`\textbf{x}` and
+# :math:`\textbf{y}`, and the angled brackets represent the averaged value over
+# epochs. When computing TDE, information from :math:`\textbf{n}` is taken not
 # only from the positive frequencies, but also the negative frequencies. Four
 # methods exist for computing TDE based on the bispectrum
 # :footcite:`Nikias1988`. The fundamental equation is as follows:
 #
-# :math:`\large TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}I(
-# \vec{x}_{f_1},\vec{y}_{f_2})e^{-if_1\tau}df_1df_2`,
+# :math:`TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}\textbf{I}(\textbf{
+# x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2`,
 #
-# where :math:`I` varies depending on the method, and :math:`\tau` is a given
-# time delay. Phase information of the signals is extracted from the bispectrum
-# in two variants used by the different methods:
+# where :math:`\textbf{I}` varies depending on the method, and :math:`\tau` is
+# a given time delay. Phase information of the signals is extracted from the
+# bispectrum in two variants used by the different methods:
 #
-# :math:`\large \phi(\vec{x}_{f_1},\vec{y}_{f_2})=\varphi_{B_{xyx}} (f_1,f_2)-
-# \varphi_{B_{xxx}}(f_1,f_2)`
+# :math:`\boldsymbol{\phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})
+# \boldsymbol{\varphi}_{\textbf{B}_{xyx}} (f_1,f_2)-\boldsymbol{
+# \varphi}_{\textbf{B}_{xxx}}(f_1,f_2)`
 #
-# :math:`\large \phi'(\vec{x}_{f_1},\vec{y}_{f_2})=\varphi_{B_{xyx}} (f_1,f_2)-
-# \frac{1}{2}(\varphi_{B_{xxx}}(f_1, f_2) + \varphi_{B_{yyy}} (f_1,f_2))`
+# :math:`\boldsymbol{\phi}'(\textbf{x}_{f_1},\textbf{y}_{f_2})=
+# \boldsymbol{\varphi}_{\textbf{B}_{xyx}}(f_1,f_2)-\frac{1}{2}(
+# \boldsymbol{\varphi}_{\textbf{B}_{xxx}}(f_1,f_2) + \boldsymbol{
+# \varphi}_{\textbf{B}_{yyy}}(f_1,f_2))`
 #
 # **Method I**:
-# :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=e^{i\phi(\vec{x}_{f_1},
-# \vec{y}_{f_2})}`
+# :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=e^{i\boldsymbol{
+# \phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})}`
 #
 # **Method II**:
-# :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=e^{i\phi'(\vec{x}_{f_1},
-# \vec{y}_{f_2})}`
+# :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=e^{i\boldsymbol{
+# \phi}'(\textbf{x}_{f_1},\textbf{y}_{f_2})}`
 #
 # **Method III**:
-# :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{B_{xyx}
-# (f_1,f_2)}{B_{xxx}(f_1,f_2)}`
+# :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{
+# \textbf{B}_{xyx}(f_1,f_2)}{\textbf{B}_{xxx}(f_1,f_2)}`
 #
 # **Method IV**:
-# :math:`\large I(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{|B_{xyx}
-# (f_1,f_2)|e^{i\phi'(\vec{x}_{f_1},\vec{y}_{f_2})}}{\sqrt{|B_{xxx}
-# (f_1,f_2)||B_{yyy}(f_1,f_2)|}}`
+# :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{
+# |\textbf{B}_{xyx}(f_1,f_2)|e^{i\boldsymbol{\phi}'(\textbf{x}_{f_1},
+# \textbf{y}_{f_2})}}{\sqrt{|\textbf{B}_{xxx}(f_1,f_2)||\textbf{B}_{yyy}
+# (f_1,f_2)|}}`
 #
-# where :math:`\varphi_{B}` is the phase of the bispectrum. All four methods
-# aim to capture the phase difference between :math:`\vec{x}` and
-# :math:`\vec{y}`. Method I involves the extraction of phase spectrum
-# periodicity and monotomy, with method III involving an additional amplitude
-# weighting from the bispectrum of :math:`\vec{x}`. Method II instead relies on
-# a combination of phase spectra of the different frequency components, with
-# method IV containing an additional amplitude weighting from the bispectra of
-# :math:`\vec{x}` and :math:`\vec{y}`. No single method is superior to another.
+# where :math:`\boldsymbol{\varphi}_{\textbf{B}}` is the phase of the
+# bispectrum. All four methods aim to capture the phase difference between
+# :math:`\textbf{x}` and :math:`\textbf{y}`. Method I involves the extraction
+# of phase spectrum periodicity and monotomy, with method III involving an
+# additional amplitude weighting from the bispectrum of :math:`\textbf{x}`.
+# Method II instead relies on a combination of phase spectra of the different
+# frequency components, with method IV containing an additional amplitude
+# weighting from the bispectra of :math:`\textbf{x}` and :math:`\textbf{y}`. No
+# single method is superior to another.
 #
 # As a result of volume conduction artefacts (i.e. a common underlying signal
-# that propagates instantaneously to :math:`\vec{x}` and :math:`\vec{y}`), time
-# delay estimates can become contaminated, resulting in spurious estimates of
-# :math:`\tau=0`. Thankfully, antisymmetrisation of the bispectrum can be used
-# to address these mixing artefacts :footcite:`Chella2014`, which is
-# implemented here as the replacement of :math:`B_{xyx}` with :math:`(B_{xxy} -
-# B_{yxx})` in the above equations :footcite:`JurharInPrep`.
+# that propagates instantaneously to :math:`\textbf{x}` and
+# :math:`\textbf{y}`), time delay estimates can become contaminated, resulting
+# in spurious estimates of :math:`\tau=0`. Thankfully, antisymmetrisation of
+# the bispectrum can be used to address these mixing artefacts
+# :footcite:`Chella2014`, which is implemented here as the replacement of
+# :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xxy} - \textbf{B}_{yxx})`
+# in the above equations :footcite:`JurharInPrep`.
 #
 # As a final note, if TDE for only certain frequencies is of interest, the
 # signals can be bandpass filtered prior to computing the bispectrum.
@@ -86,19 +93,20 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # Loading data and computing Fourier coefficients
 # -----------------------------------------------
 # We will start by loading some simulated data containing a time delay of 250
-# ms between two signals, where :math:`\vec{y}` is a delayed version of
-# :math:`\vec{x}`. We will then compute the Fourier coefficients of the data,
-# which will be used to compute TDE. Since TDE requires information from both
-# negative and positive frequencies, we set the ``return_neg_freqs`` parameter
-# to ``True``. Furthermore, we specify ``n_points`` to be twice the number of
-# time points in the data, plus one, to ensure that the time delay estimates
-# correspond to the sampling frequency of the data (accounting for time point
-# zero as well as the fact that the estimates are returned for both time delay
-# directions, i.e. where :math:`\vec{x}` drives :math:`\vec{y}` and
-# :math:`\vec{y}` drives :math:`\vec{x}`). By altering the number of points
-# used to compute the Fourier coefficients, the temporal resolution of the TDE
-# results can be adjusted. E.g. a higher number of points increases the
-# temporal resolution at the cost of computational cost.
+# ms between two signals, where :math:`\textbf{y}` is a delayed version of
+# :math:`\textbf{x}`. We will then compute the Fourier coefficients of the
+# data, which will be used to compute TDE. Since TDE requires information from
+# both negative and positive frequencies, we set the ``return_neg_freqs``
+# parameter to ``True``. Furthermore, we specify ``n_points`` to be twice the
+# number of time points in the data, plus one, to ensure that the time delay
+# estimates correspond to the sampling frequency of the data (accounting for
+# time point zero as well as the fact that the estimates are returned for both
+# time delay directions, i.e. where :math:`\textbf{x}` drives
+# :math:`\textbf{y}` and :math:`\textbf{y}` drives :math:`\textbf{x}`). By
+# altering the number of points used to compute the Fourier coefficients, the
+# temporal resolution of the TDE results can be adjusted. E.g. a higher number
+# of points increases the temporal resolution at the cost of computational
+# cost.
 #
 # In this example, our data consists of 30 epochs of 200 timepoints each, which
 # with a 200 Hz sampling frequency corresponds to 1 second of data per epoch

@@ -118,31 +118,32 @@ class PAC(_ProcessBispectrum):
 
         Notes
         -----
-        PAC can be computed as the bispectrum, :math:`B`, of signals
-        :math:`\vec{x}` and :math:`\vec{y}` of the seeds and targets,
+        PAC can be computed as the bispectrum, :math:`\textbf{B}`, of signals
+        :math:`\textbf{x}` and :math:`\textbf{y}` of the seeds and targets,
         respectively, which has the general form
 
-        :math:`\large B_{kmn}(f_1,f_2)=<\vec{k}(f_1)\vec{m}(f_2)\vec{n}^*
-        (f_2+f_1)>`,
+        :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)
+        \textbf{n}^*(f_2+f_1)>`,
 
-        where :math:`kmn` is a combination of channels :math:`\vec{x}` and
-        :math:`\vec{y}`, and the angled brackets represent the average over
-        epochs. PAC between signals :math:`\vec{x}` and :math:`\vec{y}` is
-        given as
+        where :math:`kmn` is a combination of channels :math:`\textbf{x}` and
+        :math:`\textbf{y}`, and the angled brackets represent the average over
+        epochs. PAC between signals :math:`\textbf{x}` and :math:`\textbf{y}`
+        is given as
 
-        :math:`\large PAC(\vec{x}_{f_1},\vec{y}_{f_2})=B_{xyy}(f_1,f_2)=
-        <\vec{x}(f_1)\vec{y}(f_2)\vec{y}^*(f_2+f_1)>`.
+        :math:`PAC(\textbf{x}_{f_1},\textbf{y}_{f_2})=\textbf{B}_{xyy}(f_1,
+        f_2)=<\textbf{x}(f_1)\textbf{y}(f_2)\textbf{y}^*(f_2+f_1)>`.
 
         Antisymmetrisaion is achieved by subtracting the PAC results from the
-        transposed bispectrum, :math:`B_{xyx}` :footcite:`Chella2014`. The
-        bispectrum can be normalised to the bicoherence, :math:`\mathcal{B}`,
-        using the threenorm, :math:`N` :footcite:`Zandvoort2021`:
+        transposed bispectrum, :math:`\textbf{B}_{xyx}` :footcite:`Chella2014`.
+        The bispectrum can be normalised to the bicoherence,
+        :math:`\boldsymbol{\mathcal{B}}`, using the threenorm,
+        :math:`\textbf{N}` :footcite:`Zandvoort2021`:
 
-        :math:`\large N_{xyy}(f_1,f_2)=(<|\vec{x}(f_1)|^3><|\vec{y}(f_2)|^3>
-        <|\vec{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+        :math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|
+        \textbf{y}(f_2)|^3><|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
 
-        :math:`\large \mathcal{B}_{xyy}(f_1,f_2)=\Large
-        \frac{B_{xyy}(f_1,f_2)}{N_{xyy}(f_1,f_2)}`.
+        :math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large
+        \frac{\textbf{B}_{xyy}(f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}`.
 
         The threenorm is a form of univariate normalisation, whereby the values
         of the bicoherence will be bound in the range :math:`[0, 1]` in a

@@ -92,14 +92,14 @@ class PPC(_ProcessFreqBase):
         -----
         PPC is computed as coherence between frequencies :footcite:`Giehl2021`:
 
-        :math:`\large PPC(\vec{x}_{f_1},\vec{y}_{f_2})=\Large \frac{|\langle
-        \vec{a}_x(f_1)\vec{a}_y(f_2) e^{i(\vec{\varphi}_x(f_1)\frac{f_2}{f_1}-
-        \vec{\varphi}_y(f_2))} \rangle|}{\langle \vec{a}_x(f_1)\vec{a}_y(f_2)
-        \rangle}`,
+        :math:`PPC(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{|\langle
+        \textbf{a}_x(f_1)\textbf{a}_y(f_2) e^{i(\boldsymbol{\varphi}_x(f_1)
+        \frac{f_2}{f_1}-\boldsymbol{\varphi}_y(f_2))} \rangle|}{\langle
+        \textbf{a}_x(f_1)\textbf{a}_y(f_2) \rangle}`,
 
-        where :math:`\vec{a}(f)` and :math:`\vec{\varphi}(f)` are the amplitude
-        and phase of a signal at a given frequency, respectively, and the
-        angled brackets represent the average over epochs.
+        where :math:`\textbf{a}(f)` and :math:`\boldsymbol{\varphi}(f)` are the
+        amplitude and phase of a signal at a given frequency, respectively, and
+        the angled brackets represent the average over epochs.
 
         PPC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
         any value of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan`

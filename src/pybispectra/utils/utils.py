@@ -27,7 +27,7 @@ def compute_fft(
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs, channels, times]
+    data : ~numpy.ndarray, shape of [epochs, channels, times]
         Real-valued data to compute the FFT on.
 
     sampling_freq : int | float
@@ -39,8 +39,8 @@ def compute_fft(
 
     window : str (default ``"hanning"``)
         Type of window to apply to ``data`` before computing the FFT.
-        Accepts ``"hanning"`` and ``"hamming"``. See :func:`numpy.hanning` and
-        :func:`numpy.hamming`.
+        Accepts ``"hanning"`` and ``"hamming"``. See :func:`~numpy.hanning` and
+        :func:`~numpy.hamming`.
 
     return_neg_freqs : bool (default ``False``)
         Whether or not to return the FFT coefficients for negative frequencies.
@@ -54,10 +54,10 @@ def compute_fft(
 
     Returns
     -------
-    coeffs : numpy.ndarray, shape of [epochs, channels, frequencies]
+    coeffs : ~numpy.ndarray, shape of [epochs, channels, frequencies]
         Fourier coefficients of ``data``.
 
-    freqs : numpy.ndarray, shape of [frequencies]
+    freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in ``coeffs``.
     """
     (
@@ -193,29 +193,29 @@ def compute_tfr(
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs, channels, times]
+    data : ~numpy.ndarray, shape of [epochs, channels, times]
         Real-valued data to compute the amplitude TFR of.
 
     sampling_freq : int | float
         Sampling frequency of the data in Hz.
 
-    freqs : numpy.ndarray, shape of [frequencies]
+    freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies to return the TFR for in Hz.
 
     tfr_mode : str (default ``"morlet"``)
         Mode for computing the TFR. Accepts ``"morlet"`` and ``"multitaper"``.
-        See :func:`mne.time_frequency.tfr_array_morlet` and
-        :func:`mne.time_frequency.tfr_array_multitaper`.
+        See :func:`~mne.time_frequency.tfr_array_morlet` and
+        :func:`~mne.time_frequency.tfr_array_multitaper`.
 
-    n_cycles : numpy.ndarray, shape of [frequencies] | int | float (default ``7.0``)
+    n_cycles : ~numpy.ndarray, shape of [frequencies] | int | float (default ``7.0``)
         Number of cycles in the wavelet when computing the TFR. If an array,
         the number of cycles is given for each frequency, otherwise a fixed
         value across all frequencies is used.
 
     zero_mean_wavelets : bool | None (default None)
         Whether or not to use wavelets with a mean of 0. If :obj:`None`, the
-        default argument of :func:`mne.time_frequency.tfr_array_morlet` and
-        :func:`mne.time_frequency.tfr_array_multitaper` is used according to
+        default argument of :func:`~mne.time_frequency.tfr_array_morlet` and
+        :func:`~mne.time_frequency.tfr_array_multitaper` is used according to
         ``tfr_mode``.
 
     use_fft : bool default (``True``)
@@ -224,7 +224,7 @@ def compute_tfr(
     multitaper_time_bandwidth : int | float (default ``4.0``)
         Product between the temporal window length (in seconds) and the
         frequency bandwidth (in Hz). Only used if ``tfr_mode = "multitaper"``.
-        See :func:`mne.time_frequency.tfr_array_multitaper` for more
+        See :func:`~mne.time_frequency.tfr_array_multitaper` for more
         information.
 
     n_jobs : int (default ``1``)
@@ -236,10 +236,10 @@ def compute_tfr(
 
     Returns
     -------
-    tfr : numpy.ndarray, shape of [epochs, channels, frequencies, times]
+    tfr : ~numpy.ndarray, shape of [epochs, channels, frequencies, times]
         Amplitude/power of the TFR of ``data``.
 
-    freqs : numpy.ndarray of float, shape of [frequencies]
+    freqs : ~numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in ``tfr``.
 
     Notes
