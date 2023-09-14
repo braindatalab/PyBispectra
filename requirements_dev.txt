@@ -15,4 +15,3 @@ notebook
 ipykernel
 ipywidgets
 ipython
-pypandoc
