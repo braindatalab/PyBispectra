@@ -21,7 +21,7 @@ using pip:
 .. code-block:: console
     
     $ pip install -e .
-    $ pip install -r requirements_dev.txt
+    $ pip install pybispectra[dev]
 
 
 Contributing to PyBispectra
