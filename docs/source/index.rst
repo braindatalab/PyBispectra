@@ -10,7 +10,7 @@
 
    <br />
 
-.. image:: https://tsbinns.com/assets/pybispectra/logo.gif
+.. image:: static/logo.gif
    :alt: PyBispectra
 
 |br|
