@@ -49,9 +49,9 @@ from pybispectra import compute_fft, get_example_data_paths, PAC
 # where the resulting PAC results are normalised to the range :math:`[0, 1]` by
 # the power of the corresponding frequencies. Furthermore, PAC can be
 # antisymmetrised by subtracting the results from those found using the
-# transposed bispectrum, :math:`\textbf{B}_{xyx}` :footcite:`Chella2014`. In the
-# context of analysing PAC between two signals, antisymmetrisation allows you
-# to correct for spurious estimates of coupling arising from interactions
+# transposed bispectrum, :math:`\textbf{B}_{xyx}` :footcite:`Chella2014`. In
+# the context of analysing PAC between two signals, antisymmetrisation allows
+# you to correct for spurious estimates of coupling arising from interactions
 # within the signals themselves in instances of source mixing, providing a more
 # robust connectivty metric.
 
