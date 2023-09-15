@@ -84,6 +84,11 @@ class _PlotBase(ABC):
                 "`major_tick_intervals` and `minor_tick_intervals` should be "
                 "ints or floats."
             )
+        if major_tick_intervals <= 0 or minor_tick_intervals <= 0:
+            raise ValueError(
+                "`major_tick_intervals` and `minor_tick_intervals` should be "
+                "> 0."
+            )
         if minor_tick_intervals >= major_tick_intervals:
             raise ValueError(
                 "`major_tick_intervals` should be > `minor_tick_intervals`."
