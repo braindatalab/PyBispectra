@@ -72,11 +72,13 @@ def test_plotting_cfc_error_catch() -> None:
         results.plot(f2s=np.random.rand(2, 2), show=False)
 
     with pytest.raises(
-        ValueError, match="Entries of `f1s` and `f2s` must be present in the"
+        ValueError,
+        match="Entries of `f1s` and `f2s` must be present in the results.",
     ):
         results.plot(f1s=f1s + 1, show=False)
     with pytest.raises(
-        ValueError, match="Entries of `f1s` and `f2s` must be present in the"
+        ValueError,
+        match="Entries of `f1s` and `f2s` must be present in the results",
     ):
         results.plot(f2s=f2s + 1, show=False)
 
@@ -118,6 +120,29 @@ def test_plotting_cfc_error_catch() -> None:
     ):
         results.plot(
             major_tick_intervals=5, minor_tick_intervals=7, show=False
+        )
+
+    with pytest.raises(
+        TypeError, match="`cbar_range` must be a list, tuple, or None."
+    ):
+        results.plot(cbar_range=np.array([0, 1]), show=False)
+    with pytest.raises(
+        ValueError,
+        match=(
+            "If `cbar_range` is a tuple, one entry must be provided for each "
+            "node being plotted."
+        ),
+    ):
+        results.plot(cbar_range=(None,), show=False)
+    with pytest.raises(
+        ValueError, match="Limits in `cbar_range` must have length of 2."
+    ):
+        results.plot(cbar_range=[0, 1, 2], show=False)
+    with pytest.raises(
+        ValueError, match="Limits in `cbar_range` must have length of 2."
+    ):
+        results.plot(
+            cbar_range=tuple([0, 1, 2] for _ in range(n_cons)), show=False
         )
 
 
