@@ -16,7 +16,6 @@ class _ResultsBase(ABC):
         self,
         data: np.ndarray,
         data_ndim: int,
-        indices: tuple[list[int], list[int]],
         name: str,
     ) -> None:
         if not isinstance(data, np.ndarray):
@@ -26,6 +25,30 @@ class _ResultsBase(ABC):
         self._data = data.copy()
         self.shape = data.shape
 
+        if not isinstance(name, str):
+            raise TypeError("`name` must be a string.")
+        self.name = deepcopy(name)
+
+    @abstractmethod
+    def _sort_init_inputs(self) -> None:
+        """Sort inputs to the object."""
+
+    def _sort_freq_inputs(self, f1s: np.ndarray, f2s: np.ndarray) -> None:
+        """Sort inputs to the object."""
+        if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
+            raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
+        if f1s.ndim != 1 or f2s.ndim != 1:
+            raise ValueError("`f1s` and `f2s` must be 1D arrays.")
+        self.f1s = f1s.copy()
+        self.f2s = f2s.copy()
+
+        if self._data.shape != (self.n_nodes, len(f1s), len(f2s)):
+            raise ValueError("`data` must have shape [nodes, f1s, f2s].")
+
+    def _sort_indices_seeds_targets(
+        self, indices: tuple[list[int], list[int]]
+    ) -> None:
+        """Sort `indices` inputs with format ([seeds], [targets])."""
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
@@ -40,7 +63,8 @@ class _ResultsBase(ABC):
                 not isinstance(idx, (int, np.integer)) for idx in group_idcs
             ):
                 raise TypeError(
-                    "Entries for seeds and targets in `indices` must be ints."
+                    "Entries for seeds and targets in `indices` must be "
+                    "ints."
                 )
         if len(seeds) != len(targets):
             raise ValueError("Entries of `indices` must have equal length.")
@@ -48,25 +72,32 @@ class _ResultsBase(ABC):
         for group_idcs in (seeds, targets):
             if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
                 raise ValueError(
-                    "`indices` contains indices for channels not present in "
+                    "`indices` contains indices for nodes not present in "
                     "the data."
                 )
-        self.indices = deepcopy(indices)
         self._seeds = deepcopy(seeds)
         self._targets = deepcopy(targets)
         self.n_nodes = len(seeds)
+        self.indices = deepcopy(indices)
 
-        if not isinstance(name, str):
-            raise TypeError("`name` must be a string.")
-        self.name = deepcopy(name)
-
-    @abstractmethod
-    def _sort_init_inputs(self) -> None:
-        """Sort inputs to the object."""
+    def _sort_indices_channels(self, indices: list[int]) -> None:
+        """Sort `indices` with inputs format [channels]."""
+        if not isinstance(indices, list):
+            raise TypeError("`indices` must be a list.")
+        if not all(isinstance(idx, (int, np.integer)) for idx in indices):
+            raise TypeError("Entries of `indices` must be ints.")
+        self._n_chans = len(np.unique(indices))
+        if any(idx < 0 or idx >= self._n_chans for idx in indices):
+            raise ValueError(
+                "`indices` contains indices for channels not present in "
+                "the data."
+            )
+        self.n_nodes = len(indices)
+        self.indices = deepcopy(indices)
 
     def get_results(
         self, form: str = "raveled"
-    ) -> np.ndarray | tuple[np.ndarray, tuple[np.ndarray]]:
+    ) -> np.ndarray | tuple[np.ndarray, tuple[list[int], list[int]]]:
         """Return a copy of the results.
 
         Parameters
@@ -82,7 +113,7 @@ class _ResultsBase(ABC):
         results : numpy.ndarray
             The results.
 
-        indices : tuple of tuple of int, length of 2
+        indices : tuple of list of int, length of 2
             Channel indices of the seeds and targets. Only returned if ``form``
             is ``"compact"``.
         """
@@ -97,7 +128,9 @@ class _ResultsBase(ABC):
     def _get_compact_results_child(self) -> None:
         """Return a compacted form of the results."""
 
-    def _get_compact_results_parent(self, compact_results: np.ndarray) -> None:
+    def _get_compact_results_parent(
+        self, compact_results: np.ndarray
+    ) -> tuple[np.ndarray, tuple[list[int], list[int]]]:
         """Return a compacted form of the results.
 
         Parameters
@@ -112,7 +145,7 @@ class _ResultsBase(ABC):
             Results array with shape ``[seeds, targets, ...]``, where ``...``
             represents the data dimensions (e.g. frequencies, times).
 
-        indices : tuple of tuple of int
+        indices : tuple of list of int
             Channel indices of ``compact_results`` for the seeds and targets,
             respectively.
         """
@@ -127,12 +160,15 @@ class _ResultsBase(ABC):
             if not all(np.isnan(entry).all() for entry in row):
                 filled_rows.append(row_i)
         filled_cols = []
-        for col_i, col in enumerate(compact_results.transpose(1, 0, ...)):
+        for col_i, col in enumerate(compact_results.swapaxes(1, 0)):
             if not all(np.isnan(entry).all() for entry in col):
                 filled_cols.append(col_i)
         compact_results = compact_results[np.ix_(filled_rows, filled_cols)]
 
-        indices = (np.unique(self._seeds), np.unique(self._targets))
+        indices = (
+            np.unique(self._seeds).tolist(),
+            np.unique(self._targets).tolist(),
+        )
 
         return compact_results.copy(), indices
 
@@ -161,10 +197,10 @@ class ResultsCFC(_ResultsBase):
 
     Methods
     -------
-    plot:
+    plot :
         Plot the results.
 
-    get_results:
+    get_results :
         Return a copy of the results.
 
     Attributes
@@ -205,8 +241,8 @@ class ResultsCFC(_ResultsBase):
         f2s: np.ndarray,
         name: str,
     ) -> None:  # noqa D107
-        super().__init__(data, 3, indices, name)
-        self._sort_init_inputs(f1s, f2s)
+        super().__init__(data, 3, name)
+        self._sort_init_inputs(indices, f1s, f2s)
 
         self._plotting = _PlotCFC(
             data=self._data,
@@ -216,21 +252,19 @@ class ResultsCFC(_ResultsBase):
             name=self.name,
         )
 
-    def _sort_init_inputs(self, f1s: np.ndarray, f2s: np.ndarray) -> None:
+    def _sort_init_inputs(
+        self,
+        indices: tuple[list[int], list[int]],
+        f1s: np.ndarray,
+        f2s: np.ndarray,
+    ) -> None:
         """Sort inputs to the object."""
-        if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
-            raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
-        if f1s.ndim != 1 or f2s.ndim != 1:
-            raise ValueError("`f1s` and `f2s` must be 1D arrays.")
-        self.f1s = f1s.copy()
-        self.f2s = f2s.copy()
-
-        if self._data.shape != (self.n_nodes, len(f1s), len(f2s)):
-            raise ValueError("`data` must have shape [nodes, f1s, f2s].")
+        super()._sort_indices_seeds_targets(indices)
+        super()._sort_freq_inputs(f1s, f2s)
 
     def _get_compact_results_child(
         self,
-    ) -> tuple[np.ndarray, tuple[list[int]]]:
+    ) -> tuple[np.ndarray, tuple[list[int], list[int]]]:
         """Return a compacted form of the results.
 
         Returns
@@ -359,10 +393,10 @@ class ResultsTDE(_ResultsBase):
 
     Methods
     -------
-    plot:
+    plot :
         Plot the results.
 
-    get_results:
+    get_results :
         Return a copy of the results.
 
     Attributes
@@ -402,8 +436,8 @@ class ResultsTDE(_ResultsBase):
         times: np.ndarray,
         name: str,
     ) -> None:  # noqa D107
-        super().__init__(data, 2, indices, name)
-        self._sort_init_inputs(times)
+        super().__init__(data, 2, name)
+        self._sort_init_inputs(indices, times)
 
         self._compute_tau()
 
@@ -415,12 +449,20 @@ class ResultsTDE(_ResultsBase):
             name=self.name,
         )
 
-    def _sort_init_inputs(self, times: np.ndarray) -> None:
+    def _sort_init_inputs(
+        self, indices: tuple[list[int], list[int]], times: np.ndarray
+    ) -> None:
         """Sort inputs to the object."""
+        super()._sort_indices_seeds_targets(indices)
+        self._sort_times(times)
+
+    def _sort_times(self, times: np.ndarray) -> None:
+        """Sort `times` input."""
         if not isinstance(times, np.ndarray):
             raise TypeError("`times` must be a NumPy array.")
         if times.ndim != 1:
             raise ValueError("`times` must be a 1D array.")
+
         if self._data.shape != (self.n_nodes, times.shape[0]):
             raise ValueError("`data` must have shape [nodes, times].")
 
@@ -547,10 +589,10 @@ class ResultsWaveShape(_ResultsBase):
 
     Methods
     -------
-    plot:
+    plot :
         Plot the results.
 
-    get_results:
+    get_results :
         Return a copy of the results.
 
     Attributes
@@ -589,31 +631,8 @@ class ResultsWaveShape(_ResultsBase):
         f2s: np.ndarray,
         name: str,
     ) -> None:  # noqa D107
-        if not isinstance(data, np.ndarray):
-            raise TypeError("`data` must be a NumPy array.")
-        if data.ndim != 3:
-            raise ValueError("`data` must be a 3D array.")
-        self._data = data.copy()
-        self.shape = data.shape
-
-        if not isinstance(indices, list):
-            raise TypeError("`indices` must be a list.")
-        if not all(isinstance(idx, (int, np.integer)) for idx in indices):
-            raise TypeError("Entries of `indices` must be ints.")
-        self._n_chans = len(np.unique(indices))
-        if any(idx < 0 or idx >= self._n_chans for idx in indices):
-            raise ValueError(
-                "`indices` contains indices for channels not present in the "
-                "data."
-            )
-        self.indices = deepcopy(indices)
-        self.n_nodes = len(indices)
-
-        if not isinstance(name, str):
-            raise TypeError("`name` must be a string.")
-        self.name = deepcopy(name)
-
-        self._sort_init_inputs(f1s, f2s)
+        super().__init__(data, 3, name)
+        self._sort_init_inputs(indices, f1s, f2s)
 
         self._plotting = _PlotWaveShape(
             data=self._data,
@@ -623,17 +642,12 @@ class ResultsWaveShape(_ResultsBase):
             name=self.name,
         )
 
-    def _sort_init_inputs(self, f1s: np.ndarray, f2s: np.ndarray) -> None:
+    def _sort_init_inputs(
+        self, indices: list[int], f1s: np.ndarray, f2s: np.ndarray
+    ) -> None:
         """Sort inputs to the object."""
-        if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
-            raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
-        if f1s.ndim != 1 or f2s.ndim != 1:
-            raise ValueError("`f1s` and `f2s` must be 1D arrays.")
-        self.f1s = f1s.copy()
-        self.f2s = f2s.copy()
-
-        if self._data.shape != (self.n_nodes, len(f1s), len(f2s)):
-            raise ValueError("`data` must have shape [nodes, f1s, f2s].")
+        super()._sort_indices_channels(indices)
+        super()._sort_freq_inputs(f1s, f2s)
 
     def get_results(self) -> np.ndarray:
         """Return a copy of the results.
