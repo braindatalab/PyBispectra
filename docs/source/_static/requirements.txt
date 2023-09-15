@@ -3,4 +3,5 @@ scipy
 numba
 mne
 pqdm
+joblib
 matplotlib
