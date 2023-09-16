@@ -10,7 +10,7 @@
 
    <br />
 
-.. image:: static/logo.gif
+.. image:: _static/logo.gif
    :alt: PyBispectra
 
 |br|
