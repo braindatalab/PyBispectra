@@ -4,7 +4,6 @@ flake8
 black
 codespell
 pydocstyle
-docutils
 sphinx
 numpydoc
 sphinxcontrib-bibtex
