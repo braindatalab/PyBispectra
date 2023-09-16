@@ -8,7 +8,6 @@
 
 import os
 import sys
-from inspect import getsourcefile
 
 import pybispectra
 from pybispectra.utils._docs import linkcode_resolve
