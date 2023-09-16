@@ -816,7 +816,7 @@ class _PlotWaveShape(_PlotBase):
             Subplot axes for the results in a list of length
             ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
             ``numpy.ndarray`` of length ``(n_rows * n_cols)``, whose
-            entries are themselves 1D ``numpy.ndarray``s of length 4,
+            entries are themselves 1D ``numpy.ndarray`` of length 4,
             corresponding to the absolute, real, imaginary, and phase plots,
             respectively.
 
@@ -979,7 +979,7 @@ class _PlotWaveShape(_PlotBase):
             Subplot axes for the results in a list of length
             ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
             ``numpy.ndarray`` of length ``(n_rows * n_cols)``, whose
-            entries are themselves 1D ``numpy.ndarray``s of length 4,
+            entries are themselves 1D ``numpy.ndarray`` of length 4,
             corresponding to the absolute, real, imaginary, and phase plots,
             respectively.
         """
