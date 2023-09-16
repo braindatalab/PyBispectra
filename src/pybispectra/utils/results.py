@@ -110,7 +110,7 @@ class _ResultsBase(ABC):
 
         Returns
         -------
-        results : numpy.ndarray
+        results : ~numpy.ndarray
             The results.
 
         indices : tuple of list of int, length of 2
@@ -178,7 +178,7 @@ class ResultsCFC(_ResultsBase):
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [nodes, f1s, f2s]
+    data : ~numpy.ndarray, shape of [nodes, f1s, f2s]
         Results to store.
 
     indices : tuple of list of int, length of 2
@@ -186,10 +186,10 @@ class ResultsCFC(_ResultsBase):
         contain two lists of equal length for the seed and target indices,
         respectively.
 
-    f1s : numpy.ndarray, shape of [frequencies]
+    f1s : ~numpy.ndarray, shape of [low frequencies]
         Low frequencies (in Hz) in the results.
 
-    f2s : numpy.ndarray, shape of [frequencies]
+    f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
 
     name : str
@@ -214,15 +214,15 @@ class ResultsCFC(_ResultsBase):
         respectively.
 
     shape : tuple of int
-        Shape of the results i.e. [n_nodes, f1s, f2s].
+        Shape of the results i.e. [nodes, f1s, f2s].
 
     n_nodes : int
         Number of connections in the the results.
 
-    f1s : numpy.ndarray, shape of [frequencies]
+    f1s : ~numpy.ndarray, shape of [low frequencies]
         Low frequencies (in Hz) in the results.
 
-    f2s : numpy.ndarray, shape of [frequencies]
+    f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
     """
 
@@ -293,8 +293,8 @@ class ResultsCFC(_ResultsBase):
     def plot(
         self,
         nodes: list[int] | None = None,
-        f1s: np.ndarray | None = None,
-        f2s: np.ndarray | None = None,
+        f1s: list[int | float] | None = None,
+        f2s: list[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
@@ -307,15 +307,16 @@ class ResultsCFC(_ResultsBase):
         Parameters
         ----------
         nodes : list of int | None (default None)
-            Indices of connections to plot. If ``None``, plot all connections.
+            Indices of connections to plot. If :obj:`None`, plot all
+            connections.
 
-        f1s : numpy.ndarray | None (default None)
-            Low frequencies of the results to plot. If ``None``, plot all low
-            frequencies.
+        f1s : list of int or float | None (default None)
+            Start and end low frequencies of the results to plot, respectively.
+            If :obj:`None`, all low frequencies are plotted.
 
-        f2s : numpy.ndarray | None (default None)
-            High frequencies of the results to plot. If ``None``, plot all high
-            frequencies.
+        f2s : list of int or float | None (default None)
+            Start and end high frequencies of the results to plot,
+            respectively. If :obj:`None`, all high frequencies are plotted.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -331,9 +332,9 @@ class ResultsCFC(_ResultsBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
-        cbar_range : list of float | tuple of list of float | None (default ``None``)
+        cbar_range : list of float | tuple of list of float | None (default None)
             Range (in units of the data) for the colourbars, consisting of the
-            lower and upper limits, respectively. If ``None``, the range is
+            lower and upper limits, respectively. If :obj:`None`, the range is
             computed automatically. If a list of float, this range is used for
             all plots. If a tuple of list of float, the ranges are used for
             each individual plot.
@@ -347,7 +348,7 @@ class ResultsCFC(_ResultsBase):
             Figures of the results in a list of length
             ``ceil(n_nodes / (n_rows * n_cols))``.
 
-        axes : list of numpy.ndarray of matplotlib pyplot Axes
+        axes : list of ~numpy.ndarray of matplotlib pyplot Axes
             Subplot axes for the results in a list of length
             ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
             ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
@@ -377,7 +378,7 @@ class ResultsTDE(_ResultsBase):
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [nodes, times]
+    data : ~numpy.ndarray, shape of [nodes, times]
         Results to store.
 
     indices : tuple of list of int, length of 2
@@ -385,8 +386,8 @@ class ResultsTDE(_ResultsBase):
         contain two lists of equal length for the seed and target indices,
         respectively.
 
-    times : numpy.ndarray
-        1D array of timepoints in the results (in ms).
+    times : ~numpy.ndarray, shape of [times]
+        Timepoints in the results (in ms).
 
     name : str
         Name of the results being stored.
@@ -410,13 +411,13 @@ class ResultsTDE(_ResultsBase):
         respectively.
 
     shape : tuple of int
-        Shape of the results i.e. [n_nodes, n_times].
+        Shape of the results i.e. [nodes, times].
 
     n_nodes : str
         Number of connections in the results.
 
-    times : numpy.ndarray
-        1D array of timepoints in the results (in ms).
+    times : ~numpy.ndarray, shape of [times]
+        Timepoints in the results (in ms).
 
     tau : tuple of float
         Estimated time delay for each connection (in ms).
@@ -492,7 +493,7 @@ class ResultsTDE(_ResultsBase):
     def plot(
         self,
         nodes: list[int] | None = None,
-        times: np.ndarray | None = None,
+        times: list[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 500.0,
@@ -504,10 +505,12 @@ class ResultsTDE(_ResultsBase):
         Parameters
         ----------
         nodes : list of int | None (default None)
-            Indices of connections to plot. If ``None``, plot all connections.
+            Indices of connections to plot. If :obj:`None`, all connections are
+            plotted.
 
-        f1s : numpy.ndarray | None (default None)
-            Times of the results to plot. If ``None``, all times are plotted.
+        times : list of int or float | None (default None)
+            Start and end times of the results to plot. If :obj:`None`, plot
+            all times.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -532,10 +535,10 @@ class ResultsTDE(_ResultsBase):
             Figures of the results in a list of length
             ``ceil(n_nodes / (n_rows * n_cols))``.
 
-        axes : list of numpy.ndarray of matplotlib pyplot Axes
+        axes : list of ~numpy.ndarray of matplotlib pyplot Axes
             Subplot axes for the results in a list of length
             ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
+            :obj:`~numpy.ndarray` of length ``(n_rows * n_cols)``.
 
         Notes
         -----
@@ -572,16 +575,16 @@ class ResultsWaveShape(_ResultsBase):
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [nodes, f1s, f2s]
+    data : ~numpy.ndarray, shape of [nodes, f1s, f2s]
         Results to store.
 
     indices : list of int
         Indices of the channels in the results.
 
-    f1s : numpy.ndarray, shape of [frequencies]
+    f1s : ~numpy.ndarray, shape of [low frequencies]
         Low frequencies (in Hz) in the results.
 
-    f2s : numpy.ndarray, shape of [frequencies]
+    f2s : ~numpy.ndarray, shape of [low frequencies]
         High frequencies (in Hz) in the results.
 
     name : str
@@ -604,15 +607,15 @@ class ResultsWaveShape(_ResultsBase):
         Indices of the channels in the results.
 
     shape : tuple of int
-        Shape of the results i.e. [n_nodes, f1s, f2s].
+        Shape of the results i.e. [nodes, f1s, f2s].
 
     n_nodes : int
         Number of channels in the results.
 
-    f1s : numpy.ndarray, shape of [frequencies]
+    f1s : ~numpy.ndarray, shape of [low frequencies]
         Low frequencies (in Hz) in the results.
 
-    f2s : numpy.ndarray, shape of [frequencies]
+    f2s : ~numpy.ndarray, shape of [low frequencies]
         High frequencies (in Hz) in the results.
     """
 
@@ -654,7 +657,7 @@ class ResultsWaveShape(_ResultsBase):
 
         Returns
         -------
-        results : numpy.ndarray, shape of [nodes, f1s, f2s]
+        results : ~numpy.ndarray, shape of [nodes, f1s, f2s]
             The results.
         """
         return self._data.copy()
@@ -662,8 +665,8 @@ class ResultsWaveShape(_ResultsBase):
     def plot(
         self,
         nodes: list[int] | None = None,
-        f1s: np.ndarray | None = None,
-        f2s: np.ndarray | None = None,
+        f1s: list[int | float] | None = None,
+        f2s: list[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
@@ -680,16 +683,16 @@ class ResultsWaveShape(_ResultsBase):
         Parameters
         ----------
         nodes : list of int | None (default None)
-            Indices of results of channels to plot. If ``None``, plot results
-            of all channels.
+            Indices of results of channels to plot. If :obj:`None`, plot
+            results of all channels.
 
-        f1s : numpy.ndarray | None (default None)
-            Low frequencies of the results to plot. If ``None``, plot all low
-            frequencies.
+        f1s : list of int or float | None (default None)
+            Start and end low frequencies of the results to plot, respectively.
+            If :obj:`None`, plot all low frequencies.
 
-        f2s : numpy.ndarray | None (default None)
-            High frequencies of the results to plot. If ``None``, plot all high
-            frequencies.
+        f2s : list of int or float | None (default None)
+            Start and end high frequencies of the results to plot,
+            respectively. If :obj:`None`, plot all high frequencies.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -709,37 +712,34 @@ class ResultsWaveShape(_ResultsBase):
             Whether or not to plot the absolute values of the real and
             imaginary parts of the results.
 
-        cbar_range_abs : list of float | tuple of list of float | None (default ``None``)
+        cbar_range_abs : list of float | tuple of list of float | None (default None)
             Range (in units of the data) for the colourbars of the absolute
             value of the results, consisting of the lower and upper limits,
-            respectively. If ``None``, the range is computed automatically. If
-            a list of float, this range is used for all plots. If a tuple of
-            list of float, the ranges are used for each individual plot. Note
-            that results are limited to the range [0, 1].
+            respectively. If :obj:`None`, the range is computed automatically.
+            If a list of float, this range is used for all plots. If a tuple of
+            list of float, the ranges are used for each individual plot.
 
-        cbar_range_real : list of float | tuple of list of float | None (default ``None``)
+        cbar_range_real : list of float | tuple of list of float | None (default None)
             Range (in units of the data) for the colourbars of the real value
             of the results, consisting of the lower and upper limits,
-            respectively. If ``None``, the range is computed automatically. If
-            a list of float, this range is used for all plots. If a tuple of
-            list of float, the ranges are used for each individual plot. Note
-            that results are limited to the range [-1, 1].
+            respectively. If :obj:`None`, the range is computed automatically.
+            If a list of float, this range is used for all plots. If a tuple of
+            list of float, the ranges are used for each individual plot.
 
-        cbar_range_imag : list of float | tuple of list of float | None (default ``None``)
+        cbar_range_imag : list of float | tuple of list of float | None (default None)
             Range (in units of the data) for the colourbars of the imaginary
             value of the results, consisting of the lower and upper limits,
-            respectively. If ``None``, the range is computed automatically. If
-            a list of float, this range is used for all plots. If a tuple of
-            list of float, the ranges are used for each individual plot. Note
-            that results are limited to the range [-1, 1].
+            respectively. If :obj:`None`, the range is computed automatically.
+            If a list of float, this range is used for all plots. If a tuple of
+            list of float, the ranges are used for each individual plot.
 
-        cbar_range_phase : list of float | tuple of list of float | None (default ``None``)
+        cbar_range_phase : list of float | tuple of list of float | None (default None)
             Range (in units of the data) for the colourbars of the phase of the
             results, consisting of the lower and upper limits, respectively. If
-            ``None``, the range is computed automatically. If a list of float,
-            this range is used for all plots. If a tuple of list of float, the
-            ranges are used for each individual plot. Note that results are
-            limited to the range (-pi, pi].
+            :obj:`None`, the range is computed automatically. If a list of
+            float, this range is used for all plots. If a tuple of list of
+            float, the ranges are used for each individual plot. Note that
+            results are limited to the range (-pi, pi].
 
         show : bool (default ``True``)
             Whether or not to show the plotted results.
@@ -750,10 +750,13 @@ class ResultsWaveShape(_ResultsBase):
             Figures of the results in a list of length
             ``ceil(n_nodes / (n_rows * n_cols))``.
 
-        axes : list of numpy.ndarray of matplotlib pyplot Axes
+        axes : list of ~numpy.ndarray of ~numpy.ndarray of matplotlib pyplot Axes
             Subplot axes for the results in a list of length
             ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
+            :obj:`~numpy.ndarray` of length ``(n_rows * n_cols)``, whose
+            entries are themselves 1D :obj:`~numpy.ndarray`s of length 4,
+            corresponding to the absolute, real, imaginary, and phase plots,
+            respectively.
 
         Notes
         -----
