@@ -8,7 +8,7 @@
 
 import os
 import sys
-from inspect import getsourcefile
+from sphinx.writers.html import HTMLTranslator
 
 import pybispectra
 from pybispectra.utils._docs import linkcode_resolve
@@ -51,6 +51,20 @@ exclude_patterns = ["_build"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+
+
+class PatchedHTMLTranslator(HTMLTranslator):
+    def visit_reference(self, node):
+        if node.get("newtab") or not (
+            node.get("target") or node.get("internal") or "refuri" not in node
+        ):
+            node["target"] = "_blank"
+            super().visit_reference(node)
+
+
+def setup(app):
+    app.set_translator("html", PatchedHTMLTranslator)
+
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
