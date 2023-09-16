@@ -741,7 +741,7 @@ class _PlotWaveShape(_PlotBase):
         cbar_range_phase: list[float] | tuple[list[float]] | None = None,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
-        """Plot the results.
+        r"""Plot the results.
 
         Parameters
         ----------
