@@ -28,7 +28,7 @@ from pybispectra import (
 # this information is the bicoherence, which captures information about
 # rise-decay asymmetry (i.e. how much a signal resembles a sawtooth wave) and
 # peak-trough asymmetry (i.e. how 'spiky' a signal is) :footcite:`Bartz2019`.
-# The use of the bicoherence for wave shape analysis was dicussed in detail in
+# The use of the bicoherence for wave shape analysis was discussed in detail in
 # this example: :doc:`plot_compute_waveshape`. In particular, it was mentioned
 # how the signal-to-noise ratio of the signal can affect the ability of the
 # bicoherence to extract information about wave shape. In this example, we will

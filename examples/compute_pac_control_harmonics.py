@@ -26,7 +26,7 @@ from pybispectra import compute_fft, PAC, PPC, WaveShape, SpatioSpectralFilter
 # non-sinusoidal this lower frequency oscillation is :footcite:`Giehl2021`.
 #
 # Crucially, the mechanisms by which harmonic and non-harmonic PAC occur are
-# thought to differ, which can have serious implications for how one interpets
+# thought to differ, which can have serious implications for how one interprets
 # the results of any PAC analysis. Therefore, it is important to determine
 # whether PAC is of the harmonic or non-harmonic variety. This can be done by
 # comparing PAC with PPC, AAC, as well as wave shape features

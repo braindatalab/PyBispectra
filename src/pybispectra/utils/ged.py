@@ -320,7 +320,7 @@ class SpatioSpectralFilter:
             excluding the frequencies in :attr:`signal_bounds`.
 
         signal_noise_gap : int | float (default ``1.0``)
-            Frequency count (in Hz) to treat as a transtition boundary between
+            Frequency count (in Hz) to treat as a transition boundary between
             :attr:`signal_bounds` and :attr:`noise_bounds`. Used to reduce
             spectral leakage between the signal and noise frequencies.
 

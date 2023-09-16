@@ -227,7 +227,7 @@ class ResultsCFC(_ResultsBase):
     """
 
     def __repr__(self) -> str:
-        """Return printable represenation of the object."""
+        """Return printable representation of the object."""
         return repr(
             f"<Result: {self.name} | [{self.n_nodes} nodes, "
             f"{len(self.f1s)} f1s, {len(self.f2s)} f2s]>"
@@ -424,7 +424,7 @@ class ResultsTDE(_ResultsBase):
     """
 
     def __repr__(self) -> str:
-        """Return printable represenation of the object."""
+        """Return printable representation of the object."""
         return repr(
             f"<Result: {self.name} | [{self.n_nodes} nodes, "
             f"{len(self.times)} times]>"
@@ -620,7 +620,7 @@ class ResultsWaveShape(_ResultsBase):
     """
 
     def __repr__(self) -> str:
-        """Return printable represenation of the object."""
+        """Return printable representation of the object."""
         return repr(
             f"<Result: {self.name} | [{self.n_nodes} nodes, "
             f"{len(self.f1s)} f1s, {len(self.f2s)} f2s]>"
