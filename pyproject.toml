@@ -35,7 +35,6 @@ dev = [
     "black",
     "codespell",
     "pydocstyle",
-    "pycodestyle",
     "docutils",
     "sphinx",
     "numpydoc",
@@ -58,3 +57,9 @@ omit = [
     "__init__.py",
     "src/pybispectra/utils/_docs.py"
 ]
+
+[tool.codespell]
+skip = "./docs/build,./docs/source/auto_examples"
+
+[tool.pydocstyle]
+match-dir = "^(?!(examples|docs|tests)).*"

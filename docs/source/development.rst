@@ -14,9 +14,7 @@ If you want to make changes to PyBispectra, you may wish to install it in
 editable mode. To do so, first clone the `GitHub repository
 <https://github.com/braindatalab/PyBispectra/tree/main>`_ to your desired
 location. Once cloned, navigate to this location and install the package
-alongside its `development requirements
-<https://github.com/braindatalab/PyBispectra/tree/main/requirements_dev.txt>`_
-using pip:
+alongside its development requirements using pip:
 
 .. code-block:: console
     
@@ -58,6 +56,6 @@ check that there are no egregious errors from the following commands:
 
 .. code-block:: console
     
-    $ pycodestyle
+    $ flake8
     $ pydocstyle
     $ codespell
