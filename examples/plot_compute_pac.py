@@ -140,7 +140,7 @@ print(
 
 # %%
 
-fig, axes = pac.results.plot(f1s=[5, 16], f2s=[55, 66])
+fig, axes = pac.results.plot(f1s=[5, 15], f2s=[55, 65])
 
 ###############################################################################
 # Antisymmetrisation for across-signal PAC
@@ -195,12 +195,12 @@ vmax = np.max(
 
 # plot unsymmetrised PAC within & between signals
 fig_standard, axes_standard = pac_standard.plot(
-    f1s=[5, 16], f2s=[55, 66], cbar_range=[vmin, vmax]
+    f1s=[5, 15], f2s=[55, 65], cbar_range=[vmin, vmax]
 )
 
 # plot antisymmetrised PAC between signals
 fig_antisym, axes_antisym = pac_antisym.plot(
-    nodes=[2], f1s=[5, 16], f2s=[55, 66], cbar_range=[vmin, vmax]
+    nodes=[2], f1s=[5, 15], f2s=[55, 65], cbar_range=[vmin, vmax]
 )
 
 ###############################################################################
