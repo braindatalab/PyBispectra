@@ -1,7 +1,7 @@
-![](https://github.com/tsbinns/tsbinns.github.io/blob/master/assets/pybispectra/logo.gif)
+![](docs/source/_static/logo.gif)
 
 A Python signal processing package for computing spectral- and time-domain
-interactions using bispectra.
+interactions using the bispectrum.
 
 This package provides the tools for computing phase-amplitude coupling, time
 delay estimation, and wave shape features using the bispectrum and bicoherence.
