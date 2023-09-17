@@ -110,7 +110,7 @@ PyBispectra offers tools for computing phase-amplitude coupling, time delay
 estimation, and wave shape feature analysis using the bispectrum and
 bicoherence. Additional tools are included for computing phase-phase coupling,
 amplitude-amplitude coupling, Fourier coefficients, time-frequency
-represenations of data, spatio-spectral filters, as well as tools plotting
+representations of data, spatio-spectral filters, as well as tools plotting
 results.
 
 You can find the installation instructions :doc:`here <installation>`, as well
