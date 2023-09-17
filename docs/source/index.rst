@@ -1,7 +1,4 @@
-.. PyBispectra documentation master file, created by
-   sphinx-quickstart on Sat Mar 11 17:27:35 2023.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. PyBispectra documentation master file
 
 .. title:: Home
 
@@ -14,14 +11,13 @@
    :alt: PyBispectra
 
 |br|
-A Python signal processing package for computing spectral-domain and
-time-domain interactions using bispectra.
+A Python signal processing package for computing spectral- and time-domain
+interactions using the bispectrum.
 
-This package provides the tools for performing spectral- and time-domain
-analyses based on bispectra, including phase-amplitude coupling, time delay
-estimation, and wave shape features. Additional tools for computing phase-phase
-coupling, generalised eigendecompositions, Fourier coefficients, and plotting
-results are also provided.
+This package provides the tools for computing phase-amplitude coupling, time
+delay estimation, and wave shape features using the bispectrum and bicoherence.
+Additional tools for computing amplitude-amplitude coupling, phase-phase
+coupling, and spatio-spectral filters are also provided.
 
 Parallel processing and `Numba <https://numba.pydata.org/>`_ optimisation are
 implemented to reduce computation times. There is a minor reliance on the
