@@ -44,20 +44,14 @@ class PAC(_ProcessBispectrum):
         PAC results for each of the computed metrics.
 
     data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        FFT coefficients.
+        Fourier coefficients.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
-    indices : tuple of ~numpy.ndarray of int, length of 2
-        Indices of the seed and target channels, respectively, most recently
-        used with :meth:`compute`.
-
-    f1s : ~numpy.ndarray of float, shape of [frequencies]
-        Low frequencies (in Hz) most recently used with :meth:`compute`.
-
-    f2s : ~numpy.ndarray of float, shape of [frequencies]
-        High frequencies (in Hz) most recently used with :meth:`compute`.
+    sampling_freq : int | float
+        Sampling frequency (in Hz) of the data from which :attr:`data` was
+        derived.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -78,11 +72,11 @@ class PAC(_ProcessBispectrum):
 
     def compute(
         self,
-        indices: tuple[tuple[int], tuple[int]] | None = None,
-        f1s: np.ndarray | None = None,
-        f2s: np.ndarray | None = None,
-        symmetrise: str | list[str] = "none",
-        normalise: str | list[str] = "none",
+        indices: tuple[tuple[int]] | None = None,
+        f1s: tuple[int | float] | None = None,
+        f2s: tuple[int | float] | None = None,
+        antisym: bool | tuple[bool] = False,
+        norm: bool | tuple[bool] = False,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute PAC, averaged over epochs.
@@ -94,23 +88,21 @@ class PAC(_ProcessBispectrum):
             PAC between. If :obj:`None`, coupling between all channels is
             computed.
 
-        f1s : ~numpy.ndarray | None (default None), shape of [frequencies]
-            Lower frequencies to compute PAC on. If :obj:`None`, all
-            frequencies are used.
+        f1s : tuple of int or float | None (default None), length of 2
+            Start and end lower frequencies to compute PAC on, respectively. If
+            :obj:`None`, all frequencies are used.
 
-        f2s : ~numpy.ndarray | None (default None), shape of [frequencies]
-            Higher frequencies to compute PAC on. If :obj:`None`, all
-            frequencies are used.
+        f2s : tuple of int or float | None (default None), length of 2
+            Start and end higher frequencies to compute PAC on, respectively.
+            If :obj:`None`, all frequencies are used.
 
-        symmetrise : str | list of str (default ``"none"``)
-            Symmetrisation to perform when computing PAC. If ``"none"``, no
-            symmetrisation is performed. If ``"antisym"``, antisymmetrisation
-            is performed.
+        antisym : bool | tuple of bool (default False)
+            Whether to antisymmetrise the PAC results. If a tuple of bool, both
+            forms of PAC are computed in turn.
 
-        normalise : str | list of str (default ``"none"``)
-            Normalisation to perform when computing PAC. If ``"none"``, no
-            normalisation is performed. If ``"threenorm"``, the bispectrum is
-            normalised to the bicoherence using a threenorm.
+        norm : bool | tuple of bool (default False)
+            Whether to normalise the PAC results using the threenorm. If a
+            tuple of bool, both forms of PAC are computed in turn.
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available
@@ -164,7 +156,7 @@ class PAC(_ProcessBispectrum):
         """
         self._reset_attrs()
 
-        self._sort_metrics(symmetrise, normalise)
+        self._sort_metrics(antisym, norm)
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
         self._sort_parallelisation(n_jobs)
@@ -199,38 +191,32 @@ class PAC(_ProcessBispectrum):
         self._pac_antisym_threenorm = None
 
     def _sort_metrics(
-        self, symmetrise: str | list[str], normalise: str | list[str]
+        self, antisym: bool | tuple[bool], norm: bool | tuple[bool]
     ) -> None:
         """Sort inputs for the form of results being requested."""
-        if not isinstance(symmetrise, (str, list)):
-            raise TypeError(
-                "`symmetrise` must be a list of strings or a string."
-            )
-        if not isinstance(normalise, (str, list)):
-            raise TypeError(
-                "`normalise` must be a list of strings or a string."
-            )
+        if not isinstance(antisym, (bool, tuple)):
+            raise TypeError("`antisym` must be a bool or tuple of bools.")
+        if not isinstance(norm, (bool, tuple)):
+            raise TypeError("`norm` must be a bool or tuple of bools.")
 
-        if isinstance(symmetrise, str):
-            symmetrise = [deepcopy(symmetrise)]
-        if isinstance(normalise, str):
-            normalise = [deepcopy(normalise)]
+        if isinstance(antisym, bool):
+            antisym = (antisym,)
+        if isinstance(norm, bool):
+            norm = (norm,)
 
-        supported_sym = ["none", "antisym"]
-        if any(entry not in supported_sym for entry in symmetrise):
-            raise ValueError("The value of `symmetrise` is not recognised.")
-        supported_norm = ["none", "threenorm"]
-        if any(entry not in supported_norm for entry in normalise):
-            raise ValueError("The value of `normalise` is not recognised.")
+        if any(not isinstance(entry, bool) for entry in antisym):
+            raise TypeError("Entries of `antisym` must be bools.")
+        if any(not isinstance(entry, bool) for entry in norm):
+            raise TypeError("Entries of `norm` must be bools.")
 
-        if "none" in symmetrise:
+        if False in antisym:
             self._return_nosym = True
-        if "antisym" in symmetrise:
+        if True in antisym:
             self._return_antisym = True
 
-        if "none" in normalise:
+        if False in norm:
             self._return_nonorm = True
-        if "threenorm" in normalise:
+        if True in norm:
             self._return_threenorm = True
 
     def _compute_bispectrum(self) -> None:
@@ -249,8 +235,8 @@ class PAC(_ProcessBispectrum):
             {
                 "data": self.data[:, (seed, target)],
                 "freqs": self.freqs,
-                "f1s": self.f1s,
-                "f2s": self.f2s,
+                "f1s": self._f1s,
+                "f2s": self._f2s,
                 "kmn": kmn,
             }
             for seed, target in zip(self._seeds, self._targets)
@@ -291,8 +277,8 @@ class PAC(_ProcessBispectrum):
             {
                 "data": self.data[:, (seed, target)],
                 "freqs": self.freqs,
-                "f1s": self.f1s,
-                "f2s": self.f2s,
+                "f1s": self._f1s,
+                "f2s": self._f2s,
                 "kmn": kmn,
             }
             for seed, target in zip(self._seeds, self._targets)
@@ -309,7 +295,7 @@ class PAC(_ProcessBispectrum):
             )
         ).transpose(1, 0, 2, 3)
 
-        self._bicoherence = np.abs(self._bispectrum) / threenorm
+        self._bicoherence = self._bispectrum / threenorm
 
         if self.verbose:
             print("        ... Bicoherence computation finished\n")
@@ -355,9 +341,9 @@ class PAC(_ProcessBispectrum):
             results.append(
                 ResultsCFC(
                     self._pac_nosym_nonorm,
-                    self.indices,
-                    self.f1s,
-                    self.f2s,
+                    self._indices,
+                    self._f1s,
+                    self._f2s,
                     "PAC | Bispectrum",
                 )
             )
@@ -366,9 +352,9 @@ class PAC(_ProcessBispectrum):
             results.append(
                 ResultsCFC(
                     self._pac_nosym_threenorm,
-                    self.indices,
-                    self.f1s,
-                    self.f2s,
+                    self._indices,
+                    self._f1s,
+                    self._f2s,
                     "PAC | Bicoherence",
                 )
             )
@@ -377,9 +363,9 @@ class PAC(_ProcessBispectrum):
             results.append(
                 ResultsCFC(
                     self._pac_antisym_nonorm,
-                    self.indices,
-                    self.f1s,
-                    self.f2s,
+                    self._indices,
+                    self._f1s,
+                    self._f2s,
                     "PAC (antisymmetrised) | Bispectrum",
                 )
             )
@@ -388,9 +374,9 @@ class PAC(_ProcessBispectrum):
             results.append(
                 ResultsCFC(
                     self._pac_antisym_threenorm,
-                    self.indices,
-                    self.f1s,
-                    self.f2s,
+                    self._indices,
+                    self._f1s,
+                    self._f2s,
                     "PAC (antisymmetrised) | Bicoherence",
                 )
             )

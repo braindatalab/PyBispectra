@@ -25,8 +25,8 @@ def test_plotting_cfc_error_catch() -> None:
     name = "test"
     n_unique_chans = 3
     indices = (
-        np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist(),
-        np.tile(np.arange(n_unique_chans), n_unique_chans).tolist(),
+        tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
+        tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
     results = ResultsCFC(
@@ -37,16 +37,20 @@ def test_plotting_cfc_error_catch() -> None:
         name=name,
     )
 
-    with pytest.raises(TypeError, match="`nodes` must be a list of integers."):
+    with pytest.raises(
+        TypeError, match="`nodes` must be a tuple of integers."
+    ):
         results.plot(nodes=9)
-    with pytest.raises(TypeError, match="`nodes` must be a list of integers."):
+    with pytest.raises(
+        TypeError, match="`nodes` must be a tuple of integers."
+    ):
         results.plot(
-            nodes=[float(i) for i in range(n_cons)],
+            nodes=(float(i) for i in range(n_cons)),
         )
     with pytest.raises(
         ValueError, match="The requested node is not present in the results."
     ):
-        results.plot(nodes=[-1])
+        results.plot(nodes=(-1,))
 
     with pytest.raises(
         TypeError, match="`n_rows` and `n_cols` must be integers."
@@ -66,30 +70,40 @@ def test_plotting_cfc_error_catch() -> None:
     ):
         results.plot(n_cols=0)
 
-    with pytest.raises(TypeError, match="`f1s` and `f2s` must be lists."):
+    with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
         results.plot(f1s=0)
-    with pytest.raises(TypeError, match="`f1s` and `f2s` must be lists."):
+    with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
         results.plot(f2s=0)
 
     with pytest.raises(
         ValueError, match="`f1s` and `f2s` must have lengths of two."
     ):
-        results.plot(f1s=[f1s[0], f1s[2], f1s[3]])
+        results.plot(f1s=(f1s[0], f1s[1], f1s[2]))
     with pytest.raises(
         ValueError, match="`f1s` and `f2s` must have lengths of two."
     ):
-        results.plot(f2s=[f2s[0], f2s[2], f2s[3]])
+        results.plot(f2s=(f2s[0], f2s[1], f2s[2]))
 
     with pytest.raises(
         ValueError,
         match="Entries of `f1s` and `f2s` must be present in the results.",
     ):
-        results.plot(f1s=[f1s[0], f1s[-1] + 1])
+        results.plot(f1s=(f1s[0] - 1, f1s[-1]))
+    with pytest.raises(
+        ValueError,
+        match="Entries of `f1s` and `f2s` must be present in the results.",
+    ):
+        results.plot(f1s=(f1s[0], f1s[-1] + 1))
     with pytest.raises(
         ValueError,
         match="Entries of `f1s` and `f2s` must be present in the results",
     ):
-        results.plot(f2s=[f2s[0], f2s[-1] + 1])
+        results.plot(f2s=(f2s[0] - 1, f2s[-1]))
+    with pytest.raises(
+        ValueError,
+        match="Entries of `f1s` and `f2s` must be present in the results",
+    ):
+        results.plot(f2s=(f2s[0], f2s[-1] + 1))
 
     with pytest.raises(
         TypeError,
@@ -136,19 +150,19 @@ def test_plotting_cfc_error_catch() -> None:
     with pytest.raises(
         ValueError,
         match=(
-            "If `cbar_range` is a tuple, one entry must be provided for each "
+            "If `cbar_range` is a list, one entry must be provided for each "
             "node being plotted."
         ),
     ):
-        results.plot(cbar_range=(None,))
+        results.plot(cbar_range=[None])
     with pytest.raises(
         ValueError, match="Limits in `cbar_range` must have length of 2."
     ):
-        results.plot(cbar_range=[0, 1, 2])
+        results.plot(cbar_range=(0, 1, 2))
     with pytest.raises(
         ValueError, match="Limits in `cbar_range` must have length of 2."
     ):
-        results.plot(cbar_range=tuple([0, 1, 2] for _ in range(n_cons)))
+        results.plot(cbar_range=[(0, 1, 2) for _ in range(n_cons)])
 
 
 def test_plotting_cfc_runs() -> None:
@@ -162,8 +176,8 @@ def test_plotting_cfc_runs() -> None:
     name = "test"
     n_unique_chans = 3
     indices = (
-        np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist(),
-        np.tile(np.arange(n_unique_chans), n_unique_chans).tolist(),
+        tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
+        tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
     results = ResultsCFC(
@@ -186,7 +200,7 @@ def test_plotting_cfc_runs() -> None:
     plt.close()
 
     figs, axes = results.plot(
-        f1s=[f1s[0], f1s[-1]], f2s=[f2s[0], f2s[-1]], show=False
+        f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False
     )
     plt.close()
 
@@ -200,8 +214,8 @@ def test_plotting_TDE_error_catch() -> None:
     name = "test"
     n_unique_chans = 3
     indices = (
-        np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist(),
-        np.tile(np.arange(n_unique_chans), n_unique_chans).tolist(),
+        tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
+        tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
     results = ResultsTDE(
@@ -211,14 +225,18 @@ def test_plotting_TDE_error_catch() -> None:
         name=name,
     )
 
-    with pytest.raises(TypeError, match="`nodes` must be a list of integers."):
+    with pytest.raises(
+        TypeError, match="`nodes` must be a tuple of integers."
+    ):
         results.plot(nodes=9)
-    with pytest.raises(TypeError, match="`nodes` must be a list of integers."):
-        results.plot(nodes=[float(i) for i in range(n_cons)])
+    with pytest.raises(
+        TypeError, match="`nodes` must be a tuple of integers."
+    ):
+        results.plot(nodes=(float(i) for i in range(n_cons)))
     with pytest.raises(
         ValueError, match="The requested node is not present in the results."
     ):
-        results.plot(nodes=[-1])
+        results.plot(nodes=(-1,))
 
     with pytest.raises(
         TypeError, match="`n_rows` and `n_cols` must be integers."
@@ -238,22 +256,22 @@ def test_plotting_TDE_error_catch() -> None:
     ):
         results.plot(n_cols=0)
 
-    with pytest.raises(TypeError, match="`times` must be a list."):
+    with pytest.raises(TypeError, match="`times` must be a tuple."):
         results.plot(times=0)
     with pytest.raises(ValueError, match="`times` must have a length of two."):
-        results.plot(times=[times[0], times[1], times[2]])
+        results.plot(times=(times[0], times[1], times[2]))
     with pytest.raises(
         ValueError, match="Entries of `times` must be present in the results."
     ):
-        results.plot(times=[times[0] - 1, times[-1]])
+        results.plot(times=(times[0] - 1, times[-1]))
     with pytest.raises(
         ValueError, match="Entries of `times` must be present in the results."
     ):
-        results.plot(times=[times[0], times[-1] + 1])
+        results.plot(times=(times[0], times[-1] + 1))
     with pytest.raises(
         ValueError, match="Entries of `times` must be present in the results."
     ):
-        results.plot(times=[times[0] - 1, times[-1] + 1])
+        results.plot(times=(times[0] - 1, times[-1] + 1))
 
     with pytest.raises(
         TypeError,
@@ -303,8 +321,8 @@ def test_plotting_tde_runs() -> None:
     name = "test"
     n_unique_chans = 3
     indices = (
-        np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist(),
-        np.tile(np.arange(n_unique_chans), n_unique_chans).tolist(),
+        tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
+        tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
     results = ResultsTDE(
@@ -325,16 +343,16 @@ def test_plotting_tde_runs() -> None:
     assert axes[0].size == n_cons
     plt.close()
 
-    figs, axes = results.plot(times=[times[0], times[-1]], show=False)
+    figs, axes = results.plot(times=(times[0], times[-1]), show=False)
     plt.close()
 
     if results.tau[0] == times[-1]:
         figs, axes = results.plot(
-            nodes=[0], times=[times[0], results.tau[0] - 1], show=False
+            nodes=(0,), times=(times[0], results.tau[0] - 1), show=False
         )
     else:
         figs, axes = results.plot(
-            nodes=[0], times=[results.tau[0] + 1, times[-1]], show=False
+            nodes=(0,), times=(results.tau[0] + 1, times[-1]), show=False
         )
     plt.close()
 
@@ -348,7 +366,7 @@ def test_plotting_waveshape_error_catch() -> None:
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
-    indices = list(range(n_chans))
+    indices = tuple(range(n_chans))
 
     results = ResultsWaveShape(
         data=data,
@@ -358,14 +376,18 @@ def test_plotting_waveshape_error_catch() -> None:
         name=name,
     )
 
-    with pytest.raises(TypeError, match="`nodes` must be a list of integers."):
+    with pytest.raises(
+        TypeError, match="`nodes` must be a tuple of integers."
+    ):
         results.plot(nodes=9)
-    with pytest.raises(TypeError, match="`nodes` must be a list of integers."):
-        results.plot(nodes=[float(i) for i in range(n_chans)])
+    with pytest.raises(
+        TypeError, match="`nodes` must be a tuple of integers."
+    ):
+        results.plot(nodes=(float(i) for i in range(n_chans)))
     with pytest.raises(
         ValueError, match="The requested node is not present in the results."
     ):
-        results.plot(nodes=[-1])
+        results.plot(nodes=(-1,))
 
     with pytest.raises(
         TypeError, match="`n_rows` and `n_cols` must be integers."
@@ -385,30 +407,30 @@ def test_plotting_waveshape_error_catch() -> None:
     ):
         results.plot(n_cols=0)
 
-    with pytest.raises(TypeError, match="`f1s` and `f2s` must be lists."):
+    with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
         results.plot(f1s=0)
-    with pytest.raises(TypeError, match="`f1s` and `f2s` must be lists."):
+    with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
         results.plot(f2s=0)
 
     with pytest.raises(
         ValueError, match="`f1s` and `f2s` must have lengths of two."
     ):
-        results.plot(f1s=[f1s[0], f1s[2], f1s[3]])
+        results.plot(f1s=(f1s[0], f1s[1], f1s[2]))
     with pytest.raises(
         ValueError, match="`f1s` and `f2s` must have lengths of two."
     ):
-        results.plot(f2s=[f2s[0], f2s[2], f2s[3]])
+        results.plot(f2s=(f2s[0], f2s[1], f2s[2]))
 
     with pytest.raises(
         ValueError,
         match="Entries of `f1s` and `f2s` must be present in the results.",
     ):
-        results.plot(f1s=[f1s[0], f1s[-1] + 1])
+        results.plot(f1s=(f1s[0], f1s[-1] + 1))
     with pytest.raises(
         ValueError,
         match="Entries of `f1s` and `f2s` must be present in the results",
     ):
-        results.plot(f2s=[f2s[0], f2s[-1] + 1])
+        results.plot(f2s=(f2s[0], f2s[-1] + 1))
 
     with pytest.raises(
         TypeError,
@@ -458,23 +480,21 @@ def test_plotting_waveshape_error_catch() -> None:
         with pytest.raises(
             ValueError,
             match=(
-                f"If `{kwarg_name}` is a tuple, one entry must be provided "
+                f"If `{kwarg_name}` is a list, one entry must be provided "
                 "for each node being plotted."
             ),
         ):
-            results.plot(**{kwarg_name: (None,)})
+            results.plot(**{kwarg_name: [None]})
         with pytest.raises(
             ValueError,
             match=f"Limits in `{kwarg_name}` must have length of two.",
         ):
-            results.plot(**{kwarg_name: [0, 1, 2]})
+            results.plot(**{kwarg_name: (0, 1, 2)})
         with pytest.raises(
             ValueError,
             match=f"Limits in `{kwarg_name}` must have length of two.",
         ):
-            results.plot(
-                **{kwarg_name: tuple([0, 1, 2] for _ in range(n_chans))}
-            )
+            results.plot(**{kwarg_name: [(0, 1, 2) for _ in range(n_chans)]})
 
     with pytest.raises(TypeError, match="`plot_absolute` must be a bool."):
         results.plot(plot_absolute=None)
@@ -489,7 +509,7 @@ def test_plotting_waveshape_runs() -> None:
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
-    indices = list(range(n_chans))
+    indices = tuple(range(n_chans))
 
     results = ResultsWaveShape(
         data=data,
@@ -511,6 +531,6 @@ def test_plotting_waveshape_runs() -> None:
     plt.close()
 
     figs, axes = results.plot(
-        f1s=[f1s[0], f1s[-1]], f2s=[f2s[0], f2s[-1]], show=False
+        f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False
     )
     plt.close()

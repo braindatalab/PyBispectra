@@ -253,17 +253,17 @@ class SpatioSpectralFilter:
 
         self.n_harmonics = deepcopy(n_harmonics)
 
-    def _sort_indices(self, indices: list[int] | None) -> None:
+    def _sort_indices(self, indices: tuple[int] | None) -> None:
         """Sort channel indices input."""
         indices = deepcopy(indices)
 
         if indices is None:
-            indices = np.arange(self._n_chans, dtype=np.int32).tolist()
+            indices = tuple(np.arange(self._n_chans, dtype=np.int32).tolist())
 
-        if not isinstance(indices, list) or not all(
-            isinstance(entry, (int, np.integer)) for entry in indices
+        if not isinstance(indices, tuple) or not all(
+            isinstance(entry, int) for entry in indices
         ):
-            raise TypeError("`indices` must be a list of ints.")
+            raise TypeError("`indices` must be a tuple of ints.")
 
         if min(indices) < 0 or max(indices) >= self._n_chans:
             raise ValueError(
@@ -304,7 +304,7 @@ class SpatioSpectralFilter:
         noise_bounds: tuple[int | float],
         signal_noise_gap: int | float = 1.0,
         bandpass_filter: bool = False,
-        indices: list[int] | None = None,
+        indices: tuple[int] | None = None,
         rank: int | None = None,
     ) -> None:
         """Fit SSD filters and transform the data.
@@ -328,7 +328,7 @@ class SpatioSpectralFilter:
             Whether or not to bandpass filter the data before transforming with
             the SSD filters.
 
-        indices : list of int | None (default None)
+        indices : tuple of int | None (default None)
             Channel indices to fit the filters to. If :obj:`None`, all channels
             are used.
 
@@ -438,7 +438,7 @@ class SpatioSpectralFilter:
         signal_bounds: tuple[int | float],
         noise_bounds: tuple[int | float],
         n_harmonics: int = -1,
-        indices: list[int] | None = None,
+        indices: tuple[int] | None = None,
         rank: int | None = None,
         csd_method: str = "multitaper",
         n_fft: int | None = None,
@@ -466,7 +466,7 @@ class SpatioSpectralFilter:
             computing the filters. If ``0``, no harmonics are used. If ``-1``,
             all harmonics are used.
 
-        indices : list of int | None (default None)
+        indices : tuple of int | None (default None)
             Channel indices to fit the filters to. If :obj:`None`, all channels
             are used.
 

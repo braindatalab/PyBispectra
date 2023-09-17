@@ -1,9 +1,9 @@
 """
-===========================
-Compute wave shape features
-===========================
+==========================
+Compute waveshape features
+==========================
 
-This example demonstrates how wave shape features can be computed with
+This example demonstrates how waveshape features can be computed with
 PyBispectra.
 """
 
@@ -19,55 +19,55 @@ from pybispectra import compute_fft, get_example_data_paths, WaveShape
 # Background
 # ----------
 # When analysing signals, important information may be gleaned from a variety
-# of features, including the shape of the wave forms. For example, in
-# neuroscience it has been suggested that non-sinusoidal waves may play
-# important roles in physiology and pathology, such as waveform sharpness
-# reflecting synchrony of synaptic inputs :footcite:`Sherman2016` and
-# correlating with symptoms of Parkinson's disease :footcite:`Cole2017`. Two
-# aspects of waveform shape described in recent literature include: rise-decay
-# asymmetry - how much the wave resembles a sawtooth pattern (also called
-# waveform sharpness or derivative skewness); and peak-trough asymmetry -
-# whether peaks (events with a positive-valued amplitude) or troughs (events
-# with a negative-valued amplitude) are more dominant in the signal (also
-# called signal/value skewness).
+# of features, including their shape. For example, in neuroscience it has been
+# suggested that non-sinusoidal waves may play important roles in physiology
+# and pathology, such as waveform sharpness reflecting synchrony of synaptic
+# inputs :footcite:`Sherman2016` and correlating with symptoms of Parkinson's
+# disease :footcite:`Cole2017`. Two aspects of waveshape described in recent
+# literature include: rise-decay asymmetry - how much the wave resembles a
+# sawtooth pattern (also called waveform sharpness or derivative skewness); and
+# peak-trough asymmetry - whether peaks (events with a positive-valued
+# amplitude) or troughs (events with a negative-valued amplitude) are more
+# dominant in the signal (also called signal/value skewness).
 #
-# A common strategy for wave shape analysis involves identifying and
+# A common strategy for waveshape analysis involves identifying and
 # characterising the features of waves in time-series data - see Cole *et al.*
 # (2017) :footcite:`Cole2017` for an example. Naturally, it can be of interest
-# to explore the waveform shapes of signals at particular frequencies, in which
-# case the time-series data can be bandpass filtered. There is, however, a
-# major limitation to this approach: applying a bandpass filter to data can
-# seriously alter the waveform shape at the filtered frequencies, compromising
-# any analysis of waveform shape before it has begun.
+# to explore the shapes of signals at particular frequencies, in which case the
+# time-series data can be bandpass filtered. There is, however, a major
+# limitation to this approach: applying a bandpass filter to data can
+# seriously alter non-sinusoidal signal shape, compromising any analysis of
+# waveshape before it has begun.
 #
-# Thankfully, the bispectrum captures information about waveform shape,
-# enabling spectrally-resolved analyses at a fine frequency resolution without
-# any need for bandpass filtering. In particular, the bispectrum contains
-# information about rise-decay asymmetry (encoded in the imaginary part of the
-# bispectrum) and peak-trough asymmetry (encoded in the real part of the
-# bispectrum) :footcite:`Bartz2019`.
+# Thankfully, the bispectrum captures information about non-sinudoisal
+# waveshape, enabling spectrally-resolved analyses at a fine frequency
+# resolution without the need for bandpass filtering. In particular, the
+# bispectrum contains information about rise-decay asymmetry (encoded in the
+# imaginary part of the bispectrum) and peak-trough asymmetry (encoded in the
+# real part of the bispectrum) :footcite:`Bartz2019`.
 #
-# The bispectrum, :math:`\textbf{B}`, has the general form:
+# The bispectrum has the general form
 #
 # :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)\textbf{n}^*
-# (f_2+f_1)>`,
+# (f_2+f_1)>` ,
 #
-# where :math:`kmn` is a combination of the fourier coefficients of channels
-# :math:`\textbf{x}` and :math:`\textbf{y}`, :math:`f` represents a given
-# frequency, and the angled brackets represent the averaged value over epochs.
-# When analysing waveform shape, we are interested in only a single signal, and
-# as such :math:`k=m=n`.
+# where :math:`kmn` is a combination of signals with Fourier coefficients
+# :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`, respectively;
+# and :math:`<>` represents the average value over epochs. When analysing
+# waveshape, we are interested in only a single signal, and as such
+# :math:`k=m=n`.
 #
 # Furthermore, we can normalise the bispectrum to the bicoherence,
-# :math:`\boldsymbol{\mathcal{B}}`, whose values lie in the range :math:`[-1,
-# 1]`. This normalisation can be performed using the threenorm,
-# :math:`\textbf{N}` :footcite:`Zandvoort2021`:
+# :math:`\boldsymbol{\mathcal{B}}`, using the threenorm, :math:`\textbf{N}`,
+# :footcite:`Zandvoort2021`
 #
-# :math:`\textbf{N}_{xxx}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{x}(f_2)|^3>
-# <|\textbf{x}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+# :math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{y}(f_2)|^3>
+# <|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}` ,
 #
-# :math:`\boldsymbol{\mathcal{B}}_{xxx}(f_1,f_2)=\Large\frac{\textbf{B}_{xxx}(
-# f_1,f_2)}{\textbf{N}_{xxx}(f_1,f_2)}`.
+# :math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large\frac{\textbf{B}_{xyy}
+# (f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}` ,
+#
+# where the resulting values lie in the range :math:`[-1, 1]`.
 
 ###############################################################################
 # Loading data and computing Fourier coefficients
@@ -142,19 +142,19 @@ fft_coeffs_peaks_troughs, _ = compute_fft(
 # where peaks are most dominant, and a signal where troughs are most dominant.
 # After loading the data, we add some noise for numerical stability.
 #
-# Computing wave shape features
-# -----------------------------
-# To compute wave shape, we start by initialising the
-# :class:`~pybispectra.waveshape.WaveShape` class object with the FFT
-# coefficients and the frequency information. To compute wave shape, we call
-# the :meth:`~pybispectra.waveshape.WaveShape.compute` method. By default, wave
-# shape is computed for all channels and all frequency combinations, however we
-# can also specify particular channels and combinations of interest.
+# Computing waveshape features
+# ----------------------------
+# To compute waveshape, we start by initialising the
+# :class:`~pybispectra.waveshape.WaveShape` class object with the Fourier
+# coefficients and the frequency information. To compute waveshape, we call the
+# :meth:`~pybispectra.waveshape.WaveShape.compute` method. By default,
+# waveshape is computed for all channels and all frequency combinations,
+# however we can also specify particular channels and combinations of interest.
 #
 # Here, we specify the frequency arguments
 # :attr:`~pybispectra.waveshape.WaveShape.f1s` and
-# :attr:`~pybispectra.waveshape.WaveShape.f2s` to compute wave shape on in the
-# range 0-36 Hz (around the frequency at which the signal features were
+# :attr:`~pybispectra.waveshape.WaveShape.f2s` to compute waveshape on in the
+# range 0-35 Hz (around the frequency at which the signal features were
 # simulated). By leaving the indices argument blank, we will look at all
 # channels in the data.
 
@@ -167,9 +167,7 @@ waveshape_sawtooths = WaveShape(
     sampling_freq=sampling_freq,
     verbose=False,
 )  # initialise object
-waveshape_sawtooths.compute(
-    f1s=np.arange(0, 36), f2s=np.arange(0, 36)
-)  # compute wave shape
+waveshape_sawtooths.compute(f1s=(5, 35), f2s=(5, 35))  # compute waveshape
 
 # peaks and troughs
 waveshape_peaks_troughs = WaveShape(
@@ -178,7 +176,7 @@ waveshape_peaks_troughs = WaveShape(
     sampling_freq=sampling_freq,
     verbose=False,
 )
-waveshape_peaks_troughs.compute(f1s=np.arange(0, 36), f2s=np.arange(0, 36))
+waveshape_peaks_troughs.compute(f1s=(5, 35), f2s=(5, 35))  # compute waveshape
 
 # return results as an array
 waveshape_results = waveshape_sawtooths.results.get_results()
@@ -249,10 +247,10 @@ print(
 figs, axes = waveshape_sawtooths.results.plot(
     major_tick_intervals=10,
     minor_tick_intervals=2,
-    cbar_range_abs=[0, 1],
-    cbar_range_real=[-1, 1],
-    cbar_range_imag=[-1, 1],
-    cbar_range_phase=[0, 2],
+    cbar_range_abs=(0, 1),
+    cbar_range_real=(-1, 1),
+    cbar_range_imag=(-1, 1),
+    cbar_range_phase=(0, 2),
     plot_absolute=False,
     show=False,
 )
@@ -265,10 +263,10 @@ for fig, title in zip(figs, titles):
 figs, axes = waveshape_peaks_troughs.results.plot(
     major_tick_intervals=10,
     minor_tick_intervals=2,
-    cbar_range_abs=[0, 1],
-    cbar_range_real=[-1, 1],
-    cbar_range_imag=[-1, 1],
-    cbar_range_phase=[0, 2],
+    cbar_range_abs=(0, 1),
+    cbar_range_real=(-1, 1),
+    cbar_range_imag=(-1, 1),
+    cbar_range_phase=(0, 2),
     plot_absolute=False,
     show=False,
 )

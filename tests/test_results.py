@@ -18,8 +18,8 @@ def test_results_cfc_error_catch() -> None:
     name = "test"
     n_unique_chans = 3
     indices = (
-        np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist(),
-        np.tile(np.arange(n_unique_chans), n_unique_chans).tolist(),
+        tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
+        tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
@@ -55,7 +55,9 @@ def test_results_cfc_error_catch() -> None:
             f2s=f2s,
             name=name,
         )
-    with pytest.raises(TypeError, match="Entries of `indices` must be lists."):
+    with pytest.raises(
+        TypeError, match="Entries of `indices` must be tuples."
+    ):
         ResultsCFC(
             data=data,
             indices=(0, 1),
@@ -69,7 +71,7 @@ def test_results_cfc_error_catch() -> None:
     ):
         ResultsCFC(
             data=data,
-            indices=([0.5], [1.5]),
+            indices=((0.5,), (1.5,)),
             f1s=f1s,
             f2s=f2s,
             name=name,
@@ -81,7 +83,7 @@ def test_results_cfc_error_catch() -> None:
             data=data,
             indices=(
                 indices[0],
-                np.concatenate((indices[1], [1])).tolist(),
+                tuple(np.concatenate((indices[1], [1])).tolist()),
             ),
             f1s=f1s,
             f2s=f2s,
@@ -95,7 +97,7 @@ def test_results_cfc_error_catch() -> None:
     ):
         ResultsCFC(
             data=data,
-            indices=([0], [n_cons + 1]),
+            indices=((0,), (n_cons + 1,)),
             f1s=f1s,
             f2s=f2s,
             name=name,
@@ -200,8 +202,8 @@ def test_results_cfc_runs() -> None:
     name = "test"
     n_unique_chans = 3
     indices = (
-        np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist(),
-        np.tile(np.arange(n_unique_chans), n_unique_chans).tolist(),
+        tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
+        tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
     results = ResultsCFC(
@@ -225,8 +227,8 @@ def test_results_cfc_runs() -> None:
         n_f2,
     )
     assert array_indices == (
-        list(range(n_unique_chans)),
-        list(range(n_unique_chans)),
+        tuple(range(n_unique_chans)),
+        tuple(range(n_unique_chans)),
     )
 
 
@@ -239,8 +241,8 @@ def test_results_tde_error_catch() -> None:
     name = "test"
     n_unique_chans = 3
     indices = (
-        np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist(),
-        np.tile(np.arange(n_unique_chans), n_unique_chans).tolist(),
+        tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
+        tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
@@ -272,7 +274,9 @@ def test_results_tde_error_catch() -> None:
             times=times,
             name=name,
         )
-    with pytest.raises(TypeError, match="Entries of `indices` must be lists."):
+    with pytest.raises(
+        TypeError, match="Entries of `indices` must be tuples."
+    ):
         ResultsTDE(
             data=data,
             indices=(0, 1),
@@ -285,7 +289,7 @@ def test_results_tde_error_catch() -> None:
     ):
         ResultsTDE(
             data=data,
-            indices=([0.5], [1.5]),
+            indices=((0.5,), (1.5,)),
             times=times,
             name=name,
         )
@@ -296,7 +300,7 @@ def test_results_tde_error_catch() -> None:
             data=data,
             indices=(
                 indices[0],
-                np.concatenate((indices[1], [1])).tolist(),
+                tuple(np.concatenate((indices[1], [1])).tolist()),
             ),
             times=times,
             name=name,
@@ -309,7 +313,7 @@ def test_results_tde_error_catch() -> None:
     ):
         ResultsTDE(
             data=data,
-            indices=([0], [n_cons + 1]),
+            indices=((0,), (n_cons + 1,)),
             times=times,
             name=name,
         )
@@ -373,8 +377,8 @@ def test_results_tde_runs() -> None:
     name = "test"
     n_unique_chans = 3
     indices = (
-        np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist(),
-        np.tile(np.arange(n_unique_chans), n_unique_chans).tolist(),
+        tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
+        tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
     results = ResultsTDE(data=data, indices=indices, times=times, name=name)
@@ -391,8 +395,8 @@ def test_results_tde_runs() -> None:
     assert isinstance(results_array, np.ndarray)
     assert results_array.shape == (n_unique_chans, n_unique_chans, n_times)
     assert array_indices == (
-        list(range(n_unique_chans)),
-        list(range(n_unique_chans)),
+        tuple(range(n_unique_chans)),
+        tuple(range(n_unique_chans)),
     )
 
 
@@ -405,7 +409,7 @@ def test_results_waveshape_error_catch() -> None:
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
-    indices = list(range(n_chans))
+    indices = tuple(range(n_chans))
 
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         ResultsWaveShape(
@@ -424,10 +428,10 @@ def test_results_waveshape_error_catch() -> None:
             name=name,
         )
 
-    with pytest.raises(TypeError, match="`indices` must be a list."):
+    with pytest.raises(TypeError, match="`indices` must be a tuple."):
         ResultsWaveShape(
             data=data,
-            indices=tuple(indices),
+            indices=list(indices),
             f1s=f1s,
             f2s=f2s,
             name=name,
@@ -435,7 +439,7 @@ def test_results_waveshape_error_catch() -> None:
     with pytest.raises(TypeError, match="Entries of `indices` must be ints."):
         ResultsWaveShape(
             data=data,
-            indices=[0.5],
+            indices=(0.5,),
             f1s=f1s,
             f2s=f2s,
             name=name,
@@ -448,7 +452,7 @@ def test_results_waveshape_error_catch() -> None:
     ):
         ResultsWaveShape(
             data=data,
-            indices=[-1],
+            indices=(-1,),
             f1s=f1s,
             f2s=f2s,
             name=name,
@@ -461,7 +465,7 @@ def test_results_waveshape_error_catch() -> None:
     ):
         ResultsWaveShape(
             data=data,
-            indices=[n_chans + 1],
+            indices=(n_chans + 1,),
             f1s=f1s,
             f2s=f2s,
             name=name,
@@ -557,7 +561,7 @@ def test_results_waveshape_runs() -> None:
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
-    indices = list(range(n_chans))
+    indices = tuple(range(n_chans))
 
     results = ResultsWaveShape(
         data=data, indices=indices, f1s=f1s, f2s=f2s, name=name

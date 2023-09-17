@@ -16,7 +16,7 @@ def test_error_catch() -> None:
     n_times = 100
     sampling_freq = 50
     data = _generate_data(n_epochs, n_chans, n_times)
-    indices = ([0, 1, 2], [0, 1, 2])
+    indices = ((0, 1, 2), (0, 1, 2))
 
     coeffs, freqs = compute_fft(
         data=data,
@@ -123,16 +123,14 @@ def test_error_catch() -> None:
     tde = TDE(coeffs, freqs, sampling_freq)
 
     with pytest.raises(
-        TypeError, match="`symmetrise` must be a list of strings or a string."
+        TypeError, match="`antisym` must be a bool or tuple of bools."
     ):
-        tde.compute(symmetrise=True)
-    with pytest.raises(
-        ValueError, match="The value of `symmetrise` is not recognised."
-    ):
-        tde.compute(symmetrise="not_a_symmetrise")
+        tde.compute(antisym="true")
+    with pytest.raises(TypeError, match="Entries of `antisym` must be bools."):
+        tde.compute(antisym=("true",))
 
     with pytest.raises(
-        TypeError, match="`method` must be a list of ints or an int."
+        TypeError, match="`method` must be an int or tuple of ints."
     ):
         tde.compute(method=0.5)
     with pytest.raises(
@@ -142,30 +140,32 @@ def test_error_catch() -> None:
     with pytest.raises(
         ValueError, match="The value of `method` is not recognised."
     ):
-        tde.compute(method=[1, 5])
+        tde.compute(method=(1, 5))
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
         tde.compute(indices=list(indices))
     with pytest.raises(ValueError, match="`indices` must have a length of 2."):
         tde.compute(indices=(0, 1, 2))
-    with pytest.raises(TypeError, match="Entries of `indices` must be lists."):
+    with pytest.raises(
+        TypeError, match="Entries of `indices` must be tuples."
+    ):
         tde.compute(indices=(0, 1))
     with pytest.raises(
         TypeError,
         match="Entries for seeds and targets in `indices` must be ints.",
     ):
-        tde.compute(indices=([0.0], [1.0]))
+        tde.compute(indices=((0.0,), (1.0,)))
     with pytest.raises(
         ValueError,
         match=(
             "`indices` contains indices for channels not present in the data."
         ),
     ):
-        tde.compute(indices=([0], [99]))
+        tde.compute(indices=((0,), (99,)))
     with pytest.raises(
         ValueError, match="Entries of `indices` must have equal length."
     ):
-        tde.compute(indices=([0], [1, 2]))
+        tde.compute(indices=((0,), (1, 2)))
     with pytest.raises(
         ValueError,
         match=(
@@ -173,7 +173,7 @@ def test_error_catch() -> None:
             "any connection."
         ),
     ):
-        tde.compute(indices=([0], [0]))
+        tde.compute(indices=((0,), (0,)))
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         tde.compute(n_jobs=0.5)
@@ -198,7 +198,7 @@ def test_tde_runs() -> None:
 
     # check it runs with correct inputs
     tde = TDE(data=fft, freqs=freqs, sampling_freq=sampling_freq)
-    tde.compute(symmetrise=["none", "antisym"], method=[1, 2, 3, 4])
+    tde.compute(antisym=(False, True), method=(1, 2, 3, 4))
 
     # check the returned results have the correct shape
     assert (
@@ -223,13 +223,13 @@ def test_tde_runs() -> None:
     )
     assert (isinstance(results, ResultsTDE) for results in tde.results)
 
-    for symmetrise_arg, symmetrise_name in zip(
-        ["none", "antisym"], ["", "(antisymmetrised) "]
+    for antisym_arg, symmetrise_name in zip(
+        [False, True], ["", "(antisymmetrised) "]
     ):
         for method_arg, method_name in zip(
             [1, 2, 3, 4], ["I", "II", "III", "IV"]
         ):
-            tde.compute(symmetrise=symmetrise_arg, method=method_arg)
+            tde.compute(antisym=antisym_arg, method=method_arg)
             assert isinstance(tde.results, ResultsTDE)
             assert (
                 tde.results.name
@@ -276,7 +276,7 @@ def test_tde_results():
 
     # compute TDE (seed -> target; target -> seed)
     tde = TDE(data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq)
-    tde.compute(indices=([0, 1], [1, 0]), method=[1, 2, 3, 4])
+    tde.compute(indices=((0, 1), (1, 0)), method=(1, 2, 3, 4))
 
     # check that 250 ms delay is detected (negative for target -> seed)
     assert (results.tau[0] == tau for results in tde.results)
@@ -299,10 +299,10 @@ def test_tde_results():
 
     # compute TDE
     tde = TDE(data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq)
-    tde.compute(indices=([0], [1]), method=[1, 2, 3, 4], symmetrise="none")
+    tde.compute(indices=((0,), (1,)), method=(1, 2, 3, 4), antisym=False)
     # check that 0 ms delay is dominant without antisymmetrisation
     assert (results.tau[0] == 0 for results in tde.results)
 
-    tde.compute(indices=([0], [1]), method=[1, 2, 3, 4], symmetrise="antisym")
+    tde.compute(indices=((0,), (1,)), method=(1, 2, 3, 4), antisym=True)
     # check that 250 ms delay is recovered with antisymmetrisation
     assert (results.tau[0] == tau for results in tde.results)

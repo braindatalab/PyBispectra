@@ -88,81 +88,81 @@ def test_error_catch(class_type: str) -> None:
     if class_type == "PAC":
         with pytest.raises(
             TypeError,
-            match="`symmetrise` must be a list of strings or a string.",
+            match="`antisym` must be a bool or tuple of bools.",
         ):
-            test_class.compute(symmetrise=True)
+            test_class.compute(antisym="true")
         with pytest.raises(
-            ValueError, match="The value of `symmetrise` is not recognised."
+            TypeError, match="Entries of `antisym` must be bools."
         ):
-            test_class.compute(symmetrise="not_a_symmetrise")
+            test_class.compute(antisym=("true",))
 
         with pytest.raises(
             TypeError,
-            match="`normalise` must be a list of strings or a string.",
+            match="`norm` must be a bool or tuple of bools.",
         ):
-            test_class.compute(normalise=True)
+            test_class.compute(norm="true")
         with pytest.raises(
-            ValueError, match="The value of `normalise` is not recognised."
+            TypeError, match="Entries of `norm` must be bools."
         ):
-            test_class.compute(normalise="not_a_normalise")
+            test_class.compute(norm=("true",))
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
         test_class.compute(indices=list(indices))
     with pytest.raises(ValueError, match="`indices` must have a length of 2."):
         test_class.compute(indices=(0, 1, 2))
-    with pytest.raises(TypeError, match="Entries of `indices` must be lists."):
+    with pytest.raises(
+        TypeError, match="Entries of `indices` must be tuples."
+    ):
         test_class.compute(indices=(0, 1))
     with pytest.raises(
         TypeError,
         match="Entries for seeds and targets in `indices` must be ints.",
     ):
-        test_class.compute(indices=([0.0], [1.0]))
+        test_class.compute(indices=((0.0,), (1.0,)))
     with pytest.raises(
         ValueError,
         match=(
             "`indices` contains indices for channels not present in the data."
         ),
     ):
-        test_class.compute(indices=([0], [99]))
+        test_class.compute(indices=((0,), (99,)))
     with pytest.raises(
         ValueError, match="Entries of `indices` must have equal length."
     ):
-        test_class.compute(indices=([0], [1, 2]))
+        test_class.compute(indices=((0,), (1, 2)))
 
+    with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
+        test_class.compute(f1s=[freqs[0], freqs[-1]])
+    with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
+        test_class.compute(f2s=[freqs[0], freqs[-1]])
     with pytest.raises(
-        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
+        ValueError, match="`f1s` and `f2s` must have lengths of two."
     ):
-        test_class.compute(f1s=freqs.tolist())
+        test_class.compute(f1s=(freqs[0], freqs[1], freqs[-1]))
     with pytest.raises(
-        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
+        ValueError, match="`f1s` and `f2s` must have lengths of two."
     ):
-        test_class.compute(f2s=freqs.tolist())
-    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
-        test_class.compute(f1s=np.random.rand(2, 2))
-    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
-        test_class.compute(f2s=np.random.rand(2, 2))
-    with pytest.raises(
-        ValueError,
-        match=(
-            "All frequencies in `f1s` and `f2s` must be present in the data."
-        ),
-    ):
-        test_class.compute(f1s=freqs * -1)
+        test_class.compute(f2s=(freqs[0], freqs[1], freqs[-1]))
     with pytest.raises(
         ValueError,
-        match=(
-            "All frequencies in `f1s` and `f2s` must be present in the data."
-        ),
+        match="Entries of `f1s` and `f2s` must be present in the data.",
     ):
-        test_class.compute(f2s=freqs * -1)
+        test_class.compute(f1s=(freqs[0] - 1, freqs[-1]))
     with pytest.raises(
-        ValueError, match="Entries of `f1s` must be in ascending order."
+        ValueError,
+        match="Entries of `f1s` and `f2s` must be present in the data.",
     ):
-        test_class.compute(f1s=freqs[::-1])
+        test_class.compute(f1s=(freqs[0], freqs[-1] + 1))
     with pytest.raises(
-        ValueError, match="Entries of `f2s` must be in ascending order."
+        ValueError,
+        match="Entries of `f1s` and `f2s` must be present in the data.",
     ):
-        test_class.compute(f2s=freqs[::-1])
+        test_class.compute(f2s=(freqs[0] - 1, freqs[-1]))
+    with pytest.raises(
+        ValueError,
+        match="Entries of `f1s` and `f2s` must be present in the data.",
+    ):
+        test_class.compute(f2s=(freqs[0], freqs[-1] + 1))
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         test_class.compute(n_jobs=0.5)
@@ -182,9 +182,7 @@ def test_pac_runs() -> None:
 
     # check it runs with correct inputs
     pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
-    pac.compute(
-        symmetrise=["none", "antisym"], normalise=["none", "threenorm"]
-    )
+    pac.compute(antisym=(False, True), norm=(False, True))
 
     # check the returned results have the correct shape
     assert (
@@ -205,30 +203,30 @@ def test_pac_runs() -> None:
     )
     assert (isinstance(results, ResultsCFC) for results in pac.results)
 
-    pac.compute(symmetrise="none", normalise="none")
+    pac.compute(antisym=False, norm=False)
     assert isinstance(pac.results, ResultsCFC)
     assert pac.results.name == result_types[0]
 
-    pac.compute(symmetrise="none", normalise="threenorm")
+    pac.compute(antisym=False, norm=True)
     assert isinstance(pac.results, ResultsCFC)
     assert pac.results.name == result_types[1]
 
-    pac.compute(symmetrise="antisym", normalise="none")
+    pac.compute(antisym=True, norm=False)
     assert isinstance(pac.results, ResultsCFC)
     assert pac.results.name == result_types[2]
 
-    pac.compute(symmetrise="antisym", normalise="threenorm")
+    pac.compute(antisym=True, norm=True)
     assert isinstance(pac.results, ResultsCFC)
     assert pac.results.name == result_types[3]
 
-    pac.compute(symmetrise=["none", "antisym"], normalise="none")
+    pac.compute(antisym=(False, True), norm=False)
     assert len(pac.results) == 2
     assert (
         pac.results[i].name == result_types[type_i]
         for i, type_i in enumerate((0, 2))
     )
 
-    pac.compute(symmetrise="none", normalise=["none", "threenorm"])
+    pac.compute(antisym=False, norm=(False, True))
     assert len(pac.results) == 2
     assert (
         pac.results[i].name == result_types[type_i]
@@ -282,7 +280,7 @@ def test_pac_results():
 
     # compute PAC
     pac = PAC(data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq)
-    pac.compute(indices=([0], [1]), symmetrise="none", normalise="none")
+    pac.compute(indices=((0,), (1,)), antisym=False, norm=False)
     results = pac.results.get_results()
 
     # check that 10-60 Hz PAC is detected
@@ -305,9 +303,7 @@ def test_pac_results():
 
     # compute PAC
     pac = PAC(data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq)
-    pac.compute(
-        indices=([0, 1, 0], [0, 1, 1]), symmetrise="none", normalise="none"
-    )
+    pac.compute(indices=((0, 1, 0), (0, 1, 1)), antisym=False, norm=False)
     results = pac.results.get_results()
 
     # check that 10-60 Hz PAC is detected within each channel
@@ -327,7 +323,7 @@ def test_pac_results():
     )  # seed = 0; target = 1
 
     # check that spurious PAC across channels is removed with antisym.
-    pac.compute(indices=([0], [1]), symmetrise="antisym", normalise="none")
+    pac.compute(indices=((0,), (1,)), antisym=True, norm=False)
     results = pac.results.get_results()
     assert np.isclose(
         results[0][np.ix_(interacting_f1s, interacting_f2s)].mean(),

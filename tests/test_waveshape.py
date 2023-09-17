@@ -17,7 +17,7 @@ def test_error_catch() -> None:
     n_times = 100
     sampling_freq = 50
     data = _generate_data(n_epochs, n_chans, n_times)
-    indices = [0, 1, 2]
+    indices = (0, 1, 2)
 
     coeffs, freqs = compute_fft(data, sampling_freq)
 
@@ -69,52 +69,38 @@ def test_error_catch() -> None:
     # compute
     waveshape = WaveShape(coeffs, freqs, sampling_freq)
 
-    with pytest.raises(TypeError, match="`indices` must be a list."):
-        waveshape.compute(indices=tuple(indices))
+    with pytest.raises(TypeError, match="`indices` must be a tuple."):
+        waveshape.compute(indices=list(indices))
     with pytest.raises(TypeError, match="Entries of `indices` must be ints."):
-        waveshape.compute(indices=[0.0, 1.0])
+        waveshape.compute(indices=(0.0, 1.0))
     with pytest.raises(
         ValueError,
         match=(
             "`indices` contains indices for channels not present in the data."
         ),
     ):
-        waveshape.compute(indices=[0, 99])
+        waveshape.compute(indices=(0, 99))
 
+    with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
+        waveshape.compute(f1s=[freqs[0], freqs[-1]])
+    with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
+        waveshape.compute(f2s=[freqs[0], freqs[-1]])
     with pytest.raises(
-        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
+        ValueError, match="`f1s` and `f2s` must be present in the data."
     ):
-        waveshape.compute(f1s=freqs.tolist())
+        waveshape.compute(f1s=(freqs[0] - 1, freqs[-1]))
     with pytest.raises(
-        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
+        ValueError, match="`f1s` and `f2s` must be present in the data."
     ):
-        waveshape.compute(f2s=freqs.tolist())
-    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
-        waveshape.compute(f1s=np.random.rand(2, 2))
-    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
-        waveshape.compute(f2s=np.random.rand(2, 2))
+        waveshape.compute(f1s=(freqs[0], freqs[-1] + 1))
     with pytest.raises(
-        ValueError,
-        match=(
-            "All frequencies in `f1s` and `f2s` must be present in the data."
-        ),
+        ValueError, match="`f1s` and `f2s` must be present in the data."
     ):
-        waveshape.compute(f1s=freqs * -1)
+        waveshape.compute(f2s=(freqs[0] - 1, freqs[-1]))
     with pytest.raises(
-        ValueError,
-        match=(
-            "All frequencies in `f1s` and `f2s` must be present in the data."
-        ),
+        ValueError, match="`f1s` and `f2s` must be present in the data."
     ):
-        waveshape.compute(f2s=freqs * -1)
-    with pytest.raises(
-        ValueError, match="Entries of `f1s` must be in ascending order."
-    ):
-        waveshape.compute(f1s=freqs[::-1])
-    with pytest.raises(
-        ValueError, match="Entries of `f2s` must be in ascending order."
-    ):
-        waveshape.compute(f2s=freqs[::-1])
+        waveshape.compute(f2s=(freqs[0], freqs[-1] + 1))
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         waveshape.compute(n_jobs=0.5)
@@ -138,7 +124,7 @@ def test_waveshape_runs() -> None:
     assert waveshape.results.shape == (n_chans, len(freqs), len(freqs))
 
     # check the returned results are of the correct type
-    assert waveshape.results.name == "Wave Shape"
+    assert waveshape.results.name == "Waveshape"
     assert isinstance(waveshape.results, ResultsWaveShape)
 
     # test it runs with parallelisation
@@ -168,7 +154,7 @@ def test_waveshape_results():
 
     # identify frequencies of wave shape features (~10 Hz and harmonics)
     focal_freqs = np.array([10, 20, 30])
-    all_freqs = np.arange(0, 36)
+    all_freqs = (0, 35)
 
     # test that genuine PAC is detected
     # load simulated data with bivariate PAC interactions

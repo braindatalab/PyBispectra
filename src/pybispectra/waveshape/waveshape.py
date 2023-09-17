@@ -41,19 +41,14 @@ class WaveShape(_ProcessBispectrum):
         Bicoherence of the data.
 
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
-        FFT coefficients.
+        Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies in :attr:`data`.
 
-    indices : list of int
-        Channel indices most recently used with :meth:`compute`.
-
-    f1s : ~numpy.ndarray, shape of [frequencies]
-        Low frequencies (in Hz) most recently used with :meth:`compute`.
-
-    f2s : ~numpy.ndarray, shape of [frequencies]
-        High frequencies (in Hz) most recently used with :meth:`compute`.
+    sampling_freq : int | float
+        Sampling frequency (in Hz) of the data from which :attr:`data` was
+        derived.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -77,26 +72,26 @@ class WaveShape(_ProcessBispectrum):
 
     def compute(
         self,
-        indices: list[int] | None = None,
-        f1s: np.ndarray | None = None,
-        f2s: np.ndarray | None = None,
+        indices: tuple[int] | None = None,
+        f1s: tuple[int | float] | None = None,
+        f2s: tuple[int | float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute bicoherence within channels, averaged over epochs.
 
         Parameters
         ----------
-        indices : list of int | None (default None)
+        indices : tuple of int | None (default None)
             Indices of the channels to compute bicoherence within. If
             :obj:`None`, bicoherence within all channels is computed.
 
-        f1s : ~numpy.ndarray of float | None (default None)
-            A 1D array of the lower frequencies to compute bicoherence for. If
-            :obj:`None`, all frequencies are used.
+        f1s : tuple of int or float | None (default None), length of 2
+            Start and end lower frequencies to compute bicoherence for,
+            respectively. If :obj:`None`, all frequencies are used.
 
-        f2s : ~numpy.ndarray of float | None (default None)
-            A 1D array of the higher frequencies to compute bicoherence for. If
-            :obj:`None`, all frequencies are used.
+        f2s : tuple of int or float | None (default None), length of 2
+            Start and end higher frequencies to compute bicoherence for,
+            respectively. If :obj:`None`, all frequencies are used.
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available
@@ -163,13 +158,13 @@ class WaveShape(_ProcessBispectrum):
 
         self._bicoherence = None
 
-    def _sort_indices(self, indices: list[int]) -> None:
+    def _sort_indices(self, indices: tuple[int]) -> None:
         """Sort channel indices inputs."""
         indices = deepcopy(indices)
         if indices is None:
-            indices = np.arange(self._n_chans).tolist()
-        if not isinstance(indices, list):
-            raise TypeError("`indices` must be a list.")
+            indices = tuple(range(self._n_chans))
+        if not isinstance(indices, tuple):
+            raise TypeError("`indices` must be a tuple.")
         if any(not isinstance(idx, (int, np.integer)) for idx in indices):
             raise TypeError("Entries of `indices` must be ints.")
 
@@ -180,7 +175,7 @@ class WaveShape(_ProcessBispectrum):
             )
 
         self._n_cons = len(indices)
-        self.indices = indices
+        self._indices = indices
 
     def _compute_bispectrum(self) -> None:
         """Compute bispectrum between f1s and f2s within channels.
@@ -197,11 +192,11 @@ class WaveShape(_ProcessBispectrum):
             {
                 "data": self.data[:, channel][:, None],
                 "freqs": self.freqs,
-                "f1s": self.f1s,
-                "f2s": self.f2s,
+                "f1s": self._f1s,
+                "f2s": self._f2s,
                 "kmn": np.array([np.array([0, 0, 0])]),
             }
-            for channel in self.indices
+            for channel in self._indices
         ]
 
         # have to average complex value outside of Numba-compiled function
@@ -240,11 +235,11 @@ class WaveShape(_ProcessBispectrum):
             {
                 "data": self.data[:, channel][:, None],
                 "freqs": self.freqs,
-                "f1s": self.f1s,
-                "f2s": self.f2s,
+                "f1s": self._f1s,
+                "f2s": self._f2s,
                 "kmn": np.array([np.array([0, 0, 0])]),
             }
-            for channel in self.indices
+            for channel in self._indices
         ]
 
         threenorm = np.array(
@@ -267,10 +262,10 @@ class WaveShape(_ProcessBispectrum):
         """Store computed results in objects."""
         self._results = ResultsWaveShape(
             data=self._bicoherence,
-            indices=self.indices,
-            f1s=self.f1s,
-            f2s=self.f2s,
-            name="Wave Shape",
+            indices=self._indices,
+            f1s=self._f1s,
+            f2s=self._f2s,
+            name="Waveshape",
         )
 
     @property

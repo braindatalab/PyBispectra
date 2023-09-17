@@ -21,7 +21,7 @@ class _PlotBase(ABC):
     def __init__(
         self,
         data: np.ndarray,
-        indices: tuple | list,
+        indices: tuple,
         name: str,
     ) -> None:
         self._data = data.copy()
@@ -29,8 +29,8 @@ class _PlotBase(ABC):
 
         if (
             len(indices) == 2
-            and isinstance(indices[0], list)
-            and isinstance(indices[1], list)
+            and isinstance(indices[0], tuple)
+            and isinstance(indices[1], tuple)
         ):
             self.n_nodes = len(indices[0])
         else:
@@ -45,24 +45,24 @@ class _PlotBase(ABC):
     @abstractmethod
     def _sort_plot_inputs(
         self,
-        nodes: list[int] | None,
+        nodes: tuple[int] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
-    ) -> list[int]:
+    ) -> tuple[int]:
         """Sort the plotting inputs.
 
         Returns
         -------
-        nodes : list of int
+        nodes : tuple of int
         """
         if nodes is None:
-            nodes = np.arange(self.n_nodes).tolist()
-        if not isinstance(nodes, list) or not all(
+            nodes = tuple(range(self.n_nodes))
+        if not isinstance(nodes, tuple) or not all(
             isinstance(con, int) for con in nodes
         ):
-            raise TypeError("`nodes` must be a list of integers.")
+            raise TypeError("`nodes` must be a tuple of integers.")
         if any(con >= self.n_nodes for con in nodes) or any(
             con < 0 for con in nodes
         ):
@@ -128,8 +128,8 @@ class _PlotBase(ABC):
             [self.f1s, self.f2s], [f1s, f2s], [check_f1s, check_f2s]
         ):
             if check_freqs:
-                if not isinstance(freqs, list):
-                    raise TypeError("`f1s` and `f2s` must be lists.")
+                if not isinstance(freqs, tuple):
+                    raise TypeError("`f1s` and `f2s` must be tuples.")
                 if len(freqs) != 2:
                     raise ValueError(
                         "`f1s` and `f2s` must have lengths of two."
@@ -152,7 +152,7 @@ class _PlotBase(ABC):
         return f1s, f2s, f1_idcs, f2_idcs
 
     def _create_plots(
-        self, nodes: list[int], n_rows: int, n_cols: int
+        self, nodes: tuple[int], n_rows: int, n_cols: int
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Create figures and subplots to fill with results.
 
@@ -201,7 +201,7 @@ class _PlotCFC(_PlotBase):
     def __init__(
         self,
         data: np.ndarray,
-        indices: tuple[list[int], list[int]],
+        indices: tuple[tuple[int]],
         f1s: np.ndarray,
         f2s: np.ndarray,
         name: str,
@@ -213,29 +213,29 @@ class _PlotCFC(_PlotBase):
 
     def plot(
         self,
-        nodes: list[int] | None = None,
-        f1s: list[int | float] | None = None,
-        f2s: list[int | float] | None = None,
+        nodes: tuple[int] | None = None,
+        f1s: tuple[int | float] | None = None,
+        f2s: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
         minor_tick_intervals: int | float = 1.0,
-        cbar_range: list[float] | tuple[list[float]] | None = None,
+        cbar_range: tuple[float] | list[tuple[float]] | None = None,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
 
         Parameters
         ----------
-        nodes : list of int | None (default None)
+        nodes : tuple of int | None (default None)
             Indices of connections to plot. If :obj:`None`, plot all
             connections.
 
-        f1s : list of int or float | None (default None)
+        f1s : tuple of int or float | None (default None)
             Start and end low frequencies of the results to plot, respectively.
             If :obj:`None`, plot all low frequencies.
 
-        f2s : list of int or float | None (default None)
+        f2s : tuple of int or float | None (default None)
             Start and end high frequencies of the results to plot,
             respectively. If :obj:`None`, plot all high frequencies.
 
@@ -253,11 +253,11 @@ class _PlotCFC(_PlotBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
-        cbar_range : list of float | tuple of list of float | None (default None)
+        cbar_range : tuple of float | list of tuple of float | None (default None)
             Range (in units of the data) for the colourbars, consisting of the
             lower and upper limits, respectively. If :obj:`None`, the range is
-            computed automatically. If a list of float, this range is used for
-            all plots. If a tuple of list of float, the ranges are used for
+            computed automatically. If a tuple of float, this range is used for
+            all plots. If a list of tuple of float, the ranges are used for
             each individual plot.
 
         show : bool (default ``True``)
@@ -312,27 +312,27 @@ class _PlotCFC(_PlotBase):
 
     def _sort_plot_inputs(
         self,
-        nodes: list[int] | None,
+        nodes: tuple[int] | None,
         f1s: np.ndarray | None,
         f2s: np.ndarray | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
-        cbar_range: list[float] | tuple[list[float]] | None,
+        cbar_range: tuple[float] | list[tuple[float]] | None,
     ) -> tuple[
-        list[int],
+        tuple[int],
         np.ndarray,
         np.ndarray,
         np.ndarray,
         np.ndarray,
-        tuple[list[float | None]],
+        tuple[tuple[float | None]],
     ]:
         """Sort the plotting inputs.
 
         Returns
         -------
-        nodes : list of int
+        nodes : tuple of int
 
         f1s : numpy.ndarray of float
             Low frequencies in the results to plot.
@@ -346,7 +346,7 @@ class _PlotCFC(_PlotBase):
         f2_idcs : numpy.ndarray of int
             Indices of ``f2s`` in the results.
 
-        cbar_range : tuple of list of float or None
+        cbar_range : list of tuple of float or None
         """
         nodes = super()._sort_plot_inputs(
             nodes,
@@ -359,10 +359,10 @@ class _PlotCFC(_PlotBase):
 
         if not isinstance(cbar_range, (list, tuple, type(None))):
             raise TypeError("`cbar_range` must be a list, tuple, or None.")
-        if isinstance(cbar_range, tuple):
+        if isinstance(cbar_range, list):
             if len(cbar_range) != len(nodes):
                 raise ValueError(
-                    "If `cbar_range` is a tuple, one entry must be provided "
+                    "If `cbar_range` is a list, one entry must be provided "
                     "for each node being plotted."
                 )
         else:
@@ -380,7 +380,7 @@ class _PlotCFC(_PlotBase):
         self,
         figures: list[Figure],
         axes: list[np.ndarray],
-        nodes: list[int],
+        nodes: tuple[int],
         f1s: np.ndarray,
         f2s: np.ndarray,
         f1_idcs: np.ndarray,
@@ -389,7 +389,7 @@ class _PlotCFC(_PlotBase):
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
-        cbar_range: tuple[list[float | None]],
+        cbar_range: list[tuple[float | None]],
     ) -> None:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0
@@ -461,7 +461,7 @@ class _PlotTDE(_PlotBase):
         self,
         data: np.ndarray,
         tau: tuple[float],
-        indices: tuple[list[int], list[int]],
+        indices: tuple[tuple[int]],
         times: np.ndarray,
         name: str,
     ) -> None:  # noqa D107
@@ -472,8 +472,8 @@ class _PlotTDE(_PlotBase):
 
     def plot(
         self,
-        nodes: list[int] | None = None,
-        times: list[int | float] | None = None,
+        nodes: tuple[int] | None = None,
+        times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 500.0,
@@ -484,11 +484,11 @@ class _PlotTDE(_PlotBase):
 
         Parameters
         ----------
-        nodes : list of int | None (default None)
+        nodes : tuple of int | None (default None)
             Indices of connections to plot. If :obj:`None`, plot all
             connections.
 
-        times : list of int or float | None (default None)
+        times : tuple of int or float | None (default None)
             Start and end times of the results to plot, respectively. If
             :obj:`None`, plot all times.
 
@@ -553,18 +553,18 @@ class _PlotTDE(_PlotBase):
 
     def _sort_plot_inputs(
         self,
-        nodes: list[int] | None,
-        times: list[int | float] | None,
+        nodes: tuple[int] | None,
+        times: tuple[int | float] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,
         minor_tick_intervals: float,
-    ) -> tuple[list[int], np.ndarray, np.ndarray]:
+    ) -> tuple[tuple[int], np.ndarray, np.ndarray]:
         """Sort the plotting inputs.
 
         Returns
         -------
-        nodes : list of int
+        nodes : tuple of int
 
         times : numpy.ndarray
             Times of the results to plot.
@@ -584,7 +584,7 @@ class _PlotTDE(_PlotBase):
         return nodes, times, time_idcs
 
     def _sort_time_inputs(
-        self, times: None | list[int]
+        self, times: tuple[int] | None
     ) -> tuple[np.ndarray, np.ndarray]:
         """Sort `times` input.
 
@@ -600,8 +600,8 @@ class _PlotTDE(_PlotBase):
             times = self.times.copy()
             time_idcs = np.arange(len(self.times), dtype=np.int32)
         else:
-            if not isinstance(times, list):
-                raise TypeError("`times` must be a list.")
+            if not isinstance(times, tuple):
+                raise TypeError("`times` must be a tuple.")
             if len(times) != 2:
                 raise ValueError("`times` must have a length of two.")
             if any(time not in self.times for time in times):
@@ -622,7 +622,7 @@ class _PlotTDE(_PlotBase):
         self,
         figures: list[Figure],
         axes: list[np.ndarray],
-        nodes: list[int],
+        nodes: tuple[int],
         times: np.ndarray,
         time_idcs: np.ndarray,
         n_rows: int,
@@ -715,7 +715,7 @@ class _PlotWaveShape(_PlotBase):
     def __init__(
         self,
         data: np.ndarray,
-        indices: tuple[list[int], list[int]] | list[int],
+        indices: tuple[tuple[int]] | tuple[int],
         f1s: np.ndarray,
         f2s: np.ndarray,
         name: str,
@@ -727,7 +727,7 @@ class _PlotWaveShape(_PlotBase):
 
     def plot(
         self,
-        nodes: list[int] | None = None,
+        nodes: tuple[int] | None = None,
         f1s: np.ndarray | None = None,
         f2s: np.ndarray | None = None,
         n_rows: int = 1,
@@ -735,24 +735,24 @@ class _PlotWaveShape(_PlotBase):
         major_tick_intervals: int | float = 5.0,
         minor_tick_intervals: int | float = 1.0,
         plot_absolute: bool = True,
-        cbar_range_abs: list[float] | tuple[list[float]] | None = None,
-        cbar_range_real: list[float] | tuple[list[float]] | None = None,
-        cbar_range_imag: list[float] | tuple[list[float]] | None = None,
-        cbar_range_phase: list[float] | tuple[list[float]] | None = None,
+        cbar_range_abs: tuple[float] | list[tuple[float]] | None = None,
+        cbar_range_real: tuple[float] | list[tuple[float]] | None = None,
+        cbar_range_imag: tuple[float] | list[tuple[float]] | None = None,
+        cbar_range_phase: tuple[float] | list[tuple[float]] | None = None,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         r"""Plot the results.
 
         Parameters
         ----------
-        nodes : list of int | None (default None)
+        nodes : tuple of int | None (default None)
             Indices of channels to plot. If :obj:`None`, plot all channels.
 
-        f1s : list of int or float | None (default None)
+        f1s : tuple of int or float | None (default None)
             Start and end low frequencies of the results to plot, respectively.
             If :obj:`None`, plot all low frequencies.
 
-        f2s : list of int or float | None (default None)
+        f2s : tuple of int or float | None (default None)
             Start and end high frequencies of the results to plot,
             respectively. If :obj:`None`, plot all high frequencies.
 
@@ -774,32 +774,32 @@ class _PlotWaveShape(_PlotBase):
             Whether or not to plot the absolute values of the real and
             imaginary parts of the results.
 
-        cbar_range_abs : list of float | tuple of list of float | None (default None)
+        cbar_range_abs : tuple of float | list of tuple of float | None (default None)
             Range (in units of the data) for the colourbars of the absolute
             value of the results, consisting of the lower and upper limits,
             respectively. If :obj:`None`, the range is computed automatically.
-            If a list of float, this range is used for all plots. If a tuple of
-            list of float, the ranges are used for each individual plot.
+            If a tuple of float, this range is used for all plots. If a tuple of
+            tuple of float, the ranges are used for each individual plot.
 
-        cbar_range_real : list of float | tuple of list of float | None (default None)
+        cbar_range_real : tuple of float | list of tuple of float | None (default None)
             Range (in units of the data) for the colourbars of the real value
             of the results, consisting of the lower and upper limits,
             respectively. If :obj:`None`, the range is computed automatically.
-            If a list of float, this range is used for all plots. If a tuple of
-            list of float, the ranges are used for each individual plot.
+            If a tuple of float, this range is used for all plots. If a tuple of
+            tuple of float, the ranges are used for each individual plot.
 
-        cbar_range_imag : list of float | tuple of list of float | None (default None)
+        cbar_range_imag : tuple of float | list of tuple of float | None (default None)
             Range (in units of the data) for the colourbars of the imaginary
             value of the results, consisting of the lower and upper limits,
             respectively. If :obj:`None`, the range is computed automatically.
-            If a list of float, this range is used for all plots. If a tuple of
-            list of float, the ranges are used for each individual plot.
+            If a tuple of float, this range is used for all plots. If a tuple of
+            tuple of float, the ranges are used for each individual plot.
 
-        cbar_range_phase : list of float | tuple of list of float | None (default None)
+        cbar_range_phase : tuple of float | list of tuple of float | None (default None)
             Range (in units of pi) for the colourbars of the phase of the
             results, consisting of the lower and upper limits, respectively. If
-            :obj:`None`, the range is computed automatically. If a list of
-            float, this range is used for all plots. If a tuple of list of
+            :obj:`None`, the range is computed automatically. If a tuple of
+            float, this range is used for all plots. If a tuple of tuple of
             float, the ranges are used for each individual plot. Note that
             results should be limited to the range :math:`(0, 2$\\pi$]`.
 
@@ -871,31 +871,31 @@ class _PlotWaveShape(_PlotBase):
 
     def _sort_plot_inputs(
         self,
-        nodes: list[int] | None,
-        f1s: list[int | float] | None,
-        f2s: list[int | float] | None,
+        nodes: tuple[int] | None,
+        f1s: tuple[int | float] | None,
+        f2s: tuple[int | float] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
         plot_absolute: bool,
-        cbar_range_abs: list[float] | tuple[list[float]] | None,
-        cbar_range_real: list[float] | tuple[list[float]] | None,
-        cbar_range_imag: list[float] | tuple[list[float]] | None,
-        cbar_range_phase: list[float] | tuple[list[float]] | None,
+        cbar_range_abs: tuple[float] | list[tuple[float]] | None,
+        cbar_range_real: tuple[float] | list[tuple[float]] | None,
+        cbar_range_imag: tuple[float] | list[tuple[float]] | None,
+        cbar_range_phase: tuple[float] | list[tuple[float]] | None,
     ) -> tuple[
-        list[int],
+        tuple[int],
         np.ndarray,
         np.ndarray,
         np.ndarray,
         np.ndarray,
-        list[tuple[list[float | None]]],
+        list[list[tuple[float | None]]],
     ]:
         """Sort the plotting inputs.
 
         Returns
         -------
-        nodes : list of int
+        nodes : tuple of int
 
         f1s : numpy.ndarray of float
             Low frequencies in the results to plot.
@@ -909,7 +909,7 @@ class _PlotWaveShape(_PlotBase):
         f2_idcs : numpy.ndarray of int
             Indices of ``f2s`` in the results.
 
-        cbar_ranges : list of tuple of list of float or None
+        cbar_ranges : list of list of tuple of float or None
             Colourbar ranges for the absolute, real, imaginary, and phase
             plots, respectively.
         """
@@ -941,10 +941,10 @@ class _PlotWaveShape(_PlotBase):
                 raise TypeError(
                     f"`cbar_range_{cbar_name}` must be a list, tuple, or None."
                 )
-            if isinstance(cbar_range, tuple):
+            if isinstance(cbar_range, list):
                 if len(cbar_range) != len(nodes):
                     raise ValueError(
-                        f"If `cbar_range_{cbar_name}` is a tuple, one entry "
+                        f"If `cbar_range_{cbar_name}` is a list, one entry "
                         "must be provided for each node being plotted."
                     )
             else:
@@ -962,7 +962,7 @@ class _PlotWaveShape(_PlotBase):
         return (nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_ranges)
 
     def _create_plots(
-        self, nodes: list[int], n_rows: int, n_cols: int
+        self, nodes: tuple[int], n_rows: int, n_cols: int
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Create figures and subplots to fill with results.
 
@@ -1016,7 +1016,7 @@ class _PlotWaveShape(_PlotBase):
         figures: list[Figure],
         subfigures: list[np.ndarray],
         axes: list[np.ndarray],
-        nodes: list[int],
+        nodes: tuple[int],
         f1s: np.ndarray,
         f2s: np.ndarray,
         f1_idcs: np.ndarray,
@@ -1026,7 +1026,7 @@ class _PlotWaveShape(_PlotBase):
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
         plot_absolute: bool,
-        cbar_ranges: list[tuple[list[float | None]]],
+        cbar_ranges: list[list[tuple[float | None]]],
     ) -> None:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0

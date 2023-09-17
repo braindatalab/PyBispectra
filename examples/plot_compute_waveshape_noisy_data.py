@@ -170,14 +170,14 @@ waveshape_transformed = WaveShape(
     sampling_freq=sampling_freq,
     verbose=False,
 )
-waveshape_transformed.compute(f1s=np.arange(10, 71), f2s=np.arange(10, 71))
+waveshape_transformed.compute(f1s=(10, 70), f2s=(10, 70))
 fig, axes = waveshape_transformed.results.plot(
     major_tick_intervals=10,
     minor_tick_intervals=2,
-    cbar_range_abs=[0, 1],
-    cbar_range_real=[0, 1],
-    cbar_range_imag=[0, 1],
-    cbar_range_phase=[0, 2],
+    cbar_range_abs=(0, 1),
+    cbar_range_real=(0, 1),
+    cbar_range_imag=(0, 1),
+    cbar_range_phase=(0, 2),
     plot_absolute=True,
 )
 fig[0].set_size_inches(6, 6)
@@ -195,12 +195,12 @@ waveshape_noisy = WaveShape(
     sampling_freq=sampling_freq,
     verbose=False,
 )
-waveshape_noisy.compute(f1s=np.arange(10, 71), f2s=np.arange(10, 71))
+waveshape_noisy.compute(f1s=(10, 70), f2s=(10, 70))
 noisy_results = waveshape_noisy.results.get_results()
 noisy_results = noisy_results.mean(axis=0)[np.newaxis, :, :]
 noisy_results = ResultsWaveShape(
     data=noisy_results,
-    indices=[0],
+    indices=(0,),
     f1s=waveshape_noisy.results.f1s,
     f2s=waveshape_noisy.results.f2s,
     name=waveshape_noisy.results.name,
@@ -208,10 +208,10 @@ noisy_results = ResultsWaveShape(
 fig, axes = noisy_results.plot(
     major_tick_intervals=10,
     minor_tick_intervals=2,
-    cbar_range_abs=[0, 1],
-    cbar_range_real=[0, 1],
-    cbar_range_imag=[0, 1],
-    cbar_range_phase=[0, 2],
+    cbar_range_abs=(0, 1),
+    cbar_range_real=(0, 1),
+    cbar_range_imag=(0, 1),
+    cbar_range_phase=(0, 2),
     plot_absolute=True,
 )
 fig[0].set_size_inches(6, 6)

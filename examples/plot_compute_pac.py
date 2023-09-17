@@ -22,38 +22,46 @@ from pybispectra import compute_fft, get_example_data_paths, PAC
 # :math:`\textbf{x}` and :math:`\textbf{y}`.
 #
 # The method available in PyBispectra is based on the bispectrum,
-# :math:`\textbf{B}`, with four variations available. The bispectrum has the
-# general form:
+# :math:`\textbf{B}`. The bispectrum has the general form
 #
 # :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)\textbf{n}^*
-# (f_2+f_1)>`,
+# (f_2+f_1)>` ,
 #
-# where :math:`kmn` is a combination of channels :math:`\textbf{x}` and
-# :math:`\textbf{y}`, and the angled brackets represent the averaged value over
-# epochs. The computation of PAC follows from this :footcite:`Kovach2018`:
+# where :math:`kmn` is a combination of signals with Fourier coefficients
+# :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`, respectively;
+# and :math:`<>` represents the average value over epochs. The computation of
+# PAC follows from this :footcite:`Kovach2018`
 #
-# :math:`PAC(\textbf{x}_{f_1},\textbf{y}_{f_2})=\textbf{B}_{xyy}(f_1,f_2)=<
-# \textbf{x}(f_1)\textbf{y}(f_2)\textbf{y}^*(f_2+f_1)>`.
+# :math:`\textbf{B}_{xyy}(f_1,f_2)=<\textbf{x}(f_1)\textbf{y}(f_2)\textbf{y}^*
+# (f_2+f_1)>` ,
 #
-# The four variations arise from the options for normalisation and
-# antisymmetrisation. The bispectrum can be normalised to the bicoherence,
-# :math:`\boldsymbol{\mathcal{B}}`, using the threenorm, :math:`\textbf{N}`
-# :footcite:`Zandvoort2021`:
+# :math:`PAC(\textbf{x}_{f_1},\textbf{y}_{f_2})=|\textbf{B}_{xyy}(f_1,f_2)|` .
+#
+# The bispectrum can be normalised to the bicoherence,
+# :math:`\boldsymbol{\mathcal{B}}`, using the threenorm, :math:`\textbf{N}`,
+# :footcite:`Zandvoort2021`
 #
 # :math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{y}(f_2)|^3>
-# <|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+# <|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}` ,
 #
 # :math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large\frac{\textbf{B}_{xyy}
-# (f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}`,
+# (f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}` ,
 #
-# where the resulting PAC results are normalised to the range :math:`[0, 1]` by
-# the power of the corresponding frequencies. Furthermore, PAC can be
-# antisymmetrised by subtracting the results from those found using the
-# transposed bispectrum, :math:`\textbf{B}_{xyx}` :footcite:`Chella2014`. In
-# the context of analysing PAC between two signals, antisymmetrisation allows
-# you to correct for spurious estimates of coupling arising from interactions
-# within the signals themselves in instances of source mixing, providing a more
-# robust connectivity metric.
+# :math:`PAC_{norm}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|
+# \boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)|` .
+#
+# where the resulting values lie in the range :math:`[0, 1]`. Furthermore, PAC
+# can be antisymmetrised by subtracting the results from those found using the
+# transposed bispectrum, :math:`\textbf{B}_{xyx}`, :footcite:`Chella2014`
+#
+# :math:`PAC_{antisym}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|\textbf{B}_{xyy}-
+# \textbf{B}_{xyx}|` .
+#
+# In the context of analysing PAC between two signals, antisymmetrisation
+# allows you to correct for spurious estimates of coupling arising from
+# interactions within the signals themselves in instances of source mixing,
+# providing a more robust connectivity metric :footcite:`PellegriniInPrep`. The
+# same principle applies for the antisymmetrisation of the bicoherence.
 
 ###############################################################################
 # Loading data and computing Fourier coefficients
@@ -84,22 +92,22 @@ print(
 )
 
 ###############################################################################
-# As you can see, we have FFT coefficients for 2 channels across 30 epochs,
+# As you can see, we have Fourier coefficients for 2 channels across 30 epochs,
 # with 101 frequencies ranging from 0 to 100 Hz with a frequency resolution of
 # 1 Hz. We will use these coefficients to compute PAC.
 #
 # Computing PAC
 # -------------
 # To compute PAC, we start by initialising the :class:`~pybispectra.cfc.PAC`
-# class object with the FFT coefficients and the frequency information. To
+# class object with the Fourier coefficients and the frequency information. To
 # compute PAC, we call the :meth:`~pybispectra.cfc.PAC.compute` method. By
 # default, PAC is computed between all channel and frequency combinations,
 # however we can also specify particular combinations of interest.
 #
 # Here, we specify the :attr:`~pybispectra.cfc.PAC.indices` to compute PAC on.
 # :attr:`~pybispectra.cfc.PAC.indices` is expected to be a tuple containing two
-# NumPy arrays for the indices of the seed and target channels, respectively.
-# The indices specified below mean that PAC will only be computed across
+# lists for the indices of the seed and target channels, respectively. The
+# indices specified below mean that PAC will only be computed across
 # frequencies between the channels (i.e. 0 -> 1). By leaving the frequency
 # arguments :attr:`~pybispectra.cfc.PAC.f1s` and
 # :attr:`~pybispectra.cfc.PAC.f2s` blank, we will look at all possible
@@ -110,12 +118,12 @@ print(
 pac = PAC(
     data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
-pac.compute(indices=([0], [1]))  # compute PAC
+pac.compute(indices=((0,), (1,)))  # compute PAC
 
 pac_results = pac.results.get_results()  # return results as array
 
 print(
-    f"PAC results: [{pac_results.shape[0]} connections x "
+    f"PAC results: [{pac_results.shape[0]} connection x "
     f"{pac_results.shape[1]} f1s x {pac_results.shape[2]} f2s]"
 )
 
@@ -136,11 +144,11 @@ print(
 # :class:`~matplotlib.axes.Axes` objects can also be returned for any desired
 # manual adjustments of the plots. In this simulated data example, we can see
 # that the bispectrum indeed identifies the occurrence of 10-60 Hz PAC between
-# our seed and target channels.
+# our seed and target channel.
 
 # %%
 
-fig, axes = pac.results.plot(f1s=[5, 15], f2s=[55, 65])
+fig, axes = pac.results.plot(f1s=(5, 15), f2s=(55, 65))
 
 ###############################################################################
 # Antisymmetrisation for across-signal PAC
@@ -177,7 +185,12 @@ fft_coeffs, freqs = compute_fft(
 pac = PAC(
     data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )
-pac.compute(indices=([0, 1, 0], [0, 1, 1]), symmetrise=["none", "antisym"])
+pac.compute(
+    indices=((0, 1, 0), (0, 1, 1)),
+    f1s=(5, 15),
+    f2s=(55, 65),
+    antisym=(False, True),
+)
 pac_standard, pac_antisym = pac.results
 
 vmin = np.min(
@@ -195,12 +208,12 @@ vmax = np.max(
 
 # plot unsymmetrised PAC within & between signals
 fig_standard, axes_standard = pac_standard.plot(
-    f1s=[5, 15], f2s=[55, 65], cbar_range=[vmin, vmax]
+    f1s=(5, 15), f2s=(55, 65), cbar_range=(vmin, vmax)
 )
 
 # plot antisymmetrised PAC between signals
 fig_antisym, axes_antisym = pac_antisym.plot(
-    nodes=[2], f1s=[5, 15], f2s=[55, 65], cbar_range=[vmin, vmax]
+    nodes=(2,), f1s=(5, 15), f2s=(55, 65), cbar_range=(vmin, vmax)
 )
 
 ###############################################################################

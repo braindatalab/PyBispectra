@@ -99,19 +99,19 @@ def test_error_catch(method: str) -> None:
         ssf.fit_transform_ssd(
             signal_bounds=signal_bounds,
             noise_bounds=noise_bounds,
-            indices=[0],
+            indices=(0,),
             rank=2,
         )
 
-    with pytest.raises(TypeError, match="`indices` must be a list of ints."):
+    with pytest.raises(TypeError, match="`indices` must be a tuple of ints."):
         ssf.fit_transform_ssd(
             signal_bounds=signal_bounds, noise_bounds=noise_bounds, indices=0
         )
-    with pytest.raises(TypeError, match="`indices` must be a list of ints."):
+    with pytest.raises(TypeError, match="`indices` must be a tuple of ints."):
         ssf.fit_transform_ssd(
             signal_bounds=signal_bounds,
             noise_bounds=noise_bounds,
-            indices=[0.0],
+            indices=(0.0,),
         )
     with pytest.raises(
         ValueError,
@@ -123,7 +123,7 @@ def test_error_catch(method: str) -> None:
         ssf.fit_transform_ssd(
             signal_bounds=signal_bounds,
             noise_bounds=noise_bounds,
-            indices=[-1],
+            indices=(-1,),
         )
     with pytest.raises(
         ValueError,
@@ -135,7 +135,7 @@ def test_error_catch(method: str) -> None:
         ssf.fit_transform_ssd(
             signal_bounds=signal_bounds,
             noise_bounds=noise_bounds,
-            indices=[n_chans + 1],
+            indices=(n_chans + 1,),
         )
 
     # SSD inputs only

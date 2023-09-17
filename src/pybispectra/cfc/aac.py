@@ -50,16 +50,6 @@ class AAC(_ProcessFreqBase):
     sampling_freq : int | float
         Sampling frequency (in Hz) of :attr:`data`.
 
-    indices : tuple of list of int, length of 2
-        Indices of the seed and target channels, respectively, most recently
-        used with :meth:`compute`.
-
-    f1s : ~numpy.ndarray, shape of [frequencies]
-        Low frequencies (in Hz) most recently used with :meth:`compute`.
-
-    f2s : ~numpy.ndarray, shape of [frequencies]
-        High frequencies (in Hz) most recently used with :meth:`compute`.
-
     verbose : bool
         Whether or not to report the progress of the processing.
     """  # noqa E501
@@ -70,27 +60,27 @@ class AAC(_ProcessFreqBase):
 
     def compute(
         self,
-        indices: tuple[list[int], list[int]] | None = None,
-        f1s: np.ndarray | None = None,
-        f2s: np.ndarray | None = None,
+        indices: tuple[tuple[int]] | None = None,
+        f1s: tuple[int | float] | None = None,
+        f2s: tuple[int | float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute AAC across epochs.
 
         Parameters
         ----------
-        indices : tuple of list of int, length of 2 | None (default None)
+        indices : tuple of tuple of int | None (default None), length of 2
             Indices of the seed and target channels, respectively, to compute
             AAC between. If :obj:`None`, coupling between all channels is
             computed.
 
-        f1s : ~numpy.ndarray | None (default None), shape of [frequencies]
-            Lower frequencies to compute AAC on. If :obj:`None`, all
-            frequencies are used.
+        f1s : tuple of int or float | None (default None), length of 2
+            Start and end lower frequencies to compute AAC on, respectively. If
+            :obj:`None`, all frequencies are used.
 
-        f2s : ~numpy.ndarray | None (default None), shape of [frequencies]
-            Higher frequencies to compute AAC on. If :obj:`None`, all
-            frequencies are used.
+        f2s : tuple of int or float | None (default None), length of 2
+            Start and end higher frequencies to compute AAC on, respectively.
+            If :obj:`None`, all frequencies are used.
 
         n_jobs : int (default ``1``)
             Number of jobs to run in parallel. If ``-1``, all available CPUs
@@ -136,8 +126,8 @@ class AAC(_ProcessFreqBase):
             {
                 "data": self.data[:, (seed, target)],
                 "freqs": self.freqs,
-                "f1s": self.f1s,
-                "f2s": self.f2s,
+                "f1s": self._f1s,
+                "f2s": self._f2s,
             }
             for seed, target in zip(self._seeds, self._targets)
         ]
@@ -156,7 +146,7 @@ class AAC(_ProcessFreqBase):
     def _store_results(self) -> None:
         """Store computed results in an object."""
         self._results = ResultsCFC(
-            self._aac, self.indices, self.f1s, self.f2s, "AAC"
+            self._aac, self._indices, self._f1s, self._f2s, "AAC"
         )
 
     @property
@@ -190,10 +180,10 @@ def _compute_aac(
     freqs : numpy.ndarray, shape of [frequencies]
         Frequencies in ``data``.
 
-    f1s : numpy.ndarray, shape of [frequencies]
+    f1s : numpy.ndarray, shape of [low frequencies]
         Low frequencies to compute coupling for.
 
-    f2s : numpy.ndarray, shape of [frequencies]
+    f2s : numpy.ndarray, shape of [high frequencies]
         High frequencies to compute coupling for.
 
     Returns
@@ -204,18 +194,15 @@ def _compute_aac(
     results = np.full(
         (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
     )
-    f1_idx = 0  # starting index to find f1s
-    for f1_i, f1 in enumerate(f1s):
-        f2_idx = 0  # starting index to find f2s
-        for f2_i, f2 in enumerate(f2s):
-            if f1 <= f2 and f1 > 0:
-                f1_idx = _fast_find_first(freqs, f1, f1_idx)
-                f2_idx = _fast_find_first(freqs, f2, f2_idx)
-
+    f1_start = _fast_find_first(freqs, f1s[0], 0)
+    f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
+    f2_start = _fast_find_first(freqs, f2s[0], 0)
+    f2_end = _fast_find_first(freqs, f2s[-1], f2_start)
+    for f1_i, f1 in enumerate(range(f1_start, f1_end + 1)):
+        for f2_i, f2 in enumerate(range(f2_start, f2_end + 1)):
+            if f1 <= f2 and freqs[f1] > 0:
                 results[f1_i, f2_i] = np.mean(
-                    _compute_pearsonr_2d(
-                        data[:, 0, f1_idx], data[:, 1, f2_idx]
-                    )
+                    _compute_pearsonr_2d(data[:, 0, f1], data[:, 1, f2])
                 )
 
     return results

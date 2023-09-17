@@ -18,23 +18,25 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # ----------
 # A common feature of interest in signal analyses is determining the flow of
 # information between two signals, in terms of both the direction and the
-# particular time lag between them, known as TDE.
+# particular time lag between them.
 #
 # The method available in PyBispectra is based on the bispectrum,
-# :math:`\textbf{B}`, which has the general form:
+# :math:`\textbf{B}`. The bispectrum has the general form
 #
 # :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)\textbf{n}^*
-# (f_2+f_1)>`,
+# (f_2+f_1)>` ,
 #
-# where :math:`kmn` is a combination of channels :math:`\textbf{x}` and
-# :math:`\textbf{y}`, and the angled brackets represent the averaged value over
-# epochs. When computing TDE, information from :math:`\textbf{n}` is taken not
+# where :math:`kmn` is a combination of signals with Fourier coefficients
+# :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`, respectively;
+# and :math:`<>` represents the average value over epochs.
+#
+# When computing time delays, information from :math:`\textbf{n}` is taken not
 # only from the positive frequencies, but also the negative frequencies. Four
 # methods exist for computing TDE based on the bispectrum
 # :footcite:`Nikias1988`. The fundamental equation is as follows:
 #
 # :math:`TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}\textbf{I}(\textbf{
-# x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2`,
+# x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2` ,
 #
 # where :math:`\textbf{I}` varies depending on the method, and :math:`\tau` is
 # a given time delay. Phase information of the signals is extracted from the
@@ -42,12 +44,12 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 #
 # :math:`\boldsymbol{\phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})
 # \boldsymbol{\varphi}_{\textbf{B}_{xyx}} (f_1,f_2)-\boldsymbol{
-# \varphi}_{\textbf{B}_{xxx}}(f_1,f_2)`
+# \varphi}_{\textbf{B}_{xxx}}(f_1,f_2)` ;
 #
 # :math:`\boldsymbol{\phi}'(\textbf{x}_{f_1},\textbf{y}_{f_2})=
 # \boldsymbol{\varphi}_{\textbf{B}_{xyx}}(f_1,f_2)-\frac{1}{2}(
 # \boldsymbol{\varphi}_{\textbf{B}_{xxx}}(f_1,f_2) + \boldsymbol{
-# \varphi}_{\textbf{B}_{yyy}}(f_1,f_2))`
+# \varphi}_{\textbf{B}_{yyy}}(f_1,f_2))` .
 #
 # **Method I**:
 # :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=e^{i\boldsymbol{
@@ -95,9 +97,10 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # We will start by loading some simulated data containing a time delay of 250
 # ms between two signals, where :math:`\textbf{y}` is a delayed version of
 # :math:`\textbf{x}`. We will then compute the Fourier coefficients of the
-# data, which will be used to compute TDE. Since TDE requires information from
-# both negative and positive frequencies, we set the ``return_neg_freqs``
-# parameter to ``True``. Furthermore, we specify ``n_points`` to be twice the
+# data, which will be used to compute the time delay. Since TDE requires
+# information from both negative and positive frequencies, we set the
+# ``return_neg_freqs`` parameter of the :func:`~pybispectra.utils.compute_fft`
+# function to ``True``. Furthermore, we specify ``n_points`` to be twice the
 # number of time points in the data, plus one, to ensure that the time delay
 # estimates correspond to the sampling frequency of the data (accounting for
 # time point zero as well as the fact that the estimates are returned for both
@@ -137,24 +140,24 @@ print(
 )
 
 ###############################################################################
-# Computing TDE
-# -------------
-# To compute TDE, we start by initialising the :class:`~pybispectra.tde.TDE`
-# class object with the FFT coefficients and the frequency information. To
-# compute TDE, we call the :meth:`~pybispectra.tde.TDE.compute` method. To keep
-# things simple, we will focus on TDE using method I. To demonstrate that TDE
-# can show the directionality of information flow as well as the particular
-# time lag, we will compute TDE from signals 0 -> 1 (the genuine direction of
-# information flow where the time delay should have a positive value) and from
-# signals 1 -> 0 (the reverse direction of information flow where the time
-# delay should have a negative value).
+# Computing time delays
+# ---------------------
+# To compute time delays, we start by initialising the
+# :class:`~pybispectra.tde.TDE` class object with the Fourier coefficients and
+# the frequency information and call the :meth:`~pybispectra.tde.TDE.compute`
+# method. For simplicity, we will focus on TDE using method I. To demonstrate
+# that TDE can show the directionality of information flow as well as the
+# particular time lag, we will compute TDE from signals 0 -> 1 (the genuine
+# direction of information flow where the time delay should have a positive
+# value) and from signals 1 -> 0 (the reverse direction of information flow
+# where the time delay should have a negative value).
 
 # %%
 
 tde = TDE(
     data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
-tde.compute(indices=([0, 1], [1, 0]), method=1)  # compute TDE
+tde.compute(indices=((0, 1), (1, 0)), method=1)  # compute TDE
 tde_times = tde.results.times
 
 tde_results = tde.results.get_results()  # return results as array
@@ -165,14 +168,14 @@ print(
 )
 
 ###############################################################################
-# We can see that TDE has been computed for two connections (0 -> 1 and 1 ->
-# 0), and 401 timepoints (twice that of the original data plus one, preserving
-# the sampling frequency of the data - i.e. with one estimate every 5 ms - and
-# including the zero time), averaged across our 30 epochs.
+# We can see that time delays have been computed for two connections (0 -> 1
+# and 1 -> 0), and 401 timepoints (twice that of the original data plus one,
+# preserving the sampling frequency of the data - i.e. with one estimate every
+# 5 ms - and including the zero time), averaged across our 30 epochs.
 
 ###############################################################################
-# Plotting TDE
-# ------------
+# Plotting time delays
+# --------------------
 # Let us now inspect the results. Note that the
 # :class:`~matplotlib.figure.Figure` and :class:`~matplotlib.axes.Axes` objects
 # can be returned for any desired manual adjustments of the plots. When
@@ -251,7 +254,7 @@ fft_coeffs, freqs = compute_fft(
 tde = TDE(
     data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )
-tde.compute(indices=([0], [1]), symmetrise=["none", "antisym"], method=1)
+tde.compute(indices=((0,), (1,)), antisym=(False, True), method=1)
 tde_standard, tde_antisym = tde.results
 
 print(

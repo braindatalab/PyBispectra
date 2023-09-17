@@ -46,12 +46,8 @@ class TDE(_ProcessBispectrum):
     results : tuple of ~pybispectra.utils.ResultsTDE
         TDE results for each of the computed metrics.
 
-    indices : tuple of tuple of int, length of 2
-        Indices of the seed and target channels, respectively, most recently
-        used with :meth:`compute`.
-
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
-        FFT coefficients.
+        Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
@@ -129,26 +125,26 @@ class TDE(_ProcessBispectrum):
 
     def compute(
         self,
-        indices: tuple[list[int], list[int]] | None = None,
-        symmetrise: str | list[str] = "none",
-        method: int | list[int] = 1,
+        indices: tuple[tuple[int]] | None = None,
+        antisym: bool | tuple[bool] = False,
+        method: int | tuple[int] = 1,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute TDE, averaged over epochs.
 
         Parameters
         ----------
-        indices : tuple of list of int, length of 2 | None (default None)
+        indices : tuple of tuple of int, length of 2 | None (default None)
             Indices of the seed and target channels, respectively, to compute
             TDE between. If :obj:`None`, coupling between all channels is
             computed.
 
-        symmetrise : str | list of str (default ``"none"``)
+        antisym : bool | tuple of bool (default False)
             Symmetrisation to perform when computing TDE. If "none", no
             symmetrisation is performed. If "antisym", antisymmetrisation is
             performed.
 
-        method : int | list of int (default ``1``)
+        method : int | tuple of int (default ``1``)
             The method to use to compute TDE :footcite:`Nikias1988`. Can
             include ``[1, 2, 3, 4]``.
 
@@ -222,7 +218,7 @@ class TDE(_ProcessBispectrum):
         """
         self._reset_attrs()
 
-        self._sort_metrics(symmetrise, method)
+        self._sort_metrics(antisym, method)
         self._sort_indices(indices)
         self._sort_parallelisation(n_jobs)
 
@@ -261,31 +257,28 @@ class TDE(_ProcessBispectrum):
         self._xyz = None
 
     def _sort_metrics(
-        self, symmetrise: str | list[str], method: int | list[int]
+        self, antisym: bool | tuple[bool], method: int | list[int]
     ) -> None:
         """Sort inputs for the form of results being requested."""
-        if not isinstance(symmetrise, (str, list)):
-            raise TypeError(
-                "`symmetrise` must be a list of strings or a string."
-            )
-        if not isinstance(method, (int, list)):
-            raise TypeError("`method` must be a list of ints or an int.")
+        if not isinstance(antisym, (bool, tuple)):
+            raise TypeError("`antisym` must be a bool or tuple of bools.")
+        if not isinstance(method, (int, tuple)):
+            raise TypeError("`method` must be an int or tuple of ints.")
 
-        if isinstance(symmetrise, str):
-            symmetrise = [deepcopy(symmetrise)]
+        if isinstance(antisym, bool):
+            antisym = (antisym,)
         if isinstance(method, int):
-            method = [deepcopy(method)]
+            method = (method,)
 
-        supported_sym = ["none", "antisym"]
-        if any(entry not in supported_sym for entry in symmetrise):
-            raise ValueError("The value of `symmetrise` is not recognised.")
+        if any(not isinstance(entry, bool) for entry in antisym):
+            raise TypeError("Entries of `antisym` must be bools.")
         supported_meth = [1, 2, 3, 4]
         if any(entry not in supported_meth for entry in method):
             raise ValueError("The value of `method` is not recognised.")
 
-        if "none" in symmetrise:
+        if False in antisym:
             self._return_nosym = True
-        if "antisym" in symmetrise:
+        if True in antisym:
             self._return_antisym = True
 
         if 1 in method:
@@ -297,26 +290,27 @@ class TDE(_ProcessBispectrum):
         if 4 in method:
             self._return_method_iv = True
 
-    def _sort_indices(
-        self, indices: tuple[list[int], list[int]] | None
-    ) -> None:
+    def _sort_indices(self, indices: tuple[tuple[int]] | None) -> None:
         """Sort seed-target indices inputs."""
         indices = deepcopy(indices)
         if indices is None:
             indices = tuple(
-                np.array(np.triu_indices(self._n_chans, 1)).tolist(),
+                map(
+                    tuple,
+                    np.array(np.triu_indices(self._n_chans, 1)).tolist(),
+                )
             )
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
             raise ValueError("`indices` must have a length of 2.")
-        self.indices = deepcopy(indices)
+        self._indices = deepcopy(indices)
 
         seeds = indices[0]
         targets = indices[1]
         for group_idcs in (seeds, targets):
-            if not isinstance(group_idcs, list):
-                raise TypeError("Entries of `indices` must be lists.")
+            if not isinstance(group_idcs, tuple):
+                raise TypeError("Entries of `indices` must be tuples.")
             if any(not isinstance(idx, int) for idx in group_idcs):
                 raise TypeError(
                     "Entries for seeds and targets in `indices` must be ints."
@@ -512,7 +506,7 @@ class TDE(_ProcessBispectrum):
             results.append(
                 ResultsTDE(
                     self._tde_i_nosym,
-                    self.indices,
+                    self._indices,
                     self._times,
                     "TDE | Method I",
                 )
@@ -521,7 +515,7 @@ class TDE(_ProcessBispectrum):
             results.append(
                 ResultsTDE(
                     self._tde_ii_nosym,
-                    self.indices,
+                    self._indices,
                     self._times,
                     "TDE | Method II",
                 )
@@ -530,7 +524,7 @@ class TDE(_ProcessBispectrum):
             results.append(
                 ResultsTDE(
                     self._tde_iii_nosym,
-                    self.indices,
+                    self._indices,
                     self._times,
                     "TDE | Method III",
                 )
@@ -539,7 +533,7 @@ class TDE(_ProcessBispectrum):
             results.append(
                 ResultsTDE(
                     self._tde_iv_nosym,
-                    self.indices,
+                    self._indices,
                     self._times,
                     "TDE | Method IV",
                 )
@@ -549,7 +543,7 @@ class TDE(_ProcessBispectrum):
             results.append(
                 ResultsTDE(
                     self._tde_i_antisym,
-                    self.indices,
+                    self._indices,
                     self._times,
                     "TDE (antisymmetrised) | Method I",
                 )
@@ -558,7 +552,7 @@ class TDE(_ProcessBispectrum):
             results.append(
                 ResultsTDE(
                     self._tde_ii_antisym,
-                    self.indices,
+                    self._indices,
                     self._times,
                     "TDE (antisymmetrised) | Method II",
                 )
@@ -567,7 +561,7 @@ class TDE(_ProcessBispectrum):
             results.append(
                 ResultsTDE(
                     self._tde_iii_antisym,
-                    self.indices,
+                    self._indices,
                     self._times,
                     "TDE (antisymmetrised) | Method III",
                 )
@@ -576,7 +570,7 @@ class TDE(_ProcessBispectrum):
             results.append(
                 ResultsTDE(
                     self._tde_iv_antisym,
-                    self.indices,
+                    self._indices,
                     self._times,
                     "TDE (antisymmetrised) | Method IV",
                 )
@@ -616,7 +610,7 @@ def _compute_bispectrum_tde(
         Contains coefficients for the zero frequency, the positive frequencies,
         and the negative frequencies, respectively.
 
-    hankel_freq_mask : numpy.ndarray, shape of [fs, fs]
+    hankel_freq_mask : numpy.ndarray, shape of [frequencies, frequencies]
         Hankel matrix to use as a frequency mask for the frequencies in channel
         n of ``data``, where ``fs`` is the zero and positive frequencies.
         Can be generated with ``scipy.linalg.hankel(c=numpy.arange(0, fs),
@@ -629,7 +623,7 @@ def _compute_bispectrum_tde(
 
     Returns
     -------
-    results : numpy.ndarray, shape of [x, epochs, fs, fs]
+    results : numpy.ndarray, shape of [x, epochs, frequencies, frequencies]
         Complex-valued array containing the bispectrum of a single connection,
         where the first dimension corresponds to the different channel indices
         given in ``kmn``.
@@ -674,15 +668,15 @@ def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray, shape of [fs, fs]
+    B_xyx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xyx``.
 
-    B_xxx : numpy.ndarray, shape of [fs, fs]
+    B_xxx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xxx``.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [frequencies]
+    tde : numpy.ndarray, shape of [times]
         Time delay estimates.
 
     Notes
@@ -705,18 +699,18 @@ def _compute_tde_ii(
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray, shape of [fs, fs]
+    B_xyx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xyx``.
 
-    B_xxx : numpy.ndarray, shape of [fs, fs]
+    B_xxx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xxx``.
 
-    B_yyy : numpy.ndarray, shape of [fs, fs]
+    B_yyy : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``yyy``.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [frequencies]
+    tde : numpy.ndarray, shape of [times]
         Time delay estimates.
 
     Notes
@@ -735,15 +729,15 @@ def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray, shape of [fs, fs]
+    B_xyx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xyx``.
 
-    B_xxx : numpy.ndarray, shape of [fs, fs]
+    B_xxx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xxx``.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [frequencies]
+    tde : numpy.ndarray, shape of [times]
         Time delay estimates.
 
     Notes
@@ -765,18 +759,18 @@ def _compute_tde_iv(
 
     Parameters
     ----------
-    B_xyx : numpy.ndarray, shape of [fs, fs]
+    B_xyx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xyx``.
 
-    B_xxx : numpy.ndarray, shape of [fs, fs]
+    B_xxx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xxx``.
 
-    B_yyy : numpy.ndarray, shape of [fs, fs]
+    B_yyy : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``yyy``.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [frequencies]
+    tde : numpy.ndarray, shape of [times]
         Time delay estimates.
 
     Notes

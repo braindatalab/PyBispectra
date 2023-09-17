@@ -8,27 +8,28 @@ from warnings import warn
 from numba import njit
 import numpy as np
 
+from pybispectra.utils.results import _ResultsBase
 from pybispectra.utils._utils import _fast_find_first
 
 
 class _ProcessFreqBase(ABC):
     """Base class for processing frequency-domain results."""
 
-    _data_ndims = 3  # usu. [epochs, channels, frequencies, (times)]
-    _allow_neg_freqs = False  # only True for TDE
+    _data_ndims: int = 3  # usu. [epochs, channels, frequencies, (times)]
+    _allow_neg_freqs: bool = False  # only True for TDE
 
-    indices = None
-    _seeds = None
-    _targets = None
-    _n_cons = None
+    _indices: tuple = None
+    _seeds: tuple = None
+    _targets: tuple = None
+    _n_cons: int = None
 
-    sampling_freq = None
-    f1s = None
-    f2s = None
+    sampling_freq: float = None
+    _f1s: np.ndarray = None
+    _f2s: np.ndarray = None
 
-    _n_jobs = None
+    _n_jobs: int = None
 
-    _results = None
+    _results: _ResultsBase = None
 
     def __init__(
         self,
@@ -108,29 +109,31 @@ class _ProcessFreqBase(ABC):
         self.sampling_freq = deepcopy(sampling_freq)
         self.verbose = deepcopy(verbose)
 
-    def _sort_indices(
-        self, indices: tuple[list[int], list[int]] | None
-    ) -> None:
+    def _sort_indices(self, indices: tuple[tuple[int]] | None) -> None:
         """Sort seed-target indices inputs."""
         indices = deepcopy(indices)
         if indices is None:
             indices = tuple(
                 [
-                    np.tile(range(self._n_chans), self._n_chans).tolist(),
-                    np.repeat(range(self._n_chans), self._n_chans).tolist(),
+                    tuple(
+                        np.tile(range(self._n_chans), self._n_chans).tolist()
+                    ),
+                    tuple(
+                        np.repeat(range(self._n_chans), self._n_chans).tolist()
+                    ),
                 ]
             )
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
             raise ValueError("`indices` must have a length of 2.")
-        self.indices = deepcopy(indices)
+        self._indices = deepcopy(indices)
 
         seeds = indices[0]
         targets = indices[1]
         for group_idcs in (seeds, targets):
-            if not isinstance(group_idcs, list):
-                raise TypeError("Entries of `indices` must be lists.")
+            if not isinstance(group_idcs, tuple):
+                raise TypeError("Entries of `indices` must be tuples.")
             if any(not isinstance(idx, int) for idx in group_idcs):
                 raise TypeError(
                     "Entries for seeds and targets in `indices` must be ints."
@@ -148,42 +151,46 @@ class _ProcessFreqBase(ABC):
         self._n_cons = len(seeds)
 
     def _sort_freqs(
-        self, f1s: np.ndarray | None, f2s: np.ndarray | None
+        self, f1s: tuple[int | float] | None, f2s: tuple[int | float] | None
     ) -> None:
         """Sort frequency inputs."""
+        check_f1s = True
+        check_f2s = True
         if f1s is None:
-            f1s = self.freqs.copy()
+            self._f1s = self.freqs.copy()
+            check_f1s = False
         if f2s is None:
-            f2s = f1s.copy()
+            self._f2s = self.freqs.copy()
+            check_f2s = False
 
-        if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
-            raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
-        if f1s.ndim != 1 or f2s.ndim != 1:
-            raise ValueError("`f1s` and `f2s` must be 1D arrays.")
+        for freqs, check_freqs in zip([f1s, f2s], [check_f1s, check_f2s]):
+            if check_freqs:
+                if not isinstance(freqs, tuple):
+                    raise TypeError("`f1s` and `f2s` must be tuples.")
+                if len(freqs) != 2:
+                    raise ValueError(
+                        "`f1s` and `f2s` must have lengths of two."
+                    )
+                if any(freq not in self.freqs for freq in freqs):
+                    raise ValueError(
+                        "Entries of `f1s` and `f2s` must be present in the "
+                        "data."
+                    )
 
-        if any(freq not in self.freqs for freq in f1s) or any(
-            freq not in self.freqs for freq in f2s
-        ):
-            raise ValueError(
-                "All frequencies in `f1s` and `f2s` must be present in the "
-                "data."
-            )
-
-        if np.any(f1s != np.sort(f1s)):
-            raise ValueError("Entries of `f1s` must be in ascending order.")
-        if np.any(f2s != np.sort(f2s)):
-            raise ValueError("Entries of `f2s` must be in ascending order.")
+        if check_f1s:
+            f1_idcs = [np.argwhere(self.freqs == freq)[0][0] for freq in f1s]
+            self._f1s = self.freqs[f1_idcs[0] : f1_idcs[1] + 1].copy()
+        if check_f2s:
+            f2_idcs = [np.argwhere(self.freqs == freq)[0][0] for freq in f2s]
+            self._f2s = self.freqs[f2_idcs[0] : f2_idcs[1] + 1].copy()
 
         if self.verbose:
-            if f1s.max() >= f2s.min():
+            if self._f1s.max() >= self._f2s.min():
                 warn(
                     "At least one value in `f1s` is >= a value in `f2s`. The "
                     "corresponding result(s) will have a value of NaN.",
                     UserWarning,
                 )
-
-        self.f1s = f1s.copy()
-        self.f2s = f2s.copy()
 
     def _sort_parallelisation(self, n_jobs: int) -> None:
         """Sort parallelisation inputs."""
@@ -202,13 +209,13 @@ class _ProcessFreqBase(ABC):
 
     def _reset_attrs(self) -> None:
         """Reset attrs. of the object to prevent interference."""
-        self.indices = None
+        self._indices = None
         self._seeds = None
         self._targets = None
         self._n_cons = None
 
-        self.f1s = None
-        self.f2s = None
+        self._f1s = None
+        self._f2s = None
 
         self._n_jobs = None
 
@@ -231,7 +238,7 @@ class _ProcessFreqBase(ABC):
 class _ProcessBispectrum(_ProcessFreqBase):
     """Base class for processing bispectrum-based results."""
 
-    def _sort_indices(self, indices: tuple[list[int], list[int]]) -> None:
+    def _sort_indices(self, indices: tuple[tuple[int]]) -> None:
         """Sort seed-target indices inputs."""
         super()._sort_indices(indices)
 
@@ -249,15 +256,17 @@ class _ProcessBispectrum(_ProcessFreqBase):
                     UserWarning,
                 )
 
-    def _sort_freqs(self, f1s: np.ndarray, f2s: np.ndarray) -> None:
+    def _sort_freqs(
+        self, f1s: tuple[int | float] | None, f2s: tuple[int | float] | None
+    ) -> None:
         """Sort frequency inputs."""
         super()._sort_freqs(f1s, f2s)
 
         if self.verbose:
             if any(
                 hfreq + lfreq not in self.freqs
-                for hfreq in self.f2s
-                for lfreq in self.f1s
+                for hfreq in self._f2s
+                for lfreq in self._f1s
             ):
                 warn(
                     "At least one value of `f2s` + `f1s` is not present in "
@@ -286,10 +295,10 @@ def _compute_bispectrum(
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies in ``data``.
 
-    f1s : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray of float, shape of [low frequencies]
         Low frequencies to compute the bispectrum for.
 
-    f2s : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray of float, shape of [high frequencies]
         High frequencies to compute the bispectrum for.
 
     kmn : numpy.ndarray of int, shape of [x, 3]
@@ -316,20 +325,20 @@ def _compute_bispectrum(
         fill_value=np.nan,
         dtype=np.complex128,
     )
-    f1_loc = 0  # starting index to find f1s
-    for f1_i, f1 in enumerate(f1s):
-        f2_loc = 0  # starting index to find f2s
-        for f2_i, f2 in enumerate(f2s):
-            if f1 <= f2 and (f2 + f1) in freqs:
-                f1_loc = _fast_find_first(freqs, f1, f1_loc)
-                f2_loc = _fast_find_first(freqs, f2, f2_loc)
-                fdiff_loc = _fast_find_first(freqs, f2 + f1, f2_loc)
+    f1_start = _fast_find_first(freqs, f1s[0], 0)
+    f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
+    f2_start = _fast_find_first(freqs, f2s[0], 0)
+    f2_end = _fast_find_first(freqs, f2s[-1], f2_start)
+    for f1_i, f1 in enumerate(range(f1_start, f1_end + 1)):
+        for f2_i, f2 in enumerate(range(f2_start, f2_end + 1)):
+            if f1 <= f2 and freqs[f2 + f1] in freqs:
+                fdiff = f1 + f2
                 for kmn_i, (k, m, n) in enumerate(kmn):
-                    for epoch_i, epoch_data in enumerate(data):
+                    for epoch_i in range(data.shape[0]):
                         results[kmn_i, epoch_i, f1_i, f2_i] = (
-                            epoch_data[k, f1_loc]
-                            * epoch_data[m, f2_loc]
-                            * np.conjugate(epoch_data[n, fdiff_loc])
+                            data[epoch_i, k, f1]
+                            * data[epoch_i, m, f2]
+                            * np.conjugate(data[epoch_i, n, fdiff])
                         )
 
     return results
@@ -354,10 +363,10 @@ def _compute_threenorm(
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies in ``data``.
 
-    f1s : numpy.ndarray of float, shape of [frequencies]
+    f1s : numpy.ndarray of float, shape of [low frequencies]
         Low frequencies to compute the threenorm for.
 
-    f2s : numpy.ndarray of float, shape of [frequencies]
+    f2s : numpy.ndarray of float, shape of [high frequencies]
         High frequencies to compute the threenorm for.
 
     kmn : numpy.ndarray of int, shape of [x, 3]
@@ -376,22 +385,19 @@ def _compute_threenorm(
         fill_value=np.nan,
         dtype=np.float64,
     )
-    f1_loc = 0  # starting index to find f1s
-    for f1_i, f1 in enumerate(f1s):
-        f2_loc = 0  # starting index to find f2s
-        for f2_i, f2 in enumerate(f2s):
-            if f1 <= f2 and (f2 + f1) in freqs:
-                f1_loc = _fast_find_first(freqs, f1, f1_loc)
-                f2_loc = _fast_find_first(freqs, f2, f2_loc)
-                fdiff_loc = _fast_find_first(freqs, f2 + f1, f2_loc)
+    f1_start = _fast_find_first(freqs, f1s[0], 0)
+    f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
+    f2_start = _fast_find_first(freqs, f2s[0], 0)
+    f2_end = _fast_find_first(freqs, f2s[-1], f2_start)
+    for f1_i, f1 in enumerate(range(f1_start, f1_end + 1)):
+        for f2_i, f2 in enumerate(range(f2_start, f2_end + 1)):
+            if f1 <= f2 and freqs[f2 + f1] in freqs:
+                fdiff = f1 + f2
                 for kmn_i, (k, m, n) in enumerate(kmn):
-                    fft_f1 = data[:, k, f1_loc]
-                    fft_f2 = data[:, m, f2_loc]
-                    fft_fdiff = data[:, n, fdiff_loc]
                     results[kmn_i, f1_i, f2_i] = (
-                        (np.abs(fft_f1) ** 3).mean()
-                        * (np.abs(fft_f2) ** 3).mean()
-                        * (np.abs(fft_fdiff) ** 3).mean()
+                        (np.abs(data[:, k, f1]) ** 3).mean()
+                        * (np.abs(data[:, m, f2]) ** 3).mean()
+                        * (np.abs(data[:, n, fdiff]) ** 3).mean()
                     ) ** (1 / 3)
 
     return results
