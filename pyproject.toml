@@ -34,6 +34,7 @@ dev = [
     "flake8",
     "black",
     "codespell",
+    "pycodestyle",
     "pydocstyle",
     "sphinx",
     "numpydoc",
