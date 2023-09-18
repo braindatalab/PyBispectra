@@ -90,9 +90,9 @@ class PPC(_ProcessFreqBase):
         -----
         PPC is computed as coherence between frequencies :footcite:`Giehl2021`
 
-        :math:`PPC(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{|\langle
-        \textbf{a}_x(f_1)\textbf{a}_y(f_2) e^{i(\boldsymbol{\varphi}_x(f_1)
-        \frac{f_2}{f_1}-\boldsymbol{\varphi}_y(f_2))} \rangle|}{\langle
+        :math:`\textrm{PPC}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{|
+        \langle\textbf{a}_x(f_1)\textbf{a}_y(f_2) e^{i(\boldsymbol{\varphi}_x
+        (f_1)\frac{f_2}{f_1}-\boldsymbol{\varphi}_y(f_2))} \rangle|}{\langle
         \textbf{a}_x(f_1)\textbf{a}_y(f_2) \rangle}` ,
 
         where :math:`\textbf{a}(f)` and :math:`\boldsymbol{\varphi}(f)` are the

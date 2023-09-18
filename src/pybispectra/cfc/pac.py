@@ -131,8 +131,8 @@ class PAC(_ProcessBispectrum):
         :math:`\textbf{B}_{xyy}(f_1,f_2)=<\textbf{x}(f_1)\textbf{y}(f_2)
         \textbf{y}^*(f_2+f_1)>` ,
 
-        :math:`PAC(\textbf{x}_{f_1},\textbf{y}_{f_2})=|\textbf{B}_{xyy}(f_1,
-        f_2)|` .
+        :math:`\textrm{PAC}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|
+        \textbf{B}_{xyy}(f_1,f_2)|` .
 
         The bispectrum can be normalised to the bicoherence,
         :math:`\boldsymbol{\mathcal{B}}`, using the threenorm,
@@ -144,16 +144,16 @@ class PAC(_ProcessBispectrum):
         :math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large\frac{
         \textbf{B}_{xyy}(f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}` ,
 
-        :math:`PAC_{norm}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|
-        \boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)|` .
+        :math:`\textrm{PAC}_{\textrm{norm}}(\textbf{x}_{f_1},\textbf{y}_{f_2})=
+        |\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)|` .
 
         where the resulting values lie in the range :math:`[0, 1]`.
         Furthermore, PAC can be antisymmetrised by subtracting the results from
         those found using the transposed bispectrum, :math:`\textbf{B}_{xyx}`,
         :footcite:`Chella2014`
 
-        :math:`PAC_{antisym}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|
-        \textbf{B}_{xyy}-\textbf{B}_{xyx}|` .
+        :math:`\textrm{PAC}_{\textrm{antisym}}(\textbf{x}_{f_1},\textbf{y}_{
+        f_2})=|\textbf{B}_{xyy}-\textbf{B}_{xyx}|` .
 
         If the seed and target for a given connection is the same channel and
         antisymmetrisation is being performed, :obj:`numpy.nan` values are

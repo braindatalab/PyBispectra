@@ -37,14 +37,14 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # Four methods exist for computing TDE based on the bispectrum
 # :footcite:`Nikias1988`. The fundamental equation is as follows
 #
-# :math:`TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}\textbf{I}(\textbf{
-# x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2` ,
+# :math:`\textrm{TDE}_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}\textbf{I}
+# (\textbf{x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2` ,
 #
 # where :math:`\textbf{I}` varies depending on the method; and :math:`\tau` is
 # a given time delay. Phase information of the signals is extracted from the
 # bispectrum in two variants used by the different methods:
 #
-# :math:`\boldsymbol{\phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})
+# :math:`\boldsymbol{\phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})=
 # \boldsymbol{\varphi}_{\textbf{B}_{xyx}} (f_1,f_2)-\boldsymbol{
 # \varphi}_{\textbf{B}_{xxx}}(f_1,f_2)` ;
 #
