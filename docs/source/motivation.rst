@@ -107,7 +107,7 @@ conduction :footcite:`JurharInPrep`.
 What is available in PyBispectra?
 ---------------------------------
 PyBispectra offers tools for computing phase-amplitude coupling, time delay
-estimation, and wave shape feature analysis using the bispectrum and
+estimation, and waveshape feature analysis using the bispectrum and
 bicoherence. Additional tools are included for computing phase-phase coupling,
 amplitude-amplitude coupling, Fourier coefficients, time-frequency
 representations of data, spatio-spectral filters, as well as tools plotting

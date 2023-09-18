@@ -76,11 +76,11 @@ def test_plotting_cfc_error_catch() -> None:
         results.plot(f2s=0)
 
     with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of two."
+        ValueError, match="`f1s` and `f2s` must have lengths of 2."
     ):
         results.plot(f1s=(f1s[0], f1s[1], f1s[2]))
     with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of two."
+        ValueError, match="`f1s` and `f2s` must have lengths of 2."
     ):
         results.plot(f2s=(f2s[0], f2s[1], f2s[2]))
 
@@ -258,7 +258,7 @@ def test_plotting_TDE_error_catch() -> None:
 
     with pytest.raises(TypeError, match="`times` must be a tuple."):
         results.plot(times=0)
-    with pytest.raises(ValueError, match="`times` must have a length of two."):
+    with pytest.raises(ValueError, match="`times` must have length of 2."):
         results.plot(times=(times[0], times[1], times[2]))
     with pytest.raises(
         ValueError, match="Entries of `times` must be present in the results."
@@ -413,11 +413,11 @@ def test_plotting_waveshape_error_catch() -> None:
         results.plot(f2s=0)
 
     with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of two."
+        ValueError, match="`f1s` and `f2s` must have lengths of 2."
     ):
         results.plot(f1s=(f1s[0], f1s[1], f1s[2]))
     with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of two."
+        ValueError, match="`f1s` and `f2s` must have lengths of 2."
     ):
         results.plot(f2s=(f2s[0], f2s[1], f2s[2]))
 
@@ -487,12 +487,12 @@ def test_plotting_waveshape_error_catch() -> None:
             results.plot(**{kwarg_name: [None]})
         with pytest.raises(
             ValueError,
-            match=f"Limits in `{kwarg_name}` must have length of two.",
+            match=f"Limits in `{kwarg_name}` must have length of 2.",
         ):
             results.plot(**{kwarg_name: (0, 1, 2)})
         with pytest.raises(
             ValueError,
-            match=f"Limits in `{kwarg_name}` must have length of two.",
+            match=f"Limits in `{kwarg_name}` must have length of 2.",
         ):
             results.plot(**{kwarg_name: [(0, 1, 2) for _ in range(n_chans)]})
 

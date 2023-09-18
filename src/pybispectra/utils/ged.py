@@ -22,18 +22,18 @@ class SpatioSpectralFilter:
     data : ~numpy.ndarray, shape of [epochs, channels, times]
 
     sampling_freq : int | float
-        Sampling frequency of :attr:`data` (in Hz).
+        Sampling frequency (in Hz) of :attr:`data`.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
     Methods
     -------
-    fit_transform_ssd :
-        Fit SSD filters and transform the data.
-
     fit_transform_hpmax :
         Fit HPMax filters and transform the data.
+
+    fit_transform_ssd :
+        Fit SSD filters and transform the data.
 
     get_transformed_data :
         Return the transformed data.
@@ -80,18 +80,18 @@ class SpatioSpectralFilter:
     Depending on the signal-to-noise ratio (SNR) of the data, the performance
     of these methods for recovering the underlying signal of interest -
     measured by the ability to suppress noise whilst retaining the original
-    wave shape - can vary :footcite:`Bartz2019`:
+    waveshape - can vary :footcite:`Bartz2019`:
 
     *   Low SNRs: SSD filters applied to bandpass-filtered data (SSD+) can show
         favourable performance compared to SSD applied to broadband data (SSD-)
-        and HPMax. The distortion of wave shape with bandpass filtering in SSD+
+        and HPMax. The distortion of waveshape with bandpass filtering in SSD+
         is compensated for by the higher level of noise reduction.
 
     *   Intermediate SNRs: SSD- and HPMax performance can match or surpass SSD+
         performance, and HPMax can outperform SSD-. The lower level of noise in
         the base signal means that the weaker degree of noise reduction with
         SSD- and HPMax is sufficient to uncover the signal without the
-        distorting effects of bandpass filtering on wave shape.
+        distorting effects of bandpass filtering on waveshape.
 
     *   High SNRs: HPMax can show increased or similar performance to SSD-.
 
@@ -104,8 +104,8 @@ class SpatioSpectralFilter:
 
     which can also be represented in the ratio form:
 
-    :math:`\boldsymbol{\Lambda}=\frac{\textbf{W}^T\textbf{SW}}{\textbf{W}^T
-    \textbf{NW}}`,
+    :math:`\boldsymbol{\Lambda}=\Large{\frac{\textbf{W}^T\textbf{SW}}{
+    \textbf{W}^T\textbf{NW}}}`,
 
     where :math:`\textbf{S}` and :math:`\textbf{N}` are the covariance matrices
     for the signal and noise information in the data, respectively,
@@ -154,7 +154,7 @@ class SpatioSpectralFilter:
         data: np.ndarray,
         sampling_freq: int | float,
         verbose: bool = True,
-    ) -> None:  # noqa D107
+    ) -> None:  # noqa: D107
         self.verbose = deepcopy(verbose)
         self._sort_init_inputs(data, sampling_freq)
 
@@ -324,7 +324,7 @@ class SpatioSpectralFilter:
             :attr:`signal_bounds` and :attr:`noise_bounds`. Used to reduce
             spectral leakage between the signal and noise frequencies.
 
-        bandpass_filter : bool (default ``False``)
+        bandpass_filter : bool (default False)
             Whether or not to bandpass filter the data before transforming with
             the SSD filters.
 
@@ -340,10 +340,6 @@ class SpatioSpectralFilter:
         -----
         The SSD implementation in MNE is used to compute the filters
         (:class:`mne.decoding.SSD`).
-
-        References
-        ----------
-        .. footbibliography::
         """
         self._sort_freq_bounds(signal_bounds, noise_bounds, signal_noise_gap)
         self._sort_bandpass_filter(bandpass_filter)
@@ -505,10 +501,6 @@ class SpatioSpectralFilter:
         obtained :footcite:`Bartz2019`
         (:func:`mne.time_frequency.csd_array_multitaper` and
         :func:`mne.time_frequency.csd_array_fourier`).
-
-        References
-        ----------
-        .. footbibliography::
         """
         self._sort_freq_bounds(signal_bounds, noise_bounds, 0.0)
         self._sort_n_harmonics(n_harmonics)
@@ -740,7 +732,7 @@ class SpatioSpectralFilter:
         Notes
         -----
         Raises a warning if no components have a signal-to-noise ratio >
-        ``min_ratio`` and :attr:`verbose` is ``True``.
+        ``min_ratio`` and :attr:`verbose` is :obj:`True`.
         """
         if not isinstance(min_ratio, (int, float)):
             raise TypeError("`min_ratio` must be an int or a float")

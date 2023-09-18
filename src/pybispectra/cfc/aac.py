@@ -23,7 +23,8 @@ class AAC(_ProcessFreqBase):
         Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of :attr:`data`.
+        Sampling frequency (in Hz) of the data from which :attr:`data` was
+        derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -52,7 +53,7 @@ class AAC(_ProcessFreqBase):
 
     verbose : bool
         Whether or not to report the progress of the processing.
-    """  # noqa E501
+    """  # noqa: E501
 
     _data_ndims = 4  # [epochs, channels, frequencies, times]
 
@@ -65,20 +66,20 @@ class AAC(_ProcessFreqBase):
         f2s: tuple[int | float] | None = None,
         n_jobs: int = 1,
     ) -> None:
-        r"""Compute AAC across epochs.
+        r"""Compute AAC, averaged over epochs.
 
         Parameters
         ----------
-        indices : tuple of tuple of int | None (default None), length of 2
+        indices : tuple of tuple of int, length of 2 | None (default None)
             Indices of the seed and target channels, respectively, to compute
             AAC between. If :obj:`None`, coupling between all channels is
             computed.
 
-        f1s : tuple of int or float | None (default None), length of 2
+        f1s : tuple of int or float, length of 2 | None (default None)
             Start and end lower frequencies to compute AAC on, respectively. If
             :obj:`None`, all frequencies are used.
 
-        f2s : tuple of int or float | None (default None), length of 2
+        f2s : tuple of int or float, length of 2 | None (default None)
             Start and end higher frequencies to compute AAC on, respectively.
             If :obj:`None`, all frequencies are used.
 
@@ -99,7 +100,7 @@ class AAC(_ProcessFreqBase):
         References
         ----------
         .. footbibliography::
-        """  # noqa E501
+        """  # noqa: E501
         self._reset_attrs()
 
         self._sort_indices(indices)
@@ -188,7 +189,7 @@ def _compute_aac(
 
     Returns
     -------
-    results : numpy.ndarray, shape of [f1s, f2s]
+    results : numpy.ndarray, shape of [low frequencies, high frequencies]
         AAC averaged across epochs for a single connection.
     """
     results = np.full(

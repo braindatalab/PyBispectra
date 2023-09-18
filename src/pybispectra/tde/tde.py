@@ -13,7 +13,7 @@ from pybispectra.utils._process import _ProcessBispectrum
 
 
 class TDE(_ProcessBispectrum):
-    """Class for computing time delay estimation (TDE) using bispectra.
+    """Class for computing time delay estimation (TDE) using the bispectrum.
 
     Parameters
     ----------
@@ -97,7 +97,7 @@ class TDE(_ProcessBispectrum):
         freqs: np.ndarray,
         sampling_freq: int | float,
         verbose: bool = True,
-    ) -> None:  # noqa D107
+    ) -> None:  # noqa: D107
         super().__init__(data, freqs, sampling_freq, verbose)
         self._sort_freqs_structure()
 
@@ -140,9 +140,8 @@ class TDE(_ProcessBispectrum):
             computed.
 
         antisym : bool | tuple of bool (default False)
-            Symmetrisation to perform when computing TDE. If "none", no
-            symmetrisation is performed. If "antisym", antisymmetrisation is
-            performed.
+            Whether to antisymmetrise the PAC results. If a tuple of bool, both
+            forms of PAC are computed in turn.
 
         method : int | tuple of int (default ``1``)
             The method to use to compute TDE :footcite:`Nikias1988`. Can
@@ -156,35 +155,38 @@ class TDE(_ProcessBispectrum):
         -----
         TDE can be computed from the bispectrum, :math:`\textbf{B}`, of signals
         :math:`\textbf{x}` and :math:`\textbf{y}` of the seeds and targets,
-        respectively, which has the general form:
+        respectively, which has the general form
 
         :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)
-        \textbf{n}^*(f_2+f_1)>`,
+        \textbf{n}^*(f_2+f_1)>` ,
 
-        where :math:`kmn` is a combination of channels :math:`\textbf{x}` and
-        :math:`\textbf{y}`, and the angled brackets represent the averaged
+        where :math:`kmn` is a combination of signals with Fourier coefficients
+        :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`,
+        respectively; :math:`f_1` and :math:`f_2` correspond to a lower and
+        higher frequency, respectively; and :math:`<>` represents the average
         value over epochs. When computing TDE, information from
         :math:`\textbf{n}` is taken not only from the positive frequencies, but
-        also the negative frequencies. Four methods exist for computing TDE
-        based on the bispectrum :footcite:`Nikias1988`. The fundamental
-        equation is as follows:
+        also the negative frequencies.
 
-        :math:`TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}\textbf{I}(
-        \textbf{x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2`,
+        Four methods exist for computing TDE based on the bispectrum
+        :footcite:`Nikias1988`. The fundamental equation is as follows
 
-        where :math:`\textbf{I}` varies depending on the method, and
+        :math:`TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}\textbf{I}
+        (\textbf{x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2` ,
+
+        where :math:`\textbf{I}` varies depending on the method; and
         :math:`\tau` is a given time delay. Phase information of the signals is
         extracted from the bispectrum in two variants used by the different
         methods:
 
         :math:`\boldsymbol{\phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})
         \boldsymbol{\varphi}_{\textbf{B}_{xyx}} (f_1,f_2)-\boldsymbol{
-        \varphi}_{\textbf{B}_{xxx}}(f_1,f_2)`
+        \varphi}_{\textbf{B}_{xxx}}(f_1,f_2)` ;
 
         :math:`\boldsymbol{\phi}'(\textbf{x}_{f_1},\textbf{y}_{f_2})=
         \boldsymbol{\varphi}_{\textbf{B}_{xyx}}(f_1,f_2)-\frac{1}{2}(
         \boldsymbol{\varphi}_{\textbf{B}_{xxx}}(f_1,f_2) + \boldsymbol{
-        \varphi}_{\textbf{B}_{yyy}}(f_1,f_2))`
+        \varphi}_{\textbf{B}_{yyy}}(f_1,f_2))` .
 
         **Method I**:
         :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=e^{i\boldsymbol{
@@ -205,8 +207,18 @@ class TDE(_ProcessBispectrum):
         (f_1,f_2)|}}`
 
         where :math:`\boldsymbol{\varphi}_{\textbf{B}}` is the phase of the
-        bispectrum. Antisymmetrisation of the bispectrum is implemented as the
-        replacement of :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xxy} -
+        bispectrum. All four methods aim to capture the phase difference
+        between :math:`\textbf{x}` and :math:`\textbf{y}`. Method I involves
+        the extraction of phase spectrum periodicity and monotony, with method
+        III involving an additional amplitude weighting from the bispectrum of
+        :math:`\textbf{x}`. Method II instead relies on a combination of phase
+        spectra of the different frequency components, with method IV
+        containing an additional amplitude weighting from the bispectrum of
+        :math:`\textbf{x}` and :math:`\textbf{y}`. No single method is superior
+        to another.
+
+        Antisymmetrisation of the bispectrum is implemented as the replacement
+        of :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xxy} -
         \textbf{B}_{yxx})` in the above equations :footcite:`JurharInPrep`.
 
         If the seed and target for a given connection is the same channel, an
@@ -257,7 +269,7 @@ class TDE(_ProcessBispectrum):
         self._xyz = None
 
     def _sort_metrics(
-        self, antisym: bool | tuple[bool], method: int | list[int]
+        self, antisym: bool | tuple[bool], method: int | tuple[int]
     ) -> None:
         """Sort inputs for the form of results being requested."""
         if not isinstance(antisym, (bool, tuple)):
@@ -303,7 +315,7 @@ class TDE(_ProcessBispectrum):
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
-            raise ValueError("`indices` must have a length of 2.")
+            raise ValueError("`indices` must have length of 2.")
         self._indices = deepcopy(indices)
 
         seeds = indices[0]
@@ -468,7 +480,7 @@ class TDE(_ProcessBispectrum):
 
         Returns
         -------
-        tde : numpy.ndarray of float, shape of [connections, frequencies]
+        tde : numpy.ndarray of float, shape of [connections, times]
             Time delay estimates.
         """
         assert isinstance(kwargs, dict), (

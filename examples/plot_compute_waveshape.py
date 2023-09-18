@@ -53,19 +53,20 @@ from pybispectra import compute_fft, get_example_data_paths, WaveShape
 #
 # where :math:`kmn` is a combination of signals with Fourier coefficients
 # :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`, respectively;
-# and :math:`<>` represents the average value over epochs. When analysing
-# waveshape, we are interested in only a single signal, and as such
+# :math:`f_1` and :math:`f_2` correspond to a lower and higher frequency,
+# respectively; and :math:`<>` represents the average value over epochs. When
+# analysing waveshape, we are interested in only a single signal, and as such
 # :math:`k=m=n`.
 #
 # Furthermore, we can normalise the bispectrum to the bicoherence,
 # :math:`\boldsymbol{\mathcal{B}}`, using the threenorm, :math:`\textbf{N}`,
-# :footcite:`Zandvoort2021`
+# :footcite:`Shahbazi2014`
 #
-# :math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{y}(f_2)|^3>
-# <|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}` ,
+# :math:`\textbf{N}_{xxx}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{x}(f_2)|^3>
+# <|\textbf{x}(f_2+f_1)|^3>)^{\frac{1}{3}}` ,
 #
-# :math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large\frac{\textbf{B}_{xyy}
-# (f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}` ,
+# :math:`\boldsymbol{\mathcal{B}}_{xxx}(f_1,f_2)=\Large\frac{\textbf{B}_{xxx}
+# (f_1,f_2)}{\textbf{N}_{xxx}(f_1,f_2)}` ,
 #
 # where the resulting values lie in the range :math:`[-1, 1]`.
 
@@ -154,7 +155,7 @@ fft_coeffs_peaks_troughs, _ = compute_fft(
 # Here, we specify the frequency arguments
 # :attr:`~pybispectra.waveshape.WaveShape.f1s` and
 # :attr:`~pybispectra.waveshape.WaveShape.f2s` to compute waveshape on in the
-# range 0-35 Hz (around the frequency at which the signal features were
+# range 5-35 Hz (around the frequency at which the signal features were
 # simulated). By leaving the indices argument blank, we will look at all
 # channels in the data.
 
@@ -182,12 +183,12 @@ waveshape_peaks_troughs.compute(f1s=(5, 35), f2s=(5, 35))  # compute waveshape
 waveshape_results = waveshape_sawtooths.results.get_results()
 
 print(
-    f"Wave shape results: [{waveshape_results.shape[0]} channels x "
+    f"Waveshape results: [{waveshape_results.shape[0]} channels x "
     f"{waveshape_results.shape[1]} f1s x {waveshape_results.shape[2]} f2s]"
 )
 
 ###############################################################################
-# We can see that wave shape features have been computed for both channels and
+# We can see that waveshape features have been computed for both channels and
 # the specified frequency combinations, averaged across our epochs. Given the
 # nature of the bispectrum, entries where :math:`f_1` would be higher than
 # :math:`f_2`, as well as where :math:`f_2 + f_1` exceeds the frequency bounds
@@ -195,9 +196,9 @@ print(
 # those 'bad' frequency combinations are :obj:`numpy.nan`.
 
 ###############################################################################
-# Plotting wave shape features
-# ----------------------------
-# Let us now inspect the results. Information about the different wave shape
+# Plotting waveshape features
+# ---------------------------
+# Let us now inspect the results. Information about the different waveshape
 # features are encoded in different aspects of the complex-valued bicoherence,
 # with peak-trough asymmetry encoded in the real part, and rise-decay asymmetry
 # encoded in the imaginary part. We can therefore additionally examine the
@@ -205,15 +206,14 @@ print(
 # angle to get an overall picture of the combination of peak-trough and
 # rise-decay asymmetries.
 #
-# For the sawtooth waves, we therefore expect the real part of bicoherence to
-# be ~0 and the imaginary part to be non-zero at the simulated 10 Hz frequency.
-# From the plots, we see that this is indeed the case. However, we also see
-# that the imaginary values at the 10 Hz higher harmonics (i.e. 20 and 30 Hz)
-# are also non-zero. The strength of the harmonics varies based on the signal
-# strength. It is also worth noting that the sign of the imaginary values
-# varies for the different sawtooth varieties, with a ramp up sawtooth
-# resulting in positive values, and a ramp down sawtooth resulting in negative
-# values.
+# For the sawtooth waves, we expect the real part of bicoherence to be ~0 and
+# the imaginary part to be non-zero at the simulated 10 Hz frequency. From the
+# plots, we see that this is indeed the case. However, we also see that the
+# imaginary values at the 10 Hz higher harmonics (i.e. 20 and 30 Hz) are also
+# non-zero, a product of the Fourier transform's application to non-sinusoidal
+# signals. It is also worth noting that the sign of the imaginary values varies
+# for the particular sawtooth type, with a ramp up sawtooth resulting in
+# positive values, and a ramp down sawtooth resulting in negative values.
 #
 # Information about the direction of the asymmetry is encoded not only in the
 # sign of the bicoherence values, but also in its phase. As in Bartz *et al.*
@@ -226,11 +226,11 @@ print(
 #
 # In contrast, we expect the real part of the bicoherence to be non-zero for
 # signals with peak-trough asymmetry, and the imaginary part to be ~0. Again,
-# this is indeed what we see. Similarly to before, the signs of the real values
-# are positive for the peaks-dominant signal, and negative for the
-# troughs-dominant signal, which is also reflected in the phases (~0 or
-# 2 :math:`\pi` for the peaks-dominant signal, and :math:`\pi` for the
-# troughs-dominant signal).
+# this is what we observe. Similarly to before, the signs of the real values
+# are positive for the peak-dominant signal, and negative for the
+# trough-dominant signal, which is also reflected in the phases (~0 or
+# 2 :math:`\pi` for the peak-dominant signal, and :math:`\pi` for the
+# trough-dominant signal).
 #
 # Here, we plotted the real and imaginary parts of the bicoherence without
 # taking the absolute value. If the particular direction of asymmetry is not of
@@ -277,17 +277,16 @@ for fig, title in zip(figs, titles):
     fig.show()
 
 ###############################################################################
-# Analysing wave shape in low signal-to-noise ratio data
-# ------------------------------------------------------
+# Analysing waveshape in low signal-to-noise ratio data
+# -----------------------------------------------------
 # Depending on the degree of signal-to-noise ratio as well as the colour of the
-# noise, the ability of the bispectrum to extract information about the true
-# underlying wave shape features can vary. To alleviate this, Bartz *et al.*
+# noise, the ability of the bispectrum to extract information about the
+# underlying waveshape features can vary. To alleviate this, Bartz *et al.*
 # :footcite:`Bartz2019` propose utilising spatio-spectral filtering to enhance
 # the signal-to-noise ratio of the data at a frequency band of interest (which
 # has the added benefit of enabling multivariate signal analysis). Details of
-# how spatio-spectral filtering can be incorporated into wave shape analysis
-# are presented in the following example:
-# :doc:`plot_compute_waveshape_noisy_data`.
+# how spatio-spectral filtering can be incorporated into waveshape analysis are
+# presented in the following example: :doc:`plot_compute_waveshape_noisy_data`.
 
 ###############################################################################
 # References

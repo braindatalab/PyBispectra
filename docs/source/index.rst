@@ -15,7 +15,7 @@ A Python signal processing package for computing spectral- and time-domain
 interactions using the bispectrum.
 
 This package provides the tools for computing phase-amplitude coupling, time
-delay estimation, and wave shape features using the bispectrum and bicoherence.
+delay estimation, and waveshape features using the bispectrum and bicoherence.
 Additional tools for computing amplitude-amplitude coupling, phase-phase
 coupling, and spatio-spectral filters are also provided.
 

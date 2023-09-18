@@ -28,17 +28,19 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 #
 # where :math:`kmn` is a combination of signals with Fourier coefficients
 # :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`, respectively;
-# and :math:`<>` represents the average value over epochs.
+# :math:`f_1` and :math:`f_2` correspond to a lower and higher frequency,
+# respectively; and :math:`<>` represents the average value over epochs.
 #
 # When computing time delays, information from :math:`\textbf{n}` is taken not
-# only from the positive frequencies, but also the negative frequencies. Four
-# methods exist for computing TDE based on the bispectrum
-# :footcite:`Nikias1988`. The fundamental equation is as follows:
+# only from the positive frequencies, but also the negative frequencies.
+#
+# Four methods exist for computing TDE based on the bispectrum
+# :footcite:`Nikias1988`. The fundamental equation is as follows
 #
 # :math:`TDE_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}\textbf{I}(\textbf{
 # x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2` ,
 #
-# where :math:`\textbf{I}` varies depending on the method, and :math:`\tau` is
+# where :math:`\textbf{I}` varies depending on the method; and :math:`\tau` is
 # a given time delay. Phase information of the signals is extracted from the
 # bispectrum in two variants used by the different methods:
 #
@@ -72,12 +74,12 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # where :math:`\boldsymbol{\varphi}_{\textbf{B}}` is the phase of the
 # bispectrum. All four methods aim to capture the phase difference between
 # :math:`\textbf{x}` and :math:`\textbf{y}`. Method I involves the extraction
-# of phase spectrum periodicity and monotomy, with method III involving an
+# of phase spectrum periodicity and monotony, with method III involving an
 # additional amplitude weighting from the bispectrum of :math:`\textbf{x}`.
 # Method II instead relies on a combination of phase spectra of the different
 # frequency components, with method IV containing an additional amplitude
-# weighting from the bispectra of :math:`\textbf{x}` and :math:`\textbf{y}`. No
-# single method is superior to another.
+# weighting from the bispectrum of :math:`\textbf{x}` and :math:`\textbf{y}`.
+# No single method is superior to another.
 #
 # As a result of volume conduction artefacts (i.e. a common underlying signal
 # that propagates instantaneously to :math:`\textbf{x}` and
@@ -105,11 +107,11 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # estimates correspond to the sampling frequency of the data (accounting for
 # time point zero as well as the fact that the estimates are returned for both
 # time delay directions, i.e. where :math:`\textbf{x}` drives
-# :math:`\textbf{y}` and :math:`\textbf{y}` drives :math:`\textbf{x}`). By
+# :math:`\textbf{y}`, and :math:`\textbf{y}` drives :math:`\textbf{x}`). By
 # altering the number of points used to compute the Fourier coefficients, the
 # temporal resolution of the TDE results can be adjusted. E.g. a higher number
 # of points increases the temporal resolution at the cost of computational
-# cost.
+# demand.
 #
 # In this example, our data consists of 30 epochs of 200 timepoints each, which
 # with a 200 Hz sampling frequency corresponds to 1 second of data per epoch
@@ -267,5 +269,10 @@ print(
 # plot results
 tde_standard.plot()
 tde_antisym.plot()
+
+###############################################################################
+# References
+# -----------------------------------------------------------------------------
+# .. footbibliography::
 
 # %%

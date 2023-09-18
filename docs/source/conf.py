@@ -124,9 +124,12 @@ numpydoc_xref_ignore = {
     "in",
     "dtype",
     "object",
+    "low",
+    "high",
     # shapes
     "epochs",
     "channels",
+    "nodes",
     "rank",
     "times",
     "components",

@@ -27,6 +27,10 @@ class PAC(_ProcessBispectrum):
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
+    sampling_freq : int | float
+        Sampling frequency (in Hz) of the data from which :attr:`data` was
+        derived.
+
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
@@ -83,16 +87,16 @@ class PAC(_ProcessBispectrum):
 
         Parameters
         ----------
-        indices : tuple of tuple of int | None (default None), length of 2
+        indices : tuple of tuple of int, length of 2 | None (default None)
             Indices of the seed and target channels, respectively, to compute
             PAC between. If :obj:`None`, coupling between all channels is
             computed.
 
-        f1s : tuple of int or float | None (default None), length of 2
+        f1s : tuple of int or float, length of 2 | None (default None)
             Start and end lower frequencies to compute PAC on, respectively. If
             :obj:`None`, all frequencies are used.
 
-        f2s : tuple of int or float | None (default None), length of 2
+        f2s : tuple of int or float, length of 2 | None (default None)
             Start and end higher frequencies to compute PAC on, respectively.
             If :obj:`None`, all frequencies are used.
 
@@ -115,32 +119,41 @@ class PAC(_ProcessBispectrum):
         respectively, which has the general form
 
         :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)
-        \textbf{n}^*(f_2+f_1)>`,
+        \textbf{n}^*(f_2+f_1)>` ,
 
-        where :math:`kmn` is a combination of channels :math:`\textbf{x}` and
-        :math:`\textbf{y}`, and the angled brackets represent the average over
-        epochs. PAC between signals :math:`\textbf{x}` and :math:`\textbf{y}`
-        is given as
+        where :math:`kmn` is a combination of signals with Fourier coefficients
+        :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`,
+        respectively; :math:`f_1` and :math:`f_2` correspond to a lower and
+        higher frequency, respectively; and :math:`<>` represents the average
+        value over epochs. The computation of PAC follows from this
+        :footcite:`Kovach2018`
 
-        :math:`PAC(\textbf{x}_{f_1},\textbf{y}_{f_2})=\textbf{B}_{xyy}(f_1,
-        f_2)=<\textbf{x}(f_1)\textbf{y}(f_2)\textbf{y}^*(f_2+f_1)>`.
+        :math:`\textbf{B}_{xyy}(f_1,f_2)=<\textbf{x}(f_1)\textbf{y}(f_2)
+        \textbf{y}^*(f_2+f_1)>` ,
 
-        Antisymmetrisaion is achieved by subtracting the PAC results from the
-        transposed bispectrum, :math:`\textbf{B}_{xyx}` :footcite:`Chella2014`.
+        :math:`PAC(\textbf{x}_{f_1},\textbf{y}_{f_2})=|\textbf{B}_{xyy}(f_1,
+        f_2)|` .
+
         The bispectrum can be normalised to the bicoherence,
         :math:`\boldsymbol{\mathcal{B}}`, using the threenorm,
-        :math:`\textbf{N}` :footcite:`Zandvoort2021`:
+        :math:`\textbf{N}`, :footcite:`Shahbazi2014`
 
-        :math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|
-        \textbf{y}(f_2)|^3><|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+        :math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{y}
+        (f_2)|^3><|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}` ,
 
-        :math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large
-        \frac{\textbf{B}_{xyy}(f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}`.
+        :math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large\frac{
+        \textbf{B}_{xyy}(f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}` ,
 
-        The threenorm is a form of univariate normalisation, whereby the values
-        of the bicoherence will be bound in the range :math:`[0, 1]` in a
-        manner that is independent of the coupling properties within or between
-        signals :footcite:`Shahbazi2014`.
+        :math:`PAC_{norm}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|
+        \boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)|` .
+
+        where the resulting values lie in the range :math:`[0, 1]`.
+        Furthermore, PAC can be antisymmetrised by subtracting the results from
+        those found using the transposed bispectrum, :math:`\textbf{B}_{xyx}`,
+        :footcite:`Chella2014`
+
+        :math:`PAC_{antisym}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|
+        \textbf{B}_{xyy}-\textbf{B}_{xyx}|` .
 
         If the seed and target for a given connection is the same channel and
         antisymmetrisation is being performed, :obj:`numpy.nan` values are

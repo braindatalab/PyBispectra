@@ -1,7 +1,7 @@
 .. _api_waveshape:
 
-Wave Shape
-==========
+Waveshape
+=========
 
 :py:mod:`pybispectra.waveshape`:
 

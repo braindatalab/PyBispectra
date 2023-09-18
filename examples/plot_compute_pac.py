@@ -39,7 +39,7 @@ from pybispectra import compute_fft, get_example_data_paths, PAC
 #
 # The bispectrum can be normalised to the bicoherence,
 # :math:`\boldsymbol{\mathcal{B}}`, using the threenorm, :math:`\textbf{N}`,
-# :footcite:`Zandvoort2021`
+# :footcite:`Shahbazi2014`
 #
 # :math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{y}(f_2)|^3>
 # <|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}` ,

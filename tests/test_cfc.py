@@ -108,7 +108,7 @@ def test_error_catch(class_type: str) -> None:
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
         test_class.compute(indices=list(indices))
-    with pytest.raises(ValueError, match="`indices` must have a length of 2."):
+    with pytest.raises(ValueError, match="`indices` must have length of 2."):
         test_class.compute(indices=(0, 1, 2))
     with pytest.raises(
         TypeError, match="Entries of `indices` must be tuples."

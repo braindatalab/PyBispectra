@@ -18,6 +18,9 @@ class _PlotBase(ABC):
     the publicly-avaiable class/function.
     """
 
+    f1s: np.ndarray = None
+    f2s: np.ndarray = None
+
     def __init__(
         self,
         data: np.ndarray,
@@ -131,9 +134,7 @@ class _PlotBase(ABC):
                 if not isinstance(freqs, tuple):
                     raise TypeError("`f1s` and `f2s` must be tuples.")
                 if len(freqs) != 2:
-                    raise ValueError(
-                        "`f1s` and `f2s` must have lengths of two."
-                    )
+                    raise ValueError("`f1s` and `f2s` must have lengths of 2.")
                 if any(freq not in self_freqs for freq in freqs):
                     raise ValueError(
                         "Entries of `f1s` and `f2s` must be present in the "
@@ -205,7 +206,7 @@ class _PlotCFC(_PlotBase):
         f1s: np.ndarray,
         f2s: np.ndarray,
         name: str,
-    ) -> None:  # noqa D107
+    ) -> None:  # noqa: D107
         super().__init__(data, indices, name)
 
         self.f1s = f1s.copy()
@@ -260,7 +261,7 @@ class _PlotCFC(_PlotBase):
             all plots. If a list of tuple of float, the ranges are used for
             each individual plot.
 
-        show : bool (default ``True``)
+        show : bool (default True)
             Whether or not to show the plotted results.
 
         Returns
@@ -464,7 +465,7 @@ class _PlotTDE(_PlotBase):
         indices: tuple[tuple[int]],
         times: np.ndarray,
         name: str,
-    ) -> None:  # noqa D107
+    ) -> None:  # noqa: D107
         super().__init__(data, indices, name)
 
         self.tau = deepcopy(tau)
@@ -506,7 +507,7 @@ class _PlotTDE(_PlotBase):
             Intervals (in ms) at which the minor ticks of the x- and y-axes
             should occur.
 
-        show : bool (default ``True``)
+        show : bool (default True)
             Whether or not to show the plotted results.
 
         Returns
@@ -603,7 +604,7 @@ class _PlotTDE(_PlotBase):
             if not isinstance(times, tuple):
                 raise TypeError("`times` must be a tuple.")
             if len(times) != 2:
-                raise ValueError("`times` must have a length of two.")
+                raise ValueError("`times` must have length of 2.")
             if any(time not in self.times for time in times):
                 raise ValueError(
                     "Entries of `times` must be present in the results."
@@ -710,7 +711,7 @@ class _PlotTDE(_PlotBase):
 
 
 class _PlotWaveShape(_PlotBase):
-    """Class for plotting wave shape results."""
+    """Class for plotting waveshape results."""
 
     def __init__(
         self,
@@ -719,7 +720,7 @@ class _PlotWaveShape(_PlotBase):
         f1s: np.ndarray,
         f2s: np.ndarray,
         name: str,
-    ) -> None:  # noqa D107
+    ) -> None:  # noqa: D107
         super().__init__(data, indices, name)
 
         self.f1s = f1s.copy()
@@ -770,7 +771,7 @@ class _PlotWaveShape(_PlotBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
-        plot_absolute : bool (default ``True``)
+        plot_absolute : bool (default True)
             Whether or not to plot the absolute values of the real and
             imaginary parts of the results.
 
@@ -803,7 +804,7 @@ class _PlotWaveShape(_PlotBase):
             float, the ranges are used for each individual plot. Note that
             results should be limited to the range :math:`(0, 2$\\pi$]`.
 
-        show : bool (default ``True``)
+        show : bool (default True)
             Whether or not to show the plotted results.
 
         Returns
@@ -954,7 +955,7 @@ class _PlotWaveShape(_PlotBase):
                 if len(entry) != 2:
                     raise ValueError(
                         f"Limits in `cbar_range_{cbar_name}` must have length "
-                        "of two."
+                        "of 2."
                     )
             cbar_ranges[cbar_idx] = cbar_range
             cbar_idx += 1

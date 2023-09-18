@@ -126,7 +126,7 @@ class _ProcessFreqBase(ABC):
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
-            raise ValueError("`indices` must have a length of 2.")
+            raise ValueError("`indices` must have length of 2.")
         self._indices = deepcopy(indices)
 
         seeds = indices[0]

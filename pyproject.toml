@@ -59,7 +59,7 @@ omit = [
 ]
 
 [tool.codespell]
-skip = "./docs/build,./docs/source/auto_examples"
+skip = "./docs/build,./docs/source/auto_examples,./docs/source/refs.bib"
 
 [tool.pydocstyle]
 match-dir = "^(?!(examples|docs|tests)).*"

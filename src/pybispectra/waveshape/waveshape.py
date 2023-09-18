@@ -1,4 +1,4 @@
-"""Tools for handling wave shape analysis."""
+"""Tools for handling waveshape analysis."""
 
 from copy import deepcopy
 
@@ -14,7 +14,7 @@ from pybispectra.utils._process import (
 
 
 class WaveShape(_ProcessBispectrum):
-    """Class for computing wave shape properties using bicoherence.
+    """Class for computing waveshape properties using bicoherence.
 
     Parameters
     ----------
@@ -23,6 +23,10 @@ class WaveShape(_ProcessBispectrum):
 
     freqs : numpy.ndarray, shape of [frequencies]
         Frequencies in :attr:`data`.
+
+    sampling_freq : int | float
+        Sampling frequency (in Hz) of the data from which :attr:`data` was
+        derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -56,12 +60,12 @@ class WaveShape(_ProcessBispectrum):
     Notes
     -----
     It is recommended that spatio-spectral filtering for a given frequency band
-    of interest has been performed on :attr:`data` before analysing wave shape
-    properties :footcite:`Bartz2019`. Spatio-spectral filtering is recommended
-    as it can enhance the signal-to-noise ratio of your data as well as
-    mitigate the risks of source-mixing in the sensor space compromising the
-    bicoherence patterns of the data :footcite:`Bartz2019`. Filtering can be
-    performed with :class:`~pybispectra.utils.SpatioSpectralFilter`.
+    of interest has been performed before analysing waveshape properties
+    :footcite:`Bartz2019`. This can enhance the signal-to-noise ratio of your
+    data as well as mitigate the risks of source-mixing in the sensor space
+    compromising the bicoherence patterns of the data :footcite:`Bartz2019`.
+    Filtering can be performed with
+    :class:`~pybispectra.utils.SpatioSpectralFilter`.
 
     References
     ----------
@@ -85,11 +89,11 @@ class WaveShape(_ProcessBispectrum):
             Indices of the channels to compute bicoherence within. If
             :obj:`None`, bicoherence within all channels is computed.
 
-        f1s : tuple of int or float | None (default None), length of 2
+        f1s : tuple of int or float, length of 2 | None (default None)
             Start and end lower frequencies to compute bicoherence for,
             respectively. If :obj:`None`, all frequencies are used.
 
-        f2s : tuple of int or float | None (default None), length of 2
+        f2s : tuple of int or float, length of 2 | None (default None)
             Start and end higher frequencies to compute bicoherence for,
             respectively. If :obj:`None`, all frequencies are used.
 
@@ -99,33 +103,30 @@ class WaveShape(_ProcessBispectrum):
 
         Notes
         -----
-        Bicoherence, :math:`\boldsymbol{\mathcal{B}}`, is the normalised
-        version of the bispectrum, :math:`\textbf{B}`, which has the general
-        form
+        Non-sinudoisal waveshape features can be extracted using
+        bispectrum-based methods. The bispectrum has the general form
 
         :math:`\textbf{B}_{kmn}(f_1,f_2)=<\textbf{k}(f_1)\textbf{m}(f_2)
-        \textbf{n}^*(f_2+f_1)>`,
+        \textbf{n}^*(f_2+f_1)>` ,
 
-        where :math:`kmn` corresponds to the channels in the data, and the
-        angled brackets represent the averaged value over epochs. For the
-        purposes of waveshape analyses, bicoherence is only computed within a
-        single signal, :math:`\textbf{x}`, such that
+        where :math:`kmn` is a combination of signals with Fourier coefficients
+        :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`,
+        respectively; :math:`f_1` and :math:`f_2` correspond to a lower and
+        higher frequency, respectively; and :math:`<>` represents the average
+        value over epochs. When analysing waveshape, we are interested in only
+        a single signal, and as such :math:`k=m=n`.
 
-        :math:`\textbf{B}_{kmn}(f_1,f_2) := \textbf{B}_{xxx}(f_1,f_2)`.
+        Furthermore, we can normalise the bispectrum to the bicoherence,
+        :math:`\boldsymbol{\mathcal{B}}`, using the threenorm,
+        :math:`\textbf{N}`, :footcite:`Shahbazi2014`
 
-        Normalisation of the bispectrum to bicoherence is achieved with the
-        threenorm, :math:`\textbf{N}` :footcite:`Zandvoort2021`,
+        :math:`\textbf{N}_{xxx}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{x}
+        (f_2)|^3><|\textbf{x}(f_2+f_1)|^3>)^{\frac{1}{3}}` ,
 
-        :math:`\textbf{N}_{xxx}(f_1,f_2)=(<|\textbf{x}(f_1)|^3>
-        <|\textbf{x}(f_2)|^3><|\textbf{x}(f_2+f_1)|^3>)^{\frac{1}{3}}`,
+        :math:`\boldsymbol{\mathcal{B}}_{xxx}(f_1,f_2)=\Large\frac{
+        \textbf{B}_{xxx}(f_1,f_2)}{\textbf{N}_{xxx}(f_1,f_2)}` ,
 
-        :math:`\boldsymbol{\mathcal{B}}_{xxx}(f_1,f_2)=\Large
-        \frac{\textbf{B}_{xxx}(f_1,f_2)}{\textbf{N}_{xxx}(f_1,f_2)}`.
-
-        The threenorm is a form of univariate normalisation, whereby the values
-        of the bicoherence will be bound in the range :math:`[0, 1]` in a
-        manner that is independent of the coupling properties within or between
-        signals :footcite:`Shahbazi2014`.
+        where the resulting values lie in the range :math:`[-1, 1]`.
 
         Bicoherence is computed for all values of :attr:`f1s` and :attr:`f2s`.
         If any value of :attr:`f1s` is higher than :attr:`f2s`, a
@@ -165,7 +166,7 @@ class WaveShape(_ProcessBispectrum):
             indices = tuple(range(self._n_chans))
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
-        if any(not isinstance(idx, (int, np.integer)) for idx in indices):
+        if any(not isinstance(idx, int) for idx in indices):
             raise TypeError("Entries of `indices` must be ints.")
 
         if any(idx < 0 or idx >= self._n_chans for idx in indices):
@@ -275,6 +276,6 @@ class WaveShape(_ProcessBispectrum):
         Returns
         -------
         results : ~pybispectra.utils.ResultsWaveShape
-            The results of the wave shape computation.
+            The results of the waveshape computation.
         """
         return deepcopy(self._results)

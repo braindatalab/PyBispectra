@@ -22,6 +22,10 @@ class PPC(_ProcessFreqBase):
     freqs : ~numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
 
+    sampling_freq : int | float
+        Sampling frequency (in Hz) of the data from which :attr:`data` was
+        derived.
+
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
@@ -56,7 +60,7 @@ class PPC(_ProcessFreqBase):
 
     def compute(
         self,
-        indices: tuple[tuple[int], tuple[int]] | None = None,
+        indices: tuple[tuple[int]] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
         n_jobs: int = 1,
@@ -70,11 +74,11 @@ class PPC(_ProcessFreqBase):
             PPC between. If :obj:`None`, coupling between all channels is
             computed.
 
-        f1s : tuple of int or float | None (default None), length of 2
+        f1s : tuple of int or float, length of 2 | None (default None)
             Start and end lower frequencies to compute PPC on, respectively. If
             :obj:`None`, all frequencies are used.
 
-        f2s : tuple of int or float | None (default None), length of 2
+        f2s : tuple of int or float, length of 2 | None (default None)
             Start and end higher frequencies to compute PPC on, respectively.
             If :obj:`None`, all frequencies are used.
 
@@ -84,16 +88,17 @@ class PPC(_ProcessFreqBase):
 
         Notes
         -----
-        PPC is computed as coherence between frequencies :footcite:`Giehl2021`:
+        PPC is computed as coherence between frequencies :footcite:`Giehl2021`
 
         :math:`PPC(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{|\langle
         \textbf{a}_x(f_1)\textbf{a}_y(f_2) e^{i(\boldsymbol{\varphi}_x(f_1)
         \frac{f_2}{f_1}-\boldsymbol{\varphi}_y(f_2))} \rangle|}{\langle
-        \textbf{a}_x(f_1)\textbf{a}_y(f_2) \rangle}`,
+        \textbf{a}_x(f_1)\textbf{a}_y(f_2) \rangle}` ,
 
         where :math:`\textbf{a}(f)` and :math:`\boldsymbol{\varphi}(f)` are the
-        amplitude and phase of a signal at a given frequency, respectively, and
-        the angled brackets represent the average over epochs.
+        amplitude and phase of a signal at a given frequency, respectively;
+        :math:`f_1` and :math:`f_2` correspond to a lower and higher frequency,
+        respectively; and :math:`<>` represents the average value over epochs.
 
         PPC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
         any value of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan`
@@ -190,7 +195,7 @@ def _compute_ppc(
 
     Returns
     -------
-    results : numpy.ndarray, shape of [f1s, f2s]
+    results : numpy.ndarray, shape of [low frequencies, high frequencies]
         PPC for a single connection.
     """
     results = np.full(

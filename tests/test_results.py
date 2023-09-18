@@ -47,7 +47,7 @@ def test_results_cfc_error_catch() -> None:
             f2s=f2s,
             name=name,
         )
-    with pytest.raises(ValueError, match="`indices` must have a length of 2."):
+    with pytest.raises(ValueError, match="`indices` must have length of 2."):
         ResultsCFC(
             data=data,
             indices=(indices[0], indices[0], indices[1]),
@@ -267,7 +267,7 @@ def test_results_tde_error_catch() -> None:
             times=times,
             name=name,
         )
-    with pytest.raises(ValueError, match="`indices` must have a length of 2."):
+    with pytest.raises(ValueError, match="`indices` must have length of 2."):
         ResultsTDE(
             data=data,
             indices=(indices[0], indices[0], indices[1]),
