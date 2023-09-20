@@ -585,7 +585,7 @@ class _PlotTDE(_PlotBase):
         return nodes, times, time_idcs
 
     def _sort_time_inputs(
-        self, times: tuple[int] | None
+        self, times: tuple[int | float] | None
     ) -> tuple[np.ndarray, np.ndarray]:
         """Sort `times` input.
 

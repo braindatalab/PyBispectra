@@ -508,7 +508,10 @@ class TDE(_ProcessBispectrum):
     def _compute_times(self) -> None:
         """Compute timepoints (in ms) in the results."""
         epoch_dur = 0.5 * ((self.freqs.shape[0] - 1) / self.sampling_freq)
-        self._times = np.linspace(-epoch_dur, epoch_dur, self._n_freqs) * 1000
+        self._times = (
+            np.linspace(-epoch_dur, epoch_dur, self._n_freqs, dtype=np.float32)
+            * 1000
+        )  # use float32 to minimise rounding errors
 
     def _store_results(self) -> None:
         """Store computed results in objects."""
