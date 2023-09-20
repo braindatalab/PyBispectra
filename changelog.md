@@ -1,5 +1,5 @@
 # PyBispectra Changelog
 
-## [Version 1.0.0dev](https://pybispectra.readthedocs.io/en/main/index.html)
+## [Version 1.0.0](https://pybispectra.readthedocs.io/en/1.0.0/)
 
-- Work in progress.
+- Initial release.
