@@ -329,16 +329,18 @@ def _compute_bispectrum(
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
     f2_start = _fast_find_first(freqs, f2s[0], 0)
     f2_end = _fast_find_first(freqs, f2s[-1], f2_start)
-    for f1_i, f1 in enumerate(range(f1_start, f1_end + 1)):
-        for f2_i, f2 in enumerate(range(f2_start, f2_end + 1)):
-            if f1 <= f2 and freqs[f2 + f1] in freqs:
-                fdiff = f1 + f2
+    for f1_ri, f1_fi in enumerate(range(f1_start, f1_end + 1)):
+        f1 = freqs[f1_fi]
+        for f2_ri, f2_fi in enumerate(range(f2_start, f2_end + 1)):
+            f2 = freqs[f2_fi]
+            if f1 <= f2 and f2 + f1 in freqs:
+                fdiff_fi = _fast_find_first(freqs, f2 + f1, f2_fi + f1_fi)
                 for kmn_i, (k, m, n) in enumerate(kmn):
                     for epoch_i in range(data.shape[0]):
-                        results[kmn_i, epoch_i, f1_i, f2_i] = (
-                            data[epoch_i, k, f1]
-                            * data[epoch_i, m, f2]
-                            * np.conjugate(data[epoch_i, n, fdiff])
+                        results[kmn_i, epoch_i, f1_ri, f2_ri] = (
+                            data[epoch_i, k, f1_fi]
+                            * data[epoch_i, m, f2_fi]
+                            * np.conjugate(data[epoch_i, n, fdiff_fi])
                         )
 
     return results
@@ -389,15 +391,17 @@ def _compute_threenorm(
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
     f2_start = _fast_find_first(freqs, f2s[0], 0)
     f2_end = _fast_find_first(freqs, f2s[-1], f2_start)
-    for f1_i, f1 in enumerate(range(f1_start, f1_end + 1)):
-        for f2_i, f2 in enumerate(range(f2_start, f2_end + 1)):
-            if f1 <= f2 and freqs[f2 + f1] in freqs:
-                fdiff = f1 + f2
+    for f1_ri, f1_fi in enumerate(range(f1_start, f1_end + 1)):
+        f1 = freqs[f1_fi]
+        for f2_ri, f2_fi in enumerate(range(f2_start, f2_end + 1)):
+            f2 = freqs[f2_fi]
+            if f1 <= f2 and f2 + f1 in freqs:
+                fdiff_fi = _fast_find_first(freqs, f2 + f1, f2_fi + f1_fi)
                 for kmn_i, (k, m, n) in enumerate(kmn):
-                    results[kmn_i, f1_i, f2_i] = (
-                        (np.abs(data[:, k, f1]) ** 3).mean()
-                        * (np.abs(data[:, m, f2]) ** 3).mean()
-                        * (np.abs(data[:, n, fdiff]) ** 3).mean()
+                    results[kmn_i, f1_ri, f2_ri] = (
+                        (np.abs(data[:, k, f1_fi]) ** 3).mean()
+                        * (np.abs(data[:, m, f2_fi]) ** 3).mean()
+                        * (np.abs(data[:, n, fdiff_fi]) ** 3).mean()
                     ) ** (1 / 3)
 
     return results
