@@ -98,20 +98,20 @@ class SpatioSpectralFilter:
     It is therefore recommended that you explore the performance of the
     different methods on your data.
 
-    Generalised eigendecompositions have the general form:
+    Generalised eigendecompositions have the general form
 
-    :math:`\textbf{NW} \boldsymbol{\Lambda}=\textbf{SW}`,
+    :math:`\textbf{NW} \boldsymbol{\Lambda}=\textbf{SW}` ,
 
-    which can also be represented in the ratio form:
+    which can also be represented in the ratio form
 
     :math:`\boldsymbol{\Lambda}=\Large{\frac{\textbf{W}^T\textbf{SW}}{
-    \textbf{W}^T\textbf{NW}}}`,
+    \textbf{W}^T\textbf{NW}}}` ,
 
     where :math:`\textbf{S}` and :math:`\textbf{N}` are the covariance matrices
-    for the signal and noise information in the data, respectively,
+    for the signal and noise information in the data, respectively;
     :math:`\textbf{W}` is a common set of spatial filters (which, when applied
     to the data, will maximise signal information content and minimise noise
-    information content), and :math:`\boldsymbol{\Lambda}` is a diagonal matrix
+    information content); and :math:`\boldsymbol{\Lambda}` is a diagonal matrix
     of eigenvalues representing the ratio of signal-to-noise information
     content in the data transformed with each spatial filter. Accordingly,
     spatial filters for with an SNR > 1 are generally of interest.
