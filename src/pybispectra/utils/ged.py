@@ -11,6 +11,7 @@ from mne.time_frequency import csd_array_fourier, csd_array_multitaper
 import scipy as sp
 
 from pybispectra.utils.utils import compute_rank
+from pybispectra.utils._defaults import _precision
 from pybispectra.utils._utils import _create_mne_info
 
 
@@ -173,7 +174,7 @@ class SpatioSpectralFilter:
 
         self._n_epochs, self._n_chans, self._n_times = data.shape
 
-        self.data = data.copy()
+        self.data = data.copy().astype(_precision.real)
 
     def _sort_freq_bounds(
         self,
@@ -598,7 +599,8 @@ class SpatioSpectralFilter:
 
         freqs = csd.frequencies.copy()
         csd = np.array(
-            [csd.get_data(freq) for freq in csd.frequencies]
+            [csd.get_data(freq) for freq in csd.frequencies],
+            dtype=_precision.complex,
         ).transpose(1, 2, 0)
 
         if self.verbose:
@@ -628,12 +630,17 @@ class SpatioSpectralFilter:
         eigvals, eigvects = sp.linalg.eigh(cov_signal, cov_noise)
         eig_idx = np.argsort(eigvals)[::-1]  # sort in descending order
 
-        self.filters = projection @ eigvects[:, eig_idx]  # project to sensors
-        self.patterns = np.linalg.pinv(self.filters)
-        self.ratios = eigvals[eig_idx]
+        self.filters = (projection @ eigvects[:, eig_idx]).astype(
+            _precision.real
+        )
+        self.patterns = np.linalg.pinv(self.filters).astype(_precision.real)
+        self.ratios = eigvals[eig_idx].astype(_precision.real)
 
         self._transformed_data = np.einsum(
-            "ijk,jl->ilk", self.data[:, self.indices], self.filters
+            "ijk,jl->ilk",
+            self.data[:, self.indices],
+            self.filters,
+            dtype=_precision.real,
         )
 
         if self.verbose:
@@ -656,10 +663,10 @@ class SpatioSpectralFilter:
         freqs = freqs.tolist()
 
         cov_signal = np.zeros(
-            (self._use_n_chans, self._use_n_chans), dtype=np.float64
+            (self._use_n_chans, self._use_n_chans), dtype=_precision.real
         )
         cov_noise = np.zeros(
-            (self._use_n_chans, self._use_n_chans), dtype=np.float64
+            (self._use_n_chans, self._use_n_chans), dtype=_precision.real
         )
 
         for harmonic_i in range(self.n_harmonics + 1):

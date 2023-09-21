@@ -9,6 +9,7 @@ from pqdm.processes import pqdm
 from pybispectra.utils import ResultsCFC
 from pybispectra.utils._process import _ProcessFreqBase
 from pybispectra.utils._utils import _compute_pearsonr_2d, _fast_find_first
+from pybispectra.utils._defaults import _precision
 
 
 class AAC(_ProcessFreqBase):
@@ -55,9 +56,11 @@ class AAC(_ProcessFreqBase):
         Whether or not to report the progress of the processing.
     """  # noqa: E501
 
-    _data_ndims = 4  # [epochs, channels, frequencies, times]
+    _data_precision: type = _precision.real  # TFR real-valued
 
-    _aac = None
+    _data_ndims: int = 4  # [epochs, channels, frequencies, times]
+
+    _aac: np.ndarray = None
 
     def compute(
         self,
@@ -129,6 +132,7 @@ class AAC(_ProcessFreqBase):
                 "freqs": self.freqs,
                 "f1s": self._f1s,
                 "f2s": self._f2s,
+                "precision": _precision.real,
             }
             for seed, target in zip(self._seeds, self._targets)
         ]
@@ -141,7 +145,8 @@ class AAC(_ProcessFreqBase):
                 argument_type="kwargs",
                 desc="Processing connections...",
                 disable=not self.verbose,
-            )
+            ),
+            dtype=_precision.real,
         )
 
     def _store_results(self) -> None:
@@ -168,6 +173,7 @@ def _compute_aac(
     freqs: np.ndarray,
     f1s: np.ndarray,
     f2s: np.ndarray,
+    precision: type,
 ) -> np.ndarray:  # pragma: no cover
     """Compute AAC for a single connection across epochs.
 
@@ -187,23 +193,31 @@ def _compute_aac(
     f2s : numpy.ndarray, shape of [high frequencies]
         High frequencies to compute coupling for.
 
+    precision : type
+        Precision to use for the computation. Either ``numpy.float32`` (single)
+        or ``numpy.float64`` (double).
+
     Returns
     -------
     results : numpy.ndarray, shape of [low frequencies, high frequencies]
         AAC averaged across epochs for a single connection.
     """
     results = np.full(
-        (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=np.float64
+        (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=precision
     )
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
     f2_start = _fast_find_first(freqs, f2s[0], 0)
     f2_end = _fast_find_first(freqs, f2s[-1], f2_start)
-    for f1_i, f1 in enumerate(range(f1_start, f1_end + 1)):
-        for f2_i, f2 in enumerate(range(f2_start, f2_end + 1)):
-            if f1 <= f2 and freqs[f1] > 0:
-                results[f1_i, f2_i] = np.mean(
-                    _compute_pearsonr_2d(data[:, 0, f1], data[:, 1, f2])
+    for f1_ri, f1_fi in enumerate(range(f1_start, f1_end + 1)):
+        f1 = freqs[f1_fi]
+        for f2_ri, f2_fi in enumerate(range(f2_start, f2_end + 1)):
+            f2 = freqs[f2_fi]
+            if f1 <= f2 and f1 > 0:
+                results[f1_ri, f2_ri] = np.mean(
+                    _compute_pearsonr_2d(
+                        data[:, 0, f1_fi], data[:, 1, f2_fi], precision
+                    )
                 )
 
     return results

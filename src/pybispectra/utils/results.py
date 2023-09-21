@@ -15,8 +15,6 @@ class _ResultsBase(ABC):
     f1s: np.ndarray = None
     f2s: np.ndarray = None
 
-    times: np.ndarray = None
-
     indices: tuple[tuple[int]] = None
     n_nodes: int = None
     _seeds: tuple[int] = None
@@ -199,7 +197,7 @@ class ResultsCFC(_ResultsBase):
     f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
 
-    name : str
+    name : str  (default ``"CFC"``)
         Name of the results being stored.
 
     Methods
@@ -246,7 +244,7 @@ class ResultsCFC(_ResultsBase):
         indices: tuple[tuple[int]],
         f1s: np.ndarray,
         f2s: np.ndarray,
-        name: str,
+        name: str = "CFC",
     ) -> None:  # noqa: D107
         super().__init__(data, 3, name)
         self._sort_init_inputs(indices, f1s, f2s)
@@ -396,7 +394,10 @@ class ResultsTDE(_ResultsBase):
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
-    name : str
+    freq_range : tuple of float, length of 2 | None (default None)
+        Lower and higher frequencies (in Hz) used to compute the results.
+
+    name : str (default ``"TDE"``)
         Name of the results being stored.
 
     Methods
@@ -426,9 +427,15 @@ class ResultsTDE(_ResultsBase):
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
+    freq_range : tuple of float, length of 2 | None
+        Lower and higher frequencies (in Hz) used to compute the results.
+
     tau : tuple of float
         Estimated time delay for each connection (in ms).
     """
+
+    times: np.ndarray = None
+    freq_range: tuple[float] = None
 
     def __repr__(self) -> str:
         """Return printable representation of the object."""
@@ -442,10 +449,11 @@ class ResultsTDE(_ResultsBase):
         data: np.ndarray,
         indices: tuple[tuple[int]],
         times: np.ndarray,
-        name: str,
+        freq_range: tuple[float] | None = None,
+        name: str = "TDE",
     ) -> None:  # noqa: D107
         super().__init__(data, 2, name)
-        self._sort_init_inputs(indices, times)
+        self._sort_init_inputs(indices, times, freq_range)
 
         self._compute_tau()
 
@@ -458,11 +466,15 @@ class ResultsTDE(_ResultsBase):
         )
 
     def _sort_init_inputs(
-        self, indices: tuple[tuple[int]], times: np.ndarray
+        self,
+        indices: tuple[tuple[int]],
+        times: np.ndarray,
+        freq_range: tuple[float],
     ) -> None:
         """Sort inputs to the object."""
         super()._sort_indices_seeds_targets(indices)
         self._sort_times(times)
+        self._sort_freq_range(freq_range)
 
     def _sort_times(self, times: np.ndarray) -> None:
         """Sort `times` input."""
@@ -475,6 +487,16 @@ class ResultsTDE(_ResultsBase):
             raise ValueError("`data` must have shape [nodes, times].")
 
         self.times = times.copy()
+
+    def _sort_freq_range(self, freq_range: tuple[float]) -> None:
+        """Sort `freq_range` input."""
+        if freq_range is not None:
+            if not isinstance(freq_range, tuple):
+                raise TypeError("`freq_range` must be a tuple.")
+            if len(freq_range) != 2:
+                raise ValueError("`freq_range` must have length of 2.")
+
+            self.freq_range = deepcopy(freq_range)
 
     def _get_compact_results_child(
         self,
@@ -594,7 +616,7 @@ class ResultsWaveShape(_ResultsBase):
     f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
 
-    name : str
+    name : str (default ``"Waveshape"``)
         Name of the results being stored.
 
     Methods
@@ -639,7 +661,7 @@ class ResultsWaveShape(_ResultsBase):
         indices: tuple[int],
         f1s: np.ndarray,
         f2s: np.ndarray,
-        name: str,
+        name: str = "Waveshape",
     ) -> None:  # noqa: D107
         super().__init__(data, 3, name)
         self._sort_init_inputs(indices, f1s, f2s)

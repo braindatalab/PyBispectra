@@ -6,6 +6,7 @@ import numpy as np
 from pqdm.processes import pqdm
 
 from pybispectra.utils.results import ResultsWaveShape
+from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import (
     _ProcessBispectrum,
     _compute_bispectrum,
@@ -196,6 +197,7 @@ class WaveShape(_ProcessBispectrum):
                 "f1s": self._f1s,
                 "f2s": self._f2s,
                 "kmn": np.array([np.array([0, 0, 0])]),
+                "precision": _precision.complex,
             }
             for channel in self._indices
         ]
@@ -210,7 +212,8 @@ class WaveShape(_ProcessBispectrum):
                     argument_type="kwargs",
                     desc="Processing connections...",
                     disable=not self.verbose,
-                )
+                ),
+                dtype=_precision.complex,
             )
             .mean(axis=2)
             .transpose(1, 0, 2, 3)
@@ -239,6 +242,7 @@ class WaveShape(_ProcessBispectrum):
                 "f1s": self._f1s,
                 "f2s": self._f2s,
                 "kmn": np.array([np.array([0, 0, 0])]),
+                "precision": _precision.real,
             }
             for channel in self._indices
         ]
@@ -251,7 +255,8 @@ class WaveShape(_ProcessBispectrum):
                 argument_type="kwargs",
                 desc="Processing connections...",
                 disable=not self.verbose,
-            )
+            ),
+            dtype=_precision.real,
         ).transpose(1, 0, 2, 3)[0]
 
         if self.verbose:

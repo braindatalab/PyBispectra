@@ -9,6 +9,8 @@ import numpy as np
 from pqdm.processes import pqdm
 import scipy as sp
 
+from pybispectra.utils._defaults import _precision
+
 
 def compute_fft(
     data: np.ndarray,
@@ -80,7 +82,9 @@ def compute_fft(
     if verbose:
         print("Computing FFT on the data...")
 
-    freqs = fft_freq_func(n=n_points, d=1 / sampling_freq)
+    freqs = fft_freq_func(n=n_points, d=1 / sampling_freq).astype(
+        _precision.real
+    )
 
     window = window_func(data.shape[2])
 
@@ -97,7 +101,8 @@ def compute_fft(
             argument_type="kwargs",
             desc="Processing channels...",
             disable=not verbose,
-        )
+        ),
+        dtype=_precision.complex,
     ).transpose(1, 0, 2)
 
     if verbose:
@@ -280,12 +285,12 @@ def compute_tfr(
     if verbose:
         print("Computing TFR of the data...")
 
-    tfr = tfr_func(**tfr_func_kwargs)
+    tfr = np.array(tfr_func(**tfr_func_kwargs), dtype=_precision.real)
 
     if verbose:
         print("    [TFR computation finished]\n")
 
-    return tfr, freqs
+    return tfr, freqs.astype(_precision.real)
 
 
 def _compute_tfr_input_checks(
@@ -413,3 +418,22 @@ def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
     singular_vals = np.linalg.svd(data, compute_uv=False).min(axis=0)
 
     return np.count_nonzero(singular_vals > singular_vals[0] * sv_tol)
+
+
+def set_precision(precision: str) -> None:
+    """Set the precision of the outputs of PyBispectra classes and functions.
+
+    Attributes
+    ----------
+    precision : str
+        Precision to use. Accepts ``"single"`` (real values are ``np.float32``
+        and complex values are ``np.complex64``) and ``"double"`` (real values
+        are ``np.float64`` and complex values are ``np.complex128``).
+
+    Notes
+    -----
+    By default, PyBispectra uses double precision. Single precision may be
+    desired to increase computational speed and reduce the likelihood of
+    memory errors when handling large datasets.
+    """
+    _precision.set_precision(precision)

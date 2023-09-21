@@ -9,6 +9,7 @@ from numba import njit
 from scipy.linalg import hankel
 
 from pybispectra.utils import ResultsTDE
+from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import _ProcessBispectrum
 
 
@@ -60,36 +61,39 @@ class TDE(_ProcessBispectrum):
         Whether or not to report the progress of the processing.
     """
 
-    _allow_neg_freqs = True
+    _allow_neg_freqs: bool = True
 
-    _return_nosym = False
-    _return_antisym = False
-    _return_method_i = False
-    _return_method_ii = False
-    _return_method_iii = False
-    _return_method_iv = False
+    _freq_mask: np.ndarray = None
+    _freq_range: tuple[float] = None
 
-    _bispectra = None
+    _return_nosym: bool = False
+    _return_antisym: bool = False
+    _return_method_i: bool = False
+    _return_method_ii: bool = False
+    _return_method_iii: bool = False
+    _return_method_iv: bool = False
 
-    _tde_i_nosym = None
-    _tde_i_antisym = None
-    _tde_ii_nosym = None
-    _tde_ii_antisym = None
-    _tde_iii_nosym = None
-    _tde_iii_antisym = None
-    _tde_iv_nosym = None
-    _tde_iv_antisym = None
+    _bispectra: np.ndarray = None
 
-    _kmn = {
+    _tde_i_nosym: np.ndarray = None
+    _tde_i_antisym: np.ndarray = None
+    _tde_ii_nosym: np.ndarray = None
+    _tde_ii_antisym: np.ndarray = None
+    _tde_iii_nosym: np.ndarray = None
+    _tde_iii_antisym: np.ndarray = None
+    _tde_iv_nosym: np.ndarray = None
+    _tde_iv_antisym: np.ndarray = None
+
+    _kmn: dict = {
         "xxx": (0, 0, 0),
         "yyy": (1, 1, 1),
         "xyx": (0, 1, 0),
         "xxy": (0, 0, 1),
         "yxx": (1, 0, 0),
     }
-    _xyz = None
+    _xyz: dict = None
 
-    _times = None
+    _times: np.ndarray = None
 
     def __init__(
         self,
@@ -126,6 +130,7 @@ class TDE(_ProcessBispectrum):
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
+        freqs: tuple[float] | None = None,
         antisym: bool | tuple[bool] = False,
         method: int | tuple[int] = 1,
         n_jobs: int = 1,
@@ -138,6 +143,9 @@ class TDE(_ProcessBispectrum):
             Indices of the seed and target channels, respectively, to compute
             TDE between. If :obj:`None`, coupling between all channels is
             computed.
+
+        freqs : tuple of float, length of 2 | None (default None)
+            Low and high frequencies (in Hz) to compute time delays for.
 
         antisym : bool | tuple of bool (default False)
             Whether to antisymmetrise the PAC results. If a tuple of bool, both
@@ -230,6 +238,7 @@ class TDE(_ProcessBispectrum):
         """
         self._reset_attrs()
 
+        self._sort_freqs(freqs)
         self._sort_metrics(antisym, method)
         self._sort_indices(indices)
         self._sort_parallelisation(n_jobs)
@@ -247,6 +256,9 @@ class TDE(_ProcessBispectrum):
     def _reset_attrs(self) -> None:
         """Reset attrs. of the object to prevent interference."""
         super()._reset_attrs()
+
+        self._freq_mask = None
+        self._freq_range = None
 
         self._return_nosym = False
         self._return_antisym = False
@@ -267,6 +279,31 @@ class TDE(_ProcessBispectrum):
         self._tde_iv_antisym = None
 
         self._xyz = None
+
+    def _sort_freqs(self, freqs: tuple[float] | None) -> None:
+        """Sort inputs for the frequency bounds."""
+        if freqs is None:
+            self._freq_mask = np.ones((self._n_unique_freqs,), dtype=np.int32)
+        else:
+            if not isinstance(freqs, tuple):
+                raise TypeError("`freqs` must be a tuple.")
+            if len(freqs) != 2:
+                raise ValueError("`freqs` must have length of 2.")
+            freq_mask = np.zeros((self._n_unique_freqs,), dtype=np.int32)
+            freq_mask[
+                np.nonzero((self.freqs >= freqs[0]) & (self.freqs <= freqs[1]))
+            ] = 1
+            if np.all(freq_mask == 0):
+                raise ValueError(
+                    "No frequencies are present in the data for the range in "
+                    "`freqs`."
+                )
+            self._freq_mask = freq_mask
+
+        self._freq_range = (
+            self.freqs[np.nonzero(self._freq_mask)][0],
+            self.freqs[np.nonzero(self._freq_mask)][-1],
+        )
 
     def _sort_metrics(
         self, antisym: bool | tuple[bool], method: int | tuple[int]
@@ -367,6 +404,7 @@ class TDE(_ProcessBispectrum):
                 "data": self.data[:, (seed, target)],
                 "hankel_freq_mask": hankel_freq_mask,
                 "kmn": tuple(self._xyz.values()),
+                "precision": _precision.complex,
             }
             for seed, target in zip(self._seeds, self._targets)
         ]
@@ -381,7 +419,8 @@ class TDE(_ProcessBispectrum):
                     argument_type="kwargs",
                     desc="Processing connections...",
                     disable=not self.verbose,
-                )
+                ),
+                dtype=_precision.complex,
             )
             .mean(axis=2)
             .transpose(1, 0, 2, 3)
@@ -493,6 +532,7 @@ class TDE(_ProcessBispectrum):
             con_kwargs.append(
                 {key: value[con_i] for key, value in kwargs.items()}
             )
+            con_kwargs[con_i]["freq_mask"] = self._freq_mask
 
         return np.array(
             pqdm(
@@ -502,14 +542,17 @@ class TDE(_ProcessBispectrum):
                 argument_type="kwargs",
                 desc="Processing connections...",
                 disable=not self.verbose,
-            )
+            ),
+            dtype=_precision.real,
         )
 
     def _compute_times(self) -> None:
         """Compute timepoints (in ms) in the results."""
         epoch_dur = 0.5 * ((self.freqs.shape[0] - 1) / self.sampling_freq)
         self._times = (
-            np.linspace(-epoch_dur, epoch_dur, self._n_freqs, dtype=np.float32)
+            np.linspace(
+                -epoch_dur, epoch_dur, self._n_freqs, dtype=_precision.real
+            )
             * 1000
         )  # use float32 to minimise rounding errors
 
@@ -523,6 +566,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_i_nosym,
                     self._indices,
                     self._times,
+                    self._freq_range,
                     "TDE | Method I",
                 )
             )
@@ -532,6 +576,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_ii_nosym,
                     self._indices,
                     self._times,
+                    self._freq_range,
                     "TDE | Method II",
                 )
             )
@@ -541,6 +586,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iii_nosym,
                     self._indices,
                     self._times,
+                    self._freq_range,
                     "TDE | Method III",
                 )
             )
@@ -550,6 +596,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iv_nosym,
                     self._indices,
                     self._times,
+                    self._freq_range,
                     "TDE | Method IV",
                 )
             )
@@ -560,6 +607,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_i_antisym,
                     self._indices,
                     self._times,
+                    self._freq_range,
                     "TDE (antisymmetrised) | Method I",
                 )
             )
@@ -569,6 +617,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_ii_antisym,
                     self._indices,
                     self._times,
+                    self._freq_range,
                     "TDE (antisymmetrised) | Method II",
                 )
             )
@@ -578,6 +627,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iii_antisym,
                     self._indices,
                     self._times,
+                    self._freq_range,
                     "TDE (antisymmetrised) | Method III",
                 )
             )
@@ -587,6 +637,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iv_antisym,
                     self._indices,
                     self._times,
+                    self._freq_range,
                     "TDE (antisymmetrised) | Method IV",
                 )
             )
@@ -614,6 +665,7 @@ def _compute_bispectrum_tde(
     data: np.ndarray,
     hankel_freq_mask: np.ndarray,
     kmn: tuple[list[int]],
+    precision: type,
 ) -> np.ndarray:  # pragma: no cover
     """Compute the bispectrum for a single connection for use in TDE.
 
@@ -636,6 +688,10 @@ def _compute_bispectrum_tde(
         m, and n channel indices in ``data``, respectively, to compute the
         bispectrum for.
 
+    precision : type
+        Precision to use for the computation. Either ``numpy.complex64``
+        (single) or ``numpy.complex128`` (double).
+
     Returns
     -------
     results : numpy.ndarray, shape of [x, epochs, frequencies, frequencies]
@@ -654,13 +710,13 @@ def _compute_bispectrum_tde(
     results = np.full(
         (len(kmn), data.shape[0], n_unique_freqs, n_unique_freqs),
         fill_value=np.nan,
-        dtype=np.complex128,
+        dtype=precision,
     )
 
     for kmn_i, (k, m, n) in enumerate(kmn):
         for epoch_i, epoch_data in enumerate(data):
             # No arrays as indices in Numba, so loop over to pass int indices
-            hankel_n = np.empty_like(hankel_freq_mask, dtype=np.complex128)
+            hankel_n = np.empty_like(hankel_freq_mask, dtype=precision)
             for row_i in range(n_unique_freqs):
                 for col_i in range(n_unique_freqs):
                     hankel_n[row_i, col_i] = epoch_data[
@@ -668,7 +724,7 @@ def _compute_bispectrum_tde(
                     ]
 
             results[kmn_i, epoch_i] = np.multiply(
-                epoch_data[k, :n_unique_freqs],
+                epoch_data[k, :n_unique_freqs][:, np.newaxis],
                 np.multiply(
                     epoch_data[m, :n_unique_freqs],
                     np.conjugate(hankel_n),
@@ -678,7 +734,9 @@ def _compute_bispectrum_tde(
     return results
 
 
-def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
+def _compute_tde_i(
+    B_xyx: np.ndarray, B_xxx: np.ndarray, freq_mask: np.ndarray
+) -> np.ndarray:
     """Compute TDE from bispectra with method I for a single connection.
 
     Parameters
@@ -689,6 +747,9 @@ def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     B_xxx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xxx``.
 
+    freq_mask : numpy.ndarray, shape of [frequencies]
+        Indices mask for the frequencies to use.
+
     Returns
     -------
     tde : numpy.ndarray, shape of [times]
@@ -698,17 +759,17 @@ def _compute_tde_i(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[0] * 2 - 1), dtype=np.complex128)
     phi = np.angle(B_xyx) - np.angle(B_xxx)
-    I[: B_xyx.shape[0]] = np.nansum(np.exp(1j * phi), axis=0)
+    I = np.exp(1j * phi)
 
-    return np.abs(np.fft.fftshift(np.fft.ifft(I)))
+    return _compute_tde_from_I(I, freq_mask)
 
 
 def _compute_tde_ii(
     B_xyx: np.ndarray,
     B_xxx: np.ndarray,
     B_yyy: np.ndarray,
+    freq_mask: np.ndarray,
 ) -> np.ndarray:
     """Compute TDE from bispectra with method II for a single connection.
 
@@ -723,6 +784,9 @@ def _compute_tde_ii(
     B_yyy : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``yyy``.
 
+    freq_mask : numpy.ndarray, shape of [frequencies]
+        Indices mask for the frequencies to use.
+
     Returns
     -------
     tde : numpy.ndarray, shape of [times]
@@ -732,14 +796,15 @@ def _compute_tde_ii(
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[0] * 2 - 1), dtype=np.complex128)
     phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
-    I[: B_xyx.shape[0]] = np.nansum(np.exp(1j * phi_prime), axis=0)
+    I = np.exp(1j * phi_prime)
 
-    return np.abs(np.fft.fftshift(np.fft.ifft(I)))
+    return _compute_tde_from_I(I, freq_mask)
 
 
-def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
+def _compute_tde_iii(
+    B_xyx: np.ndarray, B_xxx: np.ndarray, freq_mask: np.ndarray
+) -> np.ndarray:
     """Compute TDE from bispectra with method III for a single connection.
 
     Parameters
@@ -750,6 +815,9 @@ def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     B_xxx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xxx``.
 
+    freq_mask : numpy.ndarray, shape of [frequencies]
+        Indices mask for the frequencies to use.
+
     Returns
     -------
     tde : numpy.ndarray, shape of [times]
@@ -759,16 +827,16 @@ def _compute_tde_iii(B_xyx: np.ndarray, B_xxx: np.ndarray) -> np.ndarray:
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[0] * 2 - 1), dtype=np.complex128)
-    I[: B_xyx.shape[0]] = np.nansum(np.divide(B_xyx, B_xxx), axis=0)
+    I = np.divide(B_xyx, B_xxx)
 
-    return np.abs(np.fft.fftshift(np.fft.ifft(I)))
+    return _compute_tde_from_I(I, freq_mask)
 
 
 def _compute_tde_iv(
     B_xyx: np.ndarray,
     B_xxx: np.ndarray,
     B_yyy: np.ndarray,
+    freq_mask: np.ndarray,
 ) -> np.ndarray:
     """Compute TDE from bispectra with method IV for a single connection.
 
@@ -783,6 +851,9 @@ def _compute_tde_iv(
     B_yyy : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``yyy``.
 
+    freq_mask : numpy.ndarray, shape of [frequencies]
+        Indices mask for the frequencies to use.
+
     Returns
     -------
     tde : numpy.ndarray, shape of [times]
@@ -792,14 +863,23 @@ def _compute_tde_iv(
     -----
     No checks on the input data are performed for speed.
     """
-    I = np.zeros((B_xyx.shape[0] * 2 - 1), dtype=np.complex128)
     phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
-    I[: B_xyx.shape[0]] = np.nansum(
-        np.divide(
-            np.multiply(np.abs(B_xyx), np.exp(1j * phi_prime)),
-            np.sqrt(np.multiply(np.abs(B_xxx), np.abs(B_yyy))),
-        ),
-        axis=0,
+    I = np.divide(
+        np.multiply(np.abs(B_xyx), np.exp(1j * phi_prime)),
+        np.sqrt(np.multiply(np.abs(B_xxx), np.abs(B_yyy))),
     )
 
-    return np.abs(np.fft.fftshift(np.fft.ifft(I)))
+    return _compute_tde_from_I(I, freq_mask)
+
+
+def _compute_tde_from_I(I: np.ndarray, freq_mask: np.ndarray) -> np.ndarray:
+    """Compute TDE from the matrix I for a single connection."""
+    if np.any(freq_mask == 0):
+        I = freq_mask[:, np.newaxis] * (freq_mask * I)
+    I = np.concatenate(
+        (I, np.zeros((I.shape[0], I.shape[1] - 1), dtype=_precision.complex)),
+        axis=1,
+    )
+    I = np.nansum(I, axis=0)
+
+    return np.abs(np.fft.fftshift(np.fft.ifft(I))).astype(_precision.real)

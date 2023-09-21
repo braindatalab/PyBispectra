@@ -9,6 +9,7 @@ from mne import Info
 
 from pybispectra.data import get_example_data_paths, DATASETS
 from pybispectra.utils import compute_fft, compute_tfr, compute_rank
+from pybispectra.utils._defaults import _precision
 from pybispectra.utils._utils import (
     _compute_pearsonr_2d,
     _create_mne_info,
@@ -470,7 +471,9 @@ def test_compute_pearson_2d() -> None:
     data = _generate_data(n_epochs, n_chans, n_times)
 
     # test it works with correct inputs
-    pearsonr = _compute_pearsonr_2d(x=data[:, 0], y=data[:, 1])
+    pearsonr = _compute_pearsonr_2d(
+        x=data[:, 0], y=data[:, 1], precision=_precision.real
+    )
     assert isinstance(
         pearsonr, np.ndarray
     ), "`pearsonr` should be a NumPy array."

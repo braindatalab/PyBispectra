@@ -9,11 +9,14 @@ from numba import njit
 import numpy as np
 
 from pybispectra.utils.results import _ResultsBase
+from pybispectra.utils._defaults import _precision
 from pybispectra.utils._utils import _fast_find_first
 
 
 class _ProcessFreqBase(ABC):
     """Base class for processing frequency-domain results."""
+
+    _data_precision: type = _precision.complex
 
     _data_ndims: int = 3  # usu. [epochs, channels, frequencies, (times)]
     _allow_neg_freqs: bool = False  # only True for TDE
@@ -104,8 +107,8 @@ class _ProcessFreqBase(ABC):
         if not isinstance(verbose, bool):
             raise TypeError("`verbose` must be a bool.")
 
-        self.data = data.copy()
-        self.freqs = freqs.copy()
+        self.data = data.copy().astype(self._data_precision)
+        self.freqs = freqs.copy().astype(_precision.real)
         self.sampling_freq = deepcopy(sampling_freq)
         self.verbose = deepcopy(verbose)
 
@@ -283,6 +286,7 @@ def _compute_bispectrum(
     f1s: np.ndarray,
     f2s: np.ndarray,
     kmn: np.ndarray,
+    precision: type,
 ) -> np.ndarray:  # pragma: no cover
     """Compute the bispectrum for a single connection.
 
@@ -306,6 +310,10 @@ def _compute_bispectrum(
         the k, m, and n channel indices in ``data``, respectively, to compute
         the bispectrum for.
 
+    precision : type
+        Precision to use for the computation. Either ``numpy.complex64``
+        (single) or ``numpy.complex128`` (double).
+
     Returns
     -------
     results : numpy.ndarray of complex float, shape of [x, epochs, f1s, f2s]
@@ -323,7 +331,7 @@ def _compute_bispectrum(
     results = np.full(
         (len(kmn), data.shape[0], f1s.shape[0], f2s.shape[0]),
         fill_value=np.nan,
-        dtype=np.complex128,
+        dtype=precision,
     )
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
@@ -346,13 +354,14 @@ def _compute_bispectrum(
     return results
 
 
-@njit
+# @njit
 def _compute_threenorm(
     data: np.ndarray,
     freqs: np.ndarray,
     f1s: np.ndarray,
     f2s: np.ndarray,
     kmn: np.ndarray,
+    precision: type,
 ) -> np.ndarray:  # pragma: no cover
     """Compute threenorm for a single connection across epochs.
 
@@ -376,6 +385,10 @@ def _compute_threenorm(
         the k, m, and n channel indices in ``data``, respectively, to compute
         the threenorm for.
 
+    precision : type
+        Precision to use for the computation. Either ``numpy.complex64``
+        (single) or ``numpy.complex128`` (double).
+
     RETURNS
     -------
     results : numpy.ndarray of float, shape of [x, f1s, f2s]
@@ -385,7 +398,7 @@ def _compute_threenorm(
     results = np.full(
         (len(kmn), f1s.shape[0], f2s.shape[0]),
         fill_value=np.nan,
-        dtype=np.float64,
+        dtype=precision,
     )
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)

@@ -4,6 +4,8 @@ from mne import Info, create_info
 from numba import njit
 import numpy as np
 
+from pybispectra.utils._defaults import _precision
+
 
 @njit
 def _fast_find_first(
@@ -39,7 +41,7 @@ def _fast_find_first(
 
 @njit
 def _compute_pearsonr_2d(
-    x: np.ndarray, y: np.ndarray
+    x: np.ndarray, y: np.ndarray, precision: type
 ) -> np.ndarray:  # pragma: no cover
     """Compute Pearson correlation for epochs over time.
 
@@ -51,6 +53,10 @@ def _compute_pearsonr_2d(
     y : numpy.ndarray, shape of [epochs, times]
         Array of time-series values to compute correlation of with ``x``.
 
+    precision : type
+        Precision to use for the computation. Either ``numpy.float32`` (single)
+        or ``numpy.float64`` (double).
+
     Returns
     -------
     pearsonr : numpy.ndarray, shape of [epochs]
@@ -61,8 +67,8 @@ def _compute_pearsonr_2d(
     -----
     Does not perform checks on inputs for speed.
     """
-    x_minus_mean = np.full(x.shape, fill_value=np.nan, dtype=np.float64)
-    y_minus_mean = np.full(y.shape, fill_value=np.nan, dtype=np.float64)
+    x_minus_mean = np.full(x.shape, fill_value=np.nan, dtype=precision)
+    y_minus_mean = np.full(y.shape, fill_value=np.nan, dtype=precision)
     for idx in range(x.shape[0]):  # same as y.shape[0]
         x_minus_mean[idx] = x[idx] - np.mean(x[idx])
         y_minus_mean[idx] = y[idx] - np.mean(y[idx])
@@ -75,7 +81,7 @@ def _compute_pearsonr_2d(
         )
     )
 
-    return np.divide(numerator, denominator)
+    return np.divide(numerator, denominator).astype(precision)
 
 
 def _create_mne_info(n_chans: int, sampling_freq: float) -> Info:
@@ -111,4 +117,4 @@ def _generate_data(
 ) -> np.ndarray:
     """Generate random data of the specified shape."""
     random = np.random.RandomState(seed)
-    return random.rand(n_epochs, n_chans, n_times)
+    return random.rand(n_epochs, n_chans, n_times).astype(_precision.real)

@@ -373,10 +373,10 @@ def test_aac_runs() -> None:
     data = _generate_data(5, n_chans, 100)
     freqs = np.arange(5, 20)
 
-    fft, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3)
+    tfr, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3)
 
     # check it runs with correct inputs
-    aac = AAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    aac = AAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
     aac.compute()
 
     # check the returned results have the correct shape
