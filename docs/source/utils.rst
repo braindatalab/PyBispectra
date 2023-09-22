@@ -24,3 +24,4 @@ Utilities
     compute_fft
     compute_tfr
     compute_rank
+    set_precision
