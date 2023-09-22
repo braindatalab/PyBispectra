@@ -394,7 +394,7 @@ class ResultsTDE(_ResultsBase):
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
-    freq_range : tuple of float, length of 2 | None (default None)
+    freq_band : tuple of float, length of 2 | None (default None)
         Lower and higher frequencies (in Hz) used to compute the results.
 
     name : str (default ``"TDE"``)
@@ -427,7 +427,7 @@ class ResultsTDE(_ResultsBase):
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
-    freq_range : tuple of float, length of 2 | None
+    freq_band : tuple of float, length of 2 | None
         Lower and higher frequencies (in Hz) used to compute the results.
 
     tau : tuple of float
@@ -435,25 +435,29 @@ class ResultsTDE(_ResultsBase):
     """
 
     times: np.ndarray = None
-    freq_range: tuple[float] = None
+    freq_band: tuple[float] = None
 
     def __repr__(self) -> str:
         """Return printable representation of the object."""
-        return repr(
-            f"<Result: {self.name} | [{self.n_nodes} nodes, "
-            f"{len(self.times)} times]>"
-        )
+        repr_ = f"<Result: {self.name} | "
+
+        if self.freq_band is not None:
+            repr_ += f"{self.freq_band[0]} - {self.freq_band[1]} Hz | "
+
+        repr_ += f"[{self.n_nodes} nodes, {len(self.times)} times]>"
+
+        return repr_
 
     def __init__(
         self,
         data: np.ndarray,
         indices: tuple[tuple[int]],
         times: np.ndarray,
-        freq_range: tuple[float] | None = None,
+        freq_band: tuple[float] | None = None,
         name: str = "TDE",
     ) -> None:  # noqa: D107
         super().__init__(data, 2, name)
-        self._sort_init_inputs(indices, times, freq_range)
+        self._sort_init_inputs(indices, times, freq_band)
 
         self._compute_tau()
 
@@ -469,12 +473,12 @@ class ResultsTDE(_ResultsBase):
         self,
         indices: tuple[tuple[int]],
         times: np.ndarray,
-        freq_range: tuple[float],
+        freq_band: tuple[float],
     ) -> None:
         """Sort inputs to the object."""
         super()._sort_indices_seeds_targets(indices)
         self._sort_times(times)
-        self._sort_freq_range(freq_range)
+        self._sort_freq_band(freq_band)
 
     def _sort_times(self, times: np.ndarray) -> None:
         """Sort `times` input."""
@@ -488,15 +492,15 @@ class ResultsTDE(_ResultsBase):
 
         self.times = times.copy()
 
-    def _sort_freq_range(self, freq_range: tuple[float]) -> None:
-        """Sort `freq_range` input."""
-        if freq_range is not None:
-            if not isinstance(freq_range, tuple):
-                raise TypeError("`freq_range` must be a tuple.")
-            if len(freq_range) != 2:
-                raise ValueError("`freq_range` must have length of 2.")
+    def _sort_freq_band(self, freq_band: tuple[float]) -> None:
+        """Sort `freq_band` input."""
+        if freq_band is not None:
+            if not isinstance(freq_band, tuple):
+                raise TypeError("`freq_band` must be a tuple.")
+            if len(freq_band) != 2:
+                raise ValueError("`freq_band` must have length of 2.")
 
-            self.freq_range = deepcopy(freq_range)
+            self.freq_band = deepcopy(freq_band)
 
     def _get_compact_results_child(
         self,

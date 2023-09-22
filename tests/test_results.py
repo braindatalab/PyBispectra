@@ -323,6 +323,13 @@ def test_results_tde_error_catch() -> None:
             times=times[1:],
         )
 
+    with pytest.raises(TypeError, match="`freq_band` must be a tuple."):
+        ResultsTDE(data=data, indices=indices, times=times, freq_band=5)
+    with pytest.raises(ValueError, match="`freq_band` must have length of 2."):
+        ResultsTDE(
+            data=data, indices=indices, times=times, freq_band=(5, 10, 15)
+        )
+
     with pytest.raises(TypeError, match="`name` must be a string."):
         ResultsTDE(
             data=data,
@@ -344,16 +351,36 @@ def test_results_tde_runs() -> None:
     data = _generate_data(n_cons, n_times, 1)[..., 0]
     times = np.arange(n_times)
     name = "test"
+    freq_band = (10, 20)
     n_unique_chans = 3
     indices = (
         tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
         tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
-    results = ResultsTDE(data=data, indices=indices, times=times, name=name)
+    results = ResultsTDE(
+        data=data,
+        indices=indices,
+        times=times,
+        name=name,
+        freq_band=None,
+    )
 
     assert repr(results) == (
-        f"'<Result: {name} | [{n_cons} nodes, {n_times} times]>'"
+        f"<Result: {name} | [{n_cons} nodes, {n_times} times]>"
+    )
+
+    results = ResultsTDE(
+        data=data,
+        indices=indices,
+        times=times,
+        name=name,
+        freq_band=freq_band,
+    )
+
+    assert repr(results) == (
+        f"<Result: {name} | {freq_band[0]} - {freq_band[1]} Hz | [{n_cons} "
+        f"nodes, {n_times} times]>"
     )
 
     results_array = results.get_results(form="raveled")

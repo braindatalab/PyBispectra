@@ -79,7 +79,9 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # Method II instead relies on a combination of phase spectra of the different
 # frequency components, with method IV containing an additional amplitude
 # weighting from the bispectrum of :math:`\textbf{x}` and :math:`\textbf{y}`.
-# No single method is superior to another.
+# No single method is superior to another. If time delay estimates for only
+# certain frequencies are desired, this information can be extracted from the
+# matrix :math:`\textbf{I}`.
 #
 # As a result of volume conduction artefacts (i.e. a common underlying signal
 # that propagates instantaneously to :math:`\textbf{x}` and
@@ -89,9 +91,6 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # :footcite:`Chella2014`, which is implemented here as the replacement of
 # :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xxy} - \textbf{B}_{yxx})`
 # in the above equations :footcite:`JurharInPrep`.
-#
-# As a final note, if TDE for only certain frequencies is of interest, the
-# signals can be bandpass filtered prior to computing the bispectrum.
 
 ###############################################################################
 # Loading data and computing Fourier coefficients
@@ -99,24 +98,22 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # We will start by loading some simulated data containing a time delay of 250
 # ms between two signals, where :math:`\textbf{y}` is a delayed version of
 # :math:`\textbf{x}`. We will then compute the Fourier coefficients of the
-# data, which will be used to compute the time delay. Since TDE requires
-# information from both negative and positive frequencies, we set the
-# ``return_neg_freqs`` parameter of the :func:`~pybispectra.utils.compute_fft`
-# function to ``True``. Furthermore, we specify ``n_points`` to be twice the
-# number of time points in the data, plus one, to ensure that the time delay
-# estimates correspond to the sampling frequency of the data (accounting for
-# time point zero as well as the fact that the estimates are returned for both
-# time delay directions, i.e. where :math:`\textbf{x}` drives
-# :math:`\textbf{y}`, and :math:`\textbf{y}` drives :math:`\textbf{x}`). By
-# altering the number of points used to compute the Fourier coefficients, the
-# temporal resolution of the TDE results can be adjusted. E.g. a higher number
-# of points increases the temporal resolution at the cost of computational
-# demand.
+# data, which will be used to compute the time delay.
+#
+# We specify ``n_points`` to be twice the number of time points in the data,
+# plus one. This ensures that the time delay estimate spectrum is returned for
+# the whole epoch length (in both positive and negative delay directions, i.e.
+# where :math:`\textbf{x}` drives :math:`\textbf{y}`, and :math:`\textbf{y}`
+# drives :math:`\textbf{x}`) with the same temporal resolution as the original
+# data. Using a number of points smaller than this will reduce the window in
+# which time delay estimates can be computed below the epoch length, whereas
+# using a higher number of points will only artificially increase this window
+# length. Accordingly ``n_points=2 * n_times + 1`` is recommended.
 #
 # In this example, our data consists of 30 epochs of 200 timepoints each, which
 # with a 200 Hz sampling frequency corresponds to 1 second of data per epoch
-# (one timepoint every 5 ms). By specifying ``n_points=2 * n_times + 1``, we
-# will obtain delay estimates at a resolution of 5 ms.
+# (one timepoint every 5 ms). Note that the temporal resolution of the time
+# delay estimates can be increased by increasing the sampling rate of the data.
 
 # %%
 
@@ -129,9 +126,8 @@ n_times = data.shape[2]  # number of timepoints in the data
 fft_coeffs, freqs = compute_fft(
     data=data,
     sampling_freq=sampling_freq,
-    n_points=2 * n_times + 1,
+    n_points=2 * n_times + 1,  # recommended for time delay estimation
     window="hamming",
-    return_neg_freqs=True,
     verbose=False,
 )
 
@@ -153,13 +149,17 @@ print(
 # direction of information flow where the time delay should have a positive
 # value) and from signals 1 -> 0 (the reverse direction of information flow
 # where the time delay should have a negative value).
+#
+# Using the :attr:`freq_band` argument, time delay information for a subset of
+# frequencies can be isolated by specifying the lower and higher frequencies of
+# interest. Here, however, we will compute time delays for all frequencies.
 
 # %%
 
 tde = TDE(
     data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
-tde.compute(indices=((0, 1), (1, 0)), method=1)  # compute TDE
+tde.compute(indices=((0, 1), (1, 0)), freq_band=None, method=1)  # compute TDE
 tde_times = tde.results.times
 
 tde_results = tde.results.get_results()  # return results as array
@@ -171,7 +171,9 @@ print(
 
 ###############################################################################
 # We can see that time delays have been computed for two connections (0 -> 1
-# and 1 -> 0), and 401 timepoints (twice that of the original data plus one,
+# and 1 -> 0), and 401 timepoints (twice that of the original data plus one;
+# i.e. delay estimates for the full epoch length in both positive and negative
+# directions). The time delays are computed at 0, 5, 10, 15, ..., 2000 ms (i.e.
 # preserving the sampling frequency of the data - i.e. with one estimate every
 # 5 ms - and including the zero time), averaged across our 30 epochs.
 
@@ -248,7 +250,6 @@ fft_coeffs, freqs = compute_fft(
     sampling_freq=sampling_freq,
     n_points=2 * n_times + 1,
     window="hamming",
-    return_neg_freqs=True,
     verbose=False,
 )
 

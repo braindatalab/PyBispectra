@@ -66,10 +66,7 @@ def test_error_catch(class_type: str) -> None:
         TestClass(coeffs, bad_freqs, sampling_freq)
     with pytest.raises(
         ValueError,
-        match=(
-            "Entries of `freqs` corresponding to positive frequencies must be "
-            "in ascending order."
-        ),
+        match=("Entries of `freqs` must be in ascending order."),
     ):
         TestClass(coeffs, freqs[::-1], sampling_freq)
 
@@ -136,33 +133,69 @@ def test_error_catch(class_type: str) -> None:
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
         test_class.compute(f2s=[freqs[0], freqs[-1]])
     with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of two."
+        ValueError, match="`f1s` and `f2s` must have lengths of 2."
     ):
         test_class.compute(f1s=(freqs[0], freqs[1], freqs[-1]))
     with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of two."
+        ValueError, match="`f1s` and `f2s` must have lengths of 2."
     ):
         test_class.compute(f2s=(freqs[0], freqs[1], freqs[-1]))
     with pytest.raises(
-        ValueError,
-        match="Entries of `f1s` and `f2s` must be present in the data.",
+        ValueError, match="Entries of `f1s` and `f2s` must be >= 0."
     ):
-        test_class.compute(f1s=(freqs[0] - 1, freqs[-1]))
+        test_class.compute(f1s=(-1, 10))
+    with pytest.raises(
+        ValueError, match="Entries of `f1s` and `f2s` must be >= 0."
+    ):
+        test_class.compute(f1s=(10, -1))
+    with pytest.raises(
+        ValueError, match="Entries of `f1s` and `f2s` must be >= 0."
+    ):
+        test_class.compute(f2s=(-1, 10))
+    with pytest.raises(
+        ValueError, match="Entries of `f1s` and `f2s` must be >= 0."
+    ):
+        test_class.compute(f2s=(10, -1))
     with pytest.raises(
         ValueError,
-        match="Entries of `f1s` and `f2s` must be present in the data.",
+        match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency.",
     ):
-        test_class.compute(f1s=(freqs[0], freqs[-1] + 1))
+        test_class.compute(f1s=(5, sampling_freq / 2 + 1))
     with pytest.raises(
         ValueError,
-        match="Entries of `f1s` and `f2s` must be present in the data.",
+        match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency.",
     ):
-        test_class.compute(f2s=(freqs[0] - 1, freqs[-1]))
+        test_class.compute(f1s=(sampling_freq / 2 + 1, 10))
     with pytest.raises(
         ValueError,
-        match="Entries of `f1s` and `f2s` must be present in the data.",
+        match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency.",
     ):
-        test_class.compute(f2s=(freqs[0], freqs[-1] + 1))
+        test_class.compute(f2s=(5, sampling_freq / 2 + 1))
+    with pytest.raises(
+        ValueError,
+        match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency.",
+    ):
+        test_class.compute(f2s=(sampling_freq / 2 + 1, 10))
+    with pytest.raises(
+        ValueError,
+        match="No frequencies are present in the data for the range in `f1s`.",
+    ):
+        test_class.compute(f1s=(10, 5))
+    with pytest.raises(
+        ValueError,
+        match="No frequencies are present in the data for the range in `f1s`.",
+    ):
+        test_class.compute(f1s=(5.6, 5.7))
+    with pytest.raises(
+        ValueError,
+        match="No frequencies are present in the data for the range in `f2s`.",
+    ):
+        test_class.compute(f2s=(10, 5))
+    with pytest.raises(
+        ValueError,
+        match="No frequencies are present in the data for the range in `f2s`.",
+    ):
+        test_class.compute(f2s=(5.6, 5.7))
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         test_class.compute(n_jobs=0.5)
@@ -232,6 +265,9 @@ def test_pac_runs() -> None:
         pac.results[i].name == result_types[type_i]
         for i, type_i in enumerate((0, 3))
     )
+
+    # check it runs with non-exact frequencies
+    pac.compute(f1s=(10.25, 19.75), f2s=(10.25, 19.75))
 
     # test it runs with parallelisation
     pac.compute(n_jobs=2)
@@ -353,6 +389,9 @@ def test_ppc_runs() -> None:
     assert ppc.results.name == "PPC"
     assert isinstance(ppc.results, ResultsCFC)
 
+    # check it runs with non-exact frequencies
+    ppc.compute(f1s=(10.25, 19.75), f2s=(10.25, 19.75))
+
     # test it runs with parallelisation
     ppc.compute(n_jobs=2)
     ppc.compute(n_jobs=-1)
@@ -385,6 +424,9 @@ def test_aac_runs() -> None:
     # check the returned results are of the correct type
     assert aac.results.name == "AAC"
     assert isinstance(aac.results, ResultsCFC)
+
+    # check it runs with non-exact frequencies
+    aac.compute(f1s=(10.25, 19.75), f2s=(10.25, 19.75))
 
     # test it runs with parallelisation
     aac.compute(n_jobs=2)

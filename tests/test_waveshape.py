@@ -51,10 +51,7 @@ def test_error_catch() -> None:
         WaveShape(coeffs, freqs * -1, sampling_freq)
     with pytest.raises(
         ValueError,
-        match=(
-            "Entries of `freqs` corresponding to positive frequencies must be "
-            "in ascending order."
-        ),
+        match="Entries of `freqs` must be in ascending order.",
     ):
         WaveShape(coeffs, freqs[::-1], sampling_freq)
 
@@ -85,22 +82,6 @@ def test_error_catch() -> None:
         waveshape.compute(f1s=[freqs[0], freqs[-1]])
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
         waveshape.compute(f2s=[freqs[0], freqs[-1]])
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must be present in the data."
-    ):
-        waveshape.compute(f1s=(freqs[0] - 1, freqs[-1]))
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must be present in the data."
-    ):
-        waveshape.compute(f1s=(freqs[0], freqs[-1] + 1))
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must be present in the data."
-    ):
-        waveshape.compute(f2s=(freqs[0] - 1, freqs[-1]))
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must be present in the data."
-    ):
-        waveshape.compute(f2s=(freqs[0], freqs[-1] + 1))
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         waveshape.compute(n_jobs=0.5)
@@ -126,6 +107,9 @@ def test_waveshape_runs() -> None:
     # check the returned results are of the correct type
     assert waveshape.results.name == "Waveshape"
     assert isinstance(waveshape.results, ResultsWaveShape)
+
+    # check it runs with non-exact frequencies
+    waveshape.compute(f1s=(10.25, 19.75), f2s=(10.25, 19.75))
 
     # test it runs with parallelisation
     waveshape.compute(n_jobs=2)

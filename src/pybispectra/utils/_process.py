@@ -19,7 +19,6 @@ class _ProcessFreqBase(ABC):
     _data_precision: type = _precision.complex
 
     _data_ndims: int = 3  # usu. [epochs, channels, frequencies, (times)]
-    _allow_neg_freqs: bool = False  # only True for TDE
 
     _indices: tuple = None
     _seeds: tuple = None
@@ -76,33 +75,14 @@ class _ProcessFreqBase(ABC):
                 "At least one entry of `freqs` is > the Nyquist frequency."
             )
 
-        if not self._allow_neg_freqs and np.any(freqs < 0):
+        if np.any(freqs < 0):
             raise ValueError("Entries of `freqs` must be >= 0.")
-
-        if self._allow_neg_freqs:
-            max_freq_idx = np.argmax(freqs)
-            if np.any(freqs[: max_freq_idx + 1] < 0):
-                raise ValueError(
-                    "Entries of `freqs` must have the form positive "
-                    "frequencies, then negative frequencies."
-                )
 
         max_freq_idx = np.where(freqs == np.abs(freqs).max())[0][0]
         if max_freq_idx == 0 or np.any(
             freqs[:max_freq_idx] != np.sort(freqs[:max_freq_idx])
         ):
-            raise ValueError(
-                "Entries of `freqs` corresponding to positive frequencies "
-                "must be in ascending order."
-            )
-        if self._allow_neg_freqs:
-            if np.any(
-                freqs[max_freq_idx + 1 :] != np.sort(freqs[max_freq_idx + 1 :])
-            ):
-                raise ValueError(
-                    "Entries of `freqs` corresponding to negative frequencies "
-                    "must be in ascending order."
-                )
+            raise ValueError("Entries of `freqs` must be in ascending order.")
 
         if not isinstance(verbose, bool):
             raise TypeError("`verbose` must be a bool.")
@@ -171,21 +151,37 @@ class _ProcessFreqBase(ABC):
                 if not isinstance(freqs, tuple):
                     raise TypeError("`f1s` and `f2s` must be tuples.")
                 if len(freqs) != 2:
+                    raise ValueError("`f1s` and `f2s` must have lengths of 2.")
+                if any(freq < 0 for freq in freqs):
                     raise ValueError(
-                        "`f1s` and `f2s` must have lengths of two."
+                        "Entries of `f1s` and `f2s` must be >= 0."
                     )
-                if any(freq not in self.freqs for freq in freqs):
+                if any(freq > self.sampling_freq / 2 for freq in freqs):
                     raise ValueError(
-                        "Entries of `f1s` and `f2s` must be present in the "
-                        "data."
+                        "Entries of `f1s` and `f2s` must be <= the Nyquist "
+                        "frequency."
                     )
 
         if check_f1s:
-            f1_idcs = [np.argwhere(self.freqs == freq)[0][0] for freq in f1s]
-            self._f1s = self.freqs[f1_idcs[0] : f1_idcs[1] + 1].copy()
+            f1_idcs = np.argwhere(
+                (self.freqs >= f1s[0]) & (self.freqs <= f1s[1])
+            ).T[0]
+            if f1_idcs.size == 0:
+                raise ValueError(
+                    "No frequencies are present in the data for the range in "
+                    "`f1s`."
+                )
+            self._f1s = self.freqs[f1_idcs].copy()
         if check_f2s:
-            f2_idcs = [np.argwhere(self.freqs == freq)[0][0] for freq in f2s]
-            self._f2s = self.freqs[f2_idcs[0] : f2_idcs[1] + 1].copy()
+            f2_idcs = np.argwhere(
+                (self.freqs >= f2s[0]) & (self.freqs <= f2s[1])
+            ).T[0]
+            if f2_idcs.size == 0:
+                raise ValueError(
+                    "No frequencies are present in the data for the range in "
+                    "`f2s`."
+                )
+            self._f2s = self.freqs[f2_idcs].copy()
 
         if self.verbose:
             if self._f1s.max() >= self._f2s.min():
@@ -354,7 +350,7 @@ def _compute_bispectrum(
     return results
 
 
-# @njit
+@njit
 def _compute_threenorm(
     data: np.ndarray,
     freqs: np.ndarray,

@@ -19,10 +19,11 @@ class TDE(_ProcessBispectrum):
     Parameters
     ----------
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
-        Fourier coefficients. Must contain coefficients for the zero frequency,
-        a set of positive frequencies, and all corresponding negative
-        frequencies, like that obtained from
-        :func:`~pybispectra.utils.compute_fft` with ``return_neg_freqs=True``.
+        Fourier coefficients. Must contain a coefficient for the zero
+        frequency. Coefficients should be computed with the number of points
+        equal to twice the number of timepoints in each epoch of the original
+        data plus one (i.e. ``n_points=2 * n_times + 1`` in
+        :func:`pybispectra.utils.compute_fft`).
 
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`data`.
@@ -48,10 +49,11 @@ class TDE(_ProcessBispectrum):
         TDE results for each of the computed metrics.
 
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
-        Fourier coefficients.
+        Fourier coefficients, with negative frequencies appended.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`.
+        Frequencies (in Hz) in :attr:`data`, with negative frequencies
+        appended.
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which :attr:`data` was
@@ -59,12 +61,29 @@ class TDE(_ProcessBispectrum):
 
     verbose : bool
         Whether or not to report the progress of the processing.
+
+    Notes
+    -----
+    TDE with the bispectrum requires the Fourier coefficients of the negative
+    frequencies of the original signals, however since these are expected to be
+    real-valued, they can be inferred from the positive frequencies.
+    Accordingly, only the coefficients corresponding to the zero and positive
+    frequencies should be passed to :attr:`data`.
+
+    It is recommended to compute the Fourier coefficients with ``n_points=2 *
+    n_times + 1``. Using a smaller number of points than this will reduce the
+    time range in which a delay estimate can be generated below that of the
+    length of the epochs. Furthermore, a larger number of points than this will
+    only artificially increase the time range in which a delay estimate can be
+    generated beyond the length of the epochs.
     """
 
-    _allow_neg_freqs: bool = True
+    _data: np.ndarray = None
 
     _freq_mask: np.ndarray = None
-    _freq_range: tuple[float] = None
+    _freq_band: tuple[float] = None
+
+    _times: np.ndarray = None
 
     _return_nosym: bool = False
     _return_antisym: bool = False
@@ -93,8 +112,6 @@ class TDE(_ProcessBispectrum):
     }
     _xyz: dict = None
 
-    _times: np.ndarray = None
-
     def __init__(
         self,
         data: np.ndarray,
@@ -103,34 +120,26 @@ class TDE(_ProcessBispectrum):
         verbose: bool = True,
     ) -> None:  # noqa: D107
         super().__init__(data, freqs, sampling_freq, verbose)
-        self._sort_freqs_structure()
+        self._sort_fft_coeffs()
 
-    def _sort_freqs_structure(self) -> None:
-        """Check the freqs. have the appropriate structure."""
+    def _sort_fft_coeffs(self) -> None:
+        """Check the freqs. are appropriate and add the negative freqs."""
         if self.freqs[0] != 0.0:
             raise ValueError("The first entry of `freqs` must be 0.")
 
-        if len(self.freqs) % 2 == 0:  # should be odd (i.e. pos + neg + 0)
-            raise ValueError(
-                "`freqs` must have an odd number of entries, consisting of "
-                "the positive frequencies, the corresponding negative "
-                "frequencies, and the zero frequency."
-            )
+        self.data = np.concatenate(
+            (self.data, np.conjugate(self.data[..., 1:][..., ::-1])), axis=2
+        )
+        self.freqs = np.concatenate(
+            (self.freqs, -self.freqs[1:][::-1]), axis=0
+        )
 
-        mid_idx = len(self.freqs) // 2
-        if np.any(
-            self.freqs[1 : mid_idx + 1] != self.freqs[::-1][:mid_idx] * -1
-        ):
-            raise ValueError(
-                "Each positive frequency in `freqs` must have a corresponding "
-                "negative frequency."
-            )
-        self._n_unique_freqs = mid_idx + 1  # pos. freqs. + zero freq.
+        self._n_unique_freqs = np.unique(np.abs(self.freqs)).shape[0]
 
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
-        freqs: tuple[float] | None = None,
+        freq_band: tuple[float] | None = None,
         antisym: bool | tuple[bool] = False,
         method: int | tuple[int] = 1,
         n_jobs: int = 1,
@@ -144,7 +153,7 @@ class TDE(_ProcessBispectrum):
             TDE between. If :obj:`None`, coupling between all channels is
             computed.
 
-        freqs : tuple of float, length of 2 | None (default None)
+        freq_band : tuple of float, length of 2 | None (default None)
             Low and high frequencies (in Hz) to compute time delays for.
 
         antisym : bool | tuple of bool (default False)
@@ -238,7 +247,7 @@ class TDE(_ProcessBispectrum):
         """
         self._reset_attrs()
 
-        self._sort_freqs(freqs)
+        self._sort_freq_band(freq_band)
         self._sort_metrics(antisym, method)
         self._sort_indices(indices)
         self._sort_parallelisation(n_jobs)
@@ -258,7 +267,7 @@ class TDE(_ProcessBispectrum):
         super()._reset_attrs()
 
         self._freq_mask = None
-        self._freq_range = None
+        self._freq_band = None
 
         self._return_nosym = False
         self._return_antisym = False
@@ -280,27 +289,37 @@ class TDE(_ProcessBispectrum):
 
         self._xyz = None
 
-    def _sort_freqs(self, freqs: tuple[float] | None) -> None:
+    def _sort_freq_band(self, freq_band: tuple[float] | None) -> None:
         """Sort inputs for the frequency bounds."""
-        if freqs is None:
+        if freq_band is None:
             self._freq_mask = np.ones((self._n_unique_freqs,), dtype=np.int32)
         else:
-            if not isinstance(freqs, tuple):
-                raise TypeError("`freqs` must be a tuple.")
-            if len(freqs) != 2:
-                raise ValueError("`freqs` must have length of 2.")
+            if not isinstance(freq_band, tuple):
+                raise TypeError("`freq_band` must be a tuple.")
+            if len(freq_band) != 2:
+                raise ValueError("`freq_band` must have length of 2.")
+            if any(freq < 0.0 for freq in freq_band):
+                raise ValueError("Entries of `freq_band` must be >= 0.")
+            if any(freq > self.sampling_freq / 2 for freq in freq_band):
+                raise ValueError(
+                    "At least one entry of `freq_band` is > the Nyquist "
+                    "frequency."
+                )
             freq_mask = np.zeros((self._n_unique_freqs,), dtype=np.int32)
             freq_mask[
-                np.nonzero((self.freqs >= freqs[0]) & (self.freqs <= freqs[1]))
+                np.nonzero(
+                    (self.freqs >= freq_band[0]) & (self.freqs <= freq_band[1])
+                )
             ] = 1
             if np.all(freq_mask == 0):
                 raise ValueError(
                     "No frequencies are present in the data for the range in "
-                    "`freqs`."
+                    "`freq_band`."
                 )
+
             self._freq_mask = freq_mask
 
-        self._freq_range = (
+        self._freq_band = (
             self.freqs[np.nonzero(self._freq_mask)][0],
             self.freqs[np.nonzero(self._freq_mask)][-1],
         )
@@ -548,13 +567,16 @@ class TDE(_ProcessBispectrum):
 
     def _compute_times(self) -> None:
         """Compute timepoints (in ms) in the results."""
-        epoch_dur = 0.5 * ((self.freqs.shape[0] - 1) / self.sampling_freq)
+        epoch_dur = (self._n_unique_freqs - 1) / self.sampling_freq
         self._times = (
             np.linspace(
-                -epoch_dur, epoch_dur, self._n_freqs, dtype=_precision.real
+                -epoch_dur,
+                epoch_dur,
+                2 * self._n_unique_freqs - 1,
+                dtype=np.float32,
             )
             * 1000
-        )  # use float32 to minimise rounding errors
+        ).astype(dtype=_precision.real)
 
     def _store_results(self) -> None:
         """Store computed results in objects."""
@@ -566,7 +588,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_i_nosym,
                     self._indices,
                     self._times,
-                    self._freq_range,
+                    self._freq_band,
                     "TDE | Method I",
                 )
             )
@@ -576,7 +598,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_ii_nosym,
                     self._indices,
                     self._times,
-                    self._freq_range,
+                    self._freq_band,
                     "TDE | Method II",
                 )
             )
@@ -586,7 +608,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iii_nosym,
                     self._indices,
                     self._times,
-                    self._freq_range,
+                    self._freq_band,
                     "TDE | Method III",
                 )
             )
@@ -596,7 +618,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iv_nosym,
                     self._indices,
                     self._times,
-                    self._freq_range,
+                    self._freq_band,
                     "TDE | Method IV",
                 )
             )
@@ -607,7 +629,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_i_antisym,
                     self._indices,
                     self._times,
-                    self._freq_range,
+                    self._freq_band,
                     "TDE (antisymmetrised) | Method I",
                 )
             )
@@ -617,7 +639,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_ii_antisym,
                     self._indices,
                     self._times,
-                    self._freq_range,
+                    self._freq_band,
                     "TDE (antisymmetrised) | Method II",
                 )
             )
@@ -627,7 +649,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iii_antisym,
                     self._indices,
                     self._times,
-                    self._freq_range,
+                    self._freq_band,
                     "TDE (antisymmetrised) | Method III",
                 )
             )
@@ -637,7 +659,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iv_antisym,
                     self._indices,
                     self._times,
-                    self._freq_range,
+                    self._freq_band,
                     "TDE (antisymmetrised) | Method IV",
                 )
             )
@@ -724,7 +746,7 @@ def _compute_bispectrum_tde(
                     ]
 
             results[kmn_i, epoch_i] = np.multiply(
-                epoch_data[k, :n_unique_freqs][:, np.newaxis],
+                epoch_data[k, :n_unique_freqs],
                 np.multiply(
                     epoch_data[m, :n_unique_freqs],
                     np.conjugate(hankel_n),

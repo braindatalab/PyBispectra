@@ -17,15 +17,13 @@ def compute_fft(
     sampling_freq: int | float,
     n_points: int | None = None,
     window: str = "hanning",
-    return_neg_freqs: bool = False,
     n_jobs: int = 1,
     verbose: bool = True,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute the fast Fourier transform (FFT) on real-valued data.
 
     As the data is assumed to be real-valued, only those values corresponding
-    to the positive frequencies are returned by default (see
-    :attr`return_neg_freqs`).
+    to the positive frequencies are returned.
 
     Parameters
     ----------
@@ -36,17 +34,15 @@ def compute_fft(
         Sampling frequency (in Hz) of :attr:`data`.
 
     n_points : int | None (default None)
-        Number of points in the FFT. If :obj:`None`, is equal to the number of
-        timepoints in :attr:`data`.
+        Number of points to use in the FFT. If :obj:`None`, is equal to the
+        number of timepoints in :attr:`data`. For time delay estimation, it is
+        recommended that :attr:`n_points=2 * n_times + 1`, where `n_times` is
+        the number of timepoints in each epoch of :attr:`data`.
 
     window : str (default ``"hanning"``)
         Type of window to apply to :attr:`data` before computing the FFT.
         Accepts ``"hanning"`` and ``"hamming"``. See :func:`numpy.hanning` and
         :func:`numpy.hamming`.
-
-    return_neg_freqs : bool (default False)
-        Whether or not to return the Fourier coefficients for negative
-        frequencies.
 
     n_jobs : int (default ``1``)
         Number of jobs to run in parallel. If ``-1``, all available CPUs are
@@ -65,8 +61,6 @@ def compute_fft(
     """
     (
         n_points,
-        fft_func,
-        fft_freq_func,
         window_func,
         n_jobs,
     ) = _compute_fft_input_checks(
@@ -74,7 +68,6 @@ def compute_fft(
         sampling_freq,
         n_points,
         window,
-        return_neg_freqs,
         n_jobs,
         verbose,
     )
@@ -82,8 +75,10 @@ def compute_fft(
     if verbose:
         print("Computing FFT on the data...")
 
-    freqs = fft_freq_func(n=n_points, d=1 / sampling_freq).astype(
-        _precision.real
+    freqs = (
+        sp.fft.rfftfreq(n=n_points, d=1 / sampling_freq)
+        .astype(np.float32)  # reduce rounding errors
+        .astype(_precision.real)
     )
 
     window = window_func(data.shape[2])
@@ -96,7 +91,7 @@ def compute_fft(
     coeffs = np.array(
         pqdm(
             args,
-            fft_func,
+            sp.fft.rfft,
             n_jobs,
             argument_type="kwargs",
             desc="Processing channels...",
@@ -108,7 +103,7 @@ def compute_fft(
     if verbose:
         print("    [FFT computation finished]\n")
 
-    return coeffs[..., : len(freqs)], freqs
+    return coeffs, freqs
 
 
 def _compute_fft_input_checks(
@@ -116,7 +111,6 @@ def _compute_fft_input_checks(
     sampling_freq: int | float,
     n_points: int | None,
     window: str,
-    return_neg_freqs: bool,
     n_jobs: int,
     verbose: bool,
 ) -> tuple[int, Callable, Callable, Callable, int]:
@@ -125,12 +119,6 @@ def _compute_fft_input_checks(
     Returns
     -------
     n_points : int
-
-    fft_func : Callable
-        Function to use to compute the FFT.
-
-    fft_freq_func : Callable
-        Function to use to compute the FFT frequencies.
 
     window_func : Callable
         Function to use to window the data.
@@ -161,15 +149,6 @@ def _compute_fft_input_checks(
     else:
         window_func = np.hamming
 
-    if not isinstance(return_neg_freqs, bool):
-        raise TypeError("`return_neg_freqs` must be a bool.")
-    if return_neg_freqs:
-        fft_func = sp.fft.fft
-        fft_freq_func = sp.fft.fftfreq
-    else:
-        fft_func = sp.fft.rfft
-        fft_freq_func = sp.fft.rfftfreq
-
     if not isinstance(n_jobs, int):
         raise TypeError("`n_jobs` must be an integer.")
     if n_jobs < 1 and n_jobs != -1:
@@ -180,7 +159,7 @@ def _compute_fft_input_checks(
     if not isinstance(verbose, bool):
         raise TypeError("`verbose` must be a bool.")
 
-    return n_points, fft_func, fft_freq_func, window_func, n_jobs
+    return n_points, window_func, n_jobs
 
 
 def compute_tfr(
