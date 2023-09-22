@@ -9,14 +9,16 @@ from numba import njit
 import numpy as np
 
 from pybispectra.utils.results import _ResultsBase
+from pybispectra.utils._defaults import _precision
 from pybispectra.utils._utils import _fast_find_first
 
 
 class _ProcessFreqBase(ABC):
     """Base class for processing frequency-domain results."""
 
+    _data_precision: type = _precision.complex
+
     _data_ndims: int = 3  # usu. [epochs, channels, frequencies, (times)]
-    _allow_neg_freqs: bool = False  # only True for TDE
 
     _indices: tuple = None
     _seeds: tuple = None
@@ -73,39 +75,20 @@ class _ProcessFreqBase(ABC):
                 "At least one entry of `freqs` is > the Nyquist frequency."
             )
 
-        if not self._allow_neg_freqs and np.any(freqs < 0):
+        if np.any(freqs < 0):
             raise ValueError("Entries of `freqs` must be >= 0.")
-
-        if self._allow_neg_freqs:
-            max_freq_idx = np.argmax(freqs)
-            if np.any(freqs[: max_freq_idx + 1] < 0):
-                raise ValueError(
-                    "Entries of `freqs` must have the form positive "
-                    "frequencies, then negative frequencies."
-                )
 
         max_freq_idx = np.where(freqs == np.abs(freqs).max())[0][0]
         if max_freq_idx == 0 or np.any(
             freqs[:max_freq_idx] != np.sort(freqs[:max_freq_idx])
         ):
-            raise ValueError(
-                "Entries of `freqs` corresponding to positive frequencies "
-                "must be in ascending order."
-            )
-        if self._allow_neg_freqs:
-            if np.any(
-                freqs[max_freq_idx + 1 :] != np.sort(freqs[max_freq_idx + 1 :])
-            ):
-                raise ValueError(
-                    "Entries of `freqs` corresponding to negative frequencies "
-                    "must be in ascending order."
-                )
+            raise ValueError("Entries of `freqs` must be in ascending order.")
 
         if not isinstance(verbose, bool):
             raise TypeError("`verbose` must be a bool.")
 
-        self.data = data.copy()
-        self.freqs = freqs.copy()
+        self.data = data.copy().astype(self._data_precision)
+        self.freqs = freqs.copy().astype(_precision.real)
         self.sampling_freq = deepcopy(sampling_freq)
         self.verbose = deepcopy(verbose)
 
@@ -168,21 +151,37 @@ class _ProcessFreqBase(ABC):
                 if not isinstance(freqs, tuple):
                     raise TypeError("`f1s` and `f2s` must be tuples.")
                 if len(freqs) != 2:
+                    raise ValueError("`f1s` and `f2s` must have lengths of 2.")
+                if any(freq < 0 for freq in freqs):
                     raise ValueError(
-                        "`f1s` and `f2s` must have lengths of two."
+                        "Entries of `f1s` and `f2s` must be >= 0."
                     )
-                if any(freq not in self.freqs for freq in freqs):
+                if any(freq > self.sampling_freq / 2 for freq in freqs):
                     raise ValueError(
-                        "Entries of `f1s` and `f2s` must be present in the "
-                        "data."
+                        "Entries of `f1s` and `f2s` must be <= the Nyquist "
+                        "frequency."
                     )
 
         if check_f1s:
-            f1_idcs = [np.argwhere(self.freqs == freq)[0][0] for freq in f1s]
-            self._f1s = self.freqs[f1_idcs[0] : f1_idcs[1] + 1].copy()
+            f1_idcs = np.argwhere(
+                (self.freqs >= f1s[0]) & (self.freqs <= f1s[1])
+            ).T[0]
+            if f1_idcs.size == 0:
+                raise ValueError(
+                    "No frequencies are present in the data for the range in "
+                    "`f1s`."
+                )
+            self._f1s = self.freqs[f1_idcs].copy()
         if check_f2s:
-            f2_idcs = [np.argwhere(self.freqs == freq)[0][0] for freq in f2s]
-            self._f2s = self.freqs[f2_idcs[0] : f2_idcs[1] + 1].copy()
+            f2_idcs = np.argwhere(
+                (self.freqs >= f2s[0]) & (self.freqs <= f2s[1])
+            ).T[0]
+            if f2_idcs.size == 0:
+                raise ValueError(
+                    "No frequencies are present in the data for the range in "
+                    "`f2s`."
+                )
+            self._f2s = self.freqs[f2_idcs].copy()
 
         if self.verbose:
             if self._f1s.max() >= self._f2s.min():
@@ -283,6 +282,7 @@ def _compute_bispectrum(
     f1s: np.ndarray,
     f2s: np.ndarray,
     kmn: np.ndarray,
+    precision: type,
 ) -> np.ndarray:  # pragma: no cover
     """Compute the bispectrum for a single connection.
 
@@ -306,6 +306,10 @@ def _compute_bispectrum(
         the k, m, and n channel indices in ``data``, respectively, to compute
         the bispectrum for.
 
+    precision : type
+        Precision to use for the computation. Either ``numpy.complex64``
+        (single) or ``numpy.complex128`` (double).
+
     Returns
     -------
     results : numpy.ndarray of complex float, shape of [x, epochs, f1s, f2s]
@@ -323,7 +327,7 @@ def _compute_bispectrum(
     results = np.full(
         (len(kmn), data.shape[0], f1s.shape[0], f2s.shape[0]),
         fill_value=np.nan,
-        dtype=np.complex128,
+        dtype=precision,
     )
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
@@ -353,6 +357,7 @@ def _compute_threenorm(
     f1s: np.ndarray,
     f2s: np.ndarray,
     kmn: np.ndarray,
+    precision: type,
 ) -> np.ndarray:  # pragma: no cover
     """Compute threenorm for a single connection across epochs.
 
@@ -376,6 +381,10 @@ def _compute_threenorm(
         the k, m, and n channel indices in ``data``, respectively, to compute
         the threenorm for.
 
+    precision : type
+        Precision to use for the computation. Either ``numpy.complex64``
+        (single) or ``numpy.complex128`` (double).
+
     RETURNS
     -------
     results : numpy.ndarray of float, shape of [x, f1s, f2s]
@@ -385,7 +394,7 @@ def _compute_threenorm(
     results = np.full(
         (len(kmn), f1s.shape[0], f2s.shape[0]),
         fill_value=np.nan,
-        dtype=np.float64,
+        dtype=precision,
     )
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)

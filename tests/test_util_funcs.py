@@ -8,7 +8,13 @@ import scipy as sp
 from mne import Info
 
 from pybispectra.data import get_example_data_paths, DATASETS
-from pybispectra.utils import compute_fft, compute_tfr, compute_rank
+from pybispectra.utils import (
+    compute_fft,
+    compute_tfr,
+    compute_rank,
+    set_precision,
+)
+from pybispectra.utils._defaults import _precision, _Precision
 from pybispectra.utils._utils import (
     _compute_pearsonr_2d,
     _create_mne_info,
@@ -16,10 +22,11 @@ from pybispectra.utils._utils import (
     _generate_data,
 )
 
+set_precision("double")  # make sure precision is as default before testing
+
 
 @pytest.mark.parametrize("window", ["hanning", "hamming"])
-@pytest.mark.parametrize("return_neg_freqs", [True, False])
-def test_compute_fft(window: str, return_neg_freqs: bool) -> None:
+def test_compute_fft(window: str) -> None:
     """Test `compute_fft`."""
     n_epochs = 5
     n_chans = 3
@@ -32,7 +39,6 @@ def test_compute_fft(window: str, return_neg_freqs: bool) -> None:
         data=data,
         sampling_freq=sampling_freq,
         window=window,
-        return_neg_freqs=return_neg_freqs,
         n_jobs=1,
     )
     assert isinstance(fft, np.ndarray), "`fft` should be a NumPy array."
@@ -57,24 +63,9 @@ def test_compute_fft(window: str, return_neg_freqs: bool) -> None:
     assert (
         max(freqs) <= sampling_freq / 2
     ), "The maximum of `freqs` should be <= the Nyquist frequency."
-    if return_neg_freqs:
-        assert np.all(freqs[: max_freq_idx + 1] >= 0), (
-            "Entries of `freqs` must have the form positive frequencies, then "
-            "negative frequencies."
-        )
-        assert np.all(
-            freqs[max_freq_idx + 1 :] == np.sort(freqs[max_freq_idx + 1 :])
-        ), (
-            "Entries of `freqs` corresponding to negative frequencies must be "
-            "in ascending order."
-        )
-        assert (
-            min(freqs) >= -sampling_freq / 2
-        ), "The minimum of `freqs` should be >= the Nyquist frequency."
-    else:
-        assert (
-            freqs[-1] == sampling_freq / 2
-        ), "The maximum of `freqs` should be the Nyquist frequency."
+    assert (
+        freqs[-1] == sampling_freq / 2
+    ), "The last entry of `freqs` should be the Nyquist frequency."
 
     # check it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
@@ -109,14 +100,6 @@ def test_compute_fft(window: str, return_neg_freqs: bool) -> None:
     ):
         compute_fft(
             data=data, sampling_freq=sampling_freq, window="not_a_window"
-        )
-
-    with pytest.raises(TypeError, match="`return_neg_freqs` must be a bool."):
-        compute_fft(
-            data=data,
-            sampling_freq=sampling_freq,
-            window=window,
-            return_neg_freqs="true",
         )
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
@@ -470,7 +453,9 @@ def test_compute_pearson_2d() -> None:
     data = _generate_data(n_epochs, n_chans, n_times)
 
     # test it works with correct inputs
-    pearsonr = _compute_pearsonr_2d(x=data[:, 0], y=data[:, 1])
+    pearsonr = _compute_pearsonr_2d(
+        x=data[:, 0], y=data[:, 1], precision=_precision.real
+    )
     assert isinstance(
         pearsonr, np.ndarray
     ), "`pearsonr` should be a NumPy array."
@@ -522,3 +507,34 @@ def test_get_example_data_paths() -> None:
     # test it catches incorrect inputs
     with pytest.raises(ValueError, match="`name` must be one of"):
         get_example_data_paths(name="not_a_name")
+
+
+@pytest.mark.parametrize("precision_object", [_precision, _precision])
+@pytest.mark.parametrize("precision_type", ["single", "double"])
+def test_set_precision(
+    precision_object: _Precision, precision_type: str
+) -> None:
+    """Test `set_precision`."""
+    # error catching
+    with pytest.raises(
+        ValueError, match="precision must be either 'single' or 'double'."
+    ):
+        set_precision(precision="not_a_precision")
+
+    # default precision should be double
+    assert precision_object.type == "double"
+    assert precision_object.real == np.float64
+    assert precision_object.complex == np.complex128
+
+    set_precision(precision=precision_type)
+
+    if precision_type == "single":
+        assert precision_object.type == "single"
+        assert precision_object.real == np.float32
+        assert precision_object.complex == np.complex64
+        # reset precision to default
+        set_precision("double")
+    else:
+        assert precision_object.type == "double"
+        assert precision_object.real == np.float64
+        assert precision_object.complex == np.complex128

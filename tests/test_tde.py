@@ -23,7 +23,6 @@ def test_error_catch() -> None:
         sampling_freq=sampling_freq,
         n_points=2 * n_times + 1,
         window="hamming",
-        return_neg_freqs=True,
     )
 
     # initialisation
@@ -40,23 +39,6 @@ def test_error_catch() -> None:
         ValueError, match="The first entry of `freqs` must be 0."
     ):
         TDE(coeffs[..., 1:], freqs[1:], sampling_freq)
-    with pytest.raises(
-        ValueError,
-        match=(
-            "`freqs` must have an odd number of entries, consisting of the "
-            "positive frequencies, the corresponding negative frequencies, "
-            "and the zero frequency."
-        ),
-    ):
-        TDE(coeffs[..., :-1], freqs[:-1], sampling_freq)
-    with pytest.raises(
-        ValueError,
-        match=(
-            "Each positive frequency in `freqs` must have a corresponding "
-            "negative frequency."
-        ),
-    ):
-        TDE(coeffs, np.hstack((freqs[:-1], -freqs[-1])), sampling_freq)
 
     with pytest.raises(
         ValueError,
@@ -75,11 +57,7 @@ def test_error_catch() -> None:
         TDE(coeffs, bad_freqs, sampling_freq)
     max_freq_i = np.argwhere(freqs == np.max(freqs))[0][0]
     with pytest.raises(
-        ValueError,
-        match=(
-            "Entries of `freqs` corresponding to positive frequencies must be "
-            "in ascending order."
-        ),
+        ValueError, match="Entries of `freqs` must be in ascending order."
     ):
         TDE(
             coeffs,
@@ -88,28 +66,6 @@ def test_error_catch() -> None:
             ),
             sampling_freq,
         )
-    with pytest.raises(
-        ValueError,
-        match=(
-            "Entries of `freqs` corresponding to negative frequencies must be "
-            "in ascending order."
-        ),
-    ):
-        TDE(
-            coeffs,
-            np.hstack(
-                (freqs[: max_freq_i + 1], freqs[max_freq_i + 1 :][::-1])
-            ),
-            sampling_freq,
-        )
-    with pytest.raises(
-        ValueError,
-        match=(
-            "Entries of `freqs` must have the form positive frequencies, then "
-            "negative frequencies."
-        ),
-    ):
-        TDE(coeffs, freqs[::-1], sampling_freq)
 
     with pytest.raises(
         TypeError, match="`sampling_freq` must be an int or a float."
@@ -175,13 +131,57 @@ def test_error_catch() -> None:
     ):
         tde.compute(indices=((0,), (0,)))
 
+    with pytest.raises(TypeError, match="`freq_band` must be a tuple."):
+        tde.compute(freq_band=5)
+    with pytest.raises(ValueError, match="`freq_band` must have length of 2."):
+        tde.compute(freq_band=(5, 10, 15))
+    with pytest.raises(
+        ValueError, match="Entries of `freq_band` must be >= 0."
+    ):
+        tde.compute(freq_band=(-1, 10))
+    with pytest.raises(
+        ValueError, match="Entries of `freq_band` must be >= 0."
+    ):
+        tde.compute(freq_band=(10, -1))
+    with pytest.raises(
+        ValueError,
+        match=(
+            "At least one entry of `freq_band` is > the Nyquist frequency."
+        ),
+    ):
+        tde.compute(freq_band=(5, sampling_freq / 2 + 1))
+    with pytest.raises(
+        ValueError,
+        match=(
+            "At least one entry of `freq_band` is > the Nyquist frequency."
+        ),
+    ):
+        tde.compute(freq_band=(sampling_freq / 2 + 1, 5))
+    with pytest.raises(
+        ValueError,
+        match=(
+            "No frequencies are present in the data for the range in "
+            "`freq_band`."
+        ),
+    ):
+        tde.compute(freq_band=(10, 5))
+    with pytest.raises(
+        ValueError,
+        match=(
+            "No frequencies are present in the data for the range in "
+            "`freq_band`."
+        ),
+    ):
+        tde.compute(freq_band=(5.6, 5.7))
+
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         tde.compute(n_jobs=0.5)
     with pytest.raises(ValueError, match="`n_jobs` must be >= 1 or -1."):
         tde.compute(n_jobs=0)
 
 
-def test_tde_runs() -> None:
+@pytest.mark.parametrize("freq_band", [None, (10, 20), (10.5, 19.5)])
+def test_tde_runs(freq_band: None | tuple) -> None:
     """Test that TDE runs correctly."""
     n_chans = 3
     n_times = 100
@@ -193,12 +193,13 @@ def test_tde_runs() -> None:
         sampling_freq=sampling_freq,
         n_points=2 * n_times + 1,
         window="hamming",
-        return_neg_freqs=True,
     )
 
     # check it runs with correct inputs
     tde = TDE(data=fft, freqs=freqs, sampling_freq=sampling_freq)
-    tde.compute(antisym=(False, True), method=(1, 2, 3, 4))
+    tde.compute(
+        antisym=(False, True), method=(1, 2, 3, 4), freq_band=freq_band
+    )
 
     # check the returned results have the correct shape
     assert (
@@ -271,7 +272,6 @@ def test_tde_results():
         sampling_freq=sampling_freq,
         n_points=2 * n_times + 1,
         window="hamming",
-        return_neg_freqs=True,
     )
 
     # compute TDE (seed -> target; target -> seed)
@@ -294,7 +294,6 @@ def test_tde_results():
         sampling_freq=sampling_freq,
         n_points=2 * n_times + 1,
         window="hamming",
-        return_neg_freqs=True,
     )
 
     # compute TDE

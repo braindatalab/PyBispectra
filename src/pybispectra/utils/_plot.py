@@ -127,28 +127,33 @@ class _PlotBase(ABC):
             f2_idcs = np.arange(len(self.f1s), dtype=np.int32)
             check_f2s = False
 
-        for self_freqs, freqs, check_freqs in zip(
-            [self.f1s, self.f2s], [f1s, f2s], [check_f1s, check_f2s]
-        ):
+        for freqs, check_freqs in zip([f1s, f2s], [check_f1s, check_f2s]):
             if check_freqs:
                 if not isinstance(freqs, tuple):
                     raise TypeError("`f1s` and `f2s` must be tuples.")
                 if len(freqs) != 2:
                     raise ValueError("`f1s` and `f2s` must have lengths of 2.")
-                if any(freq not in self_freqs for freq in freqs):
-                    raise ValueError(
-                        "Entries of `f1s` and `f2s` must be present in the "
-                        "results."
-                    )
 
         if check_f1s:
-            f1_idcs = [np.argwhere(self.f1s == freq)[0][0] for freq in f1s]
-            f1s = self.f1s[f1_idcs[0] : f1_idcs[1] + 1]
-            f1_idcs = np.arange(f1_idcs[0], f1_idcs[1] + 1, dtype=np.int32)
+            f1_idcs = np.argwhere(
+                (self.f1s >= f1s[0]) & (self.f1s <= f1s[1])
+            ).T[0]
+            if f1_idcs.size == 0:
+                raise ValueError(
+                    "No frequencies are present in the data for the range in "
+                    "`f1s`."
+                )
+            f1s = self.f1s[f1_idcs].copy()
         if check_f2s:
-            f2_idcs = [np.argwhere(self.f2s == freq)[0][0] for freq in f2s]
-            f2s = self.f2s[f2_idcs[0] : f2_idcs[1] + 1]
-            f2_idcs = np.arange(f2_idcs[0], f2_idcs[1] + 1, dtype=np.int32)
+            f2_idcs = np.argwhere(
+                (self.f2s >= f2s[0]) & (self.f2s <= f2s[1])
+            ).T[0]
+            if f2_idcs.size == 0:
+                raise ValueError(
+                    "No frequencies are present in the data for the range in "
+                    "`f2s`."
+                )
+            f2s = self.f2s[f2_idcs].copy()
 
         return f1s, f2s, f1_idcs, f2_idcs
 
@@ -605,17 +610,23 @@ class _PlotTDE(_PlotBase):
                 raise TypeError("`times` must be a tuple.")
             if len(times) != 2:
                 raise ValueError("`times` must have length of 2.")
-            if any(time not in self.times for time in times):
+            if any(
+                time < self.times[0] or time > self.times[-1] for time in times
+            ):
                 raise ValueError(
-                    "Entries of `times` must be present in the results."
+                    "At least one entry of `times` is outside the range of "
+                    "the results."
                 )
-            time_idcs = [
-                np.argwhere(self.times == time)[0][0] for time in times
-            ]
-            times = self.times[time_idcs[0] : time_idcs[1] + 1]
-            time_idcs = np.arange(
-                time_idcs[0], time_idcs[1] + 1, dtype=np.int32
-            )
+
+            time_idcs = np.argwhere(
+                (self.times >= times[0]) & (self.times <= times[1])
+            ).T[0]
+            if time_idcs.size == 0:
+                raise ValueError(
+                    "No times are present in the data for the range in "
+                    "`times`."
+                )
+            times = self.times[time_idcs].copy()
 
         return times, time_idcs
 

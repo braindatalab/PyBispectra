@@ -15,7 +15,6 @@ def test_results_cfc_error_catch() -> None:
     data = _generate_data(n_cons, n_f1, n_f2)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
-    name = "test"
     n_unique_chans = 3
     indices = (
         tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
@@ -28,7 +27,6 @@ def test_results_cfc_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
         ResultsCFC(
@@ -36,7 +34,6 @@ def test_results_cfc_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
@@ -45,7 +42,6 @@ def test_results_cfc_error_catch() -> None:
             indices=list(indices),
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(ValueError, match="`indices` must have length of 2."):
         ResultsCFC(
@@ -53,7 +49,6 @@ def test_results_cfc_error_catch() -> None:
             indices=(indices[0], indices[0], indices[1]),
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         TypeError, match="Entries of `indices` must be tuples."
@@ -63,7 +58,6 @@ def test_results_cfc_error_catch() -> None:
             indices=(0, 1),
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         TypeError,
@@ -74,7 +68,6 @@ def test_results_cfc_error_catch() -> None:
             indices=((0.5,), (1.5,)),
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         ValueError, match="Entries of `indices` must have equal length."
@@ -87,7 +80,6 @@ def test_results_cfc_error_catch() -> None:
             ),
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         ValueError,
@@ -100,7 +92,6 @@ def test_results_cfc_error_catch() -> None:
             indices=((0,), (n_cons + 1,)),
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
 
     with pytest.raises(
@@ -111,7 +102,6 @@ def test_results_cfc_error_catch() -> None:
             indices=indices,
             f1s=f1s.tolist(),
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         TypeError, match="`f1s` and `f2s` must be NumPy arrays."
@@ -121,7 +111,6 @@ def test_results_cfc_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=f2s.tolist(),
-            name=name,
         )
     with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
         ResultsCFC(
@@ -129,7 +118,6 @@ def test_results_cfc_error_catch() -> None:
             indices=indices,
             f1s=np.vstack((f1s, f1s)),
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
         ResultsCFC(
@@ -137,7 +125,6 @@ def test_results_cfc_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=np.vstack((f2s, f2s)),
-            name=name,
         )
 
     with pytest.raises(
@@ -149,7 +136,6 @@ def test_results_cfc_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         ValueError,
@@ -160,7 +146,6 @@ def test_results_cfc_error_catch() -> None:
             indices=indices,
             f1s=f1s[1:],
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         ValueError,
@@ -171,7 +156,6 @@ def test_results_cfc_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=f2s[1:],
-            name=name,
         )
 
     with pytest.raises(TypeError, match="`name` must be a string."):
@@ -183,9 +167,7 @@ def test_results_cfc_error_catch() -> None:
             name=1,
         )
 
-    results = ResultsCFC(
-        data=data, indices=indices, f1s=f1s, f2s=f2s, name=name
-    )
+    results = ResultsCFC(data=data, indices=indices, f1s=f1s, f2s=f2s)
 
     with pytest.raises(ValueError, match="`form` is not recognised."):
         results.get_results(form="not_a_form")
@@ -238,7 +220,6 @@ def test_results_tde_error_catch() -> None:
     n_times = 50
     data = _generate_data(n_cons, n_times, 1)[..., 0]
     times = np.arange(n_times)
-    name = "test"
     n_unique_chans = 3
     indices = (
         tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
@@ -250,14 +231,12 @@ def test_results_tde_error_catch() -> None:
             data=data.tolist(),
             indices=indices,
             times=times,
-            name=name,
         )
     with pytest.raises(ValueError, match="`data` must be a 2D array."):
         ResultsTDE(
             data=data[..., 0],
             indices=indices,
             times=times,
-            name=name,
         )
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
@@ -265,14 +244,12 @@ def test_results_tde_error_catch() -> None:
             data=data,
             indices=list(indices),
             times=times,
-            name=name,
         )
     with pytest.raises(ValueError, match="`indices` must have length of 2."):
         ResultsTDE(
             data=data,
             indices=(indices[0], indices[0], indices[1]),
             times=times,
-            name=name,
         )
     with pytest.raises(
         TypeError, match="Entries of `indices` must be tuples."
@@ -281,7 +258,6 @@ def test_results_tde_error_catch() -> None:
             data=data,
             indices=(0, 1),
             times=times,
-            name=name,
         )
     with pytest.raises(
         TypeError,
@@ -291,7 +267,6 @@ def test_results_tde_error_catch() -> None:
             data=data,
             indices=((0.5,), (1.5,)),
             times=times,
-            name=name,
         )
     with pytest.raises(
         ValueError, match="Entries of `indices` must have equal length."
@@ -303,7 +278,6 @@ def test_results_tde_error_catch() -> None:
                 tuple(np.concatenate((indices[1], [1])).tolist()),
             ),
             times=times,
-            name=name,
         )
     with pytest.raises(
         ValueError,
@@ -315,7 +289,6 @@ def test_results_tde_error_catch() -> None:
             data=data,
             indices=((0,), (n_cons + 1,)),
             times=times,
-            name=name,
         )
 
     with pytest.raises(TypeError, match="`times` must be a NumPy array."):
@@ -323,14 +296,12 @@ def test_results_tde_error_catch() -> None:
             data=data,
             indices=indices,
             times=times.tolist(),
-            name=name,
         )
     with pytest.raises(ValueError, match="`times` must be a 1D array."):
         ResultsTDE(
             data=data,
             indices=indices,
             times=times[:, np.newaxis],
-            name=name,
         )
 
     with pytest.raises(
@@ -341,7 +312,6 @@ def test_results_tde_error_catch() -> None:
             data=data[1:, :],
             indices=indices,
             times=times,
-            name=name,
         )
     with pytest.raises(
         ValueError,
@@ -351,7 +321,13 @@ def test_results_tde_error_catch() -> None:
             data=data,
             indices=indices,
             times=times[1:],
-            name=name,
+        )
+
+    with pytest.raises(TypeError, match="`freq_band` must be a tuple."):
+        ResultsTDE(data=data, indices=indices, times=times, freq_band=5)
+    with pytest.raises(ValueError, match="`freq_band` must have length of 2."):
+        ResultsTDE(
+            data=data, indices=indices, times=times, freq_band=(5, 10, 15)
         )
 
     with pytest.raises(TypeError, match="`name` must be a string."):
@@ -362,7 +338,7 @@ def test_results_tde_error_catch() -> None:
             name=1,
         )
 
-    results = ResultsTDE(data=data, indices=indices, times=times, name=name)
+    results = ResultsTDE(data=data, indices=indices, times=times)
 
     with pytest.raises(ValueError, match="`form` is not recognised."):
         results.get_results(form="not_a_form")
@@ -375,16 +351,36 @@ def test_results_tde_runs() -> None:
     data = _generate_data(n_cons, n_times, 1)[..., 0]
     times = np.arange(n_times)
     name = "test"
+    freq_band = (10, 20)
     n_unique_chans = 3
     indices = (
         tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
         tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
-    results = ResultsTDE(data=data, indices=indices, times=times, name=name)
+    results = ResultsTDE(
+        data=data,
+        indices=indices,
+        times=times,
+        name=name,
+        freq_band=None,
+    )
 
     assert repr(results) == (
-        f"'<Result: {name} | [{n_cons} nodes, {n_times} times]>'"
+        f"<Result: {name} | [{n_cons} nodes, {n_times} times]>"
+    )
+
+    results = ResultsTDE(
+        data=data,
+        indices=indices,
+        times=times,
+        name=name,
+        freq_band=freq_band,
+    )
+
+    assert repr(results) == (
+        f"<Result: {name} | {freq_band[0]} - {freq_band[1]} Hz | [{n_cons} "
+        f"nodes, {n_times} times]>"
     )
 
     results_array = results.get_results(form="raveled")
@@ -408,7 +404,6 @@ def test_results_waveshape_error_catch() -> None:
     data = _generate_data(n_chans, n_f1, n_f2)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
-    name = "test"
     indices = tuple(range(n_chans))
 
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
@@ -417,7 +412,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
         ResultsWaveShape(
@@ -425,7 +419,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
@@ -434,7 +427,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=list(indices),
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(TypeError, match="Entries of `indices` must be ints."):
         ResultsWaveShape(
@@ -442,7 +434,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=(0.5,),
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         ValueError,
@@ -455,7 +446,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=(-1,),
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         ValueError,
@@ -468,7 +458,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=(n_chans + 1,),
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
 
     with pytest.raises(
@@ -479,7 +468,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=indices,
             f1s=f1s.tolist(),
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         TypeError, match="`f1s` and `f2s` must be NumPy arrays."
@@ -489,7 +477,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=f2s.tolist(),
-            name=name,
         )
     with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
         ResultsWaveShape(
@@ -497,7 +484,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=indices,
             f1s=np.vstack((f1s, f1s)),
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
         ResultsWaveShape(
@@ -505,7 +491,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=np.vstack((f2s, f2s)),
-            name=name,
         )
 
     with pytest.raises(
@@ -517,7 +502,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         ValueError,
@@ -528,7 +512,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=indices,
             f1s=f1s[1:],
             f2s=f2s,
-            name=name,
         )
     with pytest.raises(
         ValueError,
@@ -539,7 +522,6 @@ def test_results_waveshape_error_catch() -> None:
             indices=indices,
             f1s=f1s,
             f2s=f2s[1:],
-            name=name,
         )
 
     with pytest.raises(TypeError, match="`name` must be a string."):

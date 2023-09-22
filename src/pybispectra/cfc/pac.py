@@ -6,6 +6,7 @@ import numpy as np
 from pqdm.processes import pqdm
 
 from pybispectra.utils import ResultsCFC
+from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import (
     _ProcessBispectrum,
     _compute_bispectrum,
@@ -251,6 +252,7 @@ class PAC(_ProcessBispectrum):
                 "f1s": self._f1s,
                 "f2s": self._f2s,
                 "kmn": kmn,
+                "precision": _precision.complex,
             }
             for seed, target in zip(self._seeds, self._targets)
         ]
@@ -265,7 +267,8 @@ class PAC(_ProcessBispectrum):
                     argument_type="kwargs",
                     desc="Processing connections...",
                     disable=not self.verbose,
-                )
+                ),
+                dtype=_precision.complex,
             )
             .mean(axis=2)
             .transpose(1, 0, 2, 3)
@@ -293,6 +296,7 @@ class PAC(_ProcessBispectrum):
                 "f1s": self._f1s,
                 "f2s": self._f2s,
                 "kmn": kmn,
+                "precision": _precision.real,
             }
             for seed, target in zip(self._seeds, self._targets)
         ]
@@ -305,7 +309,8 @@ class PAC(_ProcessBispectrum):
                 argument_type="kwargs",
                 desc="Processing connections...",
                 disable=not self.verbose,
-            )
+            ),
+            dtype=_precision.real,
         ).transpose(1, 0, 2, 3)
 
         self._bicoherence = self._bispectrum / threenorm
@@ -327,7 +332,9 @@ class PAC(_ProcessBispectrum):
                 ):
                     if seed == target:
                         self._pac_antisym_nonorm[con_i] = np.full_like(
-                            self._pac_antisym_nonorm[con_i], fill_value=np.nan
+                            self._pac_antisym_nonorm[con_i],
+                            fill_value=np.nan,
+                            dtype=_precision.real,
                         )
 
         if self._return_threenorm:
@@ -344,6 +351,7 @@ class PAC(_ProcessBispectrum):
                         self._pac_antisym_threenorm[con_i] = np.full_like(
                             self._pac_antisym_threenorm[con_i],
                             fill_value=np.nan,
+                            dtype=_precision.real,
                         )
 
     def _store_results(self) -> None:

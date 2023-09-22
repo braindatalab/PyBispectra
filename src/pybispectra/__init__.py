@@ -13,5 +13,6 @@ from .utils import (
     compute_fft,
     compute_tfr,
     compute_rank,
+    set_precision,
 )
 from .data import get_example_data_paths

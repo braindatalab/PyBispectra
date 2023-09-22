@@ -83,27 +83,26 @@ def test_plotting_cfc_error_catch() -> None:
         ValueError, match="`f1s` and `f2s` must have lengths of 2."
     ):
         results.plot(f2s=(f2s[0], f2s[1], f2s[2]))
-
     with pytest.raises(
         ValueError,
-        match="Entries of `f1s` and `f2s` must be present in the results.",
+        match="No frequencies are present in the data for the range in `f1s`.",
     ):
-        results.plot(f1s=(f1s[0] - 1, f1s[-1]))
+        results.plot(f1s=(20, 10))
     with pytest.raises(
         ValueError,
-        match="Entries of `f1s` and `f2s` must be present in the results.",
+        match="No frequencies are present in the data for the range in `f1s`.",
     ):
-        results.plot(f1s=(f1s[0], f1s[-1] + 1))
+        results.plot(f1s=(10.1, 10.2))
     with pytest.raises(
         ValueError,
-        match="Entries of `f1s` and `f2s` must be present in the results",
+        match="No frequencies are present in the data for the range in `f2s`.",
     ):
-        results.plot(f2s=(f2s[0] - 1, f2s[-1]))
+        results.plot(f2s=(20, 10))
     with pytest.raises(
         ValueError,
-        match="Entries of `f1s` and `f2s` must be present in the results",
+        match="No frequencies are present in the data for the range in `f2s`.",
     ):
-        results.plot(f2s=(f2s[0], f2s[-1] + 1))
+        results.plot(f2s=(10.1, 10.2))
 
     with pytest.raises(
         TypeError,
@@ -204,13 +203,19 @@ def test_plotting_cfc_runs() -> None:
     )
     plt.close()
 
+    # check it works with non-exact frequencies
+    figs, axes = results.plot(
+        f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False
+    )
+    plt.close()
+
 
 def test_plotting_TDE_error_catch() -> None:
     """Test plotting in `ResultsTDE` catches errors."""
     n_cons = 9
-    n_times = 50
+    n_times = 51
     data = _generate_data(n_cons, n_times, 1)[..., 0]
-    times = np.arange(n_times)
+    times = np.arange((n_times - 1) * -0.5, n_times * 0.5)
     name = "test"
     n_unique_chans = 3
     indices = (
@@ -261,17 +266,31 @@ def test_plotting_TDE_error_catch() -> None:
     with pytest.raises(ValueError, match="`times` must have length of 2."):
         results.plot(times=(times[0], times[1], times[2]))
     with pytest.raises(
-        ValueError, match="Entries of `times` must be present in the results."
+        ValueError,
+        match=(
+            "At least one entry of `times` is outside the range of the "
+            "results."
+        ),
     ):
         results.plot(times=(times[0] - 1, times[-1]))
     with pytest.raises(
-        ValueError, match="Entries of `times` must be present in the results."
+        ValueError,
+        match=(
+            "At least one entry of `times` is outside the range of the "
+            "results."
+        ),
     ):
         results.plot(times=(times[0], times[-1] + 1))
     with pytest.raises(
-        ValueError, match="Entries of `times` must be present in the results."
+        ValueError,
+        match=("No times are present in the data for the range in `times`."),
     ):
-        results.plot(times=(times[0] - 1, times[-1] + 1))
+        results.plot(times=(times[-1], times[0]))
+    with pytest.raises(
+        ValueError,
+        match=("No times are present in the data for the range in `times`."),
+    ):
+        results.plot(times=(0.1, 0.2))
 
     with pytest.raises(
         TypeError,
@@ -315,9 +334,9 @@ def test_plotting_TDE_error_catch() -> None:
 def test_plotting_tde_runs() -> None:
     """Test plotting in `ResultsTDE` runs with correct inputs."""
     n_cons = 9
-    n_times = 50
+    n_times = 51
     data = _generate_data(n_cons, n_times, 1)[..., 0]
-    times = np.arange(n_times)
+    times = np.arange((n_times - 1) * -0.5, n_times * 0.5)
     name = "test"
     n_unique_chans = 3
     indices = (
@@ -354,6 +373,13 @@ def test_plotting_tde_runs() -> None:
         figs, axes = results.plot(
             nodes=(0,), times=(results.tau[0] + 1, times[-1]), show=False
         )
+    plt.close()
+
+    # check it works with non-exact times
+    figs, axes = results.plot(
+        times=(times[0] + 1e-5, times[-1] - 1e-5),
+        show=False,
+    )
     plt.close()
 
 
@@ -420,17 +446,26 @@ def test_plotting_waveshape_error_catch() -> None:
         ValueError, match="`f1s` and `f2s` must have lengths of 2."
     ):
         results.plot(f2s=(f2s[0], f2s[1], f2s[2]))
-
     with pytest.raises(
         ValueError,
-        match="Entries of `f1s` and `f2s` must be present in the results.",
+        match="No frequencies are present in the data for the range in `f1s`.",
     ):
-        results.plot(f1s=(f1s[0], f1s[-1] + 1))
+        results.plot(f1s=(20, 10))
     with pytest.raises(
         ValueError,
-        match="Entries of `f1s` and `f2s` must be present in the results",
+        match="No frequencies are present in the data for the range in `f1s`.",
     ):
-        results.plot(f2s=(f2s[0], f2s[-1] + 1))
+        results.plot(f1s=(10.1, 10.2))
+    with pytest.raises(
+        ValueError,
+        match="No frequencies are present in the data for the range in `f2s`.",
+    ):
+        results.plot(f2s=(20, 10))
+    with pytest.raises(
+        ValueError,
+        match="No frequencies are present in the data for the range in `f2s`.",
+    ):
+        results.plot(f2s=(10.1, 10.2))
 
     with pytest.raises(
         TypeError,
@@ -532,5 +567,11 @@ def test_plotting_waveshape_runs() -> None:
 
     figs, axes = results.plot(
         f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False
+    )
+    plt.close()
+
+    # check it works with non-exact frequencies
+    figs, axes = results.plot(
+        f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False
     )
     plt.close()
