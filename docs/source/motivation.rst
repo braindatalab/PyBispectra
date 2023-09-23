@@ -81,7 +81,7 @@ poorly at distinguishing genuine across-site coupling from within-site coupling
 in the presence of source mixing :footcite:`Chella2014`. The bispectrum
 overcomes these issues, being computationally cheaper, lacking the
 need to precisely filter the data :footcite:`Zandvoort2021`, and being more
-robust to spurious across-site coupling estimates :footcite:`PellegriniInPrep`
+robust to spurious across-site coupling estimates :footcite:`PellegriniInPrep`.
 
 Additionally, analyses of waveshape often rely on searching through the
 time-series signal :footcite:`Cole2017`, a computationally expensive procedure
