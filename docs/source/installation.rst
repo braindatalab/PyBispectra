@@ -8,7 +8,7 @@ package, then install it using pip:
     
     $ pip install pybispectra
 
-PyBispectra requires Python >= 3.11. Other requirements are listed
+PyBispectra requires Python >= 3.10. Other requirements are listed
 `here <_static/requirements.txt>`_.
 
 If you need to create an environment in which to install PyBispectra, you can
