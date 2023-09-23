@@ -405,9 +405,10 @@ def set_precision(precision: str) -> None:
     Attributes
     ----------
     precision : str
-        Precision to use. Accepts ``"single"`` (real values are ``np.float32``
-        and complex values are ``np.complex64``) and ``"double"`` (real values
-        are ``np.float64`` and complex values are ``np.complex128``).
+        Precision to use. Accepts ``"single"`` (real values are
+        :obj:`np.float32` and complex values are :obj:`np.complex64`) and
+        ``"double"`` (real values are :obj:`np.float64` and complex values are
+        :obj:`np.complex128`).
 
     Notes
     -----
