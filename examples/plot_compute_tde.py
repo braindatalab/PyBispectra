@@ -29,10 +29,9 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # where :math:`kmn` is a combination of signals with Fourier coefficients
 # :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`, respectively;
 # :math:`f_1` and :math:`f_2` correspond to a lower and higher frequency,
-# respectively; and :math:`<>` represents the average value over epochs.
-#
-# When computing time delays, information from :math:`\textbf{n}` is taken not
-# only from the positive frequencies, but also the negative frequencies.
+# respectively; and :math:`<>` represents the average value over epochs. When
+# computing time delays, information from :math:`\textbf{n}` is taken not only
+# from the positive frequencies, but also the negative frequencies.
 #
 # Four methods exist for computing TDE based on the bispectrum
 # :footcite:`Nikias1988`. The fundamental equation is as follows
