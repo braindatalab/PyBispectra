@@ -368,7 +368,7 @@ def _compute_tfr_input_checks(
 
 
 def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
-    """Compute the min. rank of data over epochs from non-zero singular values.
+    """Compute the minimum rank of data from non-zero singular values.
 
     Parameters
     ----------
