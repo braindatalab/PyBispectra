@@ -137,17 +137,26 @@ class AAC(_ProcessFreqBase):
             for seed, target in zip(self._seeds, self._targets)
         ]
 
-        self._aac = np.array(
-            pqdm(
-                args,
-                _compute_aac,
-                self._n_jobs,
-                argument_type="kwargs",
-                desc="Processing connections...",
-                disable=not self.verbose,
-            ),
-            dtype=_precision.real,
-        )
+        try:
+            self._aac = np.array(
+                pqdm(
+                    args,
+                    _compute_aac,
+                    self._n_jobs,
+                    argument_type="kwargs",
+                    desc="Processing connections...",
+                    disable=not self.verbose,
+                    exception_behaviour="immediate",
+                ),
+                dtype=_precision.real,
+            )
+        except MemoryError as error:  # pragma: no cover
+            raise MemoryError(
+                "Memory allocation for the AAC computation failed. Try "
+                "reducing the sampling frequency of the data, or reduce the "
+                "precision of the computation with "
+                "`pybispectra.set_precision('single')`."
+            ) from error
 
     def _store_results(self) -> None:
         """Store computed results in an object."""
