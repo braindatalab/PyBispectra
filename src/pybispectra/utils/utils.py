@@ -406,9 +406,9 @@ def set_precision(precision: str) -> None:
     ----------
     precision : str
         Precision to use. Accepts ``"single"`` (real values are
-        :obj:`np.float32` and complex values are :obj:`np.complex64`) and
-        ``"double"`` (real values are :obj:`np.float64` and complex values are
-        :obj:`np.complex128`).
+        :obj:`numpy.float32` and complex values are :obj:`numpy.complex64`) and
+        ``"double"`` (real values are :obj:`numpy.float64` and complex values
+        are :obj:`numpy.complex128`).
 
     Notes
     -----
