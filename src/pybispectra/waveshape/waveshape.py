@@ -73,8 +73,6 @@ class WaveShape(_ProcessBispectrum):
     .. footbibliography::
     """
 
-    _bicoherence = None
-
     def compute(
         self,
         indices: tuple[int] | None = None,
@@ -146,9 +144,9 @@ class WaveShape(_ProcessBispectrum):
         if self.verbose:
             print("Computing bicoherence...\n")
 
-        bispectrum = self._compute_bispectrum()
-        threenorm = self._compute_threenorm()
-        self._bicoherence = bispectrum / threenorm
+        self._compute_bispectrum()
+        self._compute_threenorm()
+        self._bicoherence = self._bispectrum / self._threenorm
         self._store_results()
 
         if self.verbose:
@@ -158,6 +156,8 @@ class WaveShape(_ProcessBispectrum):
         """Reset attrs. of the object to prevent interference."""
         super()._reset_attrs()
 
+        self._bispectrum = None
+        self._threenorm = None
         self._bicoherence = None
 
     def _sort_indices(self, indices: tuple[int]) -> None:
@@ -180,13 +180,7 @@ class WaveShape(_ProcessBispectrum):
         self._indices = indices
 
     def _compute_bispectrum(self) -> None:
-        """Compute bispectrum between f1s and f2s within channels.
-
-        Returns
-        -------
-        bispectrum : np.ndarray, shape of [channels, f1s, f2s]
-            Complex-valued array containing the bispectrum for each channel.
-        """
+        """Compute bispectrum between f1s and f2s within channels."""
         if self.verbose:
             print("    Computing bispectrum...")
 
@@ -202,8 +196,7 @@ class WaveShape(_ProcessBispectrum):
             for channel in self._indices
         ]
 
-        # have to average complex value outside of Numba-compiled function
-        bispectrum = (
+        self._bispectrum = (
             np.array(
                 pqdm(
                     args,
@@ -215,23 +208,15 @@ class WaveShape(_ProcessBispectrum):
                 ),
                 dtype=_precision.complex,
             )
-            .mean(axis=2)
+            .mean(axis=2)  # must average complex values outside Numba
             .transpose(1, 0, 2, 3)
         )[0]
 
         if self.verbose:
             print("        ... Bispectrum computation finished\n")
 
-        return bispectrum
-
     def _compute_threenorm(self) -> None:
-        """Compute threenorm between f1s and f2s within channels.
-
-        Returns
-        -------
-        threenorm : numpy.ndarray, shape of [channels, f1s, f2s]
-            Complex-valued array containing the threenorm for each channel.
-        """
+        """Compute threenorm between f1s and f2s within channels."""
         if self.verbose:
             print("    Computing threenorm...")
 
@@ -247,22 +232,29 @@ class WaveShape(_ProcessBispectrum):
             for channel in self._indices
         ]
 
-        threenorm = np.array(
-            pqdm(
-                args,
-                _compute_threenorm,
-                self._n_jobs,
-                argument_type="kwargs",
-                desc="Processing connections...",
-                disable=not self.verbose,
-            ),
-            dtype=_precision.real,
-        ).transpose(1, 0, 2, 3)[0]
+        try:
+            self._threenorm = np.array(
+                pqdm(
+                    args,
+                    _compute_threenorm,
+                    self._n_jobs,
+                    argument_type="kwargs",
+                    desc="Processing connections...",
+                    disable=not self.verbose,
+                    exception_behaviour="immediate",
+                ),
+                dtype=_precision.real,
+            ).transpose(1, 0, 2, 3)[0]
+        except MemoryError as error:  # pragma: no cover
+            raise MemoryError(
+                "Memory allocation for the threenorm computation failed. Try "
+                "reducing the sampling frequency of the data, or reduce the "
+                "precision of the computation with "
+                "`pybispectra.set_precision('single')`."
+            ) from error
 
         if self.verbose:
             print("        ... Threenorm computation finished\n")
-
-        return threenorm
 
     def _store_results(self) -> None:
         """Store computed results in objects."""

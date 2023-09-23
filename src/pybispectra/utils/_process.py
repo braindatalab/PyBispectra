@@ -237,6 +237,12 @@ class _ProcessFreqBase(ABC):
 class _ProcessBispectrum(_ProcessFreqBase):
     """Base class for processing bispectrum-based results."""
 
+    _bispectrum: np.ndarray = None
+    _threenorm: np.ndarray = None
+    _bicoherence: np.ndarray = None
+
+    _return_antisym: bool = None
+
     def _sort_indices(self, indices: tuple[tuple[int]]) -> None:
         """Sort seed-target indices inputs."""
         super()._sort_indices(indices)

@@ -67,9 +67,6 @@ class PAC(_ProcessBispectrum):
     _return_nonorm = False
     _return_threenorm = False
 
-    _bispectrum = None
-    _bicoherence = None
-
     _pac_nosym_nonorm = None
     _pac_nosym_threenorm = None
     _pac_antisym_nonorm = None
@@ -180,7 +177,8 @@ class PAC(_ProcessBispectrum):
 
         self._compute_bispectrum()
         if self._return_threenorm:
-            self._compute_bicoherence()
+            self._compute_threenorm()
+            self._bicoherence = self._bispectrum / self._threenorm
         self._compute_pac()
         self._store_results()
 
@@ -197,6 +195,7 @@ class PAC(_ProcessBispectrum):
         self._return_threenorm = False
 
         self._bispectrum = None
+        self._threenorm = None
         self._bicoherence = None
 
         self._pac_nosym_nonorm = None
@@ -257,30 +256,38 @@ class PAC(_ProcessBispectrum):
             for seed, target in zip(self._seeds, self._targets)
         ]
 
-        # have to average complex value outside of Numba-compiled function
-        self._bispectrum = (
-            np.array(
-                pqdm(
-                    args,
-                    _compute_bispectrum,
-                    self._n_jobs,
-                    argument_type="kwargs",
-                    desc="Processing connections...",
-                    disable=not self.verbose,
-                ),
-                dtype=_precision.complex,
+        try:
+            self._bispectrum = (
+                np.array(
+                    pqdm(
+                        args,
+                        _compute_bispectrum,
+                        self._n_jobs,
+                        argument_type="kwargs",
+                        desc="Processing connections...",
+                        disable=not self.verbose,
+                        exception_behaviour="immediate",
+                    ),
+                    dtype=_precision.complex,
+                )
+                .mean(axis=2)  # must average complex values outside Numba
+                .transpose(1, 0, 2, 3)
             )
-            .mean(axis=2)
-            .transpose(1, 0, 2, 3)
-        )
+        except MemoryError as error:  # pragma: no cover
+            raise MemoryError(
+                "Memory allocation for the bispectrum computation failed. Try "
+                "reducing the sampling frequency of the data, or reduce the "
+                "precision of the computation with "
+                "`pybispectra.set_precision('single')`."
+            ) from error
 
         if self.verbose:
             print("        ... Bispectrum computation finished\n")
 
-    def _compute_bicoherence(self) -> None:
-        """Compute bicoherence from the bispectrum using the threenorm."""
+    def _compute_threenorm(self) -> None:
+        """Compute threenorm between f1s and f2s within channels."""
         if self.verbose:
-            print("    Computing bicoherence...")
+            print("    Computing threenorm...")
 
         if self._return_antisym:
             # kmm, mkm
@@ -301,22 +308,29 @@ class PAC(_ProcessBispectrum):
             for seed, target in zip(self._seeds, self._targets)
         ]
 
-        threenorm = np.array(
-            pqdm(
-                args,
-                _compute_threenorm,
-                self._n_jobs,
-                argument_type="kwargs",
-                desc="Processing connections...",
-                disable=not self.verbose,
-            ),
-            dtype=_precision.real,
-        ).transpose(1, 0, 2, 3)
-
-        self._bicoherence = self._bispectrum / threenorm
+        try:
+            self._threenorm = np.array(
+                pqdm(
+                    args,
+                    _compute_threenorm,
+                    self._n_jobs,
+                    argument_type="kwargs",
+                    desc="Processing connections...",
+                    disable=not self.verbose,
+                    exception_behaviour="immediate",
+                ),
+                dtype=_precision.real,
+            ).transpose(1, 0, 2, 3)
+        except MemoryError as error:  # pragma: no cover
+            raise MemoryError(
+                "Memory allocation for the threenorm computation failed. Try "
+                "reducing the sampling frequency of the data, or reduce the "
+                "precision of the computation with "
+                "`pybispectra.set_precision('single')`."
+            ) from error
 
         if self.verbose:
-            print("        ... Bicoherence computation finished\n")
+            print("        ... Threenorm computation finished\n")
 
     def _compute_pac(self) -> None:
         """Compute PAC results from bispectrum/bicoherence."""
