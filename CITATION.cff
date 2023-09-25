@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Binns"
+  given-names: "Thomas Samuel"
+  orcid: "https://orcid.org/0000-0003-0657-0891"
+- family-names: "Pellegrini"
+  given-names: "Franziska"
+  orcid: "https://orcid.org/0000-0001-9769-1597"
+- family-names: "Jurhar"
+  given-names: "Tin"
+  orcid: "https://orcid.org/0000-0002-8804-2349"
+- family-names: "Haufe"
+  given-names: "Stefan"
+  orcid: "https://orcid.org/0000-0003-1470-9195"
+title: "PyBispectra"
+version: 1.0.0
+doi: 10.5281/zenodo.8377821
+date-released: 2023-09-23
+url: "https://github.com/neuromodulation/PyBispectra/tree/1.0.0"
