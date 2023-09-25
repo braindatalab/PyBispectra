@@ -23,6 +23,9 @@ Parallel processing and `Numba <https://numba.pydata.org/>`_ optimisation are
 implemented to reduce computation times. There is a minor reliance on the
 `MNE <https://mne.tools/stable/index.html>`_ signal processing toolbox.
 
+If you use this toolbox in your work, please include the following citation:|br|
+Binns, T. S., Pellegrini, F., Jurhar, T., & Haufe, S. (2023). PyBispectra (Version 1.0.0). DOI: `10.5281/zenodo.8377821 <https://doi.org/10.5281/zenodo.8377821>`_
+
 .. toctree::
    :maxdepth: 2
    :titlesonly:
