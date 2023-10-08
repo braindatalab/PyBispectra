@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 from typing import Callable
-from warnings import warn
 
 import numpy as np
 from pqdm.processes import pqdm
@@ -254,6 +253,8 @@ class TDE(_ProcessBispectrum):
         ----------
         .. footbibliography::
         """
+        super()._reset_attrs()
+
         self._sort_freq_bands(fmin, fmax)
         self._sort_metrics(antisym, method)
         self._sort_indices(indices)
@@ -273,8 +274,6 @@ class TDE(_ProcessBispectrum):
 
     def _reset_attrs(self) -> None:
         """Reset attrs. of the object to prevent interference."""
-        super()._reset_attrs()
-
         self._freq_bands = None
         self._freq_masks = None
 
@@ -937,20 +936,22 @@ def _compute_tde_from_I(I: np.ndarray, freq_masks: np.ndarray) -> np.ndarray:
     tde = []
     for freq_mask in freq_masks:
         if np.any(freq_mask == 0):
-            I = freq_mask[:, np.newaxis] * (freq_mask * I)
-        I = np.concatenate(
+            fband_I = freq_mask[:, np.newaxis] * (freq_mask * I)
+        fband_I = np.concatenate(
             (
-                I,
+                fband_I,
                 np.zeros(
                     (I.shape[0], I.shape[1] - 1), dtype=_precision.complex
                 ),
             ),
             axis=1,
         )
-        I = np.nansum(I, axis=0)
+        fband_I = np.nansum(fband_I, axis=0)
 
         tde.append(
-            np.abs(np.fft.fftshift(np.fft.ifft(I))).astype(_precision.real)
+            np.abs(np.fft.fftshift(np.fft.ifft(fband_I))).astype(
+                _precision.real
+            )
         )
 
     return np.array(tde, dtype=_precision.real)

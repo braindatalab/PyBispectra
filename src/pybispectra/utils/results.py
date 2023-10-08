@@ -450,8 +450,8 @@ class ResultsTDE(_ResultsBase):
                 )
             else:
                 repr_ += (
-                    f"{self.freq_bands[0][0]} - {self.freq_bands[-1][1]} Hz "
-                    f"({len(self.freq_bands)} bands) | "
+                    f"{np.min(self.freq_bands)} - {np.max(self.freq_bands)} "
+                    f"Hz ({len(self.freq_bands)} bands) | "
                 )
 
         repr_ += f"[{self.n_nodes} nodes, {len(self.times)} times]>"
@@ -491,15 +491,21 @@ class ResultsTDE(_ResultsBase):
         self._sort_times(times)
         self._sort_freq_band(freq_band)
 
+        if self._data.shape != (
+            self.n_nodes,
+            len(self.freq_bands),
+            times.shape[0],
+        ):
+            raise ValueError(
+                "`data` must have shape [nodes, frequency bands, times]."
+            )
+
     def _sort_times(self, times: np.ndarray) -> None:
         """Sort `times` input."""
         if not isinstance(times, np.ndarray):
             raise TypeError("`times` must be a NumPy array.")
         if times.ndim != 1:
             raise ValueError("`times` must be a 1D array.")
-
-        if self._data.shape != (self.n_nodes, times.shape[0]):
-            raise ValueError("`data` must have shape [nodes, times].")
 
         self.times = times.copy()
 
