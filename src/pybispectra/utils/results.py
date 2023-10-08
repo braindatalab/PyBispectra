@@ -383,7 +383,7 @@ class ResultsTDE(_ResultsBase):
 
     Parameters
     ----------
-    data : ~numpy.ndarray, shape of [nodes, times]
+    data : ~numpy.ndarray, shape of [nodes, frequency bands, times]
         Results to store.
 
     indices : tuple of tuple of int, length of 2
@@ -394,8 +394,9 @@ class ResultsTDE(_ResultsBase):
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
-    freq_band : tuple of float, length of 2 | None (default None)
-        Lower and higher frequencies (in Hz) used to compute the results.
+    freq_bands : tuple of tuple of float, length of 2 | None (default None)
+        Lower and higher frequencies (in Hz) of each frequency band used to
+        compute the results.
 
     name : str (default ``"TDE"``)
         Name of the results being stored.
@@ -427,22 +428,31 @@ class ResultsTDE(_ResultsBase):
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
-    freq_band : tuple of float, length of 2 | None
-        Lower and higher frequencies (in Hz) used to compute the results.
+    freq_bands : tuple of tuple of float, length of 2 | None
+        Lower and higher frequencies (in Hz) of each frequency band used to
+        compute the results.
 
-    tau : tuple of float
-        Estimated time delay for each connection (in ms).
+    tau :  ~numpy.ndarray, shape of [nodes, frequency bands]
+        Estimated time delay (in ms) for each connection and frequency band.
     """
 
     times: np.ndarray = None
-    freq_band: tuple[float] = None
+    freq_bands: tuple[tuple[float]] = None
 
     def __repr__(self) -> str:
         """Return printable representation of the object."""
         repr_ = f"<Result: {self.name} | "
 
-        if self.freq_band is not None:
-            repr_ += f"{self.freq_band[0]} - {self.freq_band[1]} Hz | "
+        if self.freq_bands is not None:
+            if len(self.freq_bands) == 1:
+                repr_ += (
+                    f"{self.freq_bands[0][0]} - {self.freq_bands[0][1]} Hz | "
+                )
+            else:
+                repr_ += (
+                    f"{self.freq_bands[0][0]} - {self.freq_bands[-1][1]} Hz "
+                    f"({len(self.freq_bands)} bands) | "
+                )
 
         repr_ += f"[{self.n_nodes} nodes, {len(self.times)} times]>"
 
@@ -453,11 +463,11 @@ class ResultsTDE(_ResultsBase):
         data: np.ndarray,
         indices: tuple[tuple[int]],
         times: np.ndarray,
-        freq_band: tuple[float] | None = None,
+        freq_bands: tuple[tuple[float]] | None = None,
         name: str = "TDE",
     ) -> None:  # noqa: D107
-        super().__init__(data, 2, name)
-        self._sort_init_inputs(indices, times, freq_band)
+        super().__init__(data, 3, name)
+        self._sort_init_inputs(indices, times, freq_bands)
 
         self._compute_tau()
 
@@ -465,6 +475,7 @@ class ResultsTDE(_ResultsBase):
             data=self._data,
             tau=self.tau,
             indices=self.indices,
+            freq_bands=self.freq_bands,
             times=self.times,
             name=self.name,
         )
@@ -492,15 +503,27 @@ class ResultsTDE(_ResultsBase):
 
         self.times = times.copy()
 
-    def _sort_freq_band(self, freq_band: tuple[float]) -> None:
-        """Sort `freq_band` input."""
-        if freq_band is not None:
-            if not isinstance(freq_band, tuple):
-                raise TypeError("`freq_band` must be a tuple.")
-            if len(freq_band) != 2:
-                raise ValueError("`freq_band` must have length of 2.")
+    def _sort_freq_band(self, freq_bands: tuple[tuple[float]]) -> None:
+        """Sort `freq_bands` input."""
+        if freq_bands is not None:
+            if not isinstance(freq_bands, tuple):
+                raise TypeError("`freq_bands` must be a tuple.")
+            if len(freq_bands) != self._data.shape[1]:
+                raise ValueError(
+                    "`freq_bands` must the same length as the number of "
+                    "frequency bands in the results."
+                )
+            for freq_band in freq_bands:
+                if not isinstance(freq_bands, tuple):
+                    raise TypeError(
+                        "Each entry of `freq_bands` must be a tuple."
+                    )
+                if len(freq_band) != 2:
+                    raise ValueError(
+                        "Each entry of `freq_bands` must have length of 2."
+                    )
 
-            self.freq_band = deepcopy(freq_band)
+            self.freq_bands = deepcopy(freq_bands)
 
     def _get_compact_results_child(
         self,
@@ -525,7 +548,8 @@ class ResultsTDE(_ResultsBase):
 
     def plot(
         self,
-        nodes: tuple[int] | None = None,
+        nodes: int | tuple[int] | None = None,
+        freq_bands: int | tuple[int] | None = None,
         times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
@@ -537,9 +561,13 @@ class ResultsTDE(_ResultsBase):
 
         Parameters
         ----------
-        nodes : tuple of int | None (default None)
+        nodes : int | tuple of int | None (default None)
             Indices of connections to plot. If :obj:`None`, all connections are
             plotted.
+
+        freq_bands : int | tuple of int | None (default None)
+            Indices of frequency bands to plot. If :obj:`None`, all frequency
+            bands are plotted.
 
         times : tuple of int or float | None (default None)
             Start and end times of the results to plot. If :obj:`None`, plot
@@ -580,6 +608,7 @@ class ResultsTDE(_ResultsBase):
         """
         figures, axes = self._plotting.plot(
             nodes=nodes,
+            freq_bands=freq_bands,
             times=times,
             n_rows=n_rows,
             n_cols=n_cols,
@@ -594,13 +623,13 @@ class ResultsTDE(_ResultsBase):
         """Compute the time delay estimates for each connection."""
         self._tau = []
         for node_i in range(self.n_nodes):
-            self._tau.append(self.times[self._data[node_i].argmax()])
-        self._tau = tuple(self._tau)
+            self._tau.append(self.times[self._data[node_i].argmax(axis=1)])
+        self._tau = np.array(self._tau)
 
     @property
-    def tau(self) -> tuple[float]:
+    def tau(self) -> np.ndarray:
         """Return the estimated time delay for each connection (in ms)."""
-        return self._tau
+        return self._tau.copy()
 
 
 class ResultsWaveShape(_ResultsBase):

@@ -48,7 +48,7 @@ class _PlotBase(ABC):
     @abstractmethod
     def _sort_plot_inputs(
         self,
-        nodes: tuple[int] | None,
+        nodes: int | tuple[int] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: int | float,
@@ -62,6 +62,8 @@ class _PlotBase(ABC):
         """
         if nodes is None:
             nodes = tuple(range(self.n_nodes))
+        if isinstance(nodes, int):
+            nodes = (nodes,)
         if not isinstance(nodes, tuple) or not all(
             isinstance(con, int) for con in nodes
         ):
@@ -158,7 +160,10 @@ class _PlotBase(ABC):
         return f1s, f2s, f1_idcs, f2_idcs
 
     def _create_plots(
-        self, nodes: tuple[int], n_rows: int, n_cols: int
+        self,
+        nodes: tuple[int],
+        n_rows: int,
+        n_cols: int,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Create figures and subplots to fill with results.
 
@@ -468,17 +473,20 @@ class _PlotTDE(_PlotBase):
         data: np.ndarray,
         tau: tuple[float],
         indices: tuple[tuple[int]],
+        freq_bands: tuple[tuple[float]],
         times: np.ndarray,
         name: str,
     ) -> None:  # noqa: D107
         super().__init__(data, indices, name)
 
         self.tau = deepcopy(tau)
+        self.freq_bands = deepcopy(freq_bands)
         self.times = times.copy()
 
     def plot(
         self,
-        nodes: tuple[int] | None = None,
+        nodes: int | tuple[int] | None = None,
+        freq_bands: int | tuple[int] | None = None,
         times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
@@ -490,9 +498,13 @@ class _PlotTDE(_PlotBase):
 
         Parameters
         ----------
-        nodes : tuple of int | None (default None)
+        nodes : int | tuple of int | None (default None)
             Indices of connections to plot. If :obj:`None`, plot all
             connections.
+
+        freq_bands : int | tuple of int | None (default None)
+            Indices of frequency bands to plot. If :obj:`None`, all frequency
+            bands are plotted.
 
         times : tuple of int or float | None (default None)
             Start and end times of the results to plot, respectively. If
@@ -531,19 +543,21 @@ class _PlotTDE(_PlotBase):
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
         connection on a new figure.
         """
-        nodes, times, time_idcs = self._sort_plot_inputs(
+        nodes, freq_bands, times, time_idcs = self._sort_plot_inputs(
             nodes,
+            freq_bands,
             times,
             n_rows,
             n_cols,
             major_tick_intervals,
             minor_tick_intervals,
         )
-        figures, axes = self._create_plots(nodes, n_rows, n_cols)
+        figures, axes = self._create_plots(nodes, freq_bands, n_rows, n_cols)
         self._plot_results(
             figures,
             axes,
             nodes,
+            freq_bands,
             times,
             time_idcs,
             n_rows,
@@ -559,18 +573,21 @@ class _PlotTDE(_PlotBase):
 
     def _sort_plot_inputs(
         self,
-        nodes: tuple[int] | None,
+        nodes: int | tuple[int] | None,
+        freq_bands: int | tuple[int] | None,
         times: tuple[int | float] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,
         minor_tick_intervals: float,
-    ) -> tuple[tuple[int], np.ndarray, np.ndarray]:
+    ) -> tuple[tuple[int], tuple[int], np.ndarray, np.ndarray]:
         """Sort the plotting inputs.
 
         Returns
         -------
         nodes : tuple of int
+
+        freq_bands : tuple of int
 
         times : numpy.ndarray
             Times of the results to plot.
@@ -585,9 +602,10 @@ class _PlotTDE(_PlotBase):
             major_tick_intervals,
             minor_tick_intervals,
         )
+        freq_bands = self._sort_freq_band_inputs(freq_bands)
         times, time_idcs = self._sort_time_inputs(times)
 
-        return nodes, times, time_idcs
+        return nodes, freq_bands, times, time_idcs
 
     def _sort_time_inputs(
         self, times: tuple[int | float] | None
@@ -630,11 +648,77 @@ class _PlotTDE(_PlotBase):
 
         return times, time_idcs
 
+    def _sort_freq_band_inputs(
+        self, freq_bands: int | tuple[int] | None
+    ) -> tuple[int]:
+        """Sort `freq_bands` input."""
+        if freq_bands is None:
+            freq_bands = tuple(range(len(self.freq_bands)))
+        else:
+            if isinstance(freq_bands, int):
+                freq_bands = (freq_bands,)
+            if not isinstance(freq_bands, tuple) or not all(
+                isinstance(con, int) for con in freq_bands
+            ):
+                raise TypeError("`freq_bands` must be a tuple of integers.")
+            if any(
+                fband >= len(self.freq_bands) for fband in freq_bands
+            ) or any(fband < 0 for fband in freq_bands):
+                raise ValueError(
+                    "The requested frequency band is not present in the "
+                    "results."
+                )
+
+        return freq_bands
+
+    def _create_plots(
+        self,
+        nodes: tuple[int],
+        freq_bands: tuple[int],
+        n_rows: int,
+        n_cols: int,
+    ) -> tuple[list[Figure], list[np.ndarray]]:
+        """Create figures and subplots to fill with results.
+
+        Returns
+        -------
+        figures : list of matplotlib Figure
+            Figures for the results in a list of length
+            ``ceil(n_nodes / (n_rows * n_cols))``.
+
+        axes : list of numpy.ndarray of matplotlib pyplot Axes
+            Subplot axes for the results in a list of length
+            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
+            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
+        """
+        figures = []
+        axes = []
+
+        plot_n = 0
+        for node_i in range(len(nodes)):
+            for fband_i in range(len(freq_bands)):
+                if node_i + fband_i == plot_n:
+                    fig, axs = plt.subplots(
+                        n_rows, n_cols, layout="constrained"
+                    )
+                    figures.append(fig)
+                    if n_rows * n_cols > 1:
+                        axs = np.ravel(axs)
+                    else:
+                        axs = np.array([axs])
+                    axes.append(axs)
+                    plot_n += n_rows * n_cols
+                if plot_n >= len(nodes) * len(freq_bands):
+                    break
+
+        return figures, axes
+
     def _plot_results(
         self,
         figures: list[Figure],
         axes: list[np.ndarray],
         nodes: tuple[int],
+        freq_bands: tuple[int],
         times: np.ndarray,
         time_idcs: np.ndarray,
         n_rows: int,
@@ -644,24 +728,26 @@ class _PlotTDE(_PlotBase):
     ) -> None:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0
-        plot_n = 0
+        node_n = 0
+        fband_n = 0
         fig_plot_n = 0
         while fig_i < len(figures):
             for _ in range(n_rows):
                 for _ in range(n_cols):
-                    node_i = nodes[plot_n]
+                    node_i = nodes[node_n]
+                    fband_i = freq_bands[fband_n]
                     axis = axes[fig_i][fig_plot_n]
 
                     axis.plot(
                         times,
-                        self._data[node_i][time_idcs],
+                        self._data[node_i, fband_i, time_idcs],
                     )
 
                     self._mark_delay(
                         axis,
                         times,
-                        self.tau[node_i],
-                        self._data[node_i][time_idcs],
+                        self.tau[node_i, fband_i],
+                        self._data[node_i, fband_i, time_idcs],
                     )
 
                     self._set_axis_ticks(
@@ -679,11 +765,16 @@ class _PlotTDE(_PlotBase):
 
                     axis.set_title(
                         f"Seed: {self._indices[0][node_i]} | Target: "
-                        f"{self._indices[1][node_i]}"
+                        f"{self._indices[1][node_i]} | "
+                        f"{self.freq_bands[fband_i][0]} - "
+                        f"{self.freq_bands[fband_i][1]} Hz"
                     )
 
-                    plot_n += 1
+                    fband_n += 1
                     fig_plot_n += 1
+                    if fband_n >= len(freq_bands):
+                        fband_n = 0
+                        node_n += 1
                     if fig_plot_n >= n_rows * n_cols:
                         figures[fig_i].suptitle(self.name)
                         fig_plot_n = 0
