@@ -317,7 +317,7 @@ class TDE(_ProcessBispectrum):
                     "`freq_band`."
                 )
 
-            self._freq_mask = freq_mask
+            self._freq_mask = np.clip(freq_mask + np.flip(freq_mask), 0, 1)
 
         self._freq_band = (
             self.freqs[np.nonzero(self._freq_mask)][0],
