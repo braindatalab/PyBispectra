@@ -327,8 +327,9 @@ def _compute_bispectrum(
     -----
     No checks on the input data are performed for speed.
     """
-    n_epochs = data.shape[0]
-    results = np.zeros((len(kmn), f1s.shape[0], f2s.shape[0]), dtype=precision)
+    results = np.zeros(
+        (kmn.shape[0], f1s.shape[0], f2s.shape[0]), dtype=precision
+    )
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
     f2_start = _fast_find_first(freqs, f2s[0], 0)
@@ -347,7 +348,7 @@ def _compute_bispectrum(
                             * np.conjugate(epoch_data[n, fdiff_fi])
                         )
 
-    return np.divide(results, n_epochs).astype(precision)
+    return np.divide(results, data.shape[0]).astype(precision)
 
 
 @njit
@@ -396,7 +397,7 @@ def _compute_threenorm(
     No checks on the input data are performed for speed.
     """
     results = np.full(
-        (len(kmn), f1s.shape[0], f2s.shape[0]),
+        (kmn.shape[0], f1s.shape[0], f2s.shape[0]),
         fill_value=np.nan,
         dtype=precision,
     )
