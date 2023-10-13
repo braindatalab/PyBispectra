@@ -186,7 +186,7 @@ class WaveShape(_ProcessBispectrum):
 
         args = [
             {
-                "data": self.data[:, channel][:, None],
+                "data": self.data[:, channel][:, np.newaxis],
                 "freqs": self.freqs,
                 "f1s": self._f1s,
                 "f2s": self._f2s,
@@ -196,21 +196,17 @@ class WaveShape(_ProcessBispectrum):
             for channel in self._indices
         ]
 
-        self._bispectrum = (
-            np.array(
-                pqdm(
-                    args,
-                    _compute_bispectrum,
-                    self._n_jobs,
-                    argument_type="kwargs",
-                    desc="Processing connections...",
-                    disable=not self.verbose,
-                ),
-                dtype=_precision.complex,
-            )
-            .mean(axis=2)  # must average complex values outside Numba
-            .transpose(1, 0, 2, 3)
-        )[0]
+        self._bispectrum = np.array(
+            pqdm(
+                args,
+                _compute_bispectrum,
+                self._n_jobs,
+                argument_type="kwargs",
+                desc="Processing connections...",
+                disable=not self.verbose,
+            ),
+            dtype=_precision.complex,
+        ).transpose(1, 0, 2, 3)[0]
 
         if self.verbose:
             print("        ... Bispectrum computation finished\n")
@@ -222,7 +218,7 @@ class WaveShape(_ProcessBispectrum):
 
         args = [
             {
-                "data": self.data[:, channel][:, None],
+                "data": self.data[:, channel][:, np.newaxis],
                 "freqs": self.freqs,
                 "f1s": self._f1s,
                 "f2s": self._f2s,
