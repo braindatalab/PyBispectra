@@ -257,22 +257,18 @@ class PAC(_ProcessBispectrum):
         ]
 
         try:
-            self._bispectrum = (
-                np.array(
-                    pqdm(
-                        args,
-                        _compute_bispectrum,
-                        self._n_jobs,
-                        argument_type="kwargs",
-                        desc="Processing connections...",
-                        disable=not self.verbose,
-                        exception_behaviour="immediate",
-                    ),
-                    dtype=_precision.complex,
-                )
-                .mean(axis=2)  # must average complex values outside Numba
-                .transpose(1, 0, 2, 3)
-            )
+            self._bispectrum = np.array(
+                pqdm(
+                    args,
+                    _compute_bispectrum,
+                    self._n_jobs,
+                    argument_type="kwargs",
+                    desc="Processing connections...",
+                    disable=not self.verbose,
+                    exception_behaviour="immediate",
+                ),
+                dtype=_precision.complex,
+            ).transpose(1, 0, 2, 3)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
                 "Memory allocation for the bispectrum computation failed. Try "

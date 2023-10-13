@@ -318,23 +318,17 @@ def _compute_bispectrum(
 
     Returns
     -------
-    results : numpy.ndarray of complex float, shape of [x, epochs, f1s, f2s]
+    results : numpy.ndarray of complex float, shape of [x, f1s, f2s]
         Complex-valued array containing the bispectrum of a single connection,
         where the first dimension corresponds to the different channel indices
         given in ``kmn``.
 
     Notes
     -----
-    Averaging across epochs is not performed here as ``numpy.mean`` of complex
-    numbers is not supported when compiling using Numba.
-
     No checks on the input data are performed for speed.
     """
-    results = np.full(
-        (len(kmn), data.shape[0], f1s.shape[0], f2s.shape[0]),
-        fill_value=np.nan,
-        dtype=precision,
-    )
+    n_epochs = data.shape[0]
+    results = np.zeros((len(kmn), f1s.shape[0], f2s.shape[0]), dtype=precision)
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
     f2_start = _fast_find_first(freqs, f2s[0], 0)
@@ -346,14 +340,14 @@ def _compute_bispectrum(
             if f1 <= f2 and f2 + f1 in freqs:
                 fdiff_fi = _fast_find_first(freqs, f2 + f1, f2_fi + f1_fi)
                 for kmn_i, (k, m, n) in enumerate(kmn):
-                    for epoch_i in range(data.shape[0]):
-                        results[kmn_i, epoch_i, f1_ri, f2_ri] = (
-                            data[epoch_i, k, f1_fi]
-                            * data[epoch_i, m, f2_fi]
-                            * np.conjugate(data[epoch_i, n, fdiff_fi])
+                    for epoch_data in data:
+                        results[kmn_i, f1_ri, f2_ri] += (
+                            epoch_data[k, f1_fi]
+                            * epoch_data[m, f2_fi]
+                            * np.conjugate(epoch_data[n, fdiff_fi])
                         )
 
-    return results
+    return np.divide(results, n_epochs).astype(precision)
 
 
 @njit
@@ -367,7 +361,7 @@ def _compute_threenorm(
 ) -> np.ndarray:  # pragma: no cover
     """Compute threenorm for a single connection across epochs.
 
-    PARAMETERS
+    Parameters
     ----------
     data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
         FFT coefficients, where the second dimension contains the data for the
@@ -391,11 +385,15 @@ def _compute_threenorm(
         Precision to use for the computation. Either ``numpy.complex64``
         (single) or ``numpy.complex128`` (double).
 
-    RETURNS
+    Returns
     -------
     results : numpy.ndarray of float, shape of [x, f1s, f2s]
         Threenorm of a single connection, where the first dimension corresponds
         to the different channel indices given in ``kmn``.
+
+    Notes
+    -----
+    No checks on the input data are performed for speed.
     """
     results = np.full(
         (len(kmn), f1s.shape[0], f2s.shape[0]),
