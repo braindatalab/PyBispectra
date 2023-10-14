@@ -133,7 +133,7 @@ fft_coeffs, freqs = compute_fft(
 print(
     f"FFT coeffs.: [{fft_coeffs.shape[0]} epochs x {fft_coeffs.shape[1]} "
     f"channels x {fft_coeffs.shape[2]} frequencies]\nFreq. range: "
-    f"{freqs[freqs.argmin()] :.0f} - {freqs[freqs.argmax()] :.0f} Hz"
+    f"{freqs[0]:.0f} - {freqs[1]:.0f} Hz"
 )
 
 ###############################################################################
@@ -149,32 +149,33 @@ print(
 # value) and from signals 1 -> 0 (the reverse direction of information flow
 # where the time delay should have a negative value).
 #
-# Using the :attr:`freq_band` argument, time delay information for a subset of
-# frequencies can be isolated by specifying the lower and higher frequencies of
-# interest. Here, however, we will compute time delays for all frequencies.
+# Using the :attr:`fmin` and :attr:`fmax` arguments, time delay information for
+# frequency band(s) of interest can be isolated by specifying the lower and
+# higher frequencies of interest. Here, we will compute time delays for all
+# frequencies. Performing time delay estimation on frequency bands is discussed
+# in the following example: :doc:`plot_compute_tde_fbands`.
 
 # %%
 
 tde = TDE(
     data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
-tde.compute(indices=((0, 1), (1, 0)), freq_band=None, method=1)  # compute TDE
+tde.compute(indices=((0, 1), (1, 0)), method=1)  # compute TDE
 tde_times = tde.results.times
 
 tde_results = tde.results.get_results()  # return results as array
 
 print(
     f"PAC results: [{tde_results.shape[0]} connections x "
-    f"{tde_results.shape[1]} times]"
+    f"{tde_results.shape[1]} frequency bands x {tde_results.shape[2]} times]"
 )
 
 ###############################################################################
 # We can see that time delays have been computed for two connections (0 -> 1
-# and 1 -> 0), and 401 timepoints (twice that of the original data plus one;
-# i.e. delay estimates for the full epoch length in both positive and negative
-# directions). The time delays are computed at 0, 5, 10, 15, ..., 2000 ms (i.e.
-# preserving the sampling frequency of the data - i.e. with one estimate every
-# 5 ms - and including the zero time), averaged across our 30 epochs.
+# and 1 -> 0) and one frequency band (0 - 100 Hz), with 401 timepoints, and
+# averaged across our 30 epochs. The timepoints correspond to time delay
+# estimates for every 5 ms (i.e. the sampling rate of the data), ranging from
+# -1000 ms to +1000 ms.
 
 ###############################################################################
 # Plotting time delays
@@ -192,7 +193,7 @@ print(
 # however this information is also precomputed and can be accessed via the
 # :attr:`~pybispectra.utils.ResultsTDE.tau` attribute.
 #
-# Taking the time at which the estimate is maximal as our :math:`\tau` is the
+# Taking the time at which the estimate is maximal as our :math:`\tau` is one
 # approach to use when estimating time delays. For interest, however, we can
 # also plot the full time course of the TDE results. In this low noise example,
 # we see that there is a clear peak in time delay estimates at 250 ms.
@@ -261,9 +262,9 @@ tde_standard, tde_antisym = tde.results
 
 print(
     "The estimated time delay without antisymmetrisation is "
-    f"{tde_standard.tau[0]:.0f} ms.\n"
+    f"{tde_standard.tau[0, 0]:.0f} ms.\n"
     "The estimated time delay with antisymmetrisation is "
-    f"{tde_antisym.tau[0]:.0f} ms."
+    f"{tde_antisym.tau[0, 0]:.0f} ms."
 )
 
 # plot results
