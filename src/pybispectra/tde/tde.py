@@ -315,7 +315,9 @@ class TDE(_ProcessBispectrum):
             raise ValueError("`fmin` and `fmax` must have the same length.")
         if any(freq < 0 for freq in fmin):
             raise ValueError("Entries of `fmin` must be >= 0.")
-        if any(freq > self.sampling_freq / 2 for freq in fmax):
+        if any(
+            freq > self.sampling_freq / 2 for freq in fmax if freq != np.inf
+        ):
             raise ValueError(
                 "Entries of `fmax` must be <= the Nyquist frequency."
             )
@@ -935,8 +937,7 @@ def _compute_tde_from_I(I: np.ndarray, freq_masks: np.ndarray) -> np.ndarray:
     """Compute TDE from the matrix I for a single connection."""
     tde = []
     for freq_mask in freq_masks:
-        if np.any(freq_mask == 0):
-            fband_I = freq_mask[:, np.newaxis] * (freq_mask * I)
+        fband_I = freq_mask[:, np.newaxis] * (freq_mask * I)
         fband_I = np.concatenate(
             (
                 fband_I,
