@@ -446,12 +446,14 @@ class ResultsTDE(_ResultsBase):
         if self.freq_bands is not None:
             if len(self.freq_bands) == 1:
                 repr_ += (
-                    f"{self.freq_bands[0][0]} - {self.freq_bands[0][1]} Hz | "
+                    f"{self.freq_bands[0][0]:.2f} - "
+                    f"{self.freq_bands[0][1]:.2f} Hz | "
                 )
             else:
                 repr_ += (
-                    f"{np.min(self.freq_bands)} - {np.max(self.freq_bands)} "
-                    f"Hz ({len(self.freq_bands)} bands) | "
+                    f"{np.min(self.freq_bands):.2f} - "
+                    f"{np.max(self.freq_bands)} Hz "
+                    f"({len(self.freq_bands):.2f} bands) | "
                 )
 
         repr_ += f"[{self.n_nodes} nodes, {len(self.times)} times]>"

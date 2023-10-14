@@ -766,8 +766,8 @@ class _PlotTDE(_PlotBase):
                     axis.set_title(
                         f"Seed: {self._indices[0][node_i]} | Target: "
                         f"{self._indices[1][node_i]} | "
-                        f"{self.freq_bands[fband_i][0]} - "
-                        f"{self.freq_bands[fband_i][1]} Hz"
+                        f"{self.freq_bands[fband_i][0]:.2f} - "
+                        f"{self.freq_bands[fband_i][1]:.2f} Hz"
                     )
 
                     fband_n += 1

@@ -311,13 +311,18 @@ class TDE(_ProcessBispectrum):
         if isinstance(fmax, float):
             fmax = (fmax,)
 
+        new_fmax = []
+        for this_fmax in fmax:
+            if this_fmax == np.inf:
+                this_fmax = self.freqs.max()
+            new_fmax.append(this_fmax)
+        fmax = tuple(new_fmax)
+
         if len(fmin) != len(fmax):
             raise ValueError("`fmin` and `fmax` must have the same length.")
         if any(freq < 0 for freq in fmin):
             raise ValueError("Entries of `fmin` must be >= 0.")
-        if any(
-            freq > self.sampling_freq / 2 for freq in fmax if freq != np.inf
-        ):
+        if any(freq > self.sampling_freq / 2 for freq in fmax):
             raise ValueError(
                 "Entries of `fmax` must be <= the Nyquist frequency."
             )
@@ -921,24 +926,20 @@ def _compute_tde_iv(
 
 def _compute_tde_from_I(I: np.ndarray, freq_masks: np.ndarray) -> np.ndarray:
     """Compute TDE from the matrix I for a single connection."""
-    tde = []
-    for freq_mask in freq_masks:
-        fband_I = freq_mask[:, np.newaxis] * (freq_mask * I)
-        fband_I = np.nansum(fband_I, axis=0)
-        fband_I = np.concatenate(
-            (
-                fband_I,
-                np.zeros(
-                    (I.shape[0], I.shape[1] - 1), dtype=_precision.complex
-                ),
-            ),
-            axis=1,
+    tde = np.full(
+        (freq_masks.shape[0], I.shape[0] * 2 - 1),
+        fill_value=np.nan,
+        dtype=_precision.real,
+    )
+    for fband_i, freq_mask in enumerate(freq_masks):
+        I_fband = freq_mask[:, np.newaxis] * (freq_mask * I)
+        I_fband = np.nansum(I_fband, axis=0)
+        I_fband = np.concatenate(
+            (I_fband, np.zeros((I.shape[0] - 1), dtype=_precision.complex))
         )
 
-        tde.append(
-            np.abs(np.fft.fftshift(np.fft.ifft(fband_I))).astype(
-                _precision.real
-            )
+        tde[fband_i] = np.abs(np.fft.fftshift(np.fft.ifft(I_fband))).astype(
+            _precision.real
         )
 
-    return np.array(tde, dtype=_precision.real)
+    return tde
