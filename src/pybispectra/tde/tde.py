@@ -343,7 +343,7 @@ class TDE(_ProcessBispectrum):
                     "No frequencies are present in the data for the range "
                     f"({this_fmin}, {this_fmax})."
                 )
-            freq_masks.append(freq_mask)
+            freq_masks.append(np.clip(freq_mask + np.flip(freq_mask), 0, 1))
             freq_bands.append((this_fmin, this_fmax))
 
         self._freq_masks = np.array(freq_masks)
@@ -444,27 +444,18 @@ class TDE(_ProcessBispectrum):
             np.arange(self._n_unique_freqs - 1, 2 * self._n_unique_freqs - 1),
         )
 
-        bispectrum = np.empty(
-            (
-                len(self._xyz.values()),
-                self._n_cons,
-                self._n_unique_freqs,
-                self._n_unique_freqs,
-            ),
-            dtype=_precision.complex,
-        )
-        for kmn_i, kmn in enumerate(self._xyz.values()):
-            args = [
-                {
-                    "data": self.data[:, (seed, target)],
-                    "hankel_freq_mask": hankel_freq_mask,
-                    "kmn": kmn,
-                    "precision": _precision.complex,
-                }
-                for seed, target in zip(self._seeds, self._targets)
-            ]
-            try:
-                out = pqdm(
+        args = [
+            {
+                "data": self.data[:, (seed, target)],
+                "hankel_freq_mask": hankel_freq_mask,
+                "kmn": np.array(list(self._xyz.values())),
+                "precision": _precision.complex,
+            }
+            for seed, target in zip(self._seeds, self._targets)
+        ]
+        try:
+            self._bispectrum = np.array(
+                pqdm(
                     args,
                     _compute_bispectrum_tde,
                     self._n_jobs,
@@ -472,19 +463,16 @@ class TDE(_ProcessBispectrum):
                     desc="Processing connections...",
                     disable=not self.verbose,
                     exception_behaviour="immediate",
-                )
-            except MemoryError as error:  # pragma: no cover
-                raise MemoryError(
-                    "Memory allocation for the bispectrum computation failed. "
-                    "Try reducing the sampling frequency of the data, or "
-                    "reduce the precision of the computation with "
-                    "`pybispectra.set_precision('single')`."
-                ) from error
-            # have to average complex values outside Numba-compiled function
-            bispectrum[kmn_i] = np.array(out, dtype=_precision.complex).mean(
-                axis=1
-            )
-        self._bispectrum = bispectrum
+                ),
+                dtype=_precision.complex,
+            ).transpose(1, 0, 2, 3)
+        except MemoryError as error:  # pragma: no cover
+            raise MemoryError(
+                "Memory allocation for the bispectrum computation failed. "
+                "Try reducing the sampling frequency of the data, or "
+                "reduce the precision of the computation with "
+                "`pybispectra.set_precision('single')`."
+            ) from error
 
         if self.verbose:
             print("        ... Bispectrum computation finished\n")
@@ -727,7 +715,7 @@ class TDE(_ProcessBispectrum):
 def _compute_bispectrum_tde(
     data: np.ndarray,
     hankel_freq_mask: np.ndarray,
-    kmn: tuple[int],
+    kmn: np.ndarray,
     precision: type,
 ) -> np.ndarray:  # pragma: no cover
     """Compute the bispectrum for a single connection for use in TDE.
@@ -746,9 +734,10 @@ def _compute_bispectrum_tde(
         Can be generated with ``scipy.linalg.hankel(c=numpy.arange(0, fs),
         r=(numpy.arange(fs-1 : fs*2))``.
 
-    kmn : tuple of int, length of 3
-        Tuple containing the k, m, and n channel indices in ``data``,
-        respectively, to compute the bispectrum for.
+    kmn : numpy.ndarray of int, shape of [x, 3]
+        Array of variable length (x) of arrays, where each sub-array contains
+        the k, m, and n channel indices in ``data``, respectively, to compute
+        the bispectrum for.
 
     precision : type
         Precision to use for the computation. Either ``numpy.complex64``
@@ -756,43 +745,40 @@ def _compute_bispectrum_tde(
 
     Returns
     -------
-    results : numpy.ndarray, shape of [epochs, frequencies, frequencies]
+    results : numpy.ndarray, shape of [x, frequencies, frequencies]
         Complex-valued array containing the bispectrum of a single connection,
-        for the channel indices in ``kmn``.
+        where the first dimension corresponds to the different channel indices
+        given in ``kmn``.
 
     Notes
     -----
-    Averaging across epochs is not performed here as ``numpy.mean`` of
-    complex numbers is not supported when compiling using Numba.
-
     No checks on the input data are performed for speed.
     """
     n_unique_freqs = hankel_freq_mask.shape[0]
-    results = np.full(
-        (data.shape[0], n_unique_freqs, n_unique_freqs),
-        fill_value=np.nan,
-        dtype=precision,
+    results = np.zeros(
+        (kmn.shape[0], n_unique_freqs, n_unique_freqs), dtype=precision
     )
 
-    (k, m, n) = kmn
-    for epoch_i, epoch_data in enumerate(data):
-        # No arrays as indices in Numba, so loop over to pass int indices
-        hankel_n = np.empty_like(hankel_freq_mask, dtype=precision)
-        for row_i in range(n_unique_freqs):
-            for col_i in range(n_unique_freqs):
-                hankel_n[row_i, col_i] = epoch_data[
-                    n, hankel_freq_mask[row_i, col_i]
-                ]
+    for kmn_i, (k, m, n) in enumerate(kmn):
+        for epoch_data in data:
+            # No arrays as indices in Numba, so loop over to pass int indices
+            hankel_n = np.empty_like(hankel_freq_mask, dtype=precision)
+            for row_i in range(n_unique_freqs):
+                for col_i in range(n_unique_freqs):
+                    hankel_n[row_i, col_i] = epoch_data[
+                        n, hankel_freq_mask[row_i, col_i]
+                    ]
 
-        results[epoch_i] = np.multiply(
-            np.transpose(np.expand_dims(epoch_data[k, :n_unique_freqs], 0)),
-            np.multiply(
-                epoch_data[m, :n_unique_freqs],
-                np.conjugate(hankel_n),
-            ),
-        )
+            results[kmn_i] += np.multiply(
+                np.transpose(
+                    np.expand_dims(epoch_data[k, :n_unique_freqs], 0)
+                ),
+                np.multiply(
+                    epoch_data[m, :n_unique_freqs], np.conjugate(hankel_n)
+                ),
+            )
 
-    return results
+    return np.divide(results, data.shape[0]).astype(precision)
 
 
 def _compute_tde_i(
@@ -938,6 +924,7 @@ def _compute_tde_from_I(I: np.ndarray, freq_masks: np.ndarray) -> np.ndarray:
     tde = []
     for freq_mask in freq_masks:
         fband_I = freq_mask[:, np.newaxis] * (freq_mask * I)
+        fband_I = np.nansum(fband_I, axis=0)
         fband_I = np.concatenate(
             (
                 fband_I,
@@ -947,7 +934,6 @@ def _compute_tde_from_I(I: np.ndarray, freq_masks: np.ndarray) -> np.ndarray:
             ),
             axis=1,
         )
-        fband_I = np.nansum(fband_I, axis=0)
 
         tde.append(
             np.abs(np.fft.fftshift(np.fft.ifft(fband_I))).astype(
