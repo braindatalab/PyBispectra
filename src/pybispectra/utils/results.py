@@ -394,7 +394,7 @@ class ResultsTDE(_ResultsBase):
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
-    freq_bands : tuple of tuple of float, length of 2 | None (default None)
+    freq_bands : tuple of tuple of int or float, length of 2 | None (default None)
         Lower and higher frequencies (in Hz) of each frequency band used to
         compute the results.
 
@@ -420,7 +420,7 @@ class ResultsTDE(_ResultsBase):
         respectively.
 
     shape : tuple of int
-        Shape of the results i.e. [nodes, times].
+        Shape of the results i.e. [nodes, frequency bands, times].
 
     n_nodes : str
         Number of connections in the results.
@@ -428,35 +428,33 @@ class ResultsTDE(_ResultsBase):
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
-    freq_bands : tuple of tuple of float, length of 2 | None
+    freq_bands : tuple of tuple of int or float, length of 2 | None
         Lower and higher frequencies (in Hz) of each frequency band used to
         compute the results.
 
     tau :  ~numpy.ndarray, shape of [nodes, frequency bands]
         Estimated time delay (in ms) for each connection and frequency band.
-    """
+    """  # noqa: E501
 
     times: np.ndarray = None
-    freq_bands: tuple[tuple[float]] = None
+    _n_times: int = None
+    freq_bands: tuple[tuple[int | float]] = None
+    _n_fbands: int = None
 
     def __repr__(self) -> str:
         """Return printable representation of the object."""
         repr_ = f"<Result: {self.name} | "
 
         if self.freq_bands is not None:
-            if len(self.freq_bands) == 1:
-                repr_ += (
-                    f"{self.freq_bands[0][0]:.2f} - "
-                    f"{self.freq_bands[0][1]:.2f} Hz | "
-                )
-            else:
-                repr_ += (
-                    f"{np.min(self.freq_bands):.2f} - "
-                    f"{np.max(self.freq_bands)} Hz "
-                    f"({len(self.freq_bands):.2f} bands) | "
-                )
+            repr_ += (
+                f"{np.min(self.freq_bands):.2f} - "
+                f"{np.max(self.freq_bands):.2f} Hz | "
+            )
 
-        repr_ += f"[{self.n_nodes} nodes, {len(self.times)} times]>"
+        repr_ += (
+            f"[{self.n_nodes} nodes, {self._n_fbands} frequency bands, "
+            f"{self._n_times} times]>"
+        )
 
         return repr_
 
@@ -465,7 +463,7 @@ class ResultsTDE(_ResultsBase):
         data: np.ndarray,
         indices: tuple[tuple[int]],
         times: np.ndarray,
-        freq_bands: tuple[tuple[float]] | None = None,
+        freq_bands: tuple[tuple[int | float]] | None = None,
         name: str = "TDE",
     ) -> None:  # noqa: D107
         super().__init__(data, 3, name)
@@ -486,16 +484,16 @@ class ResultsTDE(_ResultsBase):
         self,
         indices: tuple[tuple[int]],
         times: np.ndarray,
-        freq_band: tuple[float],
+        freq_bands: tuple[int | float],
     ) -> None:
         """Sort inputs to the object."""
         super()._sort_indices_seeds_targets(indices)
         self._sort_times(times)
-        self._sort_freq_band(freq_band)
+        self._sort_freq_bands(freq_bands)
 
         if self._data.shape != (
             self.n_nodes,
-            len(self.freq_bands),
+            self._n_fbands,
             times.shape[0],
         ):
             raise ValueError(
@@ -510,8 +508,9 @@ class ResultsTDE(_ResultsBase):
             raise ValueError("`times` must be a 1D array.")
 
         self.times = times.copy()
+        self._n_times = times.shape[0]
 
-    def _sort_freq_band(self, freq_bands: tuple[tuple[float]]) -> None:
+    def _sort_freq_bands(self, freq_bands: tuple[tuple[int | float]]) -> None:
         """Sort `freq_bands` input."""
         if freq_bands is not None:
             if not isinstance(freq_bands, tuple):
@@ -522,7 +521,7 @@ class ResultsTDE(_ResultsBase):
                     "frequency bands in the results."
                 )
             for freq_band in freq_bands:
-                if not isinstance(freq_bands, tuple):
+                if not isinstance(freq_band, tuple):
                     raise TypeError(
                         "Each entry of `freq_bands` must be a tuple."
                     )
@@ -532,6 +531,9 @@ class ResultsTDE(_ResultsBase):
                     )
 
             self.freq_bands = deepcopy(freq_bands)
+            self._n_fbands = len(freq_bands)
+        else:
+            self._n_fbands = self._data.shape[1]
 
     def _get_compact_results_child(
         self,
@@ -541,15 +543,22 @@ class ResultsTDE(_ResultsBase):
         Returns
         -------
         compact_results : numpy.ndarray
-            Results with shape ``[seeds, targets, times]``.
+            Results with shape ``[seeds, targets, frequency bands, times]``.
 
         indices : tuple of tuple of int, length of 2
             Channel indices of ``compact_results`` for the seeds and targets,
             respectively.
         """
         compact_results = np.full(
-            (self._n_chans, self._n_chans, self.times.shape[0]),
-            fill_value=np.full(self.times.shape[0], fill_value=np.nan),
+            (
+                self._n_chans,
+                self._n_chans,
+                self._n_fbands,
+                self.times.shape[0],
+            ),
+            fill_value=np.full(
+                (self._n_fbands, self.times.shape[0]), fill_value=np.nan
+            ),
         )
 
         return super()._get_compact_results_parent(compact_results)

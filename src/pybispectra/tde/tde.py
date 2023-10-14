@@ -139,8 +139,8 @@ class TDE(_ProcessBispectrum):
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
-        fmin: float | tuple[float] = 0.0,
-        fmax: float | tuple[float] = np.inf,
+        fmin: int | float | tuple[int | float] = 0.0,
+        fmax: int | float | tuple[int | float] = np.inf,
         antisym: bool | tuple[bool] = False,
         method: int | tuple[int] = 1,
         n_jobs: int = 1,
@@ -154,12 +154,12 @@ class TDE(_ProcessBispectrum):
             TDE between. If :obj:`None`, coupling between all channels is
             computed.
 
-        fmin : float | tuple of float (default ``0.0``)
+        fmin : int | float | tuple of int or float (default ``0.0``)
             The low frequency of interest (in Hz) to compute time delays for.
             If a tuple of float, specifies the low frequencies for each
             frequency band of interest (must have the same length as `fmax`).
 
-        fmax : float | tuple of float (default np.inf)
+        fmax : int | float | tuple of int or float (default np.inf)
             The high frequency of interest (in Hz) to compute time delays for.
             If a tuple of float, specifies the high frequencies for each
             frequency band of interest (must have the same length as `fmin`).
@@ -298,17 +298,19 @@ class TDE(_ProcessBispectrum):
         self._xyz = None
 
     def _sort_freq_bands(
-        self, fmin: float | tuple[float], fmax: float | tuple[float]
+        self,
+        fmin: int | float | tuple[int | float],
+        fmax: int | float | tuple[int | float],
     ) -> None:
         """Sort inputs for the frequency bounds."""
-        if not isinstance(fmin, (float, tuple)):
-            raise TypeError("`fmin` must be a float or tuple of floats.")
-        if not isinstance(fmax, (float, tuple)):
-            raise TypeError("`fmax` must be a float or tuple of floats.")
+        if not isinstance(fmin, (int, float, tuple)):
+            raise TypeError("`fmin` must be an int, float, or tuple.")
+        if not isinstance(fmax, (int, float, tuple)):
+            raise TypeError("`fmax` must be an int, float, or tuple.")
 
-        if isinstance(fmin, float):
+        if isinstance(fmin, (int, float)):
             fmin = (fmin,)
-        if isinstance(fmax, float):
+        if isinstance(fmax, (int, float)):
             fmax = (fmax,)
 
         new_fmax = []
@@ -821,7 +823,7 @@ def _compute_tde_ii(
     B_xyx: np.ndarray,
     B_xxx: np.ndarray,
     B_yyy: np.ndarray,
-    freq_mask: np.ndarray,
+    freq_masks: np.ndarray,
 ) -> np.ndarray:
     """Compute TDE from bispectra with method II for a single connection.
 
@@ -851,11 +853,11 @@ def _compute_tde_ii(
     phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
     I = np.exp(1j * phi_prime)
 
-    return _compute_tde_from_I(I, freq_mask)
+    return _compute_tde_from_I(I, freq_masks)
 
 
 def _compute_tde_iii(
-    B_xyx: np.ndarray, B_xxx: np.ndarray, freq_mask: np.ndarray
+    B_xyx: np.ndarray, B_xxx: np.ndarray, freq_masks: np.ndarray
 ) -> np.ndarray:
     """Compute TDE from bispectra with method III for a single connection.
 
@@ -881,14 +883,14 @@ def _compute_tde_iii(
     """
     I = np.divide(B_xyx, B_xxx)
 
-    return _compute_tde_from_I(I, freq_mask)
+    return _compute_tde_from_I(I, freq_masks)
 
 
 def _compute_tde_iv(
     B_xyx: np.ndarray,
     B_xxx: np.ndarray,
     B_yyy: np.ndarray,
-    freq_mask: np.ndarray,
+    freq_masks: np.ndarray,
 ) -> np.ndarray:
     """Compute TDE from bispectra with method IV for a single connection.
 
@@ -921,7 +923,7 @@ def _compute_tde_iv(
         np.sqrt(np.multiply(np.abs(B_xxx), np.abs(B_yyy))),
     )
 
-    return _compute_tde_from_I(I, freq_mask)
+    return _compute_tde_from_I(I, freq_masks)
 
 
 def _compute_tde_from_I(I: np.ndarray, freq_masks: np.ndarray) -> np.ndarray:

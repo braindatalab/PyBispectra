@@ -62,12 +62,12 @@ class _PlotBase(ABC):
         """
         if nodes is None:
             nodes = tuple(range(self.n_nodes))
+        if not isinstance(nodes, (int, tuple)):
+            raise TypeError("`nodes` must be an int or tuple.")
         if isinstance(nodes, int):
             nodes = (nodes,)
-        if not isinstance(nodes, tuple) or not all(
-            isinstance(con, int) for con in nodes
-        ):
-            raise TypeError("`nodes` must be a tuple of integers.")
+        if not all(isinstance(con, int) for con in nodes):
+            raise TypeError("Entries of `nodes` must be ints.")
         if any(con >= self.n_nodes for con in nodes) or any(
             con < 0 for con in nodes
         ):
@@ -473,7 +473,7 @@ class _PlotTDE(_PlotBase):
         data: np.ndarray,
         tau: tuple[float],
         indices: tuple[tuple[int]],
-        freq_bands: tuple[tuple[float]],
+        freq_bands: tuple[tuple[float]] | None,
         times: np.ndarray,
         name: str,
     ) -> None:  # noqa: D107
@@ -482,6 +482,11 @@ class _PlotTDE(_PlotBase):
         self.tau = deepcopy(tau)
         self.freq_bands = deepcopy(freq_bands)
         self.times = times.copy()
+
+        if self.freq_bands is None:
+            self._n_fbands = self._data.shape[1]
+        else:
+            self._n_fbands = len(self.freq_bands)
 
     def plot(
         self,
@@ -653,17 +658,17 @@ class _PlotTDE(_PlotBase):
     ) -> tuple[int]:
         """Sort `freq_bands` input."""
         if freq_bands is None:
-            freq_bands = tuple(range(len(self.freq_bands)))
+            freq_bands = tuple(range(self._n_fbands))
         else:
+            if not isinstance(freq_bands, (int, tuple)):
+                raise TypeError("`freq_bands` must be an int or tuple.")
             if isinstance(freq_bands, int):
                 freq_bands = (freq_bands,)
-            if not isinstance(freq_bands, tuple) or not all(
-                isinstance(con, int) for con in freq_bands
+            if not all(isinstance(fband, int) for fband in freq_bands):
+                raise TypeError("Entries of `freq_bands` must be ints.")
+            if any(fband >= self._n_fbands for fband in freq_bands) or any(
+                fband < 0 for fband in freq_bands
             ):
-                raise TypeError("`freq_bands` must be a tuple of integers.")
-            if any(
-                fband >= len(self.freq_bands) for fband in freq_bands
-            ) or any(fband < 0 for fband in freq_bands):
                 raise ValueError(
                     "The requested frequency band is not present in the "
                     "results."
@@ -695,21 +700,18 @@ class _PlotTDE(_PlotBase):
         axes = []
 
         plot_n = 0
-        for node_i in range(len(nodes)):
-            for fband_i in range(len(freq_bands)):
-                if node_i + fband_i == plot_n:
-                    fig, axs = plt.subplots(
-                        n_rows, n_cols, layout="constrained"
-                    )
-                    figures.append(fig)
-                    if n_rows * n_cols > 1:
-                        axs = np.ravel(axs)
-                    else:
-                        axs = np.array([axs])
-                    axes.append(axs)
-                    plot_n += n_rows * n_cols
-                if plot_n >= len(nodes) * len(freq_bands):
-                    break
+        for plot_i in range(len(nodes) * len(freq_bands)):
+            if plot_i == plot_n:
+                fig, axs = plt.subplots(n_rows, n_cols, layout="constrained")
+                figures.append(fig)
+                if n_rows * n_cols > 1:
+                    axs = np.ravel(axs)
+                else:
+                    axs = np.array([axs])
+                axes.append(axs)
+                plot_n += n_rows * n_cols
+            if plot_n >= len(nodes) * len(freq_bands):
+                break
 
         return figures, axes
 
