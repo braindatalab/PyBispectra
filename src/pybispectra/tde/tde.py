@@ -350,7 +350,7 @@ class TDE(_ProcessBispectrum):
                     "No frequencies are present in the data for the range "
                     f"({this_fmin}, {this_fmax})."
                 )
-            freq_masks.append(np.clip(freq_mask + np.flip(freq_mask), 0, 1))
+            freq_masks.append(freq_mask)
             freq_bands.append((this_fmin, this_fmax))
 
         self._freq_masks = np.array(freq_masks)
