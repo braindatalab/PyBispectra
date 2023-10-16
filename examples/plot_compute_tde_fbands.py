@@ -87,7 +87,7 @@ print(
 # timepoints. The timepoints correspond to time delay estimates for every 5 ms
 # (i.e. the sampling rate of the data), ranging from -1000 ms to +1000 ms.
 #
-# Inspecting the results, we see that the: 20-30 Hz bispectrum entries capture
+# Inspecting the results, we see that: the 20-30 Hz bispectrum entries capture
 # the corresponding delay around 100 ms from :math:`\textbf{x}` to
 # :math:`\textbf{y}`; the 30-40 Hz bispectrum entries capture the delay around
 # 200 ms from :math:`\textbf{y}` to :math:`\textbf{x}` (represented as a
