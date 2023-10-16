@@ -107,7 +107,6 @@ class TDE(_ProcessBispectrum):
         "xxx": (0, 0, 0),
         "yyy": (1, 1, 1),
         "xyx": (0, 1, 0),
-        "xxy": (0, 1, 0),  # (0, 0, 1)
         "yxx": (1, 0, 0),
     }
     _xyz: dict = None
@@ -440,10 +439,7 @@ class TDE(_ProcessBispectrum):
         self._xyz = deepcopy(self._kmn)
         if not self._return_method_ii and not self._return_method_iv:
             del self._xyz["yyy"]
-        if not self._return_nosym:
-            del self._xyz["xyx"]
         if not self._return_antisym:
-            del self._xyz["xxy"]
             del self._xyz["yxx"]
 
         hankel_freq_mask = hankel(
@@ -536,7 +532,7 @@ class TDE(_ProcessBispectrum):
             B_yyy = self._bispectrum[list(self._xyz.keys()).index("yyy")]
 
         B_xyx = (
-            self._bispectrum[list(self._xyz.keys()).index("xxy")]
+            self._bispectrum[list(self._xyz.keys()).index("xyx")]
             - self._bispectrum[list(self._xyz.keys()).index("yxx")]
         )
 
