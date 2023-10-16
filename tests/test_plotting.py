@@ -186,24 +186,24 @@ def test_plotting_cfc_runs() -> None:
     figs, axes = results.plot(show=False)
     assert len(figs) == n_cons
     assert len(axes) == n_cons
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(n_rows=3, n_cols=3, show=False)
     assert len(figs) == 1
     assert len(axes) == 1
     assert axes[0].size == n_cons
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(
         f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False
     )
-    plt.close()
+    plt.close("all")
 
     # check it works with non-exact frequencies
     figs, axes = results.plot(
         f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False
     )
-    plt.close()
+    plt.close("all")
 
 
 def test_plotting_tde_error_catch() -> None:
@@ -370,22 +370,22 @@ def test_plotting_tde_runs() -> None:
     figs, axes = results.plot(show=False)
     assert len(figs) == n_cons * n_fbands
     assert len(axes) == n_cons * n_fbands
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(n_rows=6, n_cols=3, show=False)
     assert len(figs) == 1
     assert len(axes) == 1
     assert axes[0].size == n_cons * n_fbands
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(freq_bands=0, n_rows=3, n_cols=3, show=False)
     assert len(figs) == 1
     assert len(axes) == 1
     assert axes[0].size == n_cons
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(times=(times[0], times[-1]), show=False)
-    plt.close()
+    plt.close("all")
 
     if results.tau[0, 0] == times[-1]:
         figs, axes = results.plot(
@@ -401,14 +401,14 @@ def test_plotting_tde_runs() -> None:
             times=(results.tau[0, 0] + 1, times[-1]),
             show=False,
         )
-    plt.close()
+    plt.close("all")
 
     # check it works with non-exact times
     figs, axes = results.plot(
         times=(times[0] + 1e-5, times[-1] - 1e-5),
         show=False,
     )
-    plt.close()
+    plt.close("all")
 
 
 def test_plotting_waveshape_error_catch() -> None:
@@ -583,21 +583,21 @@ def test_plotting_waveshape_runs() -> None:
     figs, axes = results.plot(show=False)
     assert len(figs) == n_chans
     assert len(axes) == n_chans
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(n_rows=3, n_cols=3, show=False)
     assert len(figs) == 1
     assert len(axes) == 1
     assert axes[0].shape == (n_chans, 4)
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(
         f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False
     )
-    plt.close()
+    plt.close("all")
 
     # check it works with non-exact frequencies
     figs, axes = results.plot(
         f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False
     )
-    plt.close()
+    plt.close("all")
