@@ -166,13 +166,13 @@ tde_times = tde.results.times
 tde_results = tde.results.get_results()  # return results as array
 
 print(
-    f"PAC results: [{tde_results.shape[0]} connections x "
+    f"TDE results: [{tde_results.shape[0]} connections x "
     f"{tde_results.shape[1]} frequency bands x {tde_results.shape[2]} times]"
 )
 
 ###############################################################################
 # We can see that time delays have been computed for two connections (0 -> 1
-# and 1 -> 0) and one frequency band (0 - 100 Hz), with 401 timepoints, and
+# and 1 -> 0) and one frequency band (0-100 Hz), with 401 timepoints, and
 # averaged across our 30 epochs. The timepoints correspond to time delay
 # estimates for every 5 ms (i.e. the sampling rate of the data), ranging from
 # -1000 ms to +1000 ms.
