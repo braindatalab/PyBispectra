@@ -131,48 +131,40 @@ def test_error_catch() -> None:
     ):
         tde.compute(indices=((0,), (0,)))
 
-    with pytest.raises(TypeError, match="`freq_band` must be a tuple."):
-        tde.compute(freq_band=5)
-    with pytest.raises(ValueError, match="`freq_band` must have length of 2."):
-        tde.compute(freq_band=(5, 10, 15))
     with pytest.raises(
-        ValueError, match="Entries of `freq_band` must be >= 0."
+        TypeError, match="`fmin` must be an int, float, or tuple."
     ):
-        tde.compute(freq_band=(-1, 10))
+        tde.compute(fmin="0")
     with pytest.raises(
-        ValueError, match="Entries of `freq_band` must be >= 0."
+        TypeError, match="`fmax` must be an int, float, or tuple."
     ):
-        tde.compute(freq_band=(10, -1))
+        tde.compute(fmax="10")
     with pytest.raises(
-        ValueError,
-        match=(
-            "At least one entry of `freq_band` is > the Nyquist frequency."
-        ),
+        ValueError, match="`fmin` and `fmax` must have the same length."
     ):
-        tde.compute(freq_band=(5, sampling_freq / 2 + 1))
+        tde.compute(fmin=0, fmax=(10, 20))
+    with pytest.raises(ValueError, match="Entries of `fmin` must be >= 0."):
+        tde.compute(fmin=-1)
     with pytest.raises(
-        ValueError,
-        match=(
-            "At least one entry of `freq_band` is > the Nyquist frequency."
-        ),
+        ValueError, match="Entries of `fmax` must be <= the Nyquist frequency."
     ):
-        tde.compute(freq_band=(sampling_freq / 2 + 1, 5))
+        tde.compute(fmax=sampling_freq / 2 + 1)
     with pytest.raises(
         ValueError,
         match=(
-            "No frequencies are present in the data for the range in "
-            "`freq_band`."
+            "At least one entry of `fmin` is > the corresponding entry of "
+            "`fmax`."
         ),
     ):
-        tde.compute(freq_band=(10, 5))
+        tde.compute(fmin=(5, 20), fmax=(10, 15))
     with pytest.raises(
         ValueError,
         match=(
-            "No frequencies are present in the data for the range in "
-            "`freq_band`."
+            r"No frequencies are present in the data for the range \(0.1, "
+            r"0.2\)."
         ),
     ):
-        tde.compute(freq_band=(5.6, 5.7))
+        tde.compute(fmin=0.1, fmax=0.2)
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         tde.compute(n_jobs=0.5)
@@ -180,8 +172,10 @@ def test_error_catch() -> None:
         tde.compute(n_jobs=0)
 
 
-@pytest.mark.parametrize("freq_band", [None, (10, 20), (10.5, 19.5)])
-def test_tde_runs(freq_band: None | tuple) -> None:
+@pytest.mark.parametrize(
+    "freq_bands", [(0, np.inf), (5, 10), ((5, 15), (10, 20))]
+)
+def test_tde_runs(freq_bands: tuple) -> None:
     """Test that TDE runs correctly."""
     n_chans = 3
     n_times = 100
@@ -198,7 +192,10 @@ def test_tde_runs(freq_band: None | tuple) -> None:
     # check it runs with correct inputs
     tde = TDE(data=fft, freqs=freqs, sampling_freq=sampling_freq)
     tde.compute(
-        antisym=(False, True), method=(1, 2, 3, 4), freq_band=freq_band
+        antisym=(False, True),
+        method=(1, 2, 3, 4),
+        fmin=freq_bands[0],
+        fmax=freq_bands[1],
     )
 
     # check the returned results have the correct shape

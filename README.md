@@ -18,3 +18,7 @@ Install the package into the desired environment using pip `pip install pybispec
 
 ## Use:
 To get started with the toolbox, check out the [documentation](https://pybispectra.readthedocs.io/en/main/) and [examples](https://pybispectra.readthedocs.io/en/main/examples.html).
+
+## Citing:
+If you use this toolbox in your work, please include the following citation:<br/>
+Binns, T. S., Pellegrini, F., Jurhar, T., & Haufe, S. (2023). PyBispectra (Version 1.0.0). DOI: [10.5281/zenodo.8377821](https://doi.org/10.5281/zenodo.8377821)
