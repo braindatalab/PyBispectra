@@ -217,9 +217,11 @@ def test_results_cfc_runs() -> None:
 def test_results_tde_error_catch() -> None:
     """Test `ResultsTDE` catches errors."""
     n_cons = 9
+    n_fbands = 2
     n_times = 50
-    data = _generate_data(n_cons, n_times, 1)[..., 0]
+    data = _generate_data(n_cons, n_fbands, n_times)
     times = np.arange(n_times)
+    freq_bands = ((5, 10), (20, 30))
     n_unique_chans = 3
     indices = (
         tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
@@ -230,12 +232,14 @@ def test_results_tde_error_catch() -> None:
         ResultsTDE(
             data=data.tolist(),
             indices=indices,
+            freq_bands=freq_bands,
             times=times,
         )
-    with pytest.raises(ValueError, match="`data` must be a 2D array."):
+    with pytest.raises(ValueError, match="`data` must be a 3D array."):
         ResultsTDE(
             data=data[..., 0],
             indices=indices,
+            freq_bands=freq_bands,
             times=times,
         )
 
@@ -243,12 +247,14 @@ def test_results_tde_error_catch() -> None:
         ResultsTDE(
             data=data,
             indices=list(indices),
+            freq_bands=freq_bands,
             times=times,
         )
     with pytest.raises(ValueError, match="`indices` must have length of 2."):
         ResultsTDE(
             data=data,
             indices=(indices[0], indices[0], indices[1]),
+            freq_bands=freq_bands,
             times=times,
         )
     with pytest.raises(
@@ -257,6 +263,7 @@ def test_results_tde_error_catch() -> None:
         ResultsTDE(
             data=data,
             indices=(0, 1),
+            freq_bands=freq_bands,
             times=times,
         )
     with pytest.raises(
@@ -266,6 +273,7 @@ def test_results_tde_error_catch() -> None:
         ResultsTDE(
             data=data,
             indices=((0.5,), (1.5,)),
+            freq_bands=freq_bands,
             times=times,
         )
     with pytest.raises(
@@ -277,6 +285,7 @@ def test_results_tde_error_catch() -> None:
                 indices[0],
                 tuple(np.concatenate((indices[1], [1])).tolist()),
             ),
+            freq_bands=freq_bands,
             times=times,
         )
     with pytest.raises(
@@ -288,6 +297,43 @@ def test_results_tde_error_catch() -> None:
         ResultsTDE(
             data=data,
             indices=((0,), (n_cons + 1,)),
+            freq_bands=freq_bands,
+            times=times,
+        )
+
+    with pytest.raises(TypeError, match="`freq_bands` must be a tuple."):
+        ResultsTDE(
+            data=data,
+            indices=indices,
+            freq_bands=list(freq_bands),
+            times=times,
+        )
+    with pytest.raises(
+        ValueError,
+        match=(
+            "`freq_bands` must the same length as the number of frequency "
+            "bands in the results."
+        ),
+    ):
+        ResultsTDE(
+            data=data, indices=indices, freq_bands=((5, 10),), times=times
+        )
+    with pytest.raises(
+        TypeError, match="Each entry of `freq_bands` must be a tuple."
+    ):
+        ResultsTDE(
+            data=data,
+            indices=indices,
+            freq_bands=tuple([list(fband) for fband in freq_bands]),
+            times=times,
+        )
+    with pytest.raises(
+        ValueError, match="Each entry of `freq_bands` must have length of 2."
+    ):
+        ResultsTDE(
+            data=data,
+            indices=indices,
+            freq_bands=tuple([(fband[0],) for fband in freq_bands]),
             times=times,
         )
 
@@ -295,39 +341,36 @@ def test_results_tde_error_catch() -> None:
         ResultsTDE(
             data=data,
             indices=indices,
+            freq_bands=freq_bands,
             times=times.tolist(),
         )
     with pytest.raises(ValueError, match="`times` must be a 1D array."):
         ResultsTDE(
             data=data,
             indices=indices,
+            freq_bands=freq_bands,
             times=times[:, np.newaxis],
         )
 
     with pytest.raises(
         ValueError,
-        match=r"`data` must have shape \[nodes, times\].",
+        match=r"`data` must have shape \[nodes, frequency bands, times\].",
     ):
         ResultsTDE(
             data=data[1:, :],
             indices=indices,
+            freq_bands=freq_bands,
             times=times,
         )
     with pytest.raises(
         ValueError,
-        match=r"`data` must have shape \[nodes, times\].",
+        match=r"`data` must have shape \[nodes, frequency bands, times\].",
     ):
         ResultsTDE(
             data=data,
             indices=indices,
+            freq_bands=freq_bands,
             times=times[1:],
-        )
-
-    with pytest.raises(TypeError, match="`freq_band` must be a tuple."):
-        ResultsTDE(data=data, indices=indices, times=times, freq_band=5)
-    with pytest.raises(ValueError, match="`freq_band` must have length of 2."):
-        ResultsTDE(
-            data=data, indices=indices, times=times, freq_band=(5, 10, 15)
         )
 
     with pytest.raises(TypeError, match="`name` must be a string."):
@@ -335,6 +378,7 @@ def test_results_tde_error_catch() -> None:
             data=data,
             indices=indices,
             times=times,
+            freq_bands=freq_bands,
             name=1,
         )
 
@@ -344,14 +388,15 @@ def test_results_tde_error_catch() -> None:
         results.get_results(form="not_a_form")
 
 
-def test_results_tde_runs() -> None:
+@pytest.mark.parametrize("freq_bands", [None, ((5, 15),), ((5, 15), (10, 20))])
+def test_results_tde_runs(freq_bands: tuple) -> None:
     """Test `ResultsTDE` runs with correct inputs."""
     n_cons = 9
+    n_fbands = len(freq_bands) if freq_bands is not None else 1
     n_times = 50
-    data = _generate_data(n_cons, n_times, 1)[..., 0]
+    data = _generate_data(n_cons, n_fbands, n_times)
     times = np.arange(n_times)
     name = "test"
-    freq_band = (10, 20)
     n_unique_chans = 3
     indices = (
         tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
@@ -363,33 +408,33 @@ def test_results_tde_runs() -> None:
         indices=indices,
         times=times,
         name=name,
-        freq_band=None,
+        freq_bands=freq_bands,
     )
 
-    assert repr(results) == (
-        f"<Result: {name} | [{n_cons} nodes, {n_times} times]>"
-    )
-
-    results = ResultsTDE(
-        data=data,
-        indices=indices,
-        times=times,
-        name=name,
-        freq_band=freq_band,
-    )
-
-    assert repr(results) == (
-        f"<Result: {name} | {freq_band[0]} - {freq_band[1]} Hz | [{n_cons} "
-        f"nodes, {n_times} times]>"
-    )
+    if freq_bands is None:
+        assert repr(results) == (
+            f"<Result: {name} | [{n_cons} nodes, {n_fbands} frequency bands, "
+            f"{n_times} times]>"
+        )
+    else:
+        assert repr(results) == (
+            f"<Result: {name} | {np.min(freq_bands):.2f} - "
+            f"{np.max(freq_bands):.2f} Hz | [{n_cons} nodes, {n_fbands} "
+            f"frequency bands, {n_times} times]>"
+        )
 
     results_array = results.get_results(form="raveled")
     assert isinstance(results_array, np.ndarray)
-    assert results_array.shape == (n_cons, n_times)
+    assert results_array.shape == (n_cons, n_fbands, n_times)
 
     results_array, array_indices = results.get_results(form="compact")
     assert isinstance(results_array, np.ndarray)
-    assert results_array.shape == (n_unique_chans, n_unique_chans, n_times)
+    assert results_array.shape == (
+        n_unique_chans,
+        n_unique_chans,
+        n_fbands,
+        n_times,
+    )
     assert array_indices == (
         tuple(range(n_unique_chans)),
         tuple(range(n_unique_chans)),

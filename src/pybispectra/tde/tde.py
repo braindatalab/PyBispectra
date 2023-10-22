@@ -80,8 +80,8 @@ class TDE(_ProcessBispectrum):
 
     _data: np.ndarray = None
 
-    _freq_mask: np.ndarray = None
-    _freq_band: tuple[float] = None
+    _freq_masks: np.ndarray = None
+    _freq_bands: tuple[tuple[float]] = None
 
     _times: np.ndarray = None
 
@@ -107,7 +107,6 @@ class TDE(_ProcessBispectrum):
         "xxx": (0, 0, 0),
         "yyy": (1, 1, 1),
         "xyx": (0, 1, 0),
-        "xxy": (0, 0, 1),
         "yxx": (1, 0, 0),
     }
     _xyz: dict = None
@@ -139,7 +138,8 @@ class TDE(_ProcessBispectrum):
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
-        freq_band: tuple[float] | None = None,
+        fmin: int | float | tuple[int | float] = 0.0,
+        fmax: int | float | tuple[int | float] = np.inf,
         antisym: bool | tuple[bool] = False,
         method: int | tuple[int] = 1,
         n_jobs: int = 1,
@@ -153,8 +153,15 @@ class TDE(_ProcessBispectrum):
             TDE between. If :obj:`None`, coupling between all channels is
             computed.
 
-        freq_band : tuple of float, length of 2 | None (default None)
-            Low and high frequencies (in Hz) to compute time delays for.
+        fmin : int | float | tuple of int or float (default ``0.0``)
+            The low frequency of interest (in Hz) to compute time delays for.
+            If a tuple of float, specifies the low frequencies for each
+            frequency band of interest (must have the same length as `fmax`).
+
+        fmax : int | float | tuple of int or float (default np.inf)
+            The high frequency of interest (in Hz) to compute time delays for.
+            If a tuple of float, specifies the high frequencies for each
+            frequency band of interest (must have the same length as `fmin`).
 
         antisym : bool | tuple of bool (default False)
             Whether to antisymmetrise the PAC results. If a tuple of bool, both
@@ -245,9 +252,9 @@ class TDE(_ProcessBispectrum):
         ----------
         .. footbibliography::
         """
-        self._reset_attrs()
+        super()._reset_attrs()
 
-        self._sort_freq_band(freq_band)
+        self._sort_freq_bands(fmin, fmax)
         self._sort_metrics(antisym, method)
         self._sort_indices(indices)
         self._sort_parallelisation(n_jobs)
@@ -259,15 +266,15 @@ class TDE(_ProcessBispectrum):
         self._compute_tde()
         self._store_results()
 
+        self._reset_attrs()
+
         if self.verbose:
             print("    ... TDE computation finished\n")
 
     def _reset_attrs(self) -> None:
         """Reset attrs. of the object to prevent interference."""
-        super()._reset_attrs()
-
-        self._freq_mask = None
-        self._freq_band = None
+        self._freq_bands = None
+        self._freq_masks = None
 
         self._return_nosym = False
         self._return_antisym = False
@@ -289,40 +296,64 @@ class TDE(_ProcessBispectrum):
 
         self._xyz = None
 
-    def _sort_freq_band(self, freq_band: tuple[float] | None) -> None:
+    def _sort_freq_bands(
+        self,
+        fmin: int | float | tuple[int | float],
+        fmax: int | float | tuple[int | float],
+    ) -> None:
         """Sort inputs for the frequency bounds."""
-        if freq_band is None:
-            self._freq_mask = np.ones((self._n_unique_freqs,), dtype=np.int32)
-        else:
-            if not isinstance(freq_band, tuple):
-                raise TypeError("`freq_band` must be a tuple.")
-            if len(freq_band) != 2:
-                raise ValueError("`freq_band` must have length of 2.")
-            if any(freq < 0.0 for freq in freq_band):
-                raise ValueError("Entries of `freq_band` must be >= 0.")
-            if any(freq > self.sampling_freq / 2 for freq in freq_band):
-                raise ValueError(
-                    "At least one entry of `freq_band` is > the Nyquist "
-                    "frequency."
-                )
+        if not isinstance(fmin, (int, float, tuple)):
+            raise TypeError("`fmin` must be an int, float, or tuple.")
+        if not isinstance(fmax, (int, float, tuple)):
+            raise TypeError("`fmax` must be an int, float, or tuple.")
+
+        if isinstance(fmin, (int, float)):
+            fmin = (fmin,)
+        if isinstance(fmax, (int, float)):
+            fmax = (fmax,)
+
+        new_fmax = []
+        for this_fmax in fmax:
+            if this_fmax == np.inf:
+                this_fmax = self.freqs.max()
+            new_fmax.append(this_fmax)
+        fmax = tuple(new_fmax)
+
+        if len(fmin) != len(fmax):
+            raise ValueError("`fmin` and `fmax` must have the same length.")
+        if any(freq < 0 for freq in fmin):
+            raise ValueError("Entries of `fmin` must be >= 0.")
+        if any(freq > self.sampling_freq / 2 for freq in fmax):
+            raise ValueError(
+                "Entries of `fmax` must be <= the Nyquist frequency."
+            )
+        if any(
+            this_fmin > this_fmax for this_fmin, this_fmax in zip(fmin, fmax)
+        ):
+            raise ValueError(
+                "At least one entry of `fmin` is > the corresponding entry of "
+                "`fmax`."
+            )
+
+        freq_masks = []
+        freq_bands = []
+        for this_fmin, this_fmax in zip(fmin, fmax):
             freq_mask = np.zeros((self._n_unique_freqs,), dtype=np.int32)
             freq_mask[
                 np.nonzero(
-                    (self.freqs >= freq_band[0]) & (self.freqs <= freq_band[1])
+                    (self.freqs >= this_fmin) & (self.freqs <= this_fmax)
                 )
             ] = 1
             if np.all(freq_mask == 0):
                 raise ValueError(
-                    "No frequencies are present in the data for the range in "
-                    "`freq_band`."
+                    "No frequencies are present in the data for the range "
+                    f"({this_fmin}, {this_fmax})."
                 )
+            freq_masks.append(freq_mask)
+            freq_bands.append((this_fmin, this_fmax))
 
-            self._freq_mask = freq_mask
-
-        self._freq_band = (
-            self.freqs[np.nonzero(self._freq_mask)][0],
-            self.freqs[np.nonzero(self._freq_mask)][-1],
-        )
+        self._freq_masks = np.array(freq_masks)
+        self._freq_bands = tuple(freq_bands)
 
     def _sort_metrics(
         self, antisym: bool | tuple[bool], method: int | tuple[int]
@@ -408,10 +439,7 @@ class TDE(_ProcessBispectrum):
         self._xyz = deepcopy(self._kmn)
         if not self._return_method_ii and not self._return_method_iv:
             del self._xyz["yyy"]
-        if not self._return_nosym:
-            del self._xyz["xyx"]
         if not self._return_antisym:
-            del self._xyz["xxy"]
             del self._xyz["yxx"]
 
         hankel_freq_mask = hankel(
@@ -419,27 +447,18 @@ class TDE(_ProcessBispectrum):
             np.arange(self._n_unique_freqs - 1, 2 * self._n_unique_freqs - 1),
         )
 
-        bispectrum = np.empty(
-            (
-                len(self._xyz.values()),
-                self._n_cons,
-                self._n_unique_freqs,
-                self._n_unique_freqs,
-            ),
-            dtype=_precision.complex,
-        )
-        for kmn_i, kmn in enumerate(self._xyz.values()):
-            args = [
-                {
-                    "data": self.data[:, (seed, target)],
-                    "hankel_freq_mask": hankel_freq_mask,
-                    "kmn": kmn,
-                    "precision": _precision.complex,
-                }
-                for seed, target in zip(self._seeds, self._targets)
-            ]
-            try:
-                out = pqdm(
+        args = [
+            {
+                "data": self.data[:, (seed, target)],
+                "hankel_freq_mask": hankel_freq_mask,
+                "kmn": np.array(list(self._xyz.values())),
+                "precision": _precision.complex,
+            }
+            for seed, target in zip(self._seeds, self._targets)
+        ]
+        try:
+            self._bispectrum = np.array(
+                pqdm(
                     args,
                     _compute_bispectrum_tde,
                     self._n_jobs,
@@ -447,19 +466,16 @@ class TDE(_ProcessBispectrum):
                     desc="Processing connections...",
                     disable=not self.verbose,
                     exception_behaviour="immediate",
-                )
-            except MemoryError as error:  # pragma: no cover
-                raise MemoryError(
-                    "Memory allocation for the bispectrum computation failed. "
-                    "Try reducing the sampling frequency of the data, or "
-                    "reduce the precision of the computation with "
-                    "`pybispectra.set_precision('single')`."
-                ) from error
-            # have to average complex values outside Numba-compiled function
-            bispectrum[kmn_i] = np.array(out, dtype=_precision.complex).mean(
-                axis=1
-            )
-        self._bispectrum = bispectrum
+                ),
+                dtype=_precision.complex,
+            ).transpose(1, 0, 2, 3)
+        except MemoryError as error:  # pragma: no cover
+            raise MemoryError(
+                "Memory allocation for the bispectrum computation failed. "
+                "Try reducing the sampling frequency of the data, or "
+                "reduce the precision of the computation with "
+                "`pybispectra.set_precision('single')`."
+            ) from error
 
         if self.verbose:
             print("        ... Bispectrum computation finished\n")
@@ -516,7 +532,7 @@ class TDE(_ProcessBispectrum):
             B_yyy = self._bispectrum[list(self._xyz.keys()).index("yyy")]
 
         B_xyx = (
-            self._bispectrum[list(self._xyz.keys()).index("xxy")]
+            self._bispectrum[list(self._xyz.keys()).index("xyx")]
             - self._bispectrum[list(self._xyz.keys()).index("yxx")]
         )
 
@@ -567,7 +583,7 @@ class TDE(_ProcessBispectrum):
             con_kwargs.append(
                 {key: value[con_i] for key, value in kwargs.items()}
             )
-            con_kwargs[con_i]["freq_mask"] = self._freq_mask
+            con_kwargs[con_i]["freq_masks"] = self._freq_masks
 
         return np.array(
             pqdm(
@@ -604,7 +620,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_i_nosym,
                     self._indices,
                     self._times,
-                    self._freq_band,
+                    self._freq_bands,
                     "TDE | Method I",
                 )
             )
@@ -614,7 +630,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_ii_nosym,
                     self._indices,
                     self._times,
-                    self._freq_band,
+                    self._freq_bands,
                     "TDE | Method II",
                 )
             )
@@ -624,7 +640,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iii_nosym,
                     self._indices,
                     self._times,
-                    self._freq_band,
+                    self._freq_bands,
                     "TDE | Method III",
                 )
             )
@@ -634,7 +650,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iv_nosym,
                     self._indices,
                     self._times,
-                    self._freq_band,
+                    self._freq_bands,
                     "TDE | Method IV",
                 )
             )
@@ -645,7 +661,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_i_antisym,
                     self._indices,
                     self._times,
-                    self._freq_band,
+                    self._freq_bands,
                     "TDE (antisymmetrised) | Method I",
                 )
             )
@@ -655,7 +671,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_ii_antisym,
                     self._indices,
                     self._times,
-                    self._freq_band,
+                    self._freq_bands,
                     "TDE (antisymmetrised) | Method II",
                 )
             )
@@ -665,7 +681,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iii_antisym,
                     self._indices,
                     self._times,
-                    self._freq_band,
+                    self._freq_bands,
                     "TDE (antisymmetrised) | Method III",
                 )
             )
@@ -675,7 +691,7 @@ class TDE(_ProcessBispectrum):
                     self._tde_iv_antisym,
                     self._indices,
                     self._times,
-                    self._freq_band,
+                    self._freq_bands,
                     "TDE (antisymmetrised) | Method IV",
                 )
             )
@@ -702,7 +718,7 @@ class TDE(_ProcessBispectrum):
 def _compute_bispectrum_tde(
     data: np.ndarray,
     hankel_freq_mask: np.ndarray,
-    kmn: tuple[int],
+    kmn: np.ndarray,
     precision: type,
 ) -> np.ndarray:  # pragma: no cover
     """Compute the bispectrum for a single connection for use in TDE.
@@ -721,9 +737,10 @@ def _compute_bispectrum_tde(
         Can be generated with ``scipy.linalg.hankel(c=numpy.arange(0, fs),
         r=(numpy.arange(fs-1 : fs*2))``.
 
-    kmn : tuple of int, length of 3
-        Tuple containing the k, m, and n channel indices in ``data``,
-        respectively, to compute the bispectrum for.
+    kmn : numpy.ndarray of int, shape of [x, 3]
+        Array of variable length (x) of arrays, where each sub-array contains
+        the k, m, and n channel indices in ``data``, respectively, to compute
+        the bispectrum for.
 
     precision : type
         Precision to use for the computation. Either ``numpy.complex64``
@@ -731,47 +748,44 @@ def _compute_bispectrum_tde(
 
     Returns
     -------
-    results : numpy.ndarray, shape of [epochs, frequencies, frequencies]
+    results : numpy.ndarray, shape of [x, frequencies, frequencies]
         Complex-valued array containing the bispectrum of a single connection,
-        for the channel indices in ``kmn``.
+        where the first dimension corresponds to the different channel indices
+        given in ``kmn``.
 
     Notes
     -----
-    Averaging across epochs is not performed here as ``numpy.mean`` of
-    complex numbers is not supported when compiling using Numba.
-
     No checks on the input data are performed for speed.
     """
     n_unique_freqs = hankel_freq_mask.shape[0]
-    results = np.full(
-        (data.shape[0], n_unique_freqs, n_unique_freqs),
-        fill_value=np.nan,
-        dtype=precision,
+    results = np.zeros(
+        (kmn.shape[0], n_unique_freqs, n_unique_freqs), dtype=precision
     )
 
-    (k, m, n) = kmn
-    for epoch_i, epoch_data in enumerate(data):
-        # No arrays as indices in Numba, so loop over to pass int indices
-        hankel_n = np.empty_like(hankel_freq_mask, dtype=precision)
-        for row_i in range(n_unique_freqs):
-            for col_i in range(n_unique_freqs):
-                hankel_n[row_i, col_i] = epoch_data[
-                    n, hankel_freq_mask[row_i, col_i]
-                ]
+    for kmn_i, (k, m, n) in enumerate(kmn):
+        for epoch_data in data:
+            # No arrays as indices in Numba, so loop over to pass int indices
+            hankel_n = np.empty_like(hankel_freq_mask, dtype=precision)
+            for row_i in range(n_unique_freqs):
+                for col_i in range(n_unique_freqs):
+                    hankel_n[row_i, col_i] = epoch_data[
+                        n, hankel_freq_mask[row_i, col_i]
+                    ]
 
-        results[epoch_i] = np.multiply(
-            epoch_data[k, :n_unique_freqs],
-            np.multiply(
-                epoch_data[m, :n_unique_freqs],
-                np.conjugate(hankel_n),
-            ),
-        )
+            results[kmn_i] += np.multiply(
+                np.transpose(
+                    np.expand_dims(epoch_data[k, :n_unique_freqs], 0)
+                ),
+                np.multiply(
+                    epoch_data[m, :n_unique_freqs], np.conjugate(hankel_n)
+                ),
+            )
 
-    return results
+    return np.divide(results, data.shape[0]).astype(precision)
 
 
 def _compute_tde_i(
-    B_xyx: np.ndarray, B_xxx: np.ndarray, freq_mask: np.ndarray
+    B_xyx: np.ndarray, B_xxx: np.ndarray, freq_masks: np.ndarray
 ) -> np.ndarray:
     """Compute TDE from bispectra with method I for a single connection.
 
@@ -783,13 +797,13 @@ def _compute_tde_i(
     B_xxx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xxx``.
 
-    freq_mask : numpy.ndarray, shape of [frequencies]
-        Indices mask for the frequencies to use.
+    freq_masks : numpy.ndarray, shape of [frequency bands, frequencies]
+        Indices masks for the frequencies to use in each frequency band.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [times]
-        Time delay estimates.
+    tde : numpy.ndarray, shape of [frequency bands, times]
+        Time delay estimates for each frequency band.
 
     Notes
     -----
@@ -798,14 +812,14 @@ def _compute_tde_i(
     phi = np.angle(B_xyx) - np.angle(B_xxx)
     I = np.exp(1j * phi)
 
-    return _compute_tde_from_I(I, freq_mask)
+    return _compute_tde_from_I(I, freq_masks)
 
 
 def _compute_tde_ii(
     B_xyx: np.ndarray,
     B_xxx: np.ndarray,
     B_yyy: np.ndarray,
-    freq_mask: np.ndarray,
+    freq_masks: np.ndarray,
 ) -> np.ndarray:
     """Compute TDE from bispectra with method II for a single connection.
 
@@ -820,13 +834,13 @@ def _compute_tde_ii(
     B_yyy : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``yyy``.
 
-    freq_mask : numpy.ndarray, shape of [frequencies]
-        Indices mask for the frequencies to use.
+    freq_masks : numpy.ndarray, shape of [frequency bands, frequencies]
+        Indices masks for the frequencies to use in each frequency band.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [times]
-        Time delay estimates.
+    tde : numpy.ndarray, shape of [frequency bands, times]
+        Time delay estimates for each frequency band.
 
     Notes
     -----
@@ -835,11 +849,11 @@ def _compute_tde_ii(
     phi_prime = np.angle(B_xyx) - 0.5 * (np.angle(B_xxx) + np.angle(B_yyy))
     I = np.exp(1j * phi_prime)
 
-    return _compute_tde_from_I(I, freq_mask)
+    return _compute_tde_from_I(I, freq_masks)
 
 
 def _compute_tde_iii(
-    B_xyx: np.ndarray, B_xxx: np.ndarray, freq_mask: np.ndarray
+    B_xyx: np.ndarray, B_xxx: np.ndarray, freq_masks: np.ndarray
 ) -> np.ndarray:
     """Compute TDE from bispectra with method III for a single connection.
 
@@ -851,13 +865,13 @@ def _compute_tde_iii(
     B_xxx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xxx``.
 
-    freq_mask : numpy.ndarray, shape of [frequencies]
-        Indices mask for the frequencies to use.
+    freq_masks : numpy.ndarray, shape of [frequency bands, frequencies]
+        Indices masks for the frequencies to use in each frequency band.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [times]
-        Time delay estimates.
+    tde : numpy.ndarray, shape of [frequency bands, times]
+        Time delay estimates for each frequency band.
 
     Notes
     -----
@@ -865,14 +879,14 @@ def _compute_tde_iii(
     """
     I = np.divide(B_xyx, B_xxx)
 
-    return _compute_tde_from_I(I, freq_mask)
+    return _compute_tde_from_I(I, freq_masks)
 
 
 def _compute_tde_iv(
     B_xyx: np.ndarray,
     B_xxx: np.ndarray,
     B_yyy: np.ndarray,
-    freq_mask: np.ndarray,
+    freq_masks: np.ndarray,
 ) -> np.ndarray:
     """Compute TDE from bispectra with method IV for a single connection.
 
@@ -887,13 +901,13 @@ def _compute_tde_iv(
     B_yyy : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``yyy``.
 
-    freq_mask : numpy.ndarray, shape of [frequencies]
-        Indices mask for the frequencies to use.
+    freq_masks : numpy.ndarray, shape of [frequency bands, frequencies]
+        Indices masks for the frequencies to use in each frequency band.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [times]
-        Time delay estimates.
+    tde : numpy.ndarray, shape of [frequency bands, times]
+        Time delay estimates for each frequency band.
 
     Notes
     -----
@@ -905,17 +919,25 @@ def _compute_tde_iv(
         np.sqrt(np.multiply(np.abs(B_xxx), np.abs(B_yyy))),
     )
 
-    return _compute_tde_from_I(I, freq_mask)
+    return _compute_tde_from_I(I, freq_masks)
 
 
-def _compute_tde_from_I(I: np.ndarray, freq_mask: np.ndarray) -> np.ndarray:
+def _compute_tde_from_I(I: np.ndarray, freq_masks: np.ndarray) -> np.ndarray:
     """Compute TDE from the matrix I for a single connection."""
-    if np.any(freq_mask == 0):
-        I = freq_mask[:, np.newaxis] * (freq_mask * I)
-    I = np.concatenate(
-        (I, np.zeros((I.shape[0], I.shape[1] - 1), dtype=_precision.complex)),
-        axis=1,
+    tde = np.full(
+        (freq_masks.shape[0], I.shape[0] * 2 - 1),
+        fill_value=np.nan,
+        dtype=_precision.real,
     )
-    I = np.nansum(I, axis=0)
+    for fband_i, freq_mask in enumerate(freq_masks):
+        I_fband = freq_mask[:, np.newaxis] * (freq_mask * I)
+        I_fband = np.nansum(I_fband, axis=0)
+        I_fband = np.concatenate(
+            (I_fband, np.zeros((I.shape[0] - 1), dtype=_precision.complex))
+        )
 
-    return np.abs(np.fft.fftshift(np.fft.ifft(I))).astype(_precision.real)
+        tde[fband_i] = np.abs(np.fft.fftshift(np.fft.ifft(I_fband))).astype(
+            _precision.real
+        )
+
+    return tde

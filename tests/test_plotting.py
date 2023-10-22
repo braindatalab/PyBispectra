@@ -37,20 +37,16 @@ def test_plotting_cfc_error_catch() -> None:
         name=name,
     )
 
-    with pytest.raises(
-        TypeError, match="`nodes` must be a tuple of integers."
-    ):
-        results.plot(nodes=9)
-    with pytest.raises(
-        TypeError, match="`nodes` must be a tuple of integers."
-    ):
-        results.plot(
-            nodes=(float(i) for i in range(n_cons)),
-        )
+    with pytest.raises(TypeError, match="`nodes` must be an int or tuple."):
+        results.plot(nodes=[0])
+    with pytest.raises(TypeError, match="`nodes` must be an int or tuple."):
+        results.plot(nodes=0.5)
+    with pytest.raises(TypeError, match="Entries of `nodes` must be ints."):
+        results.plot(nodes=(0.5,))
     with pytest.raises(
         ValueError, match="The requested node is not present in the results."
     ):
-        results.plot(nodes=(-1,))
+        results.plot(nodes=n_cons + 1)
 
     with pytest.raises(
         TypeError, match="`n_rows` and `n_cols` must be integers."
@@ -190,31 +186,32 @@ def test_plotting_cfc_runs() -> None:
     figs, axes = results.plot(show=False)
     assert len(figs) == n_cons
     assert len(axes) == n_cons
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(n_rows=3, n_cols=3, show=False)
     assert len(figs) == 1
     assert len(axes) == 1
     assert axes[0].size == n_cons
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(
         f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False
     )
-    plt.close()
+    plt.close("all")
 
     # check it works with non-exact frequencies
     figs, axes = results.plot(
         f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False
     )
-    plt.close()
+    plt.close("all")
 
 
-def test_plotting_TDE_error_catch() -> None:
+def test_plotting_tde_error_catch() -> None:
     """Test plotting in `ResultsTDE` catches errors."""
     n_cons = 9
+    n_fbands = 2
     n_times = 51
-    data = _generate_data(n_cons, n_times, 1)[..., 0]
+    data = _generate_data(n_cons, n_fbands, n_times)
     times = np.arange((n_times - 1) * -0.5, n_times * 0.5)
     name = "test"
     n_unique_chans = 3
@@ -230,18 +227,34 @@ def test_plotting_TDE_error_catch() -> None:
         name=name,
     )
 
-    with pytest.raises(
-        TypeError, match="`nodes` must be a tuple of integers."
-    ):
-        results.plot(nodes=9)
-    with pytest.raises(
-        TypeError, match="`nodes` must be a tuple of integers."
-    ):
-        results.plot(nodes=(float(i) for i in range(n_cons)))
+    with pytest.raises(TypeError, match="`nodes` must be an int or tuple."):
+        results.plot(nodes=[0])
+    with pytest.raises(TypeError, match="`nodes` must be an int or tuple."):
+        results.plot(nodes=0.5)
+    with pytest.raises(TypeError, match="Entries of `nodes` must be ints."):
+        results.plot(nodes=(0.5,))
     with pytest.raises(
         ValueError, match="The requested node is not present in the results."
     ):
-        results.plot(nodes=(-1,))
+        results.plot(nodes=n_cons + 1)
+
+    with pytest.raises(
+        TypeError, match="`freq_bands` must be an int or tuple."
+    ):
+        results.plot(freq_bands=[0])
+    with pytest.raises(
+        TypeError, match="`freq_bands` must be an int or tuple."
+    ):
+        results.plot(freq_bands=0.5)
+    with pytest.raises(
+        TypeError, match="Entries of `freq_bands` must be ints."
+    ):
+        results.plot(freq_bands=(0.5,))
+    with pytest.raises(
+        ValueError,
+        match="The requested frequency band is not present in the results.",
+    ):
+        results.plot(freq_bands=n_fbands + 1)
 
     with pytest.raises(
         TypeError, match="`n_rows` and `n_cols` must be integers."
@@ -334,8 +347,10 @@ def test_plotting_TDE_error_catch() -> None:
 def test_plotting_tde_runs() -> None:
     """Test plotting in `ResultsTDE` runs with correct inputs."""
     n_cons = 9
+    n_fbands = 2
     n_times = 51
-    data = _generate_data(n_cons, n_times, 1)[..., 0]
+    data = _generate_data(n_cons, n_fbands, n_times)
+    freq_bands = ((5, 10), (15, 20))
     times = np.arange((n_times - 1) * -0.5, n_times * 0.5)
     name = "test"
     n_unique_chans = 3
@@ -348,39 +363,52 @@ def test_plotting_tde_runs() -> None:
         data=data,
         indices=indices,
         times=times,
+        freq_bands=freq_bands,
         name=name,
     )
 
     figs, axes = results.plot(show=False)
-    assert len(figs) == n_cons
-    assert len(axes) == n_cons
-    plt.close()
+    assert len(figs) == n_cons * n_fbands
+    assert len(axes) == n_cons * n_fbands
+    plt.close("all")
 
-    figs, axes = results.plot(n_rows=3, n_cols=3, show=False)
+    figs, axes = results.plot(n_rows=6, n_cols=3, show=False)
+    assert len(figs) == 1
+    assert len(axes) == 1
+    assert axes[0].size == n_cons * n_fbands
+    plt.close("all")
+
+    figs, axes = results.plot(freq_bands=0, n_rows=3, n_cols=3, show=False)
     assert len(figs) == 1
     assert len(axes) == 1
     assert axes[0].size == n_cons
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(times=(times[0], times[-1]), show=False)
-    plt.close()
+    plt.close("all")
 
-    if results.tau[0] == times[-1]:
+    if results.tau[0, 0] == times[-1]:
         figs, axes = results.plot(
-            nodes=(0,), times=(times[0], results.tau[0] - 1), show=False
+            nodes=0,
+            freq_bands=0,
+            times=(times[0], results.tau[0, 0] - 1),
+            show=False,
         )
     else:
         figs, axes = results.plot(
-            nodes=(0,), times=(results.tau[0] + 1, times[-1]), show=False
+            nodes=0,
+            freq_bands=0,
+            times=(results.tau[0, 0] + 1, times[-1]),
+            show=False,
         )
-    plt.close()
+    plt.close("all")
 
     # check it works with non-exact times
     figs, axes = results.plot(
         times=(times[0] + 1e-5, times[-1] - 1e-5),
         show=False,
     )
-    plt.close()
+    plt.close("all")
 
 
 def test_plotting_waveshape_error_catch() -> None:
@@ -402,18 +430,16 @@ def test_plotting_waveshape_error_catch() -> None:
         name=name,
     )
 
-    with pytest.raises(
-        TypeError, match="`nodes` must be a tuple of integers."
-    ):
-        results.plot(nodes=9)
-    with pytest.raises(
-        TypeError, match="`nodes` must be a tuple of integers."
-    ):
-        results.plot(nodes=(float(i) for i in range(n_chans)))
+    with pytest.raises(TypeError, match="`nodes` must be an int or tuple."):
+        results.plot(nodes=[0])
+    with pytest.raises(TypeError, match="`nodes` must be an int or tuple."):
+        results.plot(nodes=0.5)
+    with pytest.raises(TypeError, match="Entries of `nodes` must be ints."):
+        results.plot(nodes=(0.5,))
     with pytest.raises(
         ValueError, match="The requested node is not present in the results."
     ):
-        results.plot(nodes=(-1,))
+        results.plot(nodes=n_chans + 1)
 
     with pytest.raises(
         TypeError, match="`n_rows` and `n_cols` must be integers."
@@ -534,8 +560,15 @@ def test_plotting_waveshape_error_catch() -> None:
     with pytest.raises(TypeError, match="`plot_absolute` must be a bool."):
         results.plot(plot_absolute=None)
 
+    with pytest.raises(TypeError, match="`mirror_cbar_range` must be a bool."):
+        results.plot(mirror_cbar_range=None)
 
-def test_plotting_waveshape_runs() -> None:
+
+@pytest.mark.parametrize("plot_absolute", [True, False])
+@pytest.mark.parametrize("mirror_cbar_range", [True, False])
+def test_plotting_waveshape_runs(
+    plot_absolute: bool, mirror_cbar_range: bool
+) -> None:
     """Test plotting in `ResultsWaveShape` runs with correct inputs."""
     n_chans = 9
     n_f1 = 50
@@ -557,21 +590,29 @@ def test_plotting_waveshape_runs() -> None:
     figs, axes = results.plot(show=False)
     assert len(figs) == n_chans
     assert len(axes) == n_chans
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(n_rows=3, n_cols=3, show=False)
     assert len(figs) == 1
     assert len(axes) == 1
     assert axes[0].shape == (n_chans, 4)
-    plt.close()
+    plt.close("all")
 
     figs, axes = results.plot(
         f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False
     )
-    plt.close()
+    plt.close("all")
 
     # check it works with non-exact frequencies
     figs, axes = results.plot(
         f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False
     )
-    plt.close()
+    plt.close("all")
+
+    # check it works with non-exact frequencies
+    figs, axes = results.plot(
+        plot_absolute=plot_absolute,
+        mirror_cbar_range=mirror_cbar_range,
+        show=False,
+    )
+    plt.close("all")

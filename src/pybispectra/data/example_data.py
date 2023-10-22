@@ -3,20 +3,23 @@
 import os
 from pathlib import Path
 
-DATASETS = {}
-DATASETS["sim_data_aac"] = "sim_data_aac.npy"
-DATASETS["sim_data_pac_bivariate"] = "sim_data_pac_bivariate.npy"
-DATASETS["sim_data_pac_univariate"] = "sim_data_pac_univariate.npy"
-DATASETS["sim_data_ppc"] = "sim_data_ppc.npy"
-DATASETS["sim_data_tde_correlated_noise"] = "sim_data_tde_correlated_noise.npy"
-DATASETS[
-    "sim_data_tde_independent_noise"
-] = "sim_data_tde_independent_noise.npy"
-DATASETS["sim_data_waveshape_noisy"] = "sim_data_waveshape_noisy.npy"
-DATASETS[
-    "sim_data_waveshape_peaks_troughs"
-] = "sim_data_waveshape_peaks_troughs.npy"
-DATASETS["sim_data_waveshape_sawtooths"] = "sim_data_waveshape_sawtooths.npy"
+DATASETS = {
+    # AAC
+    "sim_data_aac": "sim_data_aac.npy",
+    # PAC
+    "sim_data_pac_univariate": "sim_data_pac_univariate.npy",
+    "sim_data_pac_bivariate": "sim_data_pac_bivariate.npy",
+    # PPC
+    "sim_data_ppc": "sim_data_aac.npy",
+    # TDE
+    "sim_data_tde_independent_noise": "sim_data_tde_independent_noise.npy",
+    "sim_data_tde_correlated_noise": "sim_data_tde_correlated_noise.npy",
+    "sim_data_tde_fbands": "sim_data_tde_fbands.npy",
+    # Waveshape
+    "sim_data_waveshape_peaks_troughs": "sim_data_waveshape_peaks_troughs.npy",
+    "sim_data_waveshape_sawtooths": "sim_data_waveshape_sawtooths.npy",
+    "sim_data_waveshape_noisy": "sim_data_waveshape_noisy.npy",
+}
 
 
 def get_example_data_paths(name: str) -> str:
