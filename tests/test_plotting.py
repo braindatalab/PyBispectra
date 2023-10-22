@@ -560,8 +560,15 @@ def test_plotting_waveshape_error_catch() -> None:
     with pytest.raises(TypeError, match="`plot_absolute` must be a bool."):
         results.plot(plot_absolute=None)
 
+    with pytest.raises(TypeError, match="`mirror_cbar_range` must be a bool."):
+        results.plot(mirror_cbar_range=None)
 
-def test_plotting_waveshape_runs() -> None:
+
+@pytest.mark.parametrize("plot_absolute", [True, False])
+@pytest.mark.parametrize("mirror_cbar_range", [True, False])
+def test_plotting_waveshape_runs(
+    plot_absolute: bool, mirror_cbar_range: bool
+) -> None:
     """Test plotting in `ResultsWaveShape` runs with correct inputs."""
     n_chans = 9
     n_f1 = 50
@@ -599,5 +606,13 @@ def test_plotting_waveshape_runs() -> None:
     # check it works with non-exact frequencies
     figs, axes = results.plot(
         f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False
+    )
+    plt.close("all")
+
+    # check it works with non-exact frequencies
+    figs, axes = results.plot(
+        plot_absolute=plot_absolute,
+        mirror_cbar_range=mirror_cbar_range,
+        show=False,
     )
     plt.close("all")

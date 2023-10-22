@@ -297,7 +297,7 @@ class ResultsCFC(_ResultsBase):
 
     def plot(
         self,
-        nodes: tuple[int] | None = None,
+        nodes: int | tuple[int] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
         n_rows: int = 1,
@@ -311,7 +311,7 @@ class ResultsCFC(_ResultsBase):
 
         Parameters
         ----------
-        nodes : tuple of int | None (default None)
+        nodes : int | tuple of int | None (default None)
             Indices of connections to plot. If :obj:`None`, plot all
             connections.
 
@@ -743,14 +743,15 @@ class ResultsWaveShape(_ResultsBase):
 
     def plot(
         self,
-        nodes: tuple[int] | None = None,
+        nodes: int | tuple[int] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
         minor_tick_intervals: int | float = 1.0,
-        plot_absolute: bool = True,
+        plot_absolute: bool = False,
+        mirror_cbar_range: bool = True,
         cbar_range_abs: tuple[float] | list[tuple[float]] | None = None,
         cbar_range_real: tuple[float] | list[tuple[float]] | None = None,
         cbar_range_imag: tuple[float] | list[tuple[float]] | None = None,
@@ -761,7 +762,7 @@ class ResultsWaveShape(_ResultsBase):
 
         Parameters
         ----------
-        nodes : tuple of int | None (default None)
+        nodes : int | tuple of int | None (default None)
             Indices of results of channels to plot. If :obj:`None`, plot
             results of all channels.
 
@@ -787,9 +788,15 @@ class ResultsWaveShape(_ResultsBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
-        plot_absolute : bool (default True)
+        plot_absolute : bool (default False)
             Whether or not to plot the absolute values of the real and
             imaginary parts of the results.
+
+        mirror_cbar_range : bool (default True)
+            Whether of not to mirror the colourbar ranges of the real and
+            imaginary results around 0. Only applied if ``plot_absolute`` is
+            :obj:`False`, and ``cbar_range_real`` and ``cbar_range_imag`` are
+            not :obj:`None`.
 
         cbar_range_abs : tuple of float | list of tuple of float | None (default None)
             Range (in units of the data) for the colourbars of the absolute
@@ -851,6 +858,7 @@ class ResultsWaveShape(_ResultsBase):
             major_tick_intervals=major_tick_intervals,
             minor_tick_intervals=minor_tick_intervals,
             plot_absolute=plot_absolute,
+            mirror_cbar_range=mirror_cbar_range,
             cbar_range_abs=cbar_range_abs,
             cbar_range_real=cbar_range_real,
             cbar_range_imag=cbar_range_imag,

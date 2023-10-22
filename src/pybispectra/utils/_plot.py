@@ -224,7 +224,7 @@ class _PlotCFC(_PlotBase):
 
     def plot(
         self,
-        nodes: tuple[int] | None = None,
+        nodes: int | tuple[int] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
         n_rows: int = 1,
@@ -238,7 +238,7 @@ class _PlotCFC(_PlotBase):
 
         Parameters
         ----------
-        nodes : tuple of int | None (default None)
+        nodes : int | tuple of int | None (default None)
             Indices of connections to plot. If :obj:`None`, plot all
             connections.
 
@@ -323,7 +323,7 @@ class _PlotCFC(_PlotBase):
 
     def _sort_plot_inputs(
         self,
-        nodes: tuple[int] | None,
+        nodes: int | tuple[int] | None,
         f1s: np.ndarray | None,
         f2s: np.ndarray | None,
         n_rows: int,
@@ -832,14 +832,15 @@ class _PlotWaveShape(_PlotBase):
 
     def plot(
         self,
-        nodes: tuple[int] | None = None,
+        nodes: int | tuple[int] | None = None,
         f1s: np.ndarray | None = None,
         f2s: np.ndarray | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
         minor_tick_intervals: int | float = 1.0,
-        plot_absolute: bool = True,
+        plot_absolute: bool = False,
+        mirror_cbar_range: bool = True,
         cbar_range_abs: tuple[float] | list[tuple[float]] | None = None,
         cbar_range_real: tuple[float] | list[tuple[float]] | None = None,
         cbar_range_imag: tuple[float] | list[tuple[float]] | None = None,
@@ -850,7 +851,7 @@ class _PlotWaveShape(_PlotBase):
 
         Parameters
         ----------
-        nodes : tuple of int | None (default None)
+        nodes : int | tuple[int] | None = None,
             Indices of channels to plot. If :obj:`None`, plot all channels.
 
         f1s : tuple of int or float | None (default None)
@@ -875,23 +876,29 @@ class _PlotWaveShape(_PlotBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
-        plot_absolute : bool (default True)
+        plot_absolute : bool (default False)
             Whether or not to plot the absolute values of the real and
             imaginary parts of the results.
+
+        mirror_cbar_range : bool (default True)
+            Whether of not to mirror the colourbar ranges of the real and
+            imaginary results around 0. Only applied if ``plot_absolute`` is
+            :obj:`False`, and ``cbar_range_real`` and ``cbar_range_imag`` are
+            not :obj:`None`.
 
         cbar_range_abs : tuple of float | list of tuple of float | None (default None)
             Range (in units of the data) for the colourbars of the absolute
             value of the results, consisting of the lower and upper limits,
             respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple of
-            tuple of float, the ranges are used for each individual plot.
+            If a tuple of float, this range is used for all plots. If a tuple
+            of tuple of float, the ranges are used for each individual plot.
 
         cbar_range_real : tuple of float | list of tuple of float | None (default None)
             Range (in units of the data) for the colourbars of the real value
             of the results, consisting of the lower and upper limits,
             respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple of
-            tuple of float, the ranges are used for each individual plot.
+            If a tuple of float, this range is used for all plots. If a tuple
+            of tuple of float, the ranges are used for each individual plot.
 
         cbar_range_imag : tuple of float | list of tuple of float | None (default None)
             Range (in units of the data) for the colourbars of the imaginary
@@ -902,8 +909,8 @@ class _PlotWaveShape(_PlotBase):
 
         cbar_range_phase : tuple of float | list of tuple of float | None (default None)
             Range (in units of pi) for the colourbars of the phase of the
-            results, consisting of the lower and upper limits, respectively. If
-            :obj:`None`, the range is computed automatically. If a tuple of
+            results, consisting of the lower and upper limits, respectively.
+            If :obj:`None`, the range is computed automatically. If a tuple of
             float, this range is used for all plots. If a tuple of tuple of
             float, the ranges are used for each individual plot. Note that
             results should be limited to the range :math:`(0, 2$\\pi$]`.
@@ -946,6 +953,7 @@ class _PlotWaveShape(_PlotBase):
             major_tick_intervals,
             minor_tick_intervals,
             plot_absolute,
+            mirror_cbar_range,
             cbar_range_abs,
             cbar_range_real,
             cbar_range_imag,
@@ -966,6 +974,7 @@ class _PlotWaveShape(_PlotBase):
             major_tick_intervals,
             minor_tick_intervals,
             plot_absolute,
+            mirror_cbar_range,
             cbar_ranges,
         )
 
@@ -976,7 +985,7 @@ class _PlotWaveShape(_PlotBase):
 
     def _sort_plot_inputs(
         self,
-        nodes: tuple[int] | None,
+        nodes: int | tuple[int] | None,
         f1s: tuple[int | float] | None,
         f2s: tuple[int | float] | None,
         n_rows: int,
@@ -984,6 +993,7 @@ class _PlotWaveShape(_PlotBase):
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
         plot_absolute: bool,
+        mirror_cbar_range: bool,
         cbar_range_abs: tuple[float] | list[tuple[float]] | None,
         cbar_range_real: tuple[float] | list[tuple[float]] | None,
         cbar_range_imag: tuple[float] | list[tuple[float]] | None,
@@ -1029,6 +1039,8 @@ class _PlotWaveShape(_PlotBase):
 
         if not isinstance(plot_absolute, bool):
             raise TypeError("`plot_absolute` must be a bool.")
+        if not isinstance(mirror_cbar_range, bool):
+            raise TypeError("`mirror_cbar_range` must be a bool.")
 
         cbar_ranges = [
             cbar_range_abs,
@@ -1131,6 +1143,7 @@ class _PlotWaveShape(_PlotBase):
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
         plot_absolute: bool,
+        mirror_cbar_range: bool,
         cbar_ranges: list[list[tuple[float | None]]],
     ) -> None:
         """Plot results on the relevant figures/subplots."""
@@ -1175,12 +1188,19 @@ class _PlotWaveShape(_PlotBase):
                         data = data_func(
                             self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T
                         )
-                        if plot_absolute and axis_title in [
-                            "Real",
-                            "Imaginary",
-                        ]:
-                            data = np.abs(data)
-                            axis_title = f"|{axis_title}|"
+                        if axis_title in ["Real", "Imaginary"]:
+                            if plot_absolute:
+                                data = np.abs(data)
+                                axis_title = f"|{axis_title}|"
+                            elif mirror_cbar_range and cbar_range[plot_n] == [
+                                None,
+                                None,
+                            ]:
+                                max_abs_data = np.nanmax(np.abs(data))
+                                cbar_range[plot_n] = [
+                                    -max_abs_data,
+                                    max_abs_data,
+                                ]
 
                         if axis_title == "Phase":
                             # np.angle returns values in range (-pi, pi]
