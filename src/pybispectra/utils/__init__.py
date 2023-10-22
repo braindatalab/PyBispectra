@@ -1,6 +1,6 @@
 """Helper tools for processing and storing results."""
 
-__version__ = "1.0.0dev"
+__version__ = "1.1.0dev"
 
 from .ged import SpatioSpectralFilter
 from .results import ResultsCFC, ResultsTDE, ResultsWaveShape
