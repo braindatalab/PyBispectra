@@ -88,7 +88,7 @@ from pybispectra import compute_fft, get_example_data_paths, TDE
 # in spurious estimates of :math:`\tau=0`. Thankfully, antisymmetrisation of
 # the bispectrum can be used to address these mixing artefacts
 # :footcite:`Chella2014`, which is implemented here as the replacement of
-# :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xxy} - \textbf{B}_{yxx})`
+# :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xyx} - \textbf{B}_{yxx})`
 # in the above equations :footcite:`JurharInPrep`.
 
 ###############################################################################

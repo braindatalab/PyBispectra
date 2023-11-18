@@ -8,6 +8,9 @@
 - Added a new option for controlling the colour bar of waveshape plots.
 - Added an option for controlling the precision of computations.
 
+##### Bug Fixes
+- Fixed incorrect channel indexing for time delay antisymmetrisation.
+
 ##### API
 - Changed how operations on specific frequency/time ranges are specified to be more flexible.
 
