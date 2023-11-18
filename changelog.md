@@ -6,7 +6,11 @@
 - Reduced the memory requirement of bispectrum computations.
 - Added support for computing & storing time delays of multiple frequency bands simultaneously.
 - Added a new option for controlling the colour bar of waveshape plots.
-  
+- Added an option for controlling the precision of computations.
+
+##### API
+- Changed how operations on specific frequency/time ranges are specified to be more flexible.
+
 ##### Documentation
 - Added a new example for computing time delays on specific frequency bands.
 

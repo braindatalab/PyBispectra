@@ -31,13 +31,6 @@ def test_error_catch() -> None:
         WaveShape(coeffs, freqs.tolist(), sampling_freq)
     with pytest.raises(ValueError, match="`freqs` must be a 1D array."):
         WaveShape(coeffs, np.random.randn(2, 2), sampling_freq)
-    with pytest.raises(
-        ValueError,
-        match="At least one entry of `freqs` is > the Nyquist frequency.",
-    ):
-        bad_freqs = freqs.copy()
-        bad_freqs[-1] = sampling_freq / 2 + 1
-        WaveShape(coeffs, bad_freqs, sampling_freq)
 
     with pytest.raises(
         ValueError,
@@ -51,9 +44,21 @@ def test_error_catch() -> None:
         WaveShape(coeffs, freqs * -1, sampling_freq)
     with pytest.raises(
         ValueError,
+        match="At least one entry of `freqs` is > the Nyquist frequency.",
+    ):
+        bad_freqs = np.linspace(0, sampling_freq / 2 + 1, freqs.size)
+        WaveShape(coeffs, bad_freqs, sampling_freq)
+    with pytest.raises(
+        ValueError,
         match="Entries of `freqs` must be in ascending order.",
     ):
         WaveShape(coeffs, freqs[::-1], sampling_freq)
+    with pytest.raises(
+        ValueError, match="Entries of `freqs` must be evenly spaced."
+    ):
+        bad_freqs = freqs.copy()
+        bad_freqs[1] *= 2
+        WaveShape(coeffs, bad_freqs, sampling_freq)
 
     with pytest.raises(
         TypeError, match="`sampling_freq` must be an int or a float."
