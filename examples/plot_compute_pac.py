@@ -61,8 +61,8 @@ from pybispectra import compute_fft, get_example_data_paths, PAC
 # In the context of analysing PAC between two signals, antisymmetrisation
 # allows you to correct for spurious estimates of coupling arising from
 # interactions within the signals themselves in instances of source mixing,
-# providing a more robust connectivity metric :footcite:`PellegriniInPrep`. The
-# same principle applies for the antisymmetrisation of the bicoherence.
+# providing a more robust connectivity metric :footcite:`PellegriniPreprint`.
+# The same principle applies for the antisymmetrisation of the bicoherence.
 
 ###############################################################################
 # Loading data and computing Fourier coefficients
