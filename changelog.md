@@ -1,6 +1,6 @@
 # PyBispectra Changelog
 
-## [Version 1.1.0dev](https://pybispectra.readthedocs.io/en/main/)
+## [Version 1.1.0](https://pybispectra.readthedocs.io/en/1.1.0/)
 
 ##### Enhancements
 - Reduced the memory requirement of bispectrum computations.
