@@ -50,7 +50,7 @@ class WaveShape(_ProcessBispectrum):
         Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies in :attr:`data`.
+        Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which :attr:`data` was
