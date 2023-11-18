@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pybispectra"
-version = "1.1.0dev"
+version = "1.2.0dev"
 authors = [
     { name="Thomas Samuel Binns", email="t.s.binns@outlook.com" }
 ]

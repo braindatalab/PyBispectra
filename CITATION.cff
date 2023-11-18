@@ -14,7 +14,6 @@ authors:
   given-names: "Stefan"
   orcid: "https://orcid.org/0000-0003-1470-9195"
 title: "PyBispectra"
-version: 1.0.0
-doi: 10.5281/zenodo.8377821
+doi: 10.5281/zenodo.8377820
 date-released: 2023-09-23
 url: "https://github.com/neuromodulation/PyBispectra/tree/main"

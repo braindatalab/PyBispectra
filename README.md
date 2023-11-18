@@ -21,4 +21,4 @@ To get started with the toolbox, check out the [documentation](https://pybispect
 
 ## Citing:
 If you use this toolbox in your work, please include the following citation:<br/>
-Binns, T. S., Pellegrini, F., Jurhar, T., & Haufe, S. (2023). PyBispectra (Version 1.0.0). DOI: [10.5281/zenodo.8377821](https://doi.org/10.5281/zenodo.8377821)
+Binns, T. S., Pellegrini, F., Jurhar, T., & Haufe, S. (2023). PyBispectra. DOI: [10.5281/zenodo.8377820](https://doi.org/10.5281/zenodo.8377820)
