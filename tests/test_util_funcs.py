@@ -517,7 +517,7 @@ def test_set_precision(
     """Test `set_precision`."""
     # error catching
     with pytest.raises(
-        ValueError, match="precision must be either 'single' or 'double'."
+        ValueError, match="`precision` must be either 'single' or 'double'."
     ):
         set_precision(precision="not_a_precision")
 
