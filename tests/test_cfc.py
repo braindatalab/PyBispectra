@@ -61,14 +61,19 @@ def test_error_catch(class_type: str) -> None:
         ValueError,
         match="At least one entry of `freqs` is > the Nyquist frequency.",
     ):
-        bad_freqs = freqs.copy()
-        bad_freqs[-1] = sampling_freq / 2 + 1
+        bad_freqs = np.linspace(0, sampling_freq / 2 + 1, freqs.size)
         TestClass(coeffs, bad_freqs, sampling_freq)
     with pytest.raises(
         ValueError,
         match=("Entries of `freqs` must be in ascending order."),
     ):
         TestClass(coeffs, freqs[::-1], sampling_freq)
+    with pytest.raises(
+        ValueError, match="Entries of `freqs` must be evenly spaced."
+    ):
+        bad_freqs = freqs.copy()
+        bad_freqs[1] *= 2
+        TestClass(coeffs, bad_freqs, sampling_freq)
 
     with pytest.raises(
         TypeError, match="`sampling_freq` must be an int or a float."

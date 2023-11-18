@@ -59,6 +59,9 @@ class _ProcessFreqBase(ABC):
             raise TypeError("`freqs` must be a NumPy array.")
         if freqs.ndim != 1:
             raise ValueError("`freqs` must be a 1D array.")
+        freqs_diff = np.diff(freqs)
+        if not np.allclose(freqs_diff, freqs_diff[0], rtol=1e-3):
+            raise ValueError("Entries of `freqs` must be evenly spaced.")
 
         self._n_epochs, self._n_chans, self._n_freqs = data.shape[:3]
 
@@ -281,7 +284,7 @@ class _ProcessBispectrum(_ProcessFreqBase):
                 )
 
 
-# @njit
+@njit
 def _compute_bispectrum(
     data: np.ndarray,
     freqs: np.ndarray,
@@ -338,17 +341,15 @@ def _compute_bispectrum(
         f1 = freqs[f1_fi]
         for f2_ri, f2_fi in enumerate(range(f2_start, f2_end + 1)):
             f2 = freqs[f2_fi]
-            if f1 <= f2:
-                fclose = np.isclose(freqs, f2 + f1)
-                if np.any(fclose):
-                    fdiff_fi = np.nonzero(fclose)[0][0]
-                    for kmn_i, (k, m, n) in enumerate(kmn):
-                        for epoch_data in data:
-                            results[kmn_i, f1_ri, f2_ri] += (
-                                epoch_data[k, f1_fi]
-                                * epoch_data[m, f2_fi]
-                                * np.conjugate(epoch_data[n, fdiff_fi])
-                            )
+            fdiff_fi = f1_fi + f2_fi
+            if f1 <= f2 and fdiff_fi < freqs.size:
+                for kmn_i, (k, m, n) in enumerate(kmn):
+                    for epoch_data in data:
+                        results[kmn_i, f1_ri, f2_ri] += (
+                            epoch_data[k, f1_fi]
+                            * epoch_data[m, f2_fi]
+                            * np.conjugate(epoch_data[n, fdiff_fi])
+                        )
 
     return np.divide(results, data.shape[0]).astype(precision)
 
@@ -411,15 +412,13 @@ def _compute_threenorm(
         f1 = freqs[f1_fi]
         for f2_ri, f2_fi in enumerate(range(f2_start, f2_end + 1)):
             f2 = freqs[f2_fi]
-            if f1 <= f2:
-                fclose = np.isclose(freqs, f2 + f1)
-                if np.any(fclose):
-                    fdiff_fi = np.nonzero(fclose)[0][0]
-                    for kmn_i, (k, m, n) in enumerate(kmn):
-                        results[kmn_i, f1_ri, f2_ri] = (
-                            (np.abs(data[:, k, f1_fi]) ** 3).mean()
-                            * (np.abs(data[:, m, f2_fi]) ** 3).mean()
-                            * (np.abs(data[:, n, fdiff_fi]) ** 3).mean()
-                        ) ** (1 / 3)
+            fdiff_fi = f1_fi + f2_fi
+            if f1 <= f2 and fdiff_fi < freqs.size:
+                for kmn_i, (k, m, n) in enumerate(kmn):
+                    results[kmn_i, f1_ri, f2_ri] = (
+                        (np.abs(data[:, k, f1_fi]) ** 3).mean()
+                        * (np.abs(data[:, m, f2_fi]) ** 3).mean()
+                        * (np.abs(data[:, n, fdiff_fi]) ** 3).mean()
+                    ) ** (1 / 3)
 
     return results

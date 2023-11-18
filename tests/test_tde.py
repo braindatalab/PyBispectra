@@ -52,8 +52,7 @@ def test_error_catch() -> None:
         ValueError,
         match="At least one entry of `freqs` is > the Nyquist frequency.",
     ):
-        bad_freqs = freqs.copy()
-        bad_freqs[np.argmax(bad_freqs)] = sampling_freq / 2 + 1
+        bad_freqs = np.linspace(0, sampling_freq / 2 + 1, freqs.size)
         TDE(coeffs, bad_freqs, sampling_freq)
     max_freq_i = np.argwhere(freqs == np.max(freqs))[0][0]
     with pytest.raises(
@@ -66,6 +65,12 @@ def test_error_catch() -> None:
             ),
             sampling_freq,
         )
+    with pytest.raises(
+        ValueError, match="Entries of `freqs` must be evenly spaced."
+    ):
+        bad_freqs = freqs.copy()
+        bad_freqs[1] *= 2
+        TDE(coeffs, bad_freqs, sampling_freq)
 
     with pytest.raises(
         TypeError, match="`sampling_freq` must be an int or a float."
