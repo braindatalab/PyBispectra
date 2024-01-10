@@ -56,7 +56,7 @@ Alzheimer's :footcite:`Bazzigaluppi2018`.
 Additionally, a signal's shape can contain information of interest. For
 example, non-sinusoidal features of signals may reflect particular forms of
 interneuronal communication :footcite:`Sherman2016`, and have been shown to be 
-orrelated with symptoms of neurological diseases and altered by their
+correlated with symptoms of neurological diseases and altered by their
 treatments :footcite:`Cole2017`.
 
 Finally, time delays, :math:`\tau`, between signals can also provide useful
