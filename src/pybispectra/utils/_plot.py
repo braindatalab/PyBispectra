@@ -30,10 +30,8 @@ class _PlotBase(ABC):
         self._data = data.copy()
         self._indices = deepcopy(indices)
 
-        if (
-            len(indices) == 2
-            and isinstance(indices[0], tuple)
-            and isinstance(indices[1], tuple)
+        if len(indices) > 1 and np.all(
+            [isinstance(group, tuple) for group in indices]
         ):
             self.n_nodes = len(indices[0])
         else:
@@ -206,8 +204,10 @@ class _PlotBase(ABC):
         """Set major and minor tick intervals of x- and y-axes."""
 
 
-class _PlotCFC(_PlotBase):
-    """Class for plotting cross-frequency coupling (CFC) results."""
+class _PlotGeneral(_PlotBase):
+    """Class for plotting general results."""
+
+    _label: str = "Value (A.U.)"
 
     def __init__(
         self,
@@ -239,8 +239,7 @@ class _PlotCFC(_PlotBase):
         Parameters
         ----------
         nodes : int | tuple of int | None (default None)
-            Indices of connections to plot. If :obj:`None`, plot all
-            connections.
+            Indices of nodes to plot. If :obj:`None`, plot all nodes.
 
         f1s : tuple of int or float | None (default None)
             Start and end low frequencies of the results to plot, respectively.
@@ -287,8 +286,8 @@ class _PlotCFC(_PlotBase):
 
         Notes
         -----
-        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
-        connection on a new figure.
+        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node
+        on a new figure.
         """  # noqa: E501
         nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_range = self._sort_plot_inputs(
             nodes,
@@ -420,9 +419,7 @@ class _PlotCFC(_PlotBase):
                         vmax=cbar_range[plot_n][1],
                     )
 
-                    plt.colorbar(
-                        mesh, ax=axis, label="Coupling (A.U.)", shrink=0.3
-                    )
+                    plt.colorbar(mesh, ax=axis, label=self._label, shrink=0.3)
 
                     axis.set_aspect("equal")
                     self._set_axis_ticks(
@@ -439,11 +436,7 @@ class _PlotCFC(_PlotBase):
                     )
                     axis.set_xlabel("$f_1$ (Hz)")
                     axis.set_ylabel("$f_2$ (Hz)")
-
-                    axis.set_title(
-                        f"Seed: {self._indices[0][node_i]} | Target: "
-                        f"{self._indices[1][node_i]}"
-                    )
+                    axis.set_title(self._get_axis_title)
 
                     plot_n += 1
                     fig_plot_n += 1
@@ -463,6 +456,49 @@ class _PlotCFC(_PlotBase):
         axis.xaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
         axis.yaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
         axis.yaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
+
+    def _get_axis_title(self, node_i: int) -> str:
+        """Get title for the axis.
+
+        Parameters
+        ----------
+        node_i : int
+            Index of the node being plotted.
+
+        Returns
+        -------
+        title : str
+            Title of the axis.
+        """
+        return (
+            f"k: {self._indices[0][node_i]} | "
+            f"m: {self._indices[1][node_i]} | "
+            f"n: {self._indices[2][node_i]} |"
+        )
+
+
+class _PlotCFC(_PlotGeneral):
+    """Class for plotting cross-frequency coupling (CFC) results."""
+
+    _label: str = "Coupling (A.U.)"
+
+    def _get_axis_title(self, node_i: int) -> str:
+        """Get title for the axis.
+
+        Parameters
+        ----------
+        node_i : int
+            Index of the node being plotted.
+
+        Returns
+        -------
+        title : str
+            Title of the axis.
+        """
+        return (
+            f"Seed: {self._indices[0][node_i]} | "
+            f"Target: {self._indices[1][node_i]}"
+        )
 
 
 class _PlotTDE(_PlotBase):

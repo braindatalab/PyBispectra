@@ -16,6 +16,7 @@ Utilities
     ResultsCFC
     ResultsTDE
     ResultsWaveShape
+    ResultsGeneral
     SpatioSpectralFilter
 
 .. autosummary::
