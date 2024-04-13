@@ -49,7 +49,7 @@ from pybispectra import compute_fft, get_example_data_paths, PAC
 # (f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}` ,
 #
 # :math:`\textrm{PAC}_{\textrm{norm}}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|
-# \boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)|` .
+# \boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)|` ,
 #
 # where the resulting values lie in the range :math:`[0, 1]`. Furthermore, PAC
 # can be antisymmetrised by subtracting the results from those found using the

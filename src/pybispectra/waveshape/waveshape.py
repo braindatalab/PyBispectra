@@ -14,6 +14,9 @@ from pybispectra.utils._process import (
 )
 
 
+np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
+
+
 class WaveShape(_ProcessBispectrum):
     """Class for computing waveshape properties using bicoherence.
 
@@ -197,17 +200,25 @@ class WaveShape(_ProcessBispectrum):
             for channel in self._indices
         ]
 
-        self._bispectrum = np.array(
-            pqdm(
-                args,
-                _compute_bispectrum,
-                self._n_jobs,
-                argument_type="kwargs",
-                desc="Processing connections...",
-                disable=not self.verbose,
-            ),
-            dtype=_precision.complex,
-        ).transpose(1, 0, 2, 3)[0]
+        try:
+            self._bispectrum = np.array(
+                pqdm(
+                    args,
+                    _compute_bispectrum,
+                    self._n_jobs,
+                    argument_type="kwargs",
+                    desc="Processing connections...",
+                    disable=not self.verbose,
+                ),
+                dtype=_precision.complex,
+            ).transpose(1, 0, 2, 3)[0]
+        except MemoryError as error:  # pragma: no cover
+            raise MemoryError(
+                "Memory allocation for the bispectrum computation failed. Try "
+                "reducing the sampling frequency of the data, or reduce the "
+                "precision of the computation with "
+                "`pybispectra.set_precision('single')`."
+            ) from error
 
         if self.verbose:
             print("        ... Bispectrum computation finished\n")
