@@ -1,10 +1,13 @@
 """
-================================
-Compute bispectrum and threenorm
-================================
+====================================
+Compute the bispectrum and threenorm
+====================================
 
 This example demonstrates how the bispectrum and threenorm can be computed.
 """
+
+# Author(s):
+#   Thomas S. Binns | github.com/tsbinns
 
 # %%
 

@@ -7,6 +7,9 @@ This example demonstrates how time delay estimation (TDE) can be computed with
 PyBispectra.
 """
 
+# Author(s):
+#   Thomas S. Binns | github.com/tsbinns
+
 # %%
 
 import numpy as np

@@ -7,6 +7,9 @@ This example demonstrates how waveshape features can be computed with
 PyBispectra.
 """
 
+# Author(s):
+#   Thomas S. Binns | github.com/tsbinns
+
 # %%
 
 import numpy as np
