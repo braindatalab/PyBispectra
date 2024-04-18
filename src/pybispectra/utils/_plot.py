@@ -350,7 +350,7 @@ class _PlotGeneral(_PlotBase):
             cbar_range_phase,
         )
         figures, subfigures, axes = self._create_plots(nodes, n_rows, n_cols)
-        self._plot_results(
+        figures, axes = self._plot_results(
             figures,
             subfigures,
             axes,
@@ -535,12 +535,13 @@ class _PlotGeneral(_PlotBase):
         plot_absolute: bool,
         mirror_cbar_range: bool,
         cbar_ranges: list[list[tuple[float | None]]],
-    ) -> None:
+    ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0
         plot_n = 0
         fig_plot_n = 0
-        while fig_i < len(figures):
+        stop_plotting = False
+        while not stop_plotting:
             for _ in range(n_rows):
                 for _ in range(n_cols):
                     node_i = nodes[plot_n]
@@ -575,9 +576,20 @@ class _PlotGeneral(_PlotBase):
                         cbar_titles,
                         cbar_ranges,
                     ):
-                        data = data_func(
-                            self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T
-                        )
+                        if axis_title in ["Imaginary", "Phase"] and np.all(
+                            np.isreal(self._data[node_i])
+                        ):
+                            # If data is real, np.imag and np.angle return 0,
+                            # resulting in coloured panels, so instead set to
+                            # NaN for empty panels
+                            data = np.full_like(
+                                self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T,
+                                fill_value=np.nan,
+                            )
+                        else:
+                            data = data_func(
+                                self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T
+                            )
                         if axis_title in ["Real", "Imaginary"]:
                             if plot_absolute:
                                 data = np.abs(data)
@@ -640,10 +652,33 @@ class _PlotGeneral(_PlotBase):
 
                     plot_n += 1
                     fig_plot_n += 1
-                    if fig_plot_n >= n_rows * n_cols:
+                    if fig_plot_n >= n_rows * n_cols or fig_plot_n >= len(
+                        nodes
+                    ):
                         figures[fig_i].suptitle(self.name)
+                    if fig_plot_n >= n_rows * n_cols:
+                        # move to next figure
                         fig_plot_n = 0
                         fig_i += 1
+                    if fig_i >= len(figures) or fig_plot_n >= len(nodes):
+                        # stop plotting
+                        if fig_i < len(figures):
+                            # remove excessive axes from current figure
+                            for axis_array in axes[fig_i][fig_plot_n:]:
+                                [axis.remove() for axis in axis_array]
+                            axes[fig_i] = np.delete(
+                                axes[fig_i],
+                                np.arange(fig_plot_n, n_rows * n_cols),
+                                axis=0,
+                            )
+
+                        stop_plotting = True
+                    if stop_plotting:
+                        break
+                if stop_plotting:
+                    break
+
+        return figures, axes
 
     def _set_axis_ticks(
         self,
@@ -771,7 +806,7 @@ class _PlotCFC(_PlotBase):
             cbar_range,
         )
         figures, axes = self._create_plots(nodes, n_rows, n_cols)
-        self._plot_results(
+        figures, axes = self._plot_results(
             figures,
             axes,
             nodes,
@@ -871,12 +906,13 @@ class _PlotCFC(_PlotBase):
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
         cbar_range: list[tuple[float | None]],
-    ) -> None:
+    ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0
         plot_n = 0
         fig_plot_n = 0
-        while fig_i < len(figures):
+        stop_plotting = False
+        while not stop_plotting:
             for _ in range(n_rows):
                 for _ in range(n_cols):
                     node_i = nodes[plot_n]
@@ -918,10 +954,33 @@ class _PlotCFC(_PlotBase):
 
                     plot_n += 1
                     fig_plot_n += 1
-                    if fig_plot_n >= n_rows * n_cols:
+                    if fig_plot_n >= n_rows * n_cols or fig_plot_n >= len(
+                        nodes
+                    ):
                         figures[fig_i].suptitle(self.name)
+                    if fig_plot_n >= n_rows * n_cols:
+                        # move to next figure
                         fig_plot_n = 0
                         fig_i += 1
+                    if fig_i >= len(figures) or fig_plot_n >= len(nodes):
+                        # stop plotting
+                        if fig_i < len(figures):
+                            # remove excessive axes from current figure
+                            for axis in axes[fig_i][fig_plot_n:]:
+                                axis.remove()
+                            axes[fig_i] = np.delete(
+                                axes[fig_i],
+                                np.arange(fig_plot_n, n_rows * n_cols),
+                                axis=0,
+                            )
+
+                        stop_plotting = True
+                    if stop_plotting:
+                        break
+                if stop_plotting:
+                    break
+
+        return figures, axes
 
     def _set_axis_ticks(
         self,
@@ -1029,7 +1088,7 @@ class _PlotTDE(_PlotBase):
             minor_tick_intervals,
         )
         figures, axes = self._create_plots(nodes, freq_bands, n_rows, n_cols)
-        self._plot_results(
+        figures, axes = self._plot_results(
             figures,
             axes,
             nodes,
@@ -1198,13 +1257,14 @@ class _PlotTDE(_PlotBase):
         n_cols: int,
         major_tick_intervals: int | float,
         minor_tick_intervals: int | float,
-    ) -> None:
+    ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0
         node_n = 0
         fband_n = 0
         fig_plot_n = 0
-        while fig_i < len(figures):
+        stop_plotting = False
+        while not stop_plotting:
             for _ in range(n_rows):
                 for _ in range(n_cols):
                     node_i = nodes[node_n]
@@ -1248,10 +1308,35 @@ class _PlotTDE(_PlotBase):
                     if fband_n >= len(freq_bands):
                         fband_n = 0
                         node_n += 1
-                    if fig_plot_n >= n_rows * n_cols:
+                    if fig_plot_n >= n_rows * n_cols or fig_plot_n >= len(
+                        nodes
+                    ) * len(freq_bands):
                         figures[fig_i].suptitle(self.name)
+                    if fig_plot_n >= n_rows * n_cols:
+                        # move to next figure
                         fig_plot_n = 0
                         fig_i += 1
+                    if fig_i >= len(figures) or fig_plot_n >= len(nodes) * len(
+                        freq_bands
+                    ):
+                        # stop plotting
+                        if fig_i < len(figures):
+                            # remove excessive axes from current figure
+                            for axis in axes[fig_i][fig_plot_n:]:
+                                axis.remove()
+                            axes[fig_i] = np.delete(
+                                axes[fig_i],
+                                np.arange(fig_plot_n, n_rows * n_cols),
+                                axis=0,
+                            )
+
+                        stop_plotting = True
+                    if stop_plotting:
+                        break
+                if stop_plotting:
+                    break
+
+        return figures, axes
 
     def _mark_delay(
         self,
