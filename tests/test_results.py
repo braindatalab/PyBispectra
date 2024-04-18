@@ -3,7 +3,12 @@
 import pytest
 import numpy as np
 
-from pybispectra.utils import ResultsCFC, ResultsTDE, ResultsWaveShape
+from pybispectra.utils import (
+    ResultsCFC,
+    ResultsGeneral,
+    ResultsTDE,
+    ResultsWaveShape,
+)
 from pybispectra.utils._utils import _generate_data
 
 
@@ -601,3 +606,240 @@ def test_results_waveshape_runs() -> None:
     results_array = results.get_results()
     assert isinstance(results_array, np.ndarray)
     assert results_array.shape == (n_chans, n_f1, n_f2)
+
+
+def test_results_general_error_catch() -> None:
+    """Test `ResultsGeneral` catches errors."""
+    n_chans = 27
+    n_f1 = 50
+    n_f2 = 50
+    data = _generate_data(n_chans, n_f1, n_f2)
+    f1s = np.arange(n_f1)
+    f2s = np.arange(n_f2)
+    n_unique_chans = 3
+    indices = tuple(
+        [
+            tuple(np.tile(range(n_unique_chans), n_unique_chans**2).tolist()),
+            tuple(
+                np.repeat(
+                    np.tile(range(n_unique_chans), n_unique_chans),
+                    n_unique_chans,
+                ).tolist()
+            ),
+            tuple(
+                np.repeat(range(n_unique_chans), n_unique_chans**2).tolist()
+            ),
+        ]
+    )
+
+    with pytest.raises(TypeError, match="`data` must be a NumPy array."):
+        ResultsGeneral(
+            data=data.tolist(),
+            indices=indices,
+            f1s=f1s,
+            f2s=f2s,
+        )
+    with pytest.raises(ValueError, match="`data` must be a 3D array."):
+        ResultsGeneral(
+            data=data[..., 0],
+            indices=indices,
+            f1s=f1s,
+            f2s=f2s,
+        )
+
+    with pytest.raises(TypeError, match="`indices` must be a tuple."):
+        ResultsGeneral(
+            data=data,
+            indices=list(indices),
+            f1s=f1s,
+            f2s=f2s,
+        )
+    with pytest.raises(ValueError, match="`indices` must have length of 3."):
+        ResultsGeneral(
+            data=data,
+            indices=(indices[0], indices[1]),
+            f1s=f1s,
+            f2s=f2s,
+        )
+    with pytest.raises(
+        TypeError, match="Entries of `indices` must be tuples."
+    ):
+        ResultsGeneral(
+            data=data,
+            indices=(0, 1, 2),
+            f1s=f1s,
+            f2s=f2s,
+        )
+    with pytest.raises(
+        TypeError, match="Entries for groups in `indices` must be ints."
+    ):
+        ResultsGeneral(
+            data=data,
+            indices=((0.5,), (1.5,), (2.5,)),
+            f1s=f1s,
+            f2s=f2s,
+        )
+    with pytest.raises(
+        ValueError,
+        match=(
+            "`indices` contains indices for nodes not present in the data."
+        ),
+    ):
+        ResultsGeneral(
+            data=data,
+            indices=((-1,), (0,), (1,)),
+            f1s=f1s,
+            f2s=f2s,
+        )
+    with pytest.raises(
+        ValueError,
+        match=(
+            "`indices` contains indices for nodes not present in the data."
+        ),
+    ):
+        ResultsGeneral(
+            data=data,
+            indices=((0,), (1,), (n_chans + 1,)),
+            f1s=f1s,
+            f2s=f2s,
+        )
+    with pytest.raises(
+        ValueError, match=("Entries of `indices` must have equal length.")
+    ):
+        ResultsGeneral(
+            data=data,
+            indices=((0,), (1,), (2, 3)),
+            f1s=f1s,
+            f2s=f2s,
+        )
+
+    with pytest.raises(
+        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
+    ):
+        ResultsGeneral(
+            data=data,
+            indices=indices,
+            f1s=f1s.tolist(),
+            f2s=f2s,
+        )
+    with pytest.raises(
+        TypeError, match="`f1s` and `f2s` must be NumPy arrays."
+    ):
+        ResultsGeneral(
+            data=data,
+            indices=indices,
+            f1s=f1s,
+            f2s=f2s.tolist(),
+        )
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
+        ResultsGeneral(
+            data=data,
+            indices=indices,
+            f1s=np.vstack((f1s, f1s)),
+            f2s=f2s,
+        )
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must be 1D arrays."):
+        ResultsGeneral(
+            data=data,
+            indices=indices,
+            f1s=f1s,
+            f2s=np.vstack((f2s, f2s)),
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=r"`data` must have shape \[nodes, f1s, f2s\].",
+    ):
+        ResultsGeneral(
+            data=data[1:, :, :],
+            indices=indices,
+            f1s=f1s,
+            f2s=f2s,
+        )
+    with pytest.raises(
+        ValueError,
+        match=r"`data` must have shape \[nodes, f1s, f2s\].",
+    ):
+        ResultsGeneral(
+            data=data,
+            indices=indices,
+            f1s=f1s[1:],
+            f2s=f2s,
+        )
+    with pytest.raises(
+        ValueError,
+        match=r"`data` must have shape \[nodes, f1s, f2s\].",
+    ):
+        ResultsGeneral(
+            data=data,
+            indices=indices,
+            f1s=f1s,
+            f2s=f2s[1:],
+        )
+
+    with pytest.raises(TypeError, match="`name` must be a string."):
+        ResultsGeneral(
+            data=data,
+            indices=indices,
+            f1s=f1s,
+            f2s=f2s,
+            name=1,
+        )
+
+    results = ResultsGeneral(data=data, indices=indices, f1s=f1s, f2s=f2s)
+
+    with pytest.raises(ValueError, match="`form` is not recognised."):
+        results.get_results(form="not_a_form")
+
+
+def test_results_general_runs() -> None:
+    """Test `ResultsGeneral` runs with correct inputs."""
+    n_cons = 27
+    n_f1 = 50
+    n_f2 = 50
+    data = _generate_data(n_cons, n_f1, n_f2)
+    f1s = np.arange(n_f1)
+    f2s = np.arange(n_f2)
+    name = "test"
+    n_unique_chans = 3
+    indices = tuple(
+        [
+            tuple(np.tile(range(n_unique_chans), n_unique_chans**2).tolist()),
+            tuple(
+                np.repeat(
+                    np.tile(range(n_unique_chans), n_unique_chans),
+                    n_unique_chans,
+                ).tolist()
+            ),
+            tuple(
+                np.repeat(range(n_unique_chans), n_unique_chans**2).tolist()
+            ),
+        ]
+    )
+
+    results = ResultsGeneral(
+        data=data, indices=indices, f1s=f1s, f2s=f2s, name=name
+    )
+
+    assert repr(results) == (
+        f"'<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s]>'"
+    )
+
+    results_array = results.get_results(form="raveled")
+    assert isinstance(results_array, np.ndarray)
+    assert results_array.shape == (n_cons, n_f1, n_f2)
+
+    results_array, array_indices = results.get_results(form="compact")
+    assert isinstance(results_array, np.ndarray)
+    assert results_array.shape == (
+        n_unique_chans,
+        n_unique_chans,
+        n_unique_chans,
+        n_f1,
+        n_f2,
+    )
+    assert array_indices == (
+        tuple(range(n_unique_chans)),
+        tuple(range(n_unique_chans)),
+        tuple(range(n_unique_chans)),
+    )
