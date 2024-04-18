@@ -63,7 +63,7 @@ from pybispectra import (
 ###############################################################################
 # Computing PAC with the dedicated class
 # ---------------------------------------
-# We start by computing PAC using the dedicated :class:`~pybispectra.PAC`
+# We start by computing PAC using the dedicated :class:`~pybispectra.cfc.PAC`
 # class, which we will take as our reference for results.
 #
 # The data we load here is simulated data containing coupling between the 10 Hz
@@ -96,8 +96,8 @@ pac.results.plot(f1s=(5, 15), f2s=(55, 65))  # plot PAC
 # (:math:`x`; 10 Hz phase) and channel index 1 as our target (:math:`y`; 60 Hz
 # amplitude).
 #
-# With the dedicated :class:`~pybispectra.PAC` class, the seeds and targets are
-# automatically assigned to the appropriate :math:`kmn` combination when
+# With the dedicated :class:`~pybispectra.cfc.PAC` class, the seeds and targets
+# are automatically assigned to the appropriate :math:`kmn` combination when
 # computing the bispectrum, in this case :math:`xyy`.
 
 ###############################################################################
@@ -118,9 +118,7 @@ bs.results.plot(f1s=(5, 15), f2s=(55, 65))  # plot bispectrum
 
 ###############################################################################
 # Since the bispectrum is complex-valued, we must take the absolute value to
-# compare to PAC.
-#
-# Additionally, we can package the results into the dedicated
+# compare to PAC. Additionally, we can package the results into the dedicated
 # :class:`~pybispectra.utils.ResultsCFC` class for cross-frequency coupling
 # results.
 #
@@ -166,7 +164,7 @@ bs_pac.plot(f1s=(5, 15), f2s=(55, 65))  # general class
 # where the resulting values lie in the range :math:`[-1, 1]`, controlling for
 # the amplitude of the signals.
 #
-# While the dedicated :class:`~pybispectra.PAC` class has an option for
+# While the dedicated :class:`~pybispectra.cfc.PAC` class has an option for
 # performing this normalisation, we can also compute the threenorm separately
 # using the :class:`~pybispectra.general.Threenorm` class and apply the
 # normalisation manually.
@@ -197,7 +195,7 @@ bicoh_pac_results = bicoh_pac.get_results()
 
 ###############################################################################
 # Comparing these bicoherence values with those obtained from the dedicated
-# :class:`~pybispectra.PAC` class, we see that both approaches produce
+# :class:`~pybispectra.cfc.PAC` class, we see that both approaches produce
 # identical results.
 
 # %%
@@ -227,7 +225,7 @@ bicoh_pac.plot(f1s=(5, 15), f2s=(55, 65))  # general class
 # The :class:`~pybispectra.general.Bispectrum` and
 # :class:`~pybispectra.general.Threenorm` classes can also be used to compute
 # non-sinusoidal waveshape results (equivalent to
-# :class:`~pybispectra.waveshape.Waveshape`) and antisymmetrised bispectra
+# :class:`~pybispectra.waveshape.WaveShape`) and antisymmetrised bispectra
 # (e.g. as in :class:`~pybispectra.cfc.PAC`) by following the equations listed
 # in the respective documentation and publications.
 
