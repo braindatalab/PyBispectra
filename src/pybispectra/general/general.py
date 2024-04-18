@@ -222,7 +222,11 @@ class Bispectrum(_General):
     def _store_results(self) -> None:
         """Store computed bispectrum in an object."""
         self._results = ResultsGeneral(
-            self._bispectrum, self._indices, self._f1s, self._f2s, "Bispectrum"
+            self._bispectrum[0],
+            self._indices,
+            self._f1s,
+            self._f2s,
+            "Bispectrum",
         )
 
     @property
@@ -363,7 +367,7 @@ class Threenorm(_General):
                 "f1s": self._f1s,
                 "f2s": self._f2s,
                 "kmn": np.array([np.array([k, m, n])]),
-                "precision": _precision.complex,
+                "precision": _precision.real,
             }
             for (k, m, n) in zip(self._k, self._m, self._n)
         ]
@@ -379,7 +383,7 @@ class Threenorm(_General):
                     disable=not self.verbose,
                     exception_behaviour="immediate",
                 ),
-                dtype=_precision.complex,
+                dtype=_precision.real,
             ).transpose(1, 0, 2, 3)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
@@ -392,7 +396,11 @@ class Threenorm(_General):
     def _store_results(self) -> None:
         """Store computed threenorm in an object."""
         self._results = ResultsGeneral(
-            self._threenorm, self._indices, self._f1s, self._f2s, "Threenorm"
+            self._threenorm[0],
+            self._indices,
+            self._f1s,
+            self._f2s,
+            "Threenorm",
         )
 
     @property
