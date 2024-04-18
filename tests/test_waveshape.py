@@ -145,7 +145,8 @@ def test_waveshape_results():
     focal_freqs = np.array([10, 20, 30])
     all_freqs = (0, 35)
 
-    # load simulated data with non-sinusoidal features
+    # test that genuine PAC is detected
+    # load simulated data with bivariate PAC interactions
     data_sawtooths = np.load(
         get_example_data_paths("sim_data_waveshape_sawtooths")
     )

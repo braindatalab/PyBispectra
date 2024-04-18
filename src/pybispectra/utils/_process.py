@@ -330,10 +330,8 @@ def _compute_bispectrum(
     -----
     No checks on the input data are performed for speed.
     """
-    results = np.full(
-        (kmn.shape[0], f1s.shape[0], f2s.shape[0]),
-        fill_value=np.nan + np.nan * 1j,
-        dtype=precision,
+    results = np.zeros(
+        (kmn.shape[0], f1s.shape[0], f2s.shape[0]), dtype=precision
     )
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
@@ -346,8 +344,6 @@ def _compute_bispectrum(
             fdiff_fi = f1_fi + f2_fi
             if f1 <= f2 and fdiff_fi < freqs.size:
                 for kmn_i, (k, m, n) in enumerate(kmn):
-                    if np.isnan(results[kmn_i, f1_ri, f2_ri]):
-                        results[kmn_i, f1_ri, f2_ri] = 0 + 0j
                     for epoch_data in data:
                         results[kmn_i, f1_ri, f2_ri] += (
                             epoch_data[k, f1_fi]

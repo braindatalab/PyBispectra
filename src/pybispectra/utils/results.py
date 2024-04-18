@@ -878,7 +878,7 @@ class ResultsWaveShape(_ResultsBase):
         Notes
         -----
         :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for
-        each node on a new figure.
+        each connection on a new figure.
         """  # noqa: E501
         figures, axes = self._plotting.plot(
             nodes=nodes,
@@ -1080,12 +1080,7 @@ class ResultsGeneral(_ResultsBase):
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
         minor_tick_intervals: int | float = 1.0,
-        plot_absolute: bool = False,
-        mirror_cbar_range: bool = True,
-        cbar_range_abs: tuple[float] | list[tuple[float]] | None = None,
-        cbar_range_real: tuple[float] | list[tuple[float]] | None = None,
-        cbar_range_imag: tuple[float] | list[tuple[float]] | None = None,
-        cbar_range_phase: tuple[float] | list[tuple[float]] | None = None,
+        cbar_range: tuple[float] | list[tuple[float]] | None = None,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
@@ -1093,16 +1088,16 @@ class ResultsGeneral(_ResultsBase):
         Parameters
         ----------
         nodes : int | tuple of int | None (default None)
-            Indices of results of channels to plot. If :obj:`None`, plot
-            results of all channels.
+            Indices of kmn combinations to plot. If :obj:`None`, plot all
+            combinations.
 
         f1s : tuple of int or float | None (default None)
             Start and end low frequencies of the results to plot, respectively.
-            If :obj:`None`, plot all low frequencies.
+            If :obj:`None`, all low frequencies are plotted.
 
         f2s : tuple of int or float | None (default None)
             Start and end high frequencies of the results to plot,
-            respectively. If :obj:`None`, plot all high frequencies.
+            respectively. If :obj:`None`, all high frequencies are plotted.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -1118,44 +1113,12 @@ class ResultsGeneral(_ResultsBase):
             Intervals (in Hz) at which the minor ticks of the x- and y-axes
             should occur.
 
-        plot_absolute : bool (default False)
-            Whether or not to plot the absolute values of the real and
-            imaginary parts of the results.
-
-        mirror_cbar_range : bool (default True)
-            Whether of not to mirror the colourbar ranges of the real and
-            imaginary results around 0. Only applied if ``plot_absolute`` is
-            :obj:`False`, and ``cbar_range_real`` and ``cbar_range_imag`` are
-            not :obj:`None`.
-
-        cbar_range_abs : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the absolute
-            value of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
-
-        cbar_range_real : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the real value
-            of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
-
-        cbar_range_imag : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the imaginary
-            value of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
-
-        cbar_range_phase : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the phase of the
-            results, consisting of the lower and upper limits, respectively. If
-            :obj:`None`, the range is computed automatically. If a tuple of
-            float, this range is used for all plots. If a tuple of tuple of
-            float, the ranges are used for each individual plot. Note that
-            results are limited to the range (-pi, pi].
+        cbar_range : tuple of float | list of tuple of float | None (default None)
+            Range (in units of the data) for the colourbars, consisting of the
+            lower and upper limits, respectively. If :obj:`None`, the range is
+            computed automatically. If a tuple of float, this range is used for
+            all plots. If a list of tuple of float, the ranges are used for
+            each individual plot.
 
         show : bool (default True)
             Whether or not to show the plotted results.
@@ -1166,18 +1129,15 @@ class ResultsGeneral(_ResultsBase):
             Figures of the results in a list of length
             ``ceil(n_nodes / (n_rows * n_cols))``.
 
-        axes : list of ~numpy.ndarray of ~numpy.ndarray of matplotlib pyplot Axes
+        axes : list of ~numpy.ndarray of matplotlib pyplot Axes
             Subplot axes for the results in a list of length
             ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            :obj:`~numpy.ndarray` of length ``(n_rows * n_cols)``, whose
-            entries are themselves 1D :obj:`~numpy.ndarray` of length 4,
-            corresponding to the absolute, real, imaginary, and phase plots,
-            respectively.
+            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
 
         Notes
         -----
         :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for
-        each node on a new figure.
+        each kmn combination on a new figure.
         """  # noqa: E501
         figures, axes = self._plotting.plot(
             nodes=nodes,
@@ -1187,12 +1147,7 @@ class ResultsGeneral(_ResultsBase):
             n_cols=n_cols,
             major_tick_intervals=major_tick_intervals,
             minor_tick_intervals=minor_tick_intervals,
-            plot_absolute=plot_absolute,
-            mirror_cbar_range=mirror_cbar_range,
-            cbar_range_abs=cbar_range_abs,
-            cbar_range_real=cbar_range_real,
-            cbar_range_imag=cbar_range_imag,
-            cbar_range_phase=cbar_range_phase,
+            cbar_range=cbar_range,
             show=show,
         )
 
