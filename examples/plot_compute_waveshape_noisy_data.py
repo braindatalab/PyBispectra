@@ -7,6 +7,9 @@ This example demonstrates how spatio-spectral filtering can be incorporated
 into waveshape analysis with PyBispectra.
 """
 
+# Author(s):
+#   Thomas S. Binns | github.com/tsbinns
+
 # %%
 
 import numpy as np

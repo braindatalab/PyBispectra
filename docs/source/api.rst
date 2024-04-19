@@ -15,4 +15,5 @@ API
     cfc
     tde
     waveshape
+    general
     utils

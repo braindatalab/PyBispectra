@@ -2,6 +2,14 @@
 
 ## [Version 1.2.0dev](https://pybispectra.readthedocs.io/en/main/)
 
+##### Enhancements
+- Added general classes for computing the bispectrum and threenorm with flexible kmn channel combinations.
+
+##### Bug Fixes
+- Fixed error where the number of subplots exceeding the number of nodes would cause plotting to fail.
+
+##### Documentation
+- Added a new example for computing the bispectrum and threenorm using the general classes.
 
 ## [Version 1.1.0](https://pybispectra.readthedocs.io/en/main/)
 

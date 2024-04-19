@@ -6,7 +6,12 @@ from copy import deepcopy
 from matplotlib.figure import Figure
 import numpy as np
 
-from pybispectra.utils._plot import _PlotCFC, _PlotTDE, _PlotWaveShape
+from pybispectra.utils._plot import (
+    _PlotCFC,
+    _PlotTDE,
+    _PlotWaveShape,
+    _PlotGeneral,
+)
 
 
 class _ResultsBase(ABC):
@@ -98,6 +103,32 @@ class _ResultsBase(ABC):
                 "the data."
             )
         self.n_nodes = len(indices)
+        self.indices = deepcopy(indices)
+
+    def _sort_indices_kmn(self, indices: tuple[tuple[int]]) -> None:
+        """Sort `indices` inputs with format ([k], [m], [n])."""
+        if not isinstance(indices, tuple):
+            raise TypeError("`indices` must be a tuple.")
+        if len(indices) != 3:
+            raise ValueError("`indices` must have length of 3.")
+
+        for group_idcs in indices:
+            if not isinstance(group_idcs, tuple):
+                raise TypeError("Entries of `indices` must be tuples.")
+            if any(not isinstance(idx, int) for idx in group_idcs):
+                raise TypeError(
+                    "Entries for groups in `indices` must be ints."
+                )
+        if len(np.unique([len(group) for group in indices])) != 1:
+            raise ValueError("Entries of `indices` must have equal length.")
+        self._n_chans = len(np.unique(np.ravel(indices)))
+        for group_idcs in indices:
+            if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
+                raise ValueError(
+                    "`indices` contains indices for nodes not present in "
+                    "the data."
+                )
+        self.n_nodes = len(indices[0])
         self.indices = deepcopy(indices)
 
     def get_results(
@@ -847,7 +878,306 @@ class ResultsWaveShape(_ResultsBase):
         Notes
         -----
         :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for
-        each connection on a new figure.
+        each node on a new figure.
+        """  # noqa: E501
+        figures, axes = self._plotting.plot(
+            nodes=nodes,
+            f1s=f1s,
+            f2s=f2s,
+            n_rows=n_rows,
+            n_cols=n_cols,
+            major_tick_intervals=major_tick_intervals,
+            minor_tick_intervals=minor_tick_intervals,
+            plot_absolute=plot_absolute,
+            mirror_cbar_range=mirror_cbar_range,
+            cbar_range_abs=cbar_range_abs,
+            cbar_range_real=cbar_range_real,
+            cbar_range_imag=cbar_range_imag,
+            cbar_range_phase=cbar_range_phase,
+            show=show,
+        )
+
+        return figures, axes
+
+
+class ResultsGeneral(_ResultsBase):
+    """Class for storing general bispectrum and threenorm results.
+
+    Parameters
+    ----------
+    data : ~numpy.ndarray, shape of [nodes, low frequencies, high frequencies]
+        Results to store.
+
+    indices : tuple of tuple of int, length of 3
+        Indices of the channels for each combination of the results. Should
+        contain three tuples of equal length for the k, m, and n channel
+        indices, respectively.
+
+    f1s : ~numpy.ndarray, shape of [low frequencies]
+        Low frequencies (in Hz) in the results.
+
+    f2s : ~numpy.ndarray, shape of [high frequencies]
+        High frequencies (in Hz) in the results.
+
+    name : str  (default ``"General"``)
+        Name of the results being stored.
+
+    Methods
+    -------
+    get_results :
+        Return a copy of the results.
+
+    plot :
+        Plot the results.
+
+    Attributes
+    ----------
+    name : str
+        Name of the results.
+
+    indices : tuple of tuple of int, length of 2
+        Indices of the channels for each connection of the results. Should
+        contain two tuples of equal length for the seed and target indices,
+        respectively.
+
+    shape : tuple of int
+        Shape of the results i.e. [nodes, low frequencies, high frequencies].
+
+    n_nodes : int
+        Number of connections in the the results.
+
+    f1s : ~numpy.ndarray, shape of [low frequencies]
+        Low frequencies (in Hz) in the results.
+
+    f2s : ~numpy.ndarray, shape of [high frequencies]
+        High frequencies (in Hz) in the results.
+    """
+
+    def __repr__(self) -> str:
+        """Return printable representation of the object."""
+        return repr(
+            f"<Result: {self.name} | [{self.n_nodes} nodes, "
+            f"{len(self.f1s)} f1s, {len(self.f2s)} f2s]>"
+        )
+
+    def __init__(
+        self,
+        data: np.ndarray,
+        indices: tuple[tuple[int]],
+        f1s: np.ndarray,
+        f2s: np.ndarray,
+        name: str = "General",
+    ) -> None:  # noqa: D107
+        super().__init__(data, 3, name)
+        self._sort_init_inputs(indices, f1s, f2s)
+
+        self._plotting = _PlotGeneral(
+            data=self._data,
+            indices=self.indices,
+            f1s=self.f1s,
+            f2s=self.f2s,
+            name=self.name,
+        )
+
+    def _sort_init_inputs(
+        self,
+        indices: tuple[tuple[int]],
+        f1s: np.ndarray,
+        f2s: np.ndarray,
+    ) -> None:
+        """Sort inputs to the object."""
+        super()._sort_indices_kmn(indices)
+        super()._sort_freq_inputs(f1s, f2s)
+
+    def get_results(
+        self, form: str = "raveled"
+    ) -> np.ndarray | tuple[np.ndarray, tuple[tuple[int]]]:
+        """Return a copy of the results.
+
+        Parameters
+        ----------
+        form : str (default ``"raveled"``)
+            How the results should be returned: ``"raveled"`` - results have
+            shape `[nodes, ...]`; ``"compact"`` - results have shape
+            ``[k, m, n, ...]``, where ``...`` represents the data dimensions
+            (e.g. frequencies, times).
+
+        Returns
+        -------
+        results : ~numpy.ndarray
+            The results.
+
+        indices : tuple of tuple of int, length of 3
+            Channel indices of the k, m, and n channels. Only returned if
+            :attr:`form` is ``"compact"``.
+        """
+        accepted_forms = ["raveled", "compact"]
+        if form not in accepted_forms:
+            raise ValueError("`form` is not recognised.")
+
+        if form == "raveled":
+            return self._data.copy()
+        return self._get_compact_results_child()
+
+    def _get_compact_results_child(
+        self,
+    ) -> tuple[np.ndarray, tuple[tuple[int]]]:
+        """Return a compacted form of the results.
+
+        Returns
+        -------
+        compact_results : numpy.ndarray of float
+            Results with shape ``[k, m, n, f1s, f2s]``.
+
+        indices : tuple of tuple of int, length of 3
+            Channel indices of ``compact_results`` for the k, m, and n
+            channels, respectively.
+        """
+        compact_results = np.full(
+            (
+                self._n_chans,
+                self._n_chans,
+                self._n_chans,
+                self.f1s.shape[0],
+                self.f2s.shape[0],
+            ),
+            fill_value=np.full(
+                (self.f1s.shape[0], self.f2s.shape[0]), fill_value=np.nan
+            ),
+        )
+
+        for con_result, k, m, n in zip(
+            self._data, self.indices[0], self.indices[1], self.indices[2]
+        ):
+            compact_results[k, m, n] = con_result
+
+        # remove empty rows and cols
+        filled_rows = []
+        for row_i, row in enumerate(compact_results):
+            if not all(np.isnan(entry).all() for entry in row):
+                filled_rows.append(row_i)
+        filled_cols = []
+        for col_i, col in enumerate(compact_results.swapaxes(1, 0)):
+            if not all(np.isnan(entry).all() for entry in col):
+                filled_cols.append(col_i)
+        compact_results = compact_results[np.ix_(filled_rows, filled_cols)]
+
+        indices = tuple(
+            [
+                tuple(np.unique(group_idcs).tolist())
+                for group_idcs in self.indices
+            ]
+        )
+
+        return compact_results.copy(), indices
+
+    def plot(
+        self,
+        nodes: int | tuple[int] | None = None,
+        f1s: tuple[int | float] | None = None,
+        f2s: tuple[int | float] | None = None,
+        n_rows: int = 1,
+        n_cols: int = 1,
+        major_tick_intervals: int | float = 5.0,
+        minor_tick_intervals: int | float = 1.0,
+        plot_absolute: bool = False,
+        mirror_cbar_range: bool = True,
+        cbar_range_abs: tuple[float] | list[tuple[float]] | None = None,
+        cbar_range_real: tuple[float] | list[tuple[float]] | None = None,
+        cbar_range_imag: tuple[float] | list[tuple[float]] | None = None,
+        cbar_range_phase: tuple[float] | list[tuple[float]] | None = None,
+        show: bool = True,
+    ) -> tuple[list[Figure], list[np.ndarray]]:
+        """Plot the results.
+
+        Parameters
+        ----------
+        nodes : int | tuple of int | None (default None)
+            Indices of results of channels to plot. If :obj:`None`, plot
+            results of all channels.
+
+        f1s : tuple of int or float | None (default None)
+            Start and end low frequencies of the results to plot, respectively.
+            If :obj:`None`, plot all low frequencies.
+
+        f2s : tuple of int or float | None (default None)
+            Start and end high frequencies of the results to plot,
+            respectively. If :obj:`None`, plot all high frequencies.
+
+        n_rows : int (default ``1``)
+            Number of rows of subplots per figure.
+
+        n_cols : int (default ``1``)
+            Number of columns of subplots per figure.
+
+        major_tick_intervals : int | float (default ``5.0``)
+            Intervals (in Hz) at which the major ticks of the x- and y-axes
+            should occur.
+
+        minor_tick_intervals : int | float (default ``1.0``)
+            Intervals (in Hz) at which the minor ticks of the x- and y-axes
+            should occur.
+
+        plot_absolute : bool (default False)
+            Whether or not to plot the absolute values of the real and
+            imaginary parts of the results.
+
+        mirror_cbar_range : bool (default True)
+            Whether of not to mirror the colourbar ranges of the real and
+            imaginary results around 0. Only applied if ``plot_absolute`` is
+            :obj:`False`, and ``cbar_range_real`` and ``cbar_range_imag`` are
+            not :obj:`None`.
+
+        cbar_range_abs : tuple of float | list of tuple of float | None (default None)
+            Range (in units of the data) for the colourbars of the absolute
+            value of the results, consisting of the lower and upper limits,
+            respectively. If :obj:`None`, the range is computed automatically.
+            If a tuple of float, this range is used for all plots. If a tuple
+            of tuple of float, the ranges are used for each individual plot.
+
+        cbar_range_real : tuple of float | list of tuple of float | None (default None)
+            Range (in units of the data) for the colourbars of the real value
+            of the results, consisting of the lower and upper limits,
+            respectively. If :obj:`None`, the range is computed automatically.
+            If a tuple of float, this range is used for all plots. If a tuple
+            of tuple of float, the ranges are used for each individual plot.
+
+        cbar_range_imag : tuple of float | list of tuple of float | None (default None)
+            Range (in units of the data) for the colourbars of the imaginary
+            value of the results, consisting of the lower and upper limits,
+            respectively. If :obj:`None`, the range is computed automatically.
+            If a tuple of float, this range is used for all plots. If a tuple
+            of tuple of float, the ranges are used for each individual plot.
+
+        cbar_range_phase : tuple of float | list of tuple of float | None (default None)
+            Range (in units of the data) for the colourbars of the phase of the
+            results, consisting of the lower and upper limits, respectively. If
+            :obj:`None`, the range is computed automatically. If a tuple of
+            float, this range is used for all plots. If a tuple of tuple of
+            float, the ranges are used for each individual plot. Note that
+            results are limited to the range (-pi, pi].
+
+        show : bool (default True)
+            Whether or not to show the plotted results.
+
+        Returns
+        -------
+        figures : list of matplotlib Figure
+            Figures of the results in a list of length
+            ``ceil(n_nodes / (n_rows * n_cols))``.
+
+        axes : list of ~numpy.ndarray of ~numpy.ndarray of matplotlib pyplot Axes
+            Subplot axes for the results in a list of length
+            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
+            :obj:`~numpy.ndarray` of length ``(n_rows * n_cols)``, whose
+            entries are themselves 1D :obj:`~numpy.ndarray` of length 4,
+            corresponding to the absolute, real, imaginary, and phase plots,
+            respectively.
+
+        Notes
+        -----
+        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for
+        each node on a new figure.
         """  # noqa: E501
         figures, axes = self._plotting.plot(
             nodes=nodes,
