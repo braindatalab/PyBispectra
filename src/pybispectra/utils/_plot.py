@@ -663,7 +663,7 @@ class _PlotGeneral(_PlotBase):
                     if fig_i >= len(figures) or fig_plot_n >= len(nodes):
                         # stop plotting
                         if fig_i < len(figures):
-                            # remove excessive axes from current figure
+                            # remove excess axes from current figure
                             for axis_array in axes[fig_i][fig_plot_n:]:
                                 [axis.remove() for axis in axis_array]
                             axes[fig_i] = np.delete(
@@ -965,7 +965,7 @@ class _PlotCFC(_PlotBase):
                     if fig_i >= len(figures) or fig_plot_n >= len(nodes):
                         # stop plotting
                         if fig_i < len(figures):
-                            # remove excessive axes from current figure
+                            # remove excess axes from current figure
                             for axis in axes[fig_i][fig_plot_n:]:
                                 axis.remove()
                             axes[fig_i] = np.delete(
@@ -1321,7 +1321,7 @@ class _PlotTDE(_PlotBase):
                     ):
                         # stop plotting
                         if fig_i < len(figures):
-                            # remove excessive axes from current figure
+                            # remove excess axes from current figure
                             for axis in axes[fig_i][fig_plot_n:]:
                                 axis.remove()
                             axes[fig_i] = np.delete(
