@@ -1,13 +1,13 @@
 """Tests for wave shape tools."""
 
-import pytest
 import numpy as np
+import pytest
 from numpy.random import RandomState
 
 from pybispectra.data import get_example_data_paths
-from pybispectra.waveshape import WaveShape
 from pybispectra.utils import ResultsWaveShape, compute_fft
 from pybispectra.utils._utils import _generate_data
+from pybispectra.waveshape import WaveShape
 
 
 def test_error_catch() -> None:
@@ -34,35 +34,27 @@ def test_error_catch() -> None:
 
     with pytest.raises(
         ValueError,
-        match=(
-            "`data` and `freqs` must contain the same number of frequencies."
-        ),
+        match=("`data` and `freqs` must contain the same number of frequencies."),
     ):
         WaveShape(coeffs, freqs[:-1], sampling_freq)
 
     with pytest.raises(ValueError, match="Entries of `freqs` must be >= 0."):
         WaveShape(coeffs, freqs * -1, sampling_freq)
     with pytest.raises(
-        ValueError,
-        match="At least one entry of `freqs` is > the Nyquist frequency.",
+        ValueError, match="At least one entry of `freqs` is > the Nyquist frequency."
     ):
         bad_freqs = np.linspace(0, sampling_freq / 2 + 1, freqs.size)
         WaveShape(coeffs, bad_freqs, sampling_freq)
     with pytest.raises(
-        ValueError,
-        match="Entries of `freqs` must be in ascending order.",
+        ValueError, match="Entries of `freqs` must be in ascending order."
     ):
         WaveShape(coeffs, freqs[::-1], sampling_freq)
-    with pytest.raises(
-        ValueError, match="Entries of `freqs` must be evenly spaced."
-    ):
+    with pytest.raises(ValueError, match="Entries of `freqs` must be evenly spaced."):
         bad_freqs = freqs.copy()
         bad_freqs[1] *= 2
         WaveShape(coeffs, bad_freqs, sampling_freq)
 
-    with pytest.raises(
-        TypeError, match="`sampling_freq` must be an int or a float."
-    ):
+    with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
         WaveShape(coeffs, freqs, None)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
@@ -77,9 +69,7 @@ def test_error_catch() -> None:
         waveshape.compute(indices=(0.0, 1.0))
     with pytest.raises(
         ValueError,
-        match=(
-            "`indices` contains indices for channels not present in the data."
-        ),
+        match=("`indices` contains indices for channels not present in the data."),
     ):
         waveshape.compute(indices=(0, 99))
 
@@ -125,18 +115,16 @@ def test_waveshape_runs() -> None:
     attrs = waveshape.__dict__.keys()
     for attr in attrs:
         if not attr.startswith("_"):
-            assert np.all(
-                getattr(waveshape, attr) == getattr(waveshape_copy, attr)
-            )
+            assert np.all(getattr(waveshape, attr) == getattr(waveshape_copy, attr))
     assert waveshape is not waveshape_copy
 
 
 def test_waveshape_results():
     """Test that WaveShape returns the correct results.
 
-    Simulated data with 10 Hz (plus harmonics) wave shape features is used.
-    Wave shape features include a ramp up sawtooth, ramp down sawtooth,
-    peak-dominant signal, and a trough-dominant signal.
+    Simulated data with 10 Hz (plus harmonics) wave shape features is used. Waveshape
+    features include a ramp up sawtooth, ramp down sawtooth, peak-dominant signal, and
+    a trough-dominant signal.
     """
     # tolerance for "closeness"
     close_atol = 0.1
@@ -146,9 +134,7 @@ def test_waveshape_results():
     all_freqs = (0, 35)
 
     # load simulated data with non-sinusoidal features
-    data_sawtooths = np.load(
-        get_example_data_paths("sim_data_waveshape_sawtooths")
-    )
+    data_sawtooths = np.load(get_example_data_paths("sim_data_waveshape_sawtooths"))
     data_peaks_troughs = np.load(
         get_example_data_paths("sim_data_waveshape_peaks_troughs")
     )
@@ -165,14 +151,10 @@ def test_waveshape_results():
 
     # compute FFT
     coeffs_sawtooths, freqs = compute_fft(
-        data=data_sawtooths,
-        sampling_freq=sampling_freq,
-        n_points=sampling_freq,
+        data=data_sawtooths, sampling_freq=sampling_freq, n_points=sampling_freq
     )
     coeffs_peaks_troughs, freqs = compute_fft(
-        data=data_peaks_troughs,
-        sampling_freq=sampling_freq,
-        n_points=sampling_freq,
+        data=data_peaks_troughs, sampling_freq=sampling_freq, n_points=sampling_freq
     )
 
     # sawtooth waves
@@ -207,11 +189,7 @@ def test_waveshape_results():
         phases = np.angle(results[np.ix_(focal_freqs, focal_freqs)])
         phases[phases < 0] += 2 * np.pi
         phases /= np.pi
-        assert np.isclose(
-            np.nanmean(phases),
-            phase,
-            atol=close_atol,
-        )
+        assert np.isclose(np.nanmean(phases), phase, atol=close_atol)
 
     # check that peak/trough features are detected
     for results, real_val, imag_val, phase in zip(
@@ -232,8 +210,4 @@ def test_waveshape_results():
         phases = np.abs(np.angle(results[np.ix_(focal_freqs, focal_freqs)]))
         phases[phases < 0] += 2 * np.pi
         phases /= np.pi
-        assert np.isclose(
-            np.nanmean(phases),
-            phase,
-            atol=close_atol,
-        )
+        assert np.isclose(np.nanmean(phases), phase, atol=close_atol)

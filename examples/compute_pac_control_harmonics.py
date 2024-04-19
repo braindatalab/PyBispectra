@@ -13,7 +13,7 @@ as opposed to an interaction between distinct oscillations.
 
 import numpy as np
 
-from pybispectra import compute_fft, PAC, PPC, WaveShape, SpatioSpectralFilter
+from pybispectra import PAC, PPC, SpatioSpectralFilter, WaveShape, compute_fft
 
 ###############################################################################
 # Background

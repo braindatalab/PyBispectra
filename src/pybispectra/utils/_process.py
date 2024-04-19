@@ -5,12 +5,12 @@ from copy import deepcopy
 from multiprocessing import cpu_count
 from warnings import warn
 
-from numba import njit
 import numpy as np
+from numba import njit
 
-from pybispectra.utils.results import _ResultsBase
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._utils import _fast_find_first
+from pybispectra.utils.results import _ResultsBase
 
 
 class _ProcessFreqBase(ABC):
@@ -67,8 +67,7 @@ class _ProcessFreqBase(ABC):
 
         if self._n_freqs != len(freqs):
             raise ValueError(
-                "`data` and `freqs` must contain the same number of "
-                "frequencies."
+                "`data` and `freqs` must contain the same number of frequencies."
             )
 
         if not isinstance(sampling_freq, (int, float)):
@@ -101,12 +100,8 @@ class _ProcessFreqBase(ABC):
         if indices is None:
             indices = tuple(
                 [
-                    tuple(
-                        np.tile(range(self._n_chans), self._n_chans).tolist()
-                    ),
-                    tuple(
-                        np.repeat(range(self._n_chans), self._n_chans).tolist()
-                    ),
+                    tuple(np.tile(range(self._n_chans), self._n_chans).tolist()),
+                    tuple(np.repeat(range(self._n_chans), self._n_chans).tolist()),
                 ]
             )
         if not isinstance(indices, tuple):
@@ -126,8 +121,7 @@ class _ProcessFreqBase(ABC):
                 )
             if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
                 raise ValueError(
-                    "`indices` contains indices for channels not present in "
-                    "the data."
+                    "`indices` contains indices for channels not present in the data."
                 )
         if len(seeds) != len(targets):
             raise ValueError("Entries of `indices` must have equal length.")
@@ -156,33 +150,24 @@ class _ProcessFreqBase(ABC):
                 if len(freqs) != 2:
                     raise ValueError("`f1s` and `f2s` must have lengths of 2.")
                 if any(freq < 0 for freq in freqs):
-                    raise ValueError(
-                        "Entries of `f1s` and `f2s` must be >= 0."
-                    )
+                    raise ValueError("Entries of `f1s` and `f2s` must be >= 0.")
                 if any(freq > self.sampling_freq / 2 for freq in freqs):
                     raise ValueError(
-                        "Entries of `f1s` and `f2s` must be <= the Nyquist "
-                        "frequency."
+                        "Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
                     )
 
         if check_f1s:
-            f1_idcs = np.argwhere(
-                (self.freqs >= f1s[0]) & (self.freqs <= f1s[1])
-            ).T[0]
+            f1_idcs = np.argwhere((self.freqs >= f1s[0]) & (self.freqs <= f1s[1])).T[0]
             if f1_idcs.size == 0:
                 raise ValueError(
-                    "No frequencies are present in the data for the range in "
-                    "`f1s`."
+                    "No frequencies are present in the data for the range in `f1s`."
                 )
             self._f1s = self.freqs[f1_idcs].copy()
         if check_f2s:
-            f2_idcs = np.argwhere(
-                (self.freqs >= f2s[0]) & (self.freqs <= f2s[1])
-            ).T[0]
+            f2_idcs = np.argwhere((self.freqs >= f2s[0]) & (self.freqs <= f2s[1])).T[0]
             if f2_idcs.size == 0:
                 raise ValueError(
-                    "No frequencies are present in the data for the range in "
-                    "`f2s`."
+                    "No frequencies are present in the data for the range in `f2s`."
                 )
             self._f2s = self.freqs[f2_idcs].copy()
 
@@ -252,15 +237,12 @@ class _ProcessBispectrum(_ProcessFreqBase):
 
         if self.verbose:
             if self._return_antisym and (
-                any(
-                    seed == target
-                    for seed, target in zip(self._seeds, self._targets)
-                )
+                any(seed == target for seed, target in zip(self._seeds, self._targets))
             ):
                 warn(
-                    "The seed and target for at least one connection is the "
-                    "same channel. The corresponding antisymmetrised "
-                    "result(s) will be NaN-valued.",
+                    "The seed and target for at least one connection is the same "
+                    "channel. The corresponding antisymmetrised result(s) will be "
+                    "NaN-valued.",
                     UserWarning,
                 )
 
@@ -277,9 +259,8 @@ class _ProcessBispectrum(_ProcessFreqBase):
                 for lfreq in self._f1s
             ):
                 warn(
-                    "At least one value of `f2s` + `f1s` is not present in "
-                    "the frequencies. The corresponding result(s) will be "
-                    "NaN-valued.",
+                    "At least one value of `f2s` + `f1s` is not present in the "
+                    "frequencies. The corresponding result(s) will be NaN-valued.",
                     UserWarning,
                 )
 
@@ -298,8 +279,8 @@ def _compute_bispectrum(
     Parameters
     ----------
     data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
-        FFT coefficients, where the second dimension contains the data for the
-        seed and target channel of a single connection, respectively.
+        FFT coefficients, where the second dimension contains the data for the seed and
+        target channel of a single connection, respectively.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies in ``data``.
@@ -311,20 +292,18 @@ def _compute_bispectrum(
         High frequencies to compute the bispectrum for.
 
     kmn : numpy.ndarray of int, shape of [x, 3]
-        Array of variable length (x) of arrays, where each sub-array contains
-        the k, m, and n channel indices in ``data``, respectively, to compute
-        the bispectrum for.
+        Array of variable length (x) of arrays, where each sub-array contains the k, m,
+        and n channel indices in ``data``, respectively, to compute the bispectrum for.
 
     precision : type
-        Precision to use for the computation. Either ``numpy.complex64``
-        (single) or ``numpy.complex128`` (double).
+        Precision to use for the computation. Either ``numpy.complex64`` (single) or
+        ``numpy.complex128`` (double).
 
     Returns
     -------
     results : numpy.ndarray of complex float, shape of [x, f1s, f2s]
-        Complex-valued array containing the bispectrum of a single connection,
-        where the first dimension corresponds to the different channel indices
-        given in ``kmn``.
+        Complex-valued array containing the bispectrum of a single connection, where the
+        first dimension corresponds to the different channel indices given in ``kmn``.
 
     Notes
     -----
@@ -372,8 +351,8 @@ def _compute_threenorm(
     Parameters
     ----------
     data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
-        FFT coefficients, where the second dimension contains the data for the
-        seed and target channel of a single connection, respectively.
+        FFT coefficients, where the second dimension contains the data for the seed and
+        target channel of a single connection, respectively.
 
     freqs : numpy.ndarray of float, shape of [frequencies]
         Frequencies in ``data``.
@@ -385,19 +364,18 @@ def _compute_threenorm(
         High frequencies to compute the threenorm for.
 
     kmn : numpy.ndarray of int, shape of [x, 3]
-        Array of variable length (x) of arrays, where each sub-array contains
-        the k, m, and n channel indices in ``data``, respectively, to compute
-        the threenorm for.
+        Array of variable length (x) of arrays, where each sub-array contains the k, m,
+        and n channel indices in ``data``, respectively, to compute the threenorm for.
 
     precision : type
-        Precision to use for the computation. Either ``numpy.complex64``
-        (single) or ``numpy.complex128`` (double).
+        Precision to use for the computation. Either ``numpy.complex64`` (single) or
+        ``numpy.complex128`` (double).
 
     Returns
     -------
     results : numpy.ndarray of float, shape of [x, f1s, f2s]
-        Threenorm of a single connection, where the first dimension corresponds
-        to the different channel indices given in ``kmn``.
+        Threenorm of a single connection, where the first dimension corresponds to the
+        different channel indices given in ``kmn``.
 
     Notes
     -----

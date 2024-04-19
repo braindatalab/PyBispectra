@@ -1,8 +1,8 @@
 """Private helper tools for processing results."""
 
+import numpy as np
 from mne import Info, create_info
 from numba import njit
-import numpy as np
 
 from pybispectra.utils._defaults import _precision
 
@@ -54,14 +54,13 @@ def _compute_pearsonr_2d(
         Array of time-series values to compute correlation of with ``x``.
 
     precision : type
-        Precision to use for the computation. Either ``numpy.float32`` (single)
-        or ``numpy.float64`` (double).
+        Precision to use for the computation. Either ``numpy.float32`` (single) or
+        ``numpy.float64`` (double).
 
     Returns
     -------
     pearsonr : numpy.ndarray, shape of [epochs]
-        Correlation coefficient between ``x`` and ``y`` over time for each
-        epoch.
+        Correlation coefficient between ``x`` and ``y`` over time for each epoch.
 
     Notes
     -----
@@ -102,9 +101,9 @@ def _create_mne_info(n_chans: int, sampling_freq: float) -> Info:
 
     Notes
     -----
-    Names are set as ``[str(i) for i in range(n_chans)]``, and channel types
-    are all set to EEG (any MNE *data* type could be used; note that not all
-    MNE channel types are recognised as data types).
+    Names are set as ``[str(i) for i in range(n_chans)]``, and channel types are all set
+    to EEG (any MNE *data* type could be used; note that not all MNE channel types are
+    recognised as data types).
     """
     ch_names = [str(i) for i in range(n_chans)]
     ch_types = ["eeg" for _ in range(n_chans)]  # must be an MNE data ch. type

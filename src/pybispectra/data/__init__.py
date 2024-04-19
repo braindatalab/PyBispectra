@@ -2,4 +2,4 @@
 
 __version__ = "1.2.0dev"
 
-from .example_data import get_example_data_paths, DATASETS
+from .example_data import DATASETS, get_example_data_paths

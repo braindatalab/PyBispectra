@@ -3,10 +3,10 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.ticker import ScalarFormatter, StrMethodFormatter
-import numpy as np
 
 
 class _PlotBase(ABC):
@@ -14,25 +14,18 @@ class _PlotBase(ABC):
 
     Notes
     -----
-    Does not check initialisation inputs, assuming these have been checked by
-    the publicly-avaiable class/function.
+    Does not check initialisation inputs, assuming these have been checked by the
+    publicly-avaiable class/function.
     """
 
     f1s: np.ndarray = None
     f2s: np.ndarray = None
 
-    def __init__(
-        self,
-        data: np.ndarray,
-        indices: tuple,
-        name: str,
-    ) -> None:
+    def __init__(self, data: np.ndarray, indices: tuple, name: str) -> None:
         self._data = data.copy()
         self._indices = deepcopy(indices)
 
-        if len(indices) > 1 and np.all(
-            [isinstance(group, tuple) for group in indices]
-        ):
+        if len(indices) > 1 and np.all([isinstance(group, tuple) for group in indices]):
             self.n_nodes = len(indices[0])
         else:
             self.n_nodes = len(indices)
@@ -66,29 +59,24 @@ class _PlotBase(ABC):
             nodes = (nodes,)
         if not all(isinstance(con, int) for con in nodes):
             raise TypeError("Entries of `nodes` must be ints.")
-        if any(con >= self.n_nodes for con in nodes) or any(
-            con < 0 for con in nodes
-        ):
-            raise ValueError(
-                "The requested node is not present in the results."
-            )
+        if any(con >= self.n_nodes for con in nodes) or any(con < 0 for con in nodes):
+            raise ValueError("The requested node is not present in the results.")
 
         if not isinstance(n_rows, int) or not isinstance(n_cols, int):
             raise TypeError("`n_rows` and `n_cols` must be integers.")
         if n_rows < 1 or n_cols < 1:
             raise ValueError("`n_rows` and `n_cols` must be >= 1.")
 
-        if not isinstance(
-            major_tick_intervals, (int, float)
-        ) or not isinstance(minor_tick_intervals, (int, float)):
+        if not isinstance(major_tick_intervals, (int, float)) or not isinstance(
+            minor_tick_intervals, (int, float)
+        ):
             raise TypeError(
-                "`major_tick_intervals` and `minor_tick_intervals` should be "
-                "ints or floats."
+                "`major_tick_intervals` and `minor_tick_intervals` should be ints or "
+                "floats."
             )
         if major_tick_intervals <= 0 or minor_tick_intervals <= 0:
             raise ValueError(
-                "`major_tick_intervals` and `minor_tick_intervals` should be "
-                "> 0."
+                "`major_tick_intervals` and `minor_tick_intervals` should be > 0."
             )
         if minor_tick_intervals >= major_tick_intervals:
             raise ValueError(
@@ -135,23 +123,17 @@ class _PlotBase(ABC):
                     raise ValueError("`f1s` and `f2s` must have lengths of 2.")
 
         if check_f1s:
-            f1_idcs = np.argwhere(
-                (self.f1s >= f1s[0]) & (self.f1s <= f1s[1])
-            ).T[0]
+            f1_idcs = np.argwhere((self.f1s >= f1s[0]) & (self.f1s <= f1s[1])).T[0]
             if f1_idcs.size == 0:
                 raise ValueError(
-                    "No frequencies are present in the data for the range in "
-                    "`f1s`."
+                    "No frequencies are present in the data for the range in `f1s`."
                 )
             f1s = self.f1s[f1_idcs].copy()
         if check_f2s:
-            f2_idcs = np.argwhere(
-                (self.f2s >= f2s[0]) & (self.f2s <= f2s[1])
-            ).T[0]
+            f2_idcs = np.argwhere((self.f2s >= f2s[0]) & (self.f2s <= f2s[1])).T[0]
             if f2_idcs.size == 0:
                 raise ValueError(
-                    "No frequencies are present in the data for the range in "
-                    "`f2s`."
+                    "No frequencies are present in the data for the range in `f2s`."
                 )
             f2s = self.f2s[f2_idcs].copy()
 
@@ -168,13 +150,13 @@ class _PlotBase(ABC):
         Returns
         -------
         figures : list of matplotlib Figure
-            Figures for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))``.
+            Figures for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))``.
 
         axes : list of numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
+            Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
+            n_cols)``.
         """
         figures = []
         axes = []
@@ -249,8 +231,8 @@ class _PlotGeneral(_PlotBase):
             If :obj:`None`, plot all low frequencies.
 
         f2s : tuple of int or float | None (default None)
-            Start and end high frequencies of the results to plot,
-            respectively. If :obj:`None`, plot all high frequencies.
+            Start and end high frequencies of the results to plot, respectively. If
+            :obj:`None`, plot all high frequencies.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -259,51 +241,50 @@ class _PlotGeneral(_PlotBase):
             Number of columns of subplots per figure.
 
         major_tick_intervals : int | float (default ``5.0``)
-            Intervals (in Hz) at which the major ticks of the x- and y-axes
-            should occur.
+            Intervals (in Hz) at which the major ticks of the x- and y-axes should
+            occur.
 
         minor_tick_intervals : int | float (default ``1.0``)
-            Intervals (in Hz) at which the minor ticks of the x- and y-axes
-            should occur.
+            Intervals (in Hz) at which the minor ticks of the x- and y-axes should
+            occur.
 
         plot_absolute : bool (default False)
-            Whether or not to plot the absolute values of the real and
-            imaginary parts of the results.
+            Whether or not to plot the absolute values of the real and imaginary parts
+            of the results.
 
         mirror_cbar_range : bool (default True)
-            Whether of not to mirror the colourbar ranges of the real and
-            imaginary results around 0. Only applied if ``plot_absolute`` is
-            :obj:`False`, and ``cbar_range_real`` and ``cbar_range_imag`` are
-            not :obj:`None`.
+            Whether of not to mirror the colourbar ranges of the real and imaginary
+            results around 0. Only applied if ``plot_absolute`` is :obj:`False`, and
+            ``cbar_range_real`` and ``cbar_range_imag`` are not :obj:`None`.
 
         cbar_range_abs : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the absolute
-            value of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
+            Range (in units of the data) for the colourbars of the absolute value of the
+            results, consisting of the lower and upper limits, respectively. If
+            :obj:`None`, the range is computed automatically. If a tuple of float, this
+            range is used for all plots. If a tuple of tuple of float, the ranges are
+            used for each individual plot.
 
         cbar_range_real : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the real value
-            of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
+            Range (in units of the data) for the colourbars of the real value of the
+            results, consisting of the lower and upper limits, respectively. If
+            :obj:`None`, the range is computed automatically. If a tuple of float, this
+            range is used for all plots. If a tuple of tuple of float, the ranges are
+            used for each individual plot.
 
         cbar_range_imag : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the imaginary
-            value of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple of
-            tuple of float, the ranges are used for each individual plot.
+            Range (in units of the data) for the colourbars of the imaginary value of
+            the results, consisting of the lower and upper limits, respectively. If
+            :obj:`None`, the range is computed automatically. If a tuple of float, this
+            range is used for all plots. If a tuple of tuple of float, the ranges are
+            used for each individual plot.
 
         cbar_range_phase : tuple of float | list of tuple of float | None (default None)
-            Range (in units of pi) for the colourbars of the phase of the
-            results, consisting of the lower and upper limits, respectively.
-            If :obj:`None`, the range is computed automatically. If a tuple of
-            float, this range is used for all plots. If a tuple of tuple of
-            float, the ranges are used for each individual plot. Note that
-            results should be limited to the range :math:`(0, 2$\\pi$]`.
+            Range (in units of pi) for the colourbars of the phase of the results,
+            consisting of the lower and upper limits, respectively. If :obj:`None`, the
+            range is computed automatically. If a tuple of float, this range is used for
+            all plots. If a tuple of tuple of float, the ranges are used for each
+            individual plot. Note that results should be limited to the range
+            :math:`(0, 2$\\pi$]`.
 
         show : bool (default True)
             Whether or not to show the plotted results.
@@ -311,30 +292,22 @@ class _PlotGeneral(_PlotBase):
         Returns
         -------
         figures : list of matplotlib Figure
-            Figures of the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))``.
+            Figures of the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))``.
 
         axes : list of numpy.ndarray of numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            ``numpy.ndarray`` of length ``(n_rows * n_cols)``, whose
-            entries are themselves 1D ``numpy.ndarray`` of length 4,
+            Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
+            n_cols)``, whose entries are themselves 1D ``numpy.ndarray`` of length 4,
             corresponding to the absolute, real, imaginary, and phase plots,
             respectively.
 
         Notes
         -----
-        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node
-        on a new figure.
-        """  # noqa: E501
-        (
-            nodes,
-            f1s,
-            f2s,
-            f1_idcs,
-            f2_idcs,
-            cbar_ranges,
-        ) = self._sort_plot_inputs(
+        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node on a new
+        figure.
+        """
+        (nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_ranges) = self._sort_plot_inputs(
             nodes,
             f1s,
             f2s,
@@ -415,15 +388,11 @@ class _PlotGeneral(_PlotBase):
             Indices of ``f2s`` in the results.
 
         cbar_ranges : list of list of tuple of float or None
-            Colourbar ranges for the absolute, real, imaginary, and phase
-            plots, respectively.
+            Colourbar ranges for the absolute, real, imaginary, and phase plots,
+            respectively.
         """
         nodes = super()._sort_plot_inputs(
-            nodes,
-            n_rows,
-            n_cols,
-            major_tick_intervals,
-            minor_tick_intervals,
+            nodes, n_rows, n_cols, major_tick_intervals, minor_tick_intervals
         )
         f1s, f2s, f1_idcs, f2_idcs = super()._sort_freq_inputs(f1s, f2s)
 
@@ -440,10 +409,7 @@ class _PlotGeneral(_PlotBase):
         ]
         cbar_names = ["abs", "real", "imag", "phase"]
         cbar_idx = 0
-        for cbar_range, cbar_name in zip(
-            cbar_ranges,
-            cbar_names,
-        ):
+        for cbar_range, cbar_name in zip(cbar_ranges, cbar_names):
             if not isinstance(cbar_range, (list, tuple, type(None))):
                 raise TypeError(
                     f"`cbar_range_{cbar_name}` must be a list, tuple, or None."
@@ -451,8 +417,8 @@ class _PlotGeneral(_PlotBase):
             if isinstance(cbar_range, list):
                 if len(cbar_range) != len(nodes):
                     raise ValueError(
-                        f"If `cbar_range_{cbar_name}` is a list, one entry "
-                        "must be provided for each node being plotted."
+                        f"If `cbar_range_{cbar_name}` is a list, one entry must be "
+                        "provided for each node being plotted."
                     )
             else:
                 fill = cbar_range if cbar_range is not None else [None, None]
@@ -460,8 +426,7 @@ class _PlotGeneral(_PlotBase):
             for entry in cbar_range:
                 if len(entry) != 2:
                     raise ValueError(
-                        f"Limits in `cbar_range_{cbar_name}` must have length "
-                        "of 2."
+                        f"Limits in `cbar_range_{cbar_name}` must have length of 2."
                     )
             cbar_ranges[cbar_idx] = cbar_range
             cbar_idx += 1
@@ -476,17 +441,16 @@ class _PlotGeneral(_PlotBase):
         Returns
         -------
         figures : list of matplotlib Figure
-            Figures for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))``.
+            Figures for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))``.
 
         subfigures : list of matplotlib Figure
             Subfigures for the results in a list of length ``figures``.
 
         axes : list of numpy.ndarray of numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            ``numpy.ndarray`` of length ``(n_rows * n_cols)``, whose
-            entries are themselves 1D ``numpy.ndarray`` of length 4,
+            Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
+            n_cols)``, whose entries are themselves 1D ``numpy.ndarray`` of length 4,
             corresponding to the absolute, real, imaginary, and phase plots,
             respectively.
         """
@@ -499,9 +463,7 @@ class _PlotGeneral(_PlotBase):
             if node_i == plot_n:
                 fig = plt.figure(layout="compressed")
                 figures.append(fig)
-                subfigs = fig.subfigures(
-                    n_rows, n_cols, wspace=0.05, hspace=0.05
-                )
+                subfigs = fig.subfigures(n_rows, n_cols, wspace=0.05, hspace=0.05)
                 if n_rows * n_cols > 1:
                     subfigs = np.ravel(subfigs)
                 else:
@@ -549,12 +511,7 @@ class _PlotGeneral(_PlotBase):
 
                     data_funcs = [np.abs, np.real, np.imag, np.angle]
                     axes_titles = ["Absolute", "Real", "Imaginary", "Phase"]
-                    cmaps = [
-                        "viridis",
-                        "viridis",
-                        "viridis",
-                        "twilight_shifted",
-                    ]
+                    cmaps = ["viridis", "viridis", "viridis", "twilight_shifted"]
                     cbar_titles = [
                         "Magnitude (A.U.)",
                         "Magnitude (A.U.)",
@@ -579,9 +536,8 @@ class _PlotGeneral(_PlotBase):
                         if axis_title in ["Imaginary", "Phase"] and np.all(
                             np.isreal(self._data[node_i])
                         ):
-                            # If data is real, np.imag and np.angle return 0,
-                            # resulting in coloured panels, so instead set to
-                            # NaN for empty panels
+                            # If data is real, np.imag and np.angle return 0, resulting
+                            # in coloured panels, so instead set to NaN for empty panels
                             data = np.full_like(
                                 self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T,
                                 fill_value=np.nan,
@@ -599,14 +555,11 @@ class _PlotGeneral(_PlotBase):
                                 None,
                             ]:
                                 max_abs_data = np.nanmax(np.abs(data))
-                                cbar_range[plot_n] = [
-                                    -max_abs_data,
-                                    max_abs_data,
-                                ]
+                                cbar_range[plot_n] = [-max_abs_data, max_abs_data]
 
                         if axis_title == "Phase":
-                            # np.angle returns values in range (-pi, pi]
-                            # nice to convert range to (0, 2*pi]
+                            # np.angle returns values in range (-pi, pi]; nice to
+                            # convert range to (0, 2*pi]
                             data[data < 0] += 2 * np.pi
                             data /= np.pi  # normalise units of the data
                             format_ = StrMethodFormatter(r"{x} $\pi$")
@@ -634,9 +587,7 @@ class _PlotGeneral(_PlotBase):
                         axis.set_title(axis_title)
                         axis.set_aspect("equal")
                         self._set_axis_ticks(
-                            axis,
-                            major_tick_intervals,
-                            minor_tick_intervals,
+                            axis, major_tick_intervals, minor_tick_intervals
                         )
                         axis.grid(
                             which="major",
@@ -652,9 +603,7 @@ class _PlotGeneral(_PlotBase):
 
                     plot_n += 1
                     fig_plot_n += 1
-                    if fig_plot_n >= n_rows * n_cols or fig_plot_n >= len(
-                        nodes
-                    ):
+                    if fig_plot_n >= n_rows * n_cols or fig_plot_n >= len(nodes):
                         figures[fig_i].suptitle(self.name)
                     if fig_plot_n >= n_rows * n_cols:
                         # move to next figure
@@ -706,8 +655,7 @@ class _PlotGeneral(_PlotBase):
             Title of the axis.
         """
         return (
-            f"k: {self._indices[0][node_i]} | "
-            f"m: {self._indices[1][node_i]} | "
+            f"k: {self._indices[0][node_i]} | m: {self._indices[1][node_i]} | "
             f"n: {self._indices[2][node_i]} |"
         )
 
@@ -748,12 +696,12 @@ class _PlotCFC(_PlotBase):
             Indices of nodes to plot. If :obj:`None`, plot all nodes.
 
         f1s : tuple of int or float | None (default None)
-            Start and end low frequencies of the results to plot, respectively.
-            If :obj:`None`, plot all low frequencies.
+            Start and end low frequencies of the results to plot, respectively. If
+            :obj:`None`, plot all low frequencies.
 
         f2s : tuple of int or float | None (default None)
-            Start and end high frequencies of the results to plot,
-            respectively. If :obj:`None`, plot all high frequencies.
+            Start and end high frequencies of the results to plot, respectively. If
+            :obj:`None`, plot all high frequencies.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -762,19 +710,18 @@ class _PlotCFC(_PlotBase):
             Number of columns of subplots per figure.
 
         major_tick_intervals : int | float (default ``5.0``)
-            Intervals (in Hz) at which the major ticks of the x- and y-axes
-            should occur.
+            Intervals (in Hz) at which the major ticks of the x- and y-axes should
+            occur.
 
         minor_tick_intervals : int | float (default ``1.0``)
-            Intervals (in Hz) at which the minor ticks of the x- and y-axes
-            should occur.
+            Intervals (in Hz) at which the minor ticks of the x- and y-axes should
+            occur.
 
         cbar_range : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars, consisting of the
-            lower and upper limits, respectively. If :obj:`None`, the range is
-            computed automatically. If a tuple of float, this range is used for
-            all plots. If a list of tuple of float, the ranges are used for
-            each individual plot.
+            Range (in units of the data) for the colourbars, consisting of the lower and
+            upper limits, respectively. If :obj:`None`, the range is computed
+            automatically. If a tuple of float, this range is used for all plots. If a
+            list of tuple of float, the ranges are used for each individual plot.
 
         show : bool (default True)
             Whether or not to show the plotted results.
@@ -782,18 +729,18 @@ class _PlotCFC(_PlotBase):
         Returns
         -------
         figures : list of matplotlib Figure
-            Figures of the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))``.
+            Figures of the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))``.
 
         axes : list of numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
+            Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
+            n_cols)``.
 
         Notes
         -----
-        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node
-        on a new figure.
+        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node on a new
+        figure.
         """  # noqa: E501
         nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_range = self._sort_plot_inputs(
             nodes,
@@ -865,11 +812,7 @@ class _PlotCFC(_PlotBase):
         cbar_range : list of tuple of float or None
         """
         nodes = super()._sort_plot_inputs(
-            nodes,
-            n_rows,
-            n_cols,
-            major_tick_intervals,
-            minor_tick_intervals,
+            nodes, n_rows, n_cols, major_tick_intervals, minor_tick_intervals
         )
         f1s, f2s, f1_idcs, f2_idcs = super()._sort_freq_inputs(f1s, f2s)
 
@@ -878,17 +821,15 @@ class _PlotCFC(_PlotBase):
         if isinstance(cbar_range, list):
             if len(cbar_range) != len(nodes):
                 raise ValueError(
-                    "If `cbar_range` is a list, one entry must be provided "
-                    "for each node being plotted."
+                    "If `cbar_range` is a list, one entry must be provided for each "
+                    "node being plotted."
                 )
         else:
             fill = cbar_range if cbar_range is not None else [None, None]
             cbar_range = [fill for _ in range(len(nodes))]
         for entry in cbar_range:
             if len(entry) != 2:
-                raise ValueError(
-                    "Limits in `cbar_range` must have length of 2."
-                )
+                raise ValueError("Limits in `cbar_range` must have length of 2.")
 
         return nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_range
 
@@ -926,15 +867,11 @@ class _PlotCFC(_PlotBase):
                         vmax=cbar_range[plot_n][1],
                     )
 
-                    plt.colorbar(
-                        mesh, ax=axis, label="Coupling (A.U.)", shrink=0.3
-                    )
+                    plt.colorbar(mesh, ax=axis, label="Coupling (A.U.)", shrink=0.3)
 
                     axis.set_aspect("equal")
                     self._set_axis_ticks(
-                        axis,
-                        major_tick_intervals,
-                        minor_tick_intervals,
+                        axis, major_tick_intervals, minor_tick_intervals
                     )
                     axis.grid(
                         which="major",
@@ -954,9 +891,7 @@ class _PlotCFC(_PlotBase):
 
                     plot_n += 1
                     fig_plot_n += 1
-                    if fig_plot_n >= n_rows * n_cols or fig_plot_n >= len(
-                        nodes
-                    ):
+                    if fig_plot_n >= n_rows * n_cols or fig_plot_n >= len(nodes):
                         figures[fig_i].suptitle(self.name)
                     if fig_plot_n >= n_rows * n_cols:
                         # move to next figure
@@ -1034,16 +969,15 @@ class _PlotTDE(_PlotBase):
         Parameters
         ----------
         nodes : int | tuple of int | None (default None)
-            Indices of connections to plot. If :obj:`None`, plot all
-            connections.
+            Indices of connections to plot. If :obj:`None`, plot all connections.
 
         freq_bands : int | tuple of int | None (default None)
-            Indices of frequency bands to plot. If :obj:`None`, all frequency
-            bands are plotted.
+            Indices of frequency bands to plot. If :obj:`None`, all frequency bands are
+            plotted.
 
         times : tuple of int or float | None (default None)
-            Start and end times of the results to plot, respectively. If
-            :obj:`None`, plot all times.
+            Start and end times of the results to plot, respectively. If :obj:`None`,
+            plot all times.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -1052,12 +986,12 @@ class _PlotTDE(_PlotBase):
             Number of columns of subplots per figure.
 
         major_tick_intervals : int | float (default ``500.0``)
-            Intervals (in ms) at which the major ticks of the x- and y-axes
-            should occur.
+            Intervals (in ms) at which the major ticks of the x- and y-axes should
+            occur.
 
         minor_tick_intervals : int | float (default ``100.0``)
-            Intervals (in ms) at which the minor ticks of the x- and y-axes
-            should occur.
+            Intervals (in ms) at which the minor ticks of the x- and y-axes should
+            occur.
 
         show : bool (default True)
             Whether or not to show the plotted results.
@@ -1065,18 +999,18 @@ class _PlotTDE(_PlotBase):
         Returns
         -------
         figures : list of matplotlib Figure
-            Figures of the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))``.
+            Figures of the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))``.
 
         axes : list of numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
+            Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
+            n_cols)``.
 
         Notes
         -----
-        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each
-        connection on a new figure.
+        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each connection on
+        a new figure.
         """
         nodes, freq_bands, times, time_idcs = self._sort_plot_inputs(
             nodes,
@@ -1163,12 +1097,9 @@ class _PlotTDE(_PlotBase):
                 raise TypeError("`times` must be a tuple.")
             if len(times) != 2:
                 raise ValueError("`times` must have length of 2.")
-            if any(
-                time < self.times[0] or time > self.times[-1] for time in times
-            ):
+            if any(time < self.times[0] or time > self.times[-1] for time in times):
                 raise ValueError(
-                    "At least one entry of `times` is outside the range of "
-                    "the results."
+                    "At least one entry of `times` is outside the range of the results."
                 )
 
             time_idcs = np.argwhere(
@@ -1176,16 +1107,13 @@ class _PlotTDE(_PlotBase):
             ).T[0]
             if time_idcs.size == 0:
                 raise ValueError(
-                    "No times are present in the data for the range in "
-                    "`times`."
+                    "No times are present in the data for the range in `times`."
                 )
             times = self.times[time_idcs].copy()
 
         return times, time_idcs
 
-    def _sort_freq_band_inputs(
-        self, freq_bands: int | tuple[int] | None
-    ) -> tuple[int]:
+    def _sort_freq_band_inputs(self, freq_bands: int | tuple[int] | None) -> tuple[int]:
         """Sort `freq_bands` input."""
         if freq_bands is None:
             freq_bands = tuple(range(self._n_fbands))
@@ -1200,8 +1128,7 @@ class _PlotTDE(_PlotBase):
                 fband < 0 for fband in freq_bands
             ):
                 raise ValueError(
-                    "The requested frequency band is not present in the "
-                    "results."
+                    "The requested frequency band is not present in the results."
                 )
 
         return freq_bands
@@ -1218,13 +1145,13 @@ class _PlotTDE(_PlotBase):
         Returns
         -------
         figures : list of matplotlib Figure
-            Figures for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))``.
+            Figures for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))``.
 
         axes : list of numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
+            Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
+            n_cols)``.
         """
         figures = []
         axes = []
@@ -1271,10 +1198,7 @@ class _PlotTDE(_PlotBase):
                     fband_i = freq_bands[fband_n]
                     axis = axes[fig_i][fig_plot_n]
 
-                    axis.plot(
-                        times,
-                        self._data[node_i, fband_i, time_idcs],
-                    )
+                    axis.plot(times, self._data[node_i, fband_i, time_idcs])
 
                     self._mark_delay(
                         axis,
@@ -1297,8 +1221,8 @@ class _PlotTDE(_PlotBase):
                     axis.set_ylabel("Estimate strength (A.U.)")
 
                     axis.set_title(
-                        f"Seed: {self._indices[0][node_i]} | Target: "
-                        f"{self._indices[1][node_i]} | "
+                        f"Seed: {self._indices[0][node_i]} | "
+                        f"Target: {self._indices[1][node_i]} | "
                         f"{self.freq_bands[fband_i][0]:.2f} - "
                         f"{self.freq_bands[fband_i][1]:.2f} Hz"
                     )
@@ -1308,9 +1232,9 @@ class _PlotTDE(_PlotBase):
                     if fband_n >= len(freq_bands):
                         fband_n = 0
                         node_n += 1
-                    if fig_plot_n >= n_rows * n_cols or fig_plot_n >= len(
-                        nodes
-                    ) * len(freq_bands):
+                    if fig_plot_n >= n_rows * n_cols or fig_plot_n >= len(nodes) * len(
+                        freq_bands
+                    ):
                         figures[fig_i].suptitle(self.name)
                     if fig_plot_n >= n_rows * n_cols:
                         # move to next figure
@@ -1339,11 +1263,7 @@ class _PlotTDE(_PlotBase):
         return figures, axes
 
     def _mark_delay(
-        self,
-        axis: plt.Axes,
-        times: np.ndarray,
-        tau: float,
-        results: np.ndarray,
+        self, axis: plt.Axes, times: np.ndarray, tau: float, results: np.ndarray
     ) -> None:
         """Mark estimated delay on the plot."""
         if tau not in times:

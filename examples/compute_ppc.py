@@ -11,7 +11,7 @@ PyBispectra.
 
 import numpy as np
 
-from pybispectra import compute_fft, get_example_data_paths, PPC
+from pybispectra import PPC, compute_fft, get_example_data_paths
 
 ###############################################################################
 # Background

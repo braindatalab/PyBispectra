@@ -7,9 +7,9 @@ from numba import njit
 from pqdm.processes import pqdm
 
 from pybispectra.utils import ResultsCFC
+from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import _ProcessFreqBase
 from pybispectra.utils._utils import _compute_pearsonr_2d, _fast_find_first
-from pybispectra.utils._defaults import _precision
 
 
 class AAC(_ProcessFreqBase):
@@ -21,12 +21,11 @@ class AAC(_ProcessFreqBase):
         Amplitude (power) of the time-frequency representation of data.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be
-        evenly spaced.
+        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be evenly
+        spaced.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was
-        derived.
+        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -75,9 +74,8 @@ class AAC(_ProcessFreqBase):
         Parameters
         ----------
         indices : tuple of tuple of int, length of 2 | None (default None)
-            Indices of the seed and target channels, respectively, to compute
-            AAC between. If :obj:`None`, coupling between all channels is
-            computed.
+            Indices of the seed and target channels, respectively, to compute AAC
+            between. If :obj:`None`, coupling between all channels is computed.
 
         f1s : tuple of int or float, length of 2 | None (default None)
             Start and end lower frequencies to compute AAC on, respectively. If
@@ -88,23 +86,21 @@ class AAC(_ProcessFreqBase):
             If :obj:`None`, all frequencies are used.
 
         n_jobs : int (default ``1``)
-            Number of jobs to run in parallel. If ``-1``, all available CPUs
-            are used.
+            Number of jobs to run in parallel. If ``-1``, all available CPUs are used.
 
         Notes
         -----
-        AAC is computed as the Pearson correlation coefficient across times for
-        each frequency in each epoch, with coupling being averaged across
-        epochs :footcite:`Giehl2021`.
+        AAC is computed as the Pearson correlation coefficient across times for each
+        frequency in each epoch, with coupling being averaged across epochs
+        :footcite:`Giehl2021`.
 
-        AAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
-        any value of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan`
-        value is returned.
+        AAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If any value
+        of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan` value is returned.
 
         References
         ----------
         .. footbibliography::
-        """  # noqa: E501
+        """
         self._reset_attrs()
 
         self._sort_indices(indices)
@@ -153,10 +149,9 @@ class AAC(_ProcessFreqBase):
             )
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
-                "Memory allocation for the AAC computation failed. Try "
-                "reducing the sampling frequency of the data, or reduce the "
-                "precision of the computation with "
-                "`pybispectra.set_precision('single')`."
+                "Memory allocation for the AAC computation failed. Try reducing the "
+                "sampling frequency of the data, or reduce the precision of the "
+                "computation with `pybispectra.set_precision('single')`."
             ) from error
 
     def _store_results(self) -> None:
@@ -190,9 +185,9 @@ def _compute_aac(
     Parameters
     ----------
     data : numpy.ndarray, shape of [epochs, 2, frequencies, times]
-        Amplitude (power) of the time-frequency representation of data where
-        the second dimension contains the data for the seed and target channel
-        of a single connection, respectively.
+        Amplitude (power) of the time-frequency representation of data where the second
+        dimension contains the data for the seed and target channel of a single
+        connection, respectively.
 
     freqs : numpy.ndarray, shape of [frequencies]
         Frequencies in ``data``.
@@ -204,17 +199,15 @@ def _compute_aac(
         High frequencies to compute coupling for.
 
     precision : type
-        Precision to use for the computation. Either ``numpy.float32`` (single)
-        or ``numpy.float64`` (double).
+        Precision to use for the computation. Either ``numpy.float32`` (single) or
+        ``numpy.float64`` (double).
 
     Returns
     -------
     results : numpy.ndarray, shape of [low frequencies, high frequencies]
         AAC averaged across epochs for a single connection.
     """
-    results = np.full(
-        (f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=precision
-    )
+    results = np.full((f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=precision)
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
     f2_start = _fast_find_first(freqs, f2s[0], 0)

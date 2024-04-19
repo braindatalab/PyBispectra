@@ -8,11 +8,10 @@ from pqdm.processes import pqdm
 from pybispectra.utils import ResultsCFC
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import (
-    _ProcessBispectrum,
     _compute_bispectrum,
     _compute_threenorm,
+    _ProcessBispectrum,
 )
-
 
 np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
 
@@ -26,12 +25,11 @@ class PAC(_ProcessBispectrum):
         Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be
-        evenly spaced.
+        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be evenly
+        spaced.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was
-        derived.
+        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -56,8 +54,7 @@ class PAC(_ProcessBispectrum):
         Frequencies (in Hz) in :attr:`data`.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was
-        derived.
+        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -87,9 +84,8 @@ class PAC(_ProcessBispectrum):
         Parameters
         ----------
         indices : tuple of tuple of int, length of 2 | None (default None)
-            Indices of the seed and target channels, respectively, to compute
-            PAC between. If :obj:`None`, coupling between all channels is
-            computed.
+            Indices of the seed and target channels, respectively, to compute PAC
+            between. If :obj:`None`, coupling between all channels is computed.
 
         f1s : tuple of int or float, length of 2 | None (default None)
             Start and end lower frequencies to compute PAC on, respectively. If
@@ -100,16 +96,16 @@ class PAC(_ProcessBispectrum):
             If :obj:`None`, all frequencies are used.
 
         antisym : bool | tuple of bool (default False)
-            Whether to antisymmetrise the PAC results. If a tuple of bool, both
-            forms of PAC are computed in turn.
+            Whether to antisymmetrise the PAC results. If a tuple of bool, both forms of
+            PAC are computed in turn.
 
         norm : bool | tuple of bool (default False)
-            Whether to normalise the PAC results using the threenorm. If a
-            tuple of bool, both forms of PAC are computed in turn.
+            Whether to normalise the PAC results using the threenorm. If a tuple of
+            bool, both forms of PAC are computed in turn.
 
         n_jobs : int (default ``1``)
-            The number of jobs to run in parallel. If ``-1``, all available
-            CPUs are used.
+            The number of jobs to run in parallel. If ``-1``, all available CPUs are
+            used.
 
         Notes
         -----
@@ -121,46 +117,42 @@ class PAC(_ProcessBispectrum):
         \textbf{n}^*(f_2+f_1)>` ,
 
         where :math:`kmn` is a combination of signals with Fourier coefficients
-        :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`,
-        respectively; :math:`f_1` and :math:`f_2` correspond to a lower and
-        higher frequency, respectively; and :math:`<>` represents the average
-        value over epochs. The computation of PAC follows from this
-        :footcite:`Kovach2018`
+        :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`, respectively;
+        :math:`f_1` and :math:`f_2` correspond to a lower and higher frequency,
+        respectively; and :math:`<>` represents the average value over epochs. The
+        computation of PAC follows from this :footcite:`Kovach2018`
 
         :math:`\textbf{B}_{xyy}(f_1,f_2)=<\textbf{x}(f_1)\textbf{y}(f_2)
         \textbf{y}^*(f_2+f_1)>` ,
 
-        :math:`\textrm{PAC}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|
-        \textbf{B}_{xyy}(f_1,f_2)|` .
+        :math:`\textrm{PAC}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|\textbf{B}_{xyy}
+        (f_1,f_2)|` .
 
         The bispectrum can be normalised to the bicoherence,
-        :math:`\boldsymbol{\mathcal{B}}`, using the threenorm,
-        :math:`\textbf{N}`, :footcite:`Shahbazi2014`
+        :math:`\boldsymbol{\mathcal{B}}`, using the threenorm, :math:`\textbf{N}`,
+        :footcite:`Shahbazi2014`
 
-        :math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{y}
-        (f_2)|^3><|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}` ,
+        :math:`\textbf{N}_{xyy}(f_1,f_2)=(<|\textbf{x}(f_1)|^3><|\textbf{y}(f_2)|^3>
+        <|\textbf{y}(f_2+f_1)|^3>)^{\frac{1}{3}}` ,
 
-        :math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large\frac{
-        \textbf{B}_{xyy}(f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}` ,
+        :math:`\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)=\Large\frac{\textbf{B}_{xyy}
+        (f_1,f_2)}{\textbf{N}_{xyy}(f_1,f_2)}` ,
 
         :math:`\textrm{PAC}_{\textrm{norm}}(\textbf{x}_{f_1},\textbf{y}_{f_2})=
         |\boldsymbol{\mathcal{B}}_{xyy}(f_1,f_2)|` .
 
-        where the resulting values lie in the range :math:`[0, 1]`.
-        Furthermore, PAC can be antisymmetrised by subtracting the results from
-        those found using the transposed bispectrum, :math:`\textbf{B}_{xyx}`,
-        :footcite:`Chella2014`
+        where the resulting values lie in the range :math:`[0, 1]`. Furthermore, PAC can
+        be antisymmetrised by subtracting the results from those found using the
+        transposed bispectrum, :math:`\textbf{B}_{xyx}`, :footcite:`Chella2014`
 
-        :math:`\textrm{PAC}_{\textrm{antisym}}(\textbf{x}_{f_1},\textbf{y}_{
-        f_2})=|\textbf{B}_{xyy}-\textbf{B}_{xyx}|` .
+        :math:`\textrm{PAC}_{\textrm{antisym}}(\textbf{x}_{f_1},\textbf{y}_{f_2})=
+        |\textbf{B}_{xyy}-\textbf{B}_{xyx}|` .
 
         If the seed and target for a given connection is the same channel and
-        antisymmetrisation is being performed, :obj:`numpy.nan` values are
-        returned.
+        antisymmetrisation is being performed, :obj:`numpy.nan` values are returned.
 
-        PAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If
-        any value of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan`
-        value is returned.
+        PAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If any value
+        of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan` value is returned.
 
         References
         ----------
@@ -272,10 +264,9 @@ class PAC(_ProcessBispectrum):
             ).transpose(1, 0, 2, 3)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
-                "Memory allocation for the bispectrum computation failed. Try "
-                "reducing the sampling frequency of the data, or reduce the "
-                "precision of the computation with "
-                "`pybispectra.set_precision('single')`."
+                "Memory allocation for the bispectrum computation failed. Try reducing "
+                "the sampling frequency of the data, or reduce the precision of the "
+                "computation with `pybispectra.set_precision('single')`."
             ) from error
 
         if self.verbose:
@@ -320,10 +311,9 @@ class PAC(_ProcessBispectrum):
             ).transpose(1, 0, 2, 3)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
-                "Memory allocation for the threenorm computation failed. Try "
-                "reducing the sampling frequency of the data, or reduce the "
-                "precision of the computation with "
-                "`pybispectra.set_precision('single')`."
+                "Memory allocation for the threenorm computation failed. Try reducing "
+                "the sampling frequency of the data, or reduce the precision of the "
+                "computation with `pybispectra.set_precision('single')`."
             ) from error
 
         if self.verbose:
@@ -422,10 +412,9 @@ class PAC(_ProcessBispectrum):
         Returns
         -------
         results : ~pybispectra.utils.ResultsCFC | tuple of ~pybispectra.utils.ResultsCFC
-            The results of the PAC computation returned as a single results
-            object (if only one PAC variant was computed) or a tuple of results
-            objects.
-        """  # noqa: E501
+            The results of the PAC computation returned as a single results object (if
+            only one PAC variant was computed) or a tuple of results objects.
+        """
         if len(self._results) == 1:
             return deepcopy(self._results[0])
         return deepcopy(self._results)
