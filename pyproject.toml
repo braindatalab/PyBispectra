@@ -60,6 +60,7 @@ omit = [
 
 [tool.codespell]
 skip = "./docs/build,./docs/source/auto_examples,./docs/source/refs.bib"
+ignore-words-list = "trough"
 
 [tool.pydocstyle]
 match-dir = "^(?!(examples|docs|tests)).*"
