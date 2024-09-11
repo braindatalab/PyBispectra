@@ -70,6 +70,14 @@ profile = "black"
 [tool.pydocstyle]
 match-dir = "^(?!(examples|docs|tests)).*"
 
+[tool.pytest.ini_options]
+# use '', not "" for escaping characters in regex
+filterwarnings = [
+  "ignore:The seed and target for at least one connection is the same channel:UserWarning",
+  'ignore:At least one value in \`f1s\` is \>\= a value in \`f2s\`:UserWarning',
+  'ignore:At least one value of \`f2s\` \+ \`f1s\` is not present in the frequencies:UserWarning',
+]
+
 [tool.rstcheck]
 ignore_directives = [
   "autoclass",
