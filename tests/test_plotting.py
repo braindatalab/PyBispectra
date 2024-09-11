@@ -467,6 +467,7 @@ def test_plotting_waveshape_error_catch() -> None:
         results.plot(mirror_cbar_range=None)
 
 
+@pytest.mark.filterwarnings("ignore:All-NaN slice encountered:RuntimeWarning")
 @pytest.mark.parametrize("plot_absolute", [True, False])
 @pytest.mark.parametrize("mirror_cbar_range", [True, False])
 def test_plotting_waveshape_runs(plot_absolute: bool, mirror_cbar_range: bool) -> None:
@@ -655,6 +656,8 @@ def test_plotting_general_error_catch() -> None:
         results.plot(mirror_cbar_range=None)
 
 
+@pytest.mark.filterwarnings("ignore:All-NaN slice encountered:RuntimeWarning")
+@pytest.mark.filterwarnings("ignore:More than 20 figures have been opened:RuntimeWarning")
 @pytest.mark.parametrize("plot_absolute", [True, False])
 @pytest.mark.parametrize("mirror_cbar_range", [True, False])
 def test_plotting_general_runs(plot_absolute: bool, mirror_cbar_range: bool) -> None:

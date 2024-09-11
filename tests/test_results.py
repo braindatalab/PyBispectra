@@ -186,7 +186,7 @@ def test_results_tde_error_catch() -> None:
         ResultsTDE(
             data=data,
             indices=indices,
-            freq_bands=tuple([list(fband) for fband in freq_bands]),
+            freq_bands=tuple(list(fband) for fband in freq_bands),
             times=times,
         )
     with pytest.raises(
@@ -195,7 +195,7 @@ def test_results_tde_error_catch() -> None:
         ResultsTDE(
             data=data,
             indices=indices,
-            freq_bands=tuple(list(fband) for fband in freq_bands),
+            freq_bands=tuple((*fband, 0) for fband in freq_bands),
             times=times,
         )
 
