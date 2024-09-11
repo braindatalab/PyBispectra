@@ -3,7 +3,6 @@
 from copy import deepcopy
 
 import numpy as np
-from pqdm.processes import pqdm
 
 from pybispectra.utils import ResultsCFC
 from pybispectra.utils._defaults import _precision
@@ -12,6 +11,7 @@ from pybispectra.utils._process import (
     _compute_threenorm,
     _ProcessBispectrum,
 )
+from pybispectra.utils._utils import _compute_in_parallel
 
 np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
 
@@ -237,30 +237,30 @@ class PAC(_ProcessBispectrum):
             # kmm
             kmn = np.array([np.array([0, 1, 1])])
 
-        args = [
-            {
-                "data": self.data[:, (seed, target)],
-                "freqs": self.freqs,
-                "f1s": self._f1s,
-                "f2s": self._f2s,
-                "kmn": kmn,
-                "precision": _precision.complex,
-            }
+        loop_kwargs = [
+            {"data": self.data[:, (seed, target)]}
             for seed, target in zip(self._seeds, self._targets)
         ]
-
+        static_kwargs = {
+            "freqs": self.freqs,
+            "f1s": self._f1s,
+            "f2s": self._f2s,
+            "kmn": kmn,
+            "precision": _precision.complex,
+        }
         try:
-            self._bispectrum = np.array(
-                pqdm(
-                    args,
-                    _compute_bispectrum,
-                    self._n_jobs,
-                    argument_type="kwargs",
-                    desc="Processing connections...",
-                    disable=not self.verbose,
-                    exception_behaviour="immediate",
+            self._bispectrum = _compute_in_parallel(
+                func=_compute_bispectrum,
+                loop_kwargs=loop_kwargs,
+                static_kwargs=static_kwargs,
+                output=np.zeros(
+                    (self._n_cons, kmn.shape[0], self._f1s.size, self._f2s.size),
+                    dtype=_precision.complex,
                 ),
-                dtype=_precision.complex,
+                message="Processing connections...",
+                n_jobs=self._n_jobs,
+                verbose=self.verbose,
+                prefer="processes",
             ).transpose(1, 0, 2, 3)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
@@ -284,34 +284,34 @@ class PAC(_ProcessBispectrum):
             # kmm
             kmn = np.array([np.array([0, 1, 1])])
 
-        args = [
-            {
-                "data": self.data[:, (seed, target)],
-                "freqs": self.freqs,
-                "f1s": self._f1s,
-                "f2s": self._f2s,
-                "kmn": kmn,
-                "precision": _precision.real,
-            }
+        loop_kwargs = [
+            {"data": self.data[:, (seed, target)]}
             for seed, target in zip(self._seeds, self._targets)
         ]
-
+        static_kwargs = {
+            "freqs": self.freqs,
+            "f1s": self._f1s,
+            "f2s": self._f2s,
+            "kmn": kmn,
+            "precision": _precision.real,
+        }
         try:
-            self._threenorm = np.array(
-                pqdm(
-                    args,
-                    _compute_threenorm,
-                    self._n_jobs,
-                    argument_type="kwargs",
-                    desc="Processing connections...",
-                    disable=not self.verbose,
-                    exception_behaviour="immediate",
+            self._threenorm = _compute_in_parallel(
+                func=_compute_threenorm,
+                loop_kwargs=loop_kwargs,
+                static_kwargs=static_kwargs,
+                output=np.zeros(
+                    (self._n_cons, kmn.shape[0], self._f1s.size, self._f2s.size),
+                    dtype=_precision.real,
                 ),
-                dtype=_precision.real,
+                message="Processing connections...",
+                n_jobs=self._n_jobs,
+                verbose=self.verbose,
+                prefer="processes",
             ).transpose(1, 0, 2, 3)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
-                "Memory allocation for the threenorm computation failed. Try reducing "
+                "Memory allocation for the bispectrum computation failed. Try reducing "
                 "the sampling frequency of the data, or reduce the precision of the "
                 "computation with `pybispectra.set_precision('single')`."
             ) from error

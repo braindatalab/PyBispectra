@@ -5,12 +5,12 @@ from typing import Callable
 
 import numpy as np
 from numba import njit
-from pqdm.processes import pqdm
 from scipy.linalg import hankel
 
 from pybispectra.utils import ResultsTDE
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import _ProcessBispectrum
+from pybispectra.utils._utils import _compute_in_parallel
 
 
 class TDE(_ProcessBispectrum):
@@ -317,8 +317,7 @@ class TDE(_ProcessBispectrum):
             raise ValueError("Entries of `fmax` must be <= the Nyquist frequency.")
         if any(this_fmin > this_fmax for this_fmin, this_fmax in zip(fmin, fmax)):
             raise ValueError(
-                "At least one entry of `fmin` is > the corresponding entry of "
-                "`fmax`."
+                "At least one entry of `fmin` is > the corresponding entry of `fmax`."
             )
 
         freq_masks = []
@@ -421,33 +420,35 @@ class TDE(_ProcessBispectrum):
             del self._xyz["yyy"]
         if not self._return_antisym:
             del self._xyz["yxx"]
+        kmn = np.array(list(self._xyz.values()))
 
         hankel_freq_mask = hankel(
             np.arange(self._n_unique_freqs),
             np.arange(self._n_unique_freqs - 1, 2 * self._n_unique_freqs - 1),
         )
 
-        args = [
-            {
-                "data": self.data[:, (seed, target)],
-                "hankel_freq_mask": hankel_freq_mask,
-                "kmn": np.array(list(self._xyz.values())),
-                "precision": _precision.complex,
-            }
+        loop_kwargs = [
+            {"data": self.data[:, (seed, target)]}
             for seed, target in zip(self._seeds, self._targets)
         ]
+        static_kwargs = {
+            "hankel_freq_mask": hankel_freq_mask,
+            "kmn": kmn,
+            "precision": _precision.complex,
+        }
         try:
-            self._bispectrum = np.array(
-                pqdm(
-                    args,
-                    _compute_bispectrum_tde,
-                    self._n_jobs,
-                    argument_type="kwargs",
-                    desc="Processing connections...",
-                    disable=not self.verbose,
-                    exception_behaviour="immediate",
+            self._bispectrum = _compute_in_parallel(
+                func=_compute_bispectrum_tde,
+                loop_kwargs=loop_kwargs,
+                static_kwargs=static_kwargs,
+                output=np.zeros(
+                    (self._n_cons, kmn.shape[0], *hankel_freq_mask.shape),
+                    dtype=_precision.complex,
                 ),
-                dtype=_precision.complex,
+                message="Processing connections...",
+                n_jobs=self._n_jobs,
+                verbose=self.verbose,
+                prefer="processes",
             ).transpose(1, 0, 2, 3)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
@@ -464,13 +465,13 @@ class TDE(_ProcessBispectrum):
         if self.verbose:
             print("    Computing TDE...")
 
+        self._compute_times()
+
         if self._return_nosym:
             self._compute_tde_nosym()
 
         if self._return_antisym:
             self._compute_tde_antisym()
-
-        self._compute_times()
 
         if self.verbose:
             print("        ... TDE computation finished\n")
@@ -547,25 +548,26 @@ class TDE(_ProcessBispectrum):
             Time delay estimates.
         """
         assert isinstance(kwargs, dict), (
-            "PyBispectra Internal Error: `kwargs` passed to `pqdm` must be a dict. "
+            "PyBispectra Internal Error: `kwargs` for parallelisation must be a dict. "
             "Please contact the PyBispectra developers."
         )
 
-        con_kwargs = []
+        loop_kwargs = []
         for con_i in range(self._n_cons):
-            con_kwargs.append({key: value[con_i] for key, value in kwargs.items()})
-            con_kwargs[con_i]["freq_masks"] = self._freq_masks
-
-        return np.array(
-            pqdm(
-                con_kwargs,
-                func,
-                self._n_jobs,
-                argument_type="kwargs",
-                desc="Processing connections...",
-                disable=not self.verbose,
+            loop_kwargs.append({key: value[con_i] for key, value in kwargs.items()})
+        static_kwargs = {"freq_masks": self._freq_masks}
+        return _compute_in_parallel(
+            func=func,
+            loop_kwargs=loop_kwargs,
+            static_kwargs=static_kwargs,
+            output=np.zeros(
+                (self._n_cons, len(self._freq_masks), len(self._times)),
+                dtype=_precision.real,
             ),
-            dtype=_precision.real,
+            message="Processing connections...",
+            n_jobs=self._n_jobs,
+            verbose=self.verbose,
+            prefer="processes",
         )
 
     def _compute_times(self) -> None:
