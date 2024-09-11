@@ -50,4 +50,4 @@ repos:
       - id: toml-sort-fix
 
 ci:
-  autofix_prs: true
+  autofix_prs: false
