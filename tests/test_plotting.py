@@ -132,6 +132,10 @@ def test_plotting_cfc_error_catch() -> None:
         results.plot(cbar_range=[(0, 1, 2) for _ in range(n_cons)])
 
 
+@pytest.mark.filterwarnings(
+    r"ignore:Adding colorbar to a different Figure.*than.*which fig.colorbar is "
+    "called on"
+)
 def test_plotting_cfc_runs() -> None:
     """Test plotting in `ResultsCFC` runs with correct inputs."""
     n_cons = 9
@@ -468,6 +472,10 @@ def test_plotting_waveshape_error_catch() -> None:
 
 
 @pytest.mark.filterwarnings("ignore:All-NaN slice encountered:RuntimeWarning")
+@pytest.mark.filterwarnings(
+    r"ignore:Adding colorbar to a different Figure.*than.*which fig.colorbar is "
+    "called on"
+)
 @pytest.mark.parametrize("plot_absolute", [True, False])
 @pytest.mark.parametrize("mirror_cbar_range", [True, False])
 def test_plotting_waveshape_runs(plot_absolute: bool, mirror_cbar_range: bool) -> None:
@@ -657,7 +665,13 @@ def test_plotting_general_error_catch() -> None:
 
 
 @pytest.mark.filterwarnings("ignore:All-NaN slice encountered:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:More than 20 figures have been opened:RuntimeWarning")
+@pytest.mark.filterwarnings(
+    "ignore:More than 20 figures have been opened:RuntimeWarning"
+)
+@pytest.mark.filterwarnings(
+    r"ignore:Adding colorbar to a different Figure.*than.*which fig.colorbar is "
+    "called on"
+)
 @pytest.mark.parametrize("plot_absolute", [True, False])
 @pytest.mark.parametrize("mirror_cbar_range", [True, False])
 def test_plotting_general_runs(plot_absolute: bool, mirror_cbar_range: bool) -> None:
