@@ -235,7 +235,7 @@ def compute_tfr(
     )
 
     tfr_func_kwargs = {
-        "epoch_data": data,
+        "data": data,
         "sfreq": sampling_freq,
         "freqs": freqs,
         "n_cycles": n_cycles,
