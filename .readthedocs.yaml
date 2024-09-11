@@ -22,4 +22,5 @@ python:
   install:
     - method: pip
       path: .
-    - requirements: requirements_rtd.txt
+    - extra_requirements:
+        - docs

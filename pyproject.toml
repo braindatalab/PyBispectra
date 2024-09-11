@@ -27,25 +27,35 @@ version = "1.2.0dev"
 
 [project.optional-dependencies]
 dev = [
-  "codespell",
-  "coverage",
+  "pybispectra[doc]",
+  "pybispectra[lint]",
+  "pybispectra[test]",
+]
+doc = [
   "ipykernel",
   "ipython",
   "ipywidgets",
-  "isort",
   "notebook",
   "numpydoc",
   "pydata-sphinx-theme",
-  "pydocstyle",
-  "pydocstyle[toml]",
-  "pytest",
-  "rstcheck",
-  "ruff",
   "sphinx",
   "sphinx-gallery",
   "sphinxcontrib-bibtex",
+]
+lint = [
+  "codespell",
+  "isort",
+  "pre-commit",
+  "pydocstyle",
+  "pydocstyle[toml]",
+  "rstcheck",
+  "ruff",
   "toml-sort",
   "yamllint",
+]
+test = [
+  "coverage",
+  "pytest",
 ]
 
 [project.urls]

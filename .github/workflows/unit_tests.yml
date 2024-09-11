@@ -1,0 +1,61 @@
+name: "unit_tests"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number }}-${{ github.event.type }}
+  cancel-in-progress: true
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  # Run unit tests
+  test:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -e {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.10"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: macos-13  # Intel
+            python-version: "3.12"
+          - os: macos-14  # arm64
+            python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.12"
+    env:
+      TZ: Europe/Berlin
+      FORCE_COLOR: true
+      DISPLAY: ":99.0"
+      OPENBLAS_NUM_THREADS: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/checkout@v4
+      - uses: pyvista/setup-headless-display-action@main
+        with:
+          qt: true
+          pyvista: false
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install --upgrade --upgrade-strategy eager .[test]
+      - name: Display versions and environment information
+        run: |
+          echo $TZ
+          date
+          python --version
+          which python
+      - run: pip install -e .
+      - run: python -c "import pybispectra; import mne; print(f'PyBispectra {pybispectra.__version__}\n'); mne.sys_info()"
+      - run: python -m coverage run --source=pybispectra -m pytest -v tests && coverage report -m
