@@ -211,6 +211,7 @@ def test_error_catch(method: str) -> None:
         ssf.get_transformed_data(min_ratio=ssf.ratios.max() + 1)
 
 
+@pytest.mark.filterwarnings(r"ignore:No signal\-to\-noise ratios are greater than the requested minimum:UserWarning")
 @pytest.mark.parametrize("bandpass_filter", [True, False])
 @pytest.mark.parametrize("rank", [3, 1])
 def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
@@ -263,6 +264,7 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
     ), "`transformed_data` should be empty when too high a ratio is requested."
 
 
+@pytest.mark.filterwarnings(r"ignore:No signal\-to\-noise ratios are greater than the requested minimum:UserWarning")
 @pytest.mark.parametrize("csd_method", ["fourier", "multitaper"])
 @pytest.mark.parametrize("rank", [3, 1])
 def test_ged_hpmax_runs(csd_method: str, rank: int) -> None:
