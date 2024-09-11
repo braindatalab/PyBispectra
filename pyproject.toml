@@ -14,7 +14,7 @@ classifiers = [
 dependencies = [
   "joblib",
   "matplotlib",
-  "mne",
+  "mne>1.6",
   "numba",
   "numpy",
   "pqdm",
