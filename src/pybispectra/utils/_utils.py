@@ -2,9 +2,99 @@
 
 import numpy as np
 from mne import Info, create_info
+from mne.parallel import parallel_func
+from mne.utils import ProgressBar
 from numba import njit
 
 from pybispectra.utils._defaults import _precision
+
+
+def _compute_in_parallel(
+    func: callable,
+    loop_kwargs: list[dict],
+    static_kwargs: dict,
+    output: np.ndarray,
+    message: str,
+    n_jobs: int,
+    verbose: bool,
+    prefer: str = "processes",
+) -> np.ndarray:
+    """Parallelise a function with a progress bar.
+
+    Parameters
+    ----------
+    func : callable
+        Function to parallelise.
+
+    loop_kwargs : list of dict
+        List of keyword arguments to pass to the function that change for each iteration
+        of the parallelisation.
+
+    static_kwargs : dict
+        Dictionary of keyword arguments to pass to the function that do not change
+        across iterations.
+
+    output : numpy.ndarray
+        Array to store the output of the computation. Values for each iteration of the
+        parallelisation are stored in the first dimension, which must be at least as
+        large as the length of the values in ``loop_kwargs``.
+
+    message : str
+        Message to display in the progress bar.
+
+    n_jobs : int
+        Number of jobs to run in parallel.
+
+    verbose : bool
+        Whether or not to report the progress of the processing.
+
+    prefer : str (default "processes")
+        Whether to use "threads" or "processes" for parallelisation.
+
+    Returns
+    -------
+    output : numpy.ndarray
+        Array with the output of the computation.
+
+    Notes
+    -----
+    Relies on the MNE progress bar and parallel implementations. Does not perform checks
+    on inputs for speed.
+    """
+    n_steps = len(loop_kwargs)
+    n_blocks = int(np.ceil(n_steps / n_jobs))
+    parallel, my_parallel_func, _ = parallel_func(
+        func, n_jobs, prefer=prefer, verbose=verbose
+    )
+    for block_i in ProgressBar(range(n_blocks), mesg=message):
+        idcs = _get_block_indices(block_i, n_steps, n_jobs)
+        output[idcs] = parallel(
+            my_parallel_func(**loop_kwargs[idx], **static_kwargs) for idx in idcs
+        )
+
+    return output
+
+
+def _get_block_indices(block_i: int, limit: int, n_jobs: int) -> np.ndarray:
+    """Get the indices for a block of parallel computation, capped by a limit.
+
+    Parameters
+    ----------
+    block_i : int
+        Index of the block to get indices for.
+
+    limit : int
+        Maximum index to return.
+
+    n_jobs : int
+        Number of jobs to run in parallel.
+
+    Returns
+    -------
+    indices : numpy.ndarray of int
+        Indices for the block of parallel computation.
+    """
+    return np.arange(block_i * n_jobs, np.min([(block_i + 1) * n_jobs, limit]))
 
 
 @njit

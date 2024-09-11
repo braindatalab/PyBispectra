@@ -7,9 +7,9 @@ from warnings import warn
 import numpy as np
 import scipy as sp
 from mne import time_frequency
-from pqdm.processes import pqdm
 
 from pybispectra.utils._defaults import _precision
+from pybispectra.utils._utils import _compute_in_parallel
 
 
 def compute_fft(
@@ -73,22 +73,27 @@ def compute_fft(
 
     window = window_func(data.shape[2])
 
-    args = [
-        {"x": sp.signal.detrend(chan_data) * window, "n": n_points}
+    loop_kwargs = [
+        {"x": sp.signal.detrend(chan_data) * window}
         for chan_data in data.transpose(1, 0, 2)
     ]
-
-    coeffs = np.array(
-        pqdm(
-            args,
-            sp.fft.rfft,
-            n_jobs,
-            argument_type="kwargs",
-            desc="Processing channels...",
-            disable=not verbose,
-        ),
-        dtype=_precision.complex,
-    ).transpose(1, 0, 2)
+    static_kwargs = {"n": n_points}
+    coeffs = (
+        _compute_in_parallel(
+            func=sp.fft.rfft,
+            loop_kwargs=loop_kwargs,
+            static_kwargs=static_kwargs,
+            output=np.zeros(
+                (data.shape[1], data.shape[0], freqs.size), dtype=_precision.complex
+            ),
+            message="Processing channels...",
+            n_jobs=n_jobs,
+            verbose=verbose,
+            prefer="processes",
+        )
+        .transpose(1, 0, 2)
+        .astype(_precision.complex)
+    )
 
     if verbose:
         print("    [FFT computation finished]\n")
