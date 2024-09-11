@@ -57,6 +57,5 @@ jobs:
           python --version
           which python
       - run: pip install -e .
-      - run: python -c "import pybispectra; import mne; print(f'PyBispectra {pybispectra.__version__}'); mne.sys_info()"
+      - run: python -c "import pybispectra; import mne; print(f'PyBispectra {pybispectra.__version__}\n'); mne.sys_info()"
       - run: python -m coverage run --source=pybispectra -m pytest -v tests && coverage report -m
-      - uses: codecov/codecov-action@v4
