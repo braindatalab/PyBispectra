@@ -1,66 +1,132 @@
 [build-system]
-requires = ["hatchling"]
 build-backend = "hatchling.build"
+requires = ["hatchling"]
 
 [project]
-name = "pybispectra"
-version = "1.2.0dev"
 authors = [
-    { name="Thomas Samuel Binns", email="t.s.binns@outlook.com" }
+  {email = "t.s.binns@outlook.com", name = "Thomas Samuel Binns"},
+]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+]
+dependencies = [
+  "joblib",
+  "matplotlib",
+  "mne",
+  "numba",
+  "numpy",
+  "pqdm",
+  "scipy",
 ]
 description = "A Python signal processing package for computing spectral-domain and time-domain interactions using the bispectrum."
+name = "pybispectra"
 readme = "README.md"
-requires-python = ">=3.10,<3.12"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent"
-]
-
-dependencies = [
-    "numpy",
-    "scipy",
-    "numba",
-    "mne",
-    "pqdm",
-    "joblib",
-    "matplotlib",
-]
+requires-python = ">=3.10"
+version = "1.2.0dev"
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "coverage",
-    "flake8",
-    "black",
-    "codespell",
-    "pycodestyle",
-    "pydocstyle",
-    "sphinx",
-    "numpydoc",
-    "sphinxcontrib-bibtex",
-    "sphinx-gallery",
-    "pydata-sphinx-theme",
-    "notebook",
-    "ipykernel",
-    "ipywidgets",
-    "ipython"
+  "codespell",
+  "coverage",
+  "ipykernel",
+  "ipython",
+  "ipywidgets",
+  "isort",
+  "notebook",
+  "numpydoc",
+  "pydata-sphinx-theme",
+  "pydocstyle",
+  "pydocstyle[toml]",
+  "pytest",
+  "rstcheck",
+  "ruff",
+  "sphinx",
+  "sphinx-gallery",
+  "sphinxcontrib-bibtex",
+  "toml-sort",
+  "yamllint",
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/braindatalab/PyBispectra"
 "Bug Tracker" = "https://github.com/braindatalab/PyBispectra/issues"
+"Homepage" = "https://github.com/braindatalab/PyBispectra"
+
+[tool.codespell]
+ignore-words-list = "trough"
+skip = "./docs/build,./docs/source/auto_examples,./docs/source/refs.bib"
 
 [tool.coverage.run]
 omit = [
-    "tests/*",
-    "__init__.py",
-    "src/pybispectra/utils/_docs.py"
+  "__init__.py",
+  "src/pybispectra/utils/_docs.py",
+  "tests/*",
 ]
 
-[tool.codespell]
-skip = "./docs/build,./docs/source/auto_examples,./docs/source/refs.bib"
-ignore-words-list = "trough"
+[tool.isort]
+profile = "black"
 
 [tool.pydocstyle]
 match-dir = "^(?!(examples|docs|tests)).*"
+
+[tool.rstcheck]
+ignore_directives = [
+  "autoclass",
+  "autofunction",
+  "automodule",
+  "autosummary",
+  "bibliography",
+  "cssclass",
+  "currentmodule",
+  "dropdown",
+  "footbibliography",
+  "glossary",
+  "graphviz",
+  "grid",
+  "highlight",
+  "minigallery",
+  "rst-class",
+  "tab-set",
+  "tabularcolumns",
+  "toctree",
+]
+ignore_messages = "^.*(Unknown target name|Undefined substitution referenced)[^`]*$"
+ignore_roles = [
+  "attr",
+  "class",
+  "doc",
+  "eq",
+  "exc",
+  "file",
+  "footcite",
+  "footcite:t",
+  "func",
+  "gh",
+  "kbd",
+  "meth",
+  "mod",
+  "newcontrib",
+  "pr",
+  "py:mod",
+  "ref",
+  "samp",
+  "term",
+]
+report_level = "WARNING"
+
+[tool.ruff]
+extend-exclude = [
+  "docs",
+  "examples/compute_*.py",
+]
+line-length = 88
+
+[tool.ruff.lint.per-file-ignores]
+"*.py" = ["E203", "E741"]
+"__init__.py" = ["F401"]
+
+[tool.tomlsort]
+all = true
+ignore_case = true
+trailing_comma_inline_array = true

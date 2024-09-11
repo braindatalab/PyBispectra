@@ -1,0 +1,53 @@
+repos:
+  # ruff PyBispectra
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.7
+    hooks:
+      - id: ruff
+        name: ruff lint pybispectra
+        args: ["--fix"]
+        files: ^src/pybispectra/
+
+  # ruff examples
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.7
+    hooks:
+      - id: ruff
+        name: ruff lint examples
+        args: ["--fix"]
+        files: ^examples/
+
+  # codespell
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        additional_dependencies:
+          - tomli
+        files: ^pybispectra/|^docs/|^examples/
+        types_or: [python, rst, inc]
+
+  # yamllint
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--strict, -c, .yamllint.yml]
+
+  # rstcheck
+  - repo: https://github.com/rstcheck/rstcheck.git
+    rev: v6.2.0
+    hooks:
+      - id: rstcheck
+        additional_dependencies:
+          - tomli
+        files: ^docs/.*\.(rst|inc)$
+
+  # toml-sort
+  - repo: https://github.com/pappasam/toml-sort.git
+    rev: v0.23.1
+    hooks:
+      - id: toml-sort-fix
+
+ci:
+  autofix_prs: false

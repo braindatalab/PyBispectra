@@ -23,9 +23,7 @@ class _Precision:
             Precision of data/results. Must be one of "single" or "double".
         """
         if precision not in ["single", "double"]:
-            raise ValueError(
-                "`precision` must be either 'single' or 'double'."
-            )
+            raise ValueError("`precision` must be either 'single' or 'double'.")
 
         if precision == "single":
             self.type = "single"

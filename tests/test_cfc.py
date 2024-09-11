@@ -1,7 +1,7 @@
 """Tests for CFC tools."""
 
-import pytest
 import numpy as np
+import pytest
 
 from pybispectra.cfc import AAC, PAC, PPC
 from pybispectra.data import get_example_data_paths
@@ -49,9 +49,7 @@ def test_error_catch(class_type: str) -> None:
 
     with pytest.raises(
         ValueError,
-        match=(
-            "`data` and `freqs` must contain the same number of frequencies."
-        ),
+        match=("`data` and `freqs` must contain the same number of frequencies."),
     ):
         TestClass(coeffs, freqs[:-1], sampling_freq)
 
@@ -68,16 +66,12 @@ def test_error_catch(class_type: str) -> None:
         match=("Entries of `freqs` must be in ascending order."),
     ):
         TestClass(coeffs, freqs[::-1], sampling_freq)
-    with pytest.raises(
-        ValueError, match="Entries of `freqs` must be evenly spaced."
-    ):
+    with pytest.raises(ValueError, match="Entries of `freqs` must be evenly spaced."):
         bad_freqs = freqs.copy()
         bad_freqs[1] *= 2
         TestClass(coeffs, bad_freqs, sampling_freq)
 
-    with pytest.raises(
-        TypeError, match="`sampling_freq` must be an int or a float."
-    ):
+    with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
         TestClass(coeffs, freqs, None)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
@@ -93,39 +87,27 @@ def test_error_catch(class_type: str) -> None:
             match="`antisym` must be a bool or tuple of bools.",
         ):
             test_class.compute(antisym="true")
-        with pytest.raises(
-            TypeError, match="Entries of `antisym` must be bools."
-        ):
+        with pytest.raises(TypeError, match="Entries of `antisym` must be bools."):
             test_class.compute(antisym=("true",))
 
-        with pytest.raises(
-            TypeError,
-            match="`norm` must be a bool or tuple of bools.",
-        ):
+        with pytest.raises(TypeError, match="`norm` must be a bool or tuple of bools."):
             test_class.compute(norm="true")
-        with pytest.raises(
-            TypeError, match="Entries of `norm` must be bools."
-        ):
+        with pytest.raises(TypeError, match="Entries of `norm` must be bools."):
             test_class.compute(norm=("true",))
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
         test_class.compute(indices=list(indices))
     with pytest.raises(ValueError, match="`indices` must have length of 2."):
         test_class.compute(indices=(0, 1, 2))
-    with pytest.raises(
-        TypeError, match="Entries of `indices` must be tuples."
-    ):
+    with pytest.raises(TypeError, match="Entries of `indices` must be tuples."):
         test_class.compute(indices=(0, 1))
     with pytest.raises(
-        TypeError,
-        match="Entries for seeds and targets in `indices` must be ints.",
+        TypeError, match="Entries for seeds and targets in `indices` must be ints."
     ):
         test_class.compute(indices=((0.0,), (1.0,)))
     with pytest.raises(
         ValueError,
-        match=(
-            "`indices` contains indices for channels not present in the data."
-        ),
+        match=("`indices` contains indices for channels not present in the data."),
     ):
         test_class.compute(indices=((0,), (99,)))
     with pytest.raises(
@@ -137,48 +119,32 @@ def test_error_catch(class_type: str) -> None:
         test_class.compute(f1s=[freqs[0], freqs[-1]])
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
         test_class.compute(f2s=[freqs[0], freqs[-1]])
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of 2."
-    ):
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must have lengths of 2."):
         test_class.compute(f1s=(freqs[0], freqs[1], freqs[-1]))
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of 2."
-    ):
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must have lengths of 2."):
         test_class.compute(f2s=(freqs[0], freqs[1], freqs[-1]))
-    with pytest.raises(
-        ValueError, match="Entries of `f1s` and `f2s` must be >= 0."
-    ):
+    with pytest.raises(ValueError, match="Entries of `f1s` and `f2s` must be >= 0."):
         test_class.compute(f1s=(-1, 10))
-    with pytest.raises(
-        ValueError, match="Entries of `f1s` and `f2s` must be >= 0."
-    ):
+    with pytest.raises(ValueError, match="Entries of `f1s` and `f2s` must be >= 0."):
         test_class.compute(f1s=(10, -1))
-    with pytest.raises(
-        ValueError, match="Entries of `f1s` and `f2s` must be >= 0."
-    ):
+    with pytest.raises(ValueError, match="Entries of `f1s` and `f2s` must be >= 0."):
         test_class.compute(f2s=(-1, 10))
-    with pytest.raises(
-        ValueError, match="Entries of `f1s` and `f2s` must be >= 0."
-    ):
+    with pytest.raises(ValueError, match="Entries of `f1s` and `f2s` must be >= 0."):
         test_class.compute(f2s=(10, -1))
     with pytest.raises(
-        ValueError,
-        match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency.",
+        ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
         test_class.compute(f1s=(5, sampling_freq / 2 + 1))
     with pytest.raises(
-        ValueError,
-        match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency.",
+        ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
         test_class.compute(f1s=(sampling_freq / 2 + 1, 10))
     with pytest.raises(
-        ValueError,
-        match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency.",
+        ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
         test_class.compute(f2s=(5, sampling_freq / 2 + 1))
     with pytest.raises(
-        ValueError,
-        match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency.",
+        ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
         test_class.compute(f2s=(sampling_freq / 2 + 1, 10))
     with pytest.raises(
@@ -214,9 +180,7 @@ def test_pac_runs() -> None:
     sampling_freq = 50
     data = _generate_data(5, n_chans, 100)
 
-    fft, freqs = compute_fft(
-        data=data, sampling_freq=sampling_freq, verbose=False
-    )
+    fft, freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
 
     # check it runs with correct inputs
     pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
@@ -224,8 +188,7 @@ def test_pac_runs() -> None:
 
     # check the returned results have the correct shape
     assert (
-        results.shape == (n_chans**2, len(freqs), len(freqs))
-        for results in pac.results
+        results.shape == (n_chans**2, len(freqs), len(freqs)) for results in pac.results
     )
 
     # check the returned results are of the correct type
@@ -235,10 +198,7 @@ def test_pac_runs() -> None:
         "PAC (antisymmetrised) | Bispectrum",
         "PAC (antisymmetrised) | Bicoherence",
     ]
-    assert (
-        results.name == result_types[i]
-        for i, results in enumerate(pac.results)
-    )
+    assert (results.name == result_types[i] for i, results in enumerate(pac.results))
     assert (isinstance(results, ResultsCFC) for results in pac.results)
 
     pac.compute(antisym=False, norm=False)
@@ -260,15 +220,13 @@ def test_pac_runs() -> None:
     pac.compute(antisym=(False, True), norm=False)
     assert len(pac.results) == 2
     assert (
-        pac.results[i].name == result_types[type_i]
-        for i, type_i in enumerate((0, 2))
+        pac.results[i].name == result_types[type_i] for i, type_i in enumerate((0, 2))
     )
 
     pac.compute(antisym=False, norm=(False, True))
     assert len(pac.results) == 2
     assert (
-        pac.results[i].name == result_types[type_i]
-        for i, type_i in enumerate((0, 3))
+        pac.results[i].name == result_types[type_i] for i, type_i in enumerate((0, 3))
     )
 
     # check it runs with non-exact frequencies
@@ -290,10 +248,9 @@ def test_pac_runs() -> None:
 def test_pac_results():
     """Test that PAC returns the correct results.
 
-    Simulated data with 10-60 Hz PAC is used. Bivariate PAC involves genuine
-    PAC between channels. Univariate PAC contains genuine PAC only within each
-    channel, however this will also appear between channels unless
-    antisymmetrisation is used.
+    Simulated data with 10-60 Hz PAC is used. Bivariate PAC involves genuine PAC between
+    channels. Univariate PAC contains genuine PAC only within each channel, however this
+    will also appear between channels unless antisymmetrisation is used.
     """
     # identify interacting and non-interacting frequencies (10-60 Hz PAC)
     interacting_f1s = np.arange(9, 12)
@@ -314,9 +271,7 @@ def test_pac_results():
 
     # compute FFT
     fft_coeffs, freqs = compute_fft(
-        data=data,
-        sampling_freq=sampling_freq,
-        n_points=sampling_freq,
+        data=data, sampling_freq=sampling_freq, n_points=sampling_freq
     )
 
     # compute PAC
@@ -379,9 +334,7 @@ def test_ppc_runs() -> None:
     sampling_freq = 50
     data = _generate_data(5, n_chans, 100)
 
-    fft, freqs = compute_fft(
-        data=data, sampling_freq=sampling_freq, verbose=False
-    )
+    fft, freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
 
     # check it runs with correct inputs
     ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq)

@@ -1,7 +1,7 @@
 """Tests for TDE tools."""
 
-import pytest
 import numpy as np
+import pytest
 
 from pybispectra.data import get_example_data_paths
 from pybispectra.tde import TDE
@@ -35,22 +35,17 @@ def test_error_catch() -> None:
         TDE(coeffs, freqs.tolist(), sampling_freq)
     with pytest.raises(ValueError, match="`freqs` must be a 1D array."):
         TDE(coeffs, np.random.randn(2, 2), sampling_freq)
-    with pytest.raises(
-        ValueError, match="The first entry of `freqs` must be 0."
-    ):
+    with pytest.raises(ValueError, match="The first entry of `freqs` must be 0."):
         TDE(coeffs[..., 1:], freqs[1:], sampling_freq)
 
     with pytest.raises(
         ValueError,
-        match=(
-            "`data` and `freqs` must contain the same number of frequencies."
-        ),
+        match=("`data` and `freqs` must contain the same number of frequencies."),
     ):
         TDE(coeffs, freqs[:-1], sampling_freq)
 
     with pytest.raises(
-        ValueError,
-        match="At least one entry of `freqs` is > the Nyquist frequency.",
+        ValueError, match="At least one entry of `freqs` is > the Nyquist frequency."
     ):
         bad_freqs = np.linspace(0, sampling_freq / 2 + 1, freqs.size)
         TDE(coeffs, bad_freqs, sampling_freq)
@@ -60,21 +55,15 @@ def test_error_catch() -> None:
     ):
         TDE(
             coeffs,
-            np.hstack(
-                (freqs[: max_freq_i + 1][::-1], freqs[max_freq_i + 1 :])
-            ),
+            np.hstack((freqs[: max_freq_i + 1][::-1], freqs[max_freq_i + 1 :])),
             sampling_freq,
         )
-    with pytest.raises(
-        ValueError, match="Entries of `freqs` must be evenly spaced."
-    ):
+    with pytest.raises(ValueError, match="Entries of `freqs` must be evenly spaced."):
         bad_freqs = freqs.copy()
         bad_freqs[1] *= 2
         TDE(coeffs, bad_freqs, sampling_freq)
 
-    with pytest.raises(
-        TypeError, match="`sampling_freq` must be an int or a float."
-    ):
+    with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
         TDE(coeffs, freqs, None)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
@@ -83,44 +72,31 @@ def test_error_catch() -> None:
     # compute
     tde = TDE(coeffs, freqs, sampling_freq)
 
-    with pytest.raises(
-        TypeError, match="`antisym` must be a bool or tuple of bools."
-    ):
+    with pytest.raises(TypeError, match="`antisym` must be a bool or tuple of bools."):
         tde.compute(antisym="true")
     with pytest.raises(TypeError, match="Entries of `antisym` must be bools."):
         tde.compute(antisym=("true",))
 
-    with pytest.raises(
-        TypeError, match="`method` must be an int or tuple of ints."
-    ):
+    with pytest.raises(TypeError, match="`method` must be an int or tuple of ints."):
         tde.compute(method=0.5)
-    with pytest.raises(
-        ValueError, match="The value of `method` is not recognised."
-    ):
+    with pytest.raises(ValueError, match="The value of `method` is not recognised."):
         tde.compute(method=0)
-    with pytest.raises(
-        ValueError, match="The value of `method` is not recognised."
-    ):
+    with pytest.raises(ValueError, match="The value of `method` is not recognised."):
         tde.compute(method=(1, 5))
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
         tde.compute(indices=list(indices))
     with pytest.raises(ValueError, match="`indices` must have length of 2."):
         tde.compute(indices=(0, 1, 2))
-    with pytest.raises(
-        TypeError, match="Entries of `indices` must be tuples."
-    ):
+    with pytest.raises(TypeError, match="Entries of `indices` must be tuples."):
         tde.compute(indices=(0, 1))
     with pytest.raises(
-        TypeError,
-        match="Entries for seeds and targets in `indices` must be ints.",
+        TypeError, match="Entries for seeds and targets in `indices` must be ints."
     ):
         tde.compute(indices=((0.0,), (1.0,)))
     with pytest.raises(
         ValueError,
-        match=(
-            "`indices` contains indices for channels not present in the data."
-        ),
+        match=("`indices` contains indices for channels not present in the data."),
     ):
         tde.compute(indices=((0,), (99,)))
     with pytest.raises(
@@ -130,19 +106,15 @@ def test_error_catch() -> None:
     with pytest.raises(
         ValueError,
         match=(
-            "Seeds and targets in `indices` must not be the same channel for "
-            "any connection."
+            "Seeds and targets in `indices` must not be the same channel for any "
+            "connection."
         ),
     ):
         tde.compute(indices=((0,), (0,)))
 
-    with pytest.raises(
-        TypeError, match="`fmin` must be an int, float, or tuple."
-    ):
+    with pytest.raises(TypeError, match="`fmin` must be an int, float, or tuple."):
         tde.compute(fmin="0")
-    with pytest.raises(
-        TypeError, match="`fmax` must be an int, float, or tuple."
-    ):
+    with pytest.raises(TypeError, match="`fmax` must be an int, float, or tuple."):
         tde.compute(fmax="10")
     with pytest.raises(
         ValueError, match="`fmin` and `fmax` must have the same length."
@@ -156,18 +128,12 @@ def test_error_catch() -> None:
         tde.compute(fmax=sampling_freq / 2 + 1)
     with pytest.raises(
         ValueError,
-        match=(
-            "At least one entry of `fmin` is > the corresponding entry of "
-            "`fmax`."
-        ),
+        match=("At least one entry of `fmin` is > the corresponding entry of `fmax`."),
     ):
         tde.compute(fmin=(5, 20), fmax=(10, 15))
     with pytest.raises(
         ValueError,
-        match=(
-            r"No frequencies are present in the data for the range \(0.1, "
-            r"0.2\)."
-        ),
+        match=(r"No frequencies are present in the data for the range \(0.1, 0.2\)."),
     ):
         tde.compute(fmin=0.1, fmax=0.2)
 
@@ -177,9 +143,7 @@ def test_error_catch() -> None:
         tde.compute(n_jobs=0)
 
 
-@pytest.mark.parametrize(
-    "freq_bands", [(0, np.inf), (5, 10), ((5, 15), (10, 20))]
-)
+@pytest.mark.parametrize("freq_bands", [(0, np.inf), (5, 10), ((5, 15), (10, 20))])
 def test_tde_runs(freq_bands: tuple) -> None:
     """Test that TDE runs correctly."""
     n_chans = 3
@@ -220,24 +184,14 @@ def test_tde_runs(freq_bands: tuple) -> None:
         "TDE (antisymmetrised) | Method III",
         "TDE (antisymmetrised) | Method IV",
     ]
-    assert (
-        results.name == result_types[i]
-        for i, results in enumerate(tde.results)
-    )
+    assert (results.name == result_types[i] for i, results in enumerate(tde.results))
     assert (isinstance(results, ResultsTDE) for results in tde.results)
 
-    for antisym_arg, symmetrise_name in zip(
-        [False, True], ["", "(antisymmetrised) "]
-    ):
-        for method_arg, method_name in zip(
-            [1, 2, 3, 4], ["I", "II", "III", "IV"]
-        ):
+    for antisym_arg, symmetrise_name in zip([False, True], ["", "(antisymmetrised) "]):
+        for method_arg, method_name in zip([1, 2, 3, 4], ["I", "II", "III", "IV"]):
             tde.compute(antisym=antisym_arg, method=method_arg)
             assert isinstance(tde.results, ResultsTDE)
-            assert (
-                tde.results.name
-                == f"TDE {symmetrise_name}| Method {method_name}"
-            )
+            assert tde.results.name == f"TDE {symmetrise_name}| Method {method_name}"
 
     # test it runs with parallelisation
     tde.compute(n_jobs=2)
@@ -255,10 +209,9 @@ def test_tde_runs(freq_bands: tuple) -> None:
 def test_tde_results():
     """Test that TDE returns the correct results.
 
-    Simulated data with a 250 ms delay between channels is used. In the case
-    that noise is correlated between channels, spurious TDE will be detected at
-    0 ms, which should be corrected for using antisymmetrisation to reveal the
-    true delay of 250 ms.
+    Simulated data with a 250 ms delay between channels is used. In the case that noise
+    is correlated between channels, spurious TDE will be detected at 0 ms, which should
+    be corrected for using antisymmetrisation to reveal the true delay of 250 ms.
     """
     tau = 250.0  # ms
 

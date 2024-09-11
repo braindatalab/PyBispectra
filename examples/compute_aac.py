@@ -11,7 +11,7 @@ computed with PyBispectra.
 
 import numpy as np
 
-from pybispectra import compute_tfr, get_example_data_paths, AAC
+from pybispectra import AAC, compute_tfr, get_example_data_paths
 
 ###############################################################################
 # Background

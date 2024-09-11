@@ -3,15 +3,10 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
-from matplotlib.figure import Figure
 import numpy as np
+from matplotlib.figure import Figure
 
-from pybispectra.utils._plot import (
-    _PlotCFC,
-    _PlotTDE,
-    _PlotWaveShape,
-    _PlotGeneral,
-)
+from pybispectra.utils._plot import _PlotCFC, _PlotGeneral, _PlotTDE, _PlotWaveShape
 
 
 class _ResultsBase(ABC):
@@ -73,8 +68,7 @@ class _ResultsBase(ABC):
                 raise TypeError("Entries of `indices` must be tuples.")
             if any(not isinstance(idx, int) for idx in group_idcs):
                 raise TypeError(
-                    "Entries for seeds and targets in `indices` must be "
-                    "ints."
+                    "Entries for seeds and targets in `indices` must be ints."
                 )
         if len(seeds) != len(targets):
             raise ValueError("Entries of `indices` must have equal length.")
@@ -82,8 +76,7 @@ class _ResultsBase(ABC):
         for group_idcs in (seeds, targets):
             if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
                 raise ValueError(
-                    "`indices` contains indices for nodes not present in "
-                    "the data."
+                    "`indices` contains indices for nodes not present in the data."
                 )
         self._seeds = deepcopy(seeds)
         self._targets = deepcopy(targets)
@@ -99,8 +92,7 @@ class _ResultsBase(ABC):
         self._n_chans = len(np.unique(indices))
         if any(idx < 0 or idx >= self._n_chans for idx in indices):
             raise ValueError(
-                "`indices` contains indices for channels not present in "
-                "the data."
+                "`indices` contains indices for channels not present in the data."
             )
         self.n_nodes = len(indices)
         self.indices = deepcopy(indices)
@@ -116,17 +108,14 @@ class _ResultsBase(ABC):
             if not isinstance(group_idcs, tuple):
                 raise TypeError("Entries of `indices` must be tuples.")
             if any(not isinstance(idx, int) for idx in group_idcs):
-                raise TypeError(
-                    "Entries for groups in `indices` must be ints."
-                )
+                raise TypeError("Entries for groups in `indices` must be ints.")
         if len(np.unique([len(group) for group in indices])) != 1:
             raise ValueError("Entries of `indices` must have equal length.")
         self._n_chans = len(np.unique(np.ravel(indices)))
         for group_idcs in indices:
             if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
                 raise ValueError(
-                    "`indices` contains indices for nodes not present in "
-                    "the data."
+                    "`indices` contains indices for nodes not present in the data."
                 )
         self.n_nodes = len(indices[0])
         self.indices = deepcopy(indices)
@@ -139,10 +128,10 @@ class _ResultsBase(ABC):
         Parameters
         ----------
         form : str (default ``"raveled"``)
-            How the results should be returned: ``"raveled"`` - results have
-            shape `[nodes, ...]`; ``"compact"`` - results have shape
-            ``[seeds, targets, ...]``, where ``...`` represents the data
-            dimensions (e.g. frequencies, times).
+            How the results should be returned: ``"raveled"`` - results have shape
+            `[nodes, ...]`; ``"compact"`` - results have shape ``[seeds, targets,
+            ...]``, where ``...`` represents the data dimensions (e.g. frequencies,
+            times).
 
         Returns
         -------
@@ -150,8 +139,8 @@ class _ResultsBase(ABC):
             The results.
 
         indices : tuple of tuple of int, length of 2
-            Channel indices of the seeds and targets. Only returned if
-            :attr:`form` is ``"compact"``.
+            Channel indices of the seeds and targets. Only returned if :attr:`form` is
+            ``"compact"``.
         """
         accepted_forms = ["raveled", "compact"]
         if form not in accepted_forms:
@@ -172,22 +161,20 @@ class _ResultsBase(ABC):
         Parameters
         ----------
         compact_results : numpy.ndarray
-            Empty results array with shape ``[seeds, targets, ...]``, where
-            ``...`` represents the data dimensions (e.g. frequencies, times).
+            Empty results array with shape ``[seeds, targets, ...]``, where ``...``
+            represents the data dimensions (e.g. frequencies, times).
 
         Returns
         -------
         compact_results : numpy.ndarray
-            Results array with shape ``[seeds, targets, ...]``, where ``...``
-            represents the data dimensions (e.g. frequencies, times).
+            Results array with shape ``[seeds, targets, ...]``, where ``...`` represents
+            the data dimensions (e.g. frequencies, times).
 
         indices : tuple of tuple of int
             Channel indices of ``compact_results`` for the seeds and targets,
             respectively.
         """
-        for con_result, seed, target in zip(
-            self._data, self._seeds, self._targets
-        ):
+        for con_result, seed, target in zip(self._data, self._seeds, self._targets):
             compact_results[seed, target] = con_result
 
         # remove empty rows and cols
@@ -218,9 +205,8 @@ class ResultsCFC(_ResultsBase):
         Results to store.
 
     indices : tuple of tuple of int, length of 2
-        Indices of the channels for each connection of the results. Should
-        contain two tuples of equal length for the seed and target indices,
-        respectively.
+        Indices of the channels for each connection of the results. Should contain two
+        tuples of equal length for the seed and target indices, respectively.
 
     f1s : ~numpy.ndarray, shape of [low frequencies]
         Low frequencies (in Hz) in the results.
@@ -245,9 +231,8 @@ class ResultsCFC(_ResultsBase):
         Name of the results.
 
     indices : tuple of tuple of int, length of 2
-        Indices of the channels for each connection of the results. Should
-        contain two tuples of equal length for the seed and target indices,
-        respectively.
+        Indices of the channels for each connection of the results. Should contain two
+        tuples of equal length for the seed and target indices, respectively.
 
     shape : tuple of int
         Shape of the results i.e. [nodes, low frequencies, high frequencies].
@@ -265,8 +250,8 @@ class ResultsCFC(_ResultsBase):
     def __repr__(self) -> str:
         """Return printable representation of the object."""
         return repr(
-            f"<Result: {self.name} | [{self.n_nodes} nodes, "
-            f"{len(self.f1s)} f1s, {len(self.f2s)} f2s]>"
+            f"<Result: {self.name} | [{self.n_nodes} nodes, {len(self.f1s)} f1s, "
+            f"{len(self.f2s)} f2s]>"
         )
 
     def __init__(
@@ -289,18 +274,13 @@ class ResultsCFC(_ResultsBase):
         )
 
     def _sort_init_inputs(
-        self,
-        indices: tuple[tuple[int]],
-        f1s: np.ndarray,
-        f2s: np.ndarray,
+        self, indices: tuple[tuple[int]], f1s: np.ndarray, f2s: np.ndarray
     ) -> None:
         """Sort inputs to the object."""
         super()._sort_indices_seeds_targets(indices)
         super()._sort_freq_inputs(f1s, f2s)
 
-    def _get_compact_results_child(
-        self,
-    ) -> tuple[np.ndarray, tuple[tuple[int]]]:
+    def _get_compact_results_child(self) -> tuple[np.ndarray, tuple[tuple[int]]]:
         """Return a compacted form of the results.
 
         Returns
@@ -313,12 +293,7 @@ class ResultsCFC(_ResultsBase):
             respectively.
         """
         compact_results = np.full(
-            (
-                self._n_chans,
-                self._n_chans,
-                self.f1s.shape[0],
-                self.f2s.shape[0],
-            ),
+            (self._n_chans, self._n_chans, self.f1s.shape[0], self.f2s.shape[0]),
             fill_value=np.full(
                 (self.f1s.shape[0], self.f2s.shape[0]), fill_value=np.nan
             ),
@@ -343,16 +318,15 @@ class ResultsCFC(_ResultsBase):
         Parameters
         ----------
         nodes : int | tuple of int | None (default None)
-            Indices of connections to plot. If :obj:`None`, plot all
-            connections.
+            Indices of connections to plot. If :obj:`None`, plot all connections.
 
         f1s : tuple of int or float | None (default None)
-            Start and end low frequencies of the results to plot, respectively.
-            If :obj:`None`, all low frequencies are plotted.
+            Start and end low frequencies of the results to plot, respectively. If
+            :obj:`None`, all low frequencies are plotted.
 
         f2s : tuple of int or float | None (default None)
-            Start and end high frequencies of the results to plot,
-            respectively. If :obj:`None`, all high frequencies are plotted.
+            Start and end high frequencies of the results to plot, respectively. If
+            :obj:`None`, all high frequencies are plotted.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -361,19 +335,18 @@ class ResultsCFC(_ResultsBase):
             Number of columns of subplots per figure.
 
         major_tick_intervals : int | float (default ``5.0``)
-            Intervals (in Hz) at which the major ticks of the x- and y-axes
-            should occur.
+            Intervals (in Hz) at which the major ticks of the x- and y-axes should
+            occur.
 
         minor_tick_intervals : int | float (default ``1.0``)
-            Intervals (in Hz) at which the minor ticks of the x- and y-axes
-            should occur.
+            Intervals (in Hz) at which the minor ticks of the x- and y-axes should
+            occur.
 
         cbar_range : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars, consisting of the
-            lower and upper limits, respectively. If :obj:`None`, the range is
-            computed automatically. If a tuple of float, this range is used for
-            all plots. If a list of tuple of float, the ranges are used for
-            each individual plot.
+            Range (in units of the data) for the colourbars, consisting of the lower and
+            upper limits, respectively. If :obj:`None`, the range is computed
+            automatically. If a tuple of float, this range is used for all plots. If a
+            list of tuple of float, the ranges are used for each individual plot.
 
         show : bool (default True)
             Whether or not to show the plotted results.
@@ -381,19 +354,19 @@ class ResultsCFC(_ResultsBase):
         Returns
         -------
         figures : list of matplotlib Figure
-            Figures of the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))``.
+            Figures of the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))``.
 
         axes : list of ~numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            ``numpy.ndarray`` of length ``(n_rows * n_cols)``.
+            Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
+            n_cols)``.
 
         Notes
         -----
-        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for
-        each connection on a new figure.
-        """  # noqa: E501
+        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for each
+        connection on a new figure.
+        """
         figures, axes = self._plotting.plot(
             nodes=nodes,
             f1s=f1s,
@@ -478,13 +451,12 @@ class ResultsTDE(_ResultsBase):
 
         if self.freq_bands is not None:
             repr_ += (
-                f"{np.min(self.freq_bands):.2f} - "
-                f"{np.max(self.freq_bands):.2f} Hz | "
+                f"{np.min(self.freq_bands):.2f} - {np.max(self.freq_bands):.2f} Hz | "
             )
 
         repr_ += (
-            f"[{self.n_nodes} nodes, {self._n_fbands} frequency bands, "
-            f"{self._n_times} times]>"
+            f"[{self.n_nodes} nodes, {self._n_fbands} frequency bands, {self._n_times} "
+            "times]>"
         )
 
         return repr_
@@ -522,14 +494,8 @@ class ResultsTDE(_ResultsBase):
         self._sort_times(times)
         self._sort_freq_bands(freq_bands)
 
-        if self._data.shape != (
-            self.n_nodes,
-            self._n_fbands,
-            times.shape[0],
-        ):
-            raise ValueError(
-                "`data` must have shape [nodes, frequency bands, times]."
-            )
+        if self._data.shape != (self.n_nodes, self._n_fbands, times.shape[0]):
+            raise ValueError("`data` must have shape [nodes, frequency bands, times].")
 
     def _sort_times(self, times: np.ndarray) -> None:
         """Sort `times` input."""
@@ -548,14 +514,12 @@ class ResultsTDE(_ResultsBase):
                 raise TypeError("`freq_bands` must be a tuple.")
             if len(freq_bands) != self._data.shape[1]:
                 raise ValueError(
-                    "`freq_bands` must the same length as the number of "
-                    "frequency bands in the results."
+                    "`freq_bands` must the same length as the number of frequency "
+                    "bands in the results."
                 )
             for freq_band in freq_bands:
                 if not isinstance(freq_band, tuple):
-                    raise TypeError(
-                        "Each entry of `freq_bands` must be a tuple."
-                    )
+                    raise TypeError("Each entry of `freq_bands` must be a tuple.")
                 if len(freq_band) != 2:
                     raise ValueError(
                         "Each entry of `freq_bands` must have length of 2."
@@ -566,9 +530,7 @@ class ResultsTDE(_ResultsBase):
         else:
             self._n_fbands = self._data.shape[1]
 
-    def _get_compact_results_child(
-        self,
-    ) -> tuple[np.ndarray, tuple[np.ndarray]]:
+    def _get_compact_results_child(self) -> tuple[np.ndarray, tuple[np.ndarray]]:
         """Return a compacted form of the results.
 
         Returns
@@ -581,12 +543,7 @@ class ResultsTDE(_ResultsBase):
             respectively.
         """
         compact_results = np.full(
-            (
-                self._n_chans,
-                self._n_chans,
-                self._n_fbands,
-                self.times.shape[0],
-            ),
+            (self._n_chans, self._n_chans, self._n_fbands, self.times.shape[0]),
             fill_value=np.full(
                 (self._n_fbands, self.times.shape[0]), fill_value=np.nan
             ),
@@ -610,16 +567,14 @@ class ResultsTDE(_ResultsBase):
         Parameters
         ----------
         nodes : int | tuple of int | None (default None)
-            Indices of connections to plot. If :obj:`None`, all connections are
-            plotted.
+            Indices of connections to plot. If :obj:`None`, all connections are plotted.
 
         freq_bands : int | tuple of int | None (default None)
-            Indices of frequency bands to plot. If :obj:`None`, all frequency
-            bands are plotted.
+            Indices of frequency bands to plot. If :obj:`None`, all frequency bands are
+            plotted.
 
         times : tuple of int or float | None (default None)
-            Start and end times of the results to plot. If :obj:`None`, plot
-            all times.
+            Start and end times of the results to plot. If :obj:`None`, plot all times.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -628,12 +583,12 @@ class ResultsTDE(_ResultsBase):
             Number of columns of subplots per figure.
 
         major_tick_intervals : int | float (default ``500.0``)
-            Intervals (in ms) at which the major ticks of the x- and y-axes
-            should occur.
+            Intervals (in ms) at which the major ticks of the x- and y-axes should
+            occur.
 
         minor_tick_intervals : int | float (default ``100.0``)
-            Intervals (in ms) at which the minor ticks of the x- and y-axes
-            should occur.
+            Intervals (in ms) at which the minor ticks of the x- and y-axes should
+            occur.
 
         show : bool (default True)
             Whether or not to show the plotted results.
@@ -641,18 +596,18 @@ class ResultsTDE(_ResultsBase):
         Returns
         -------
         figures : list of matplotlib Figure
-            Figures of the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))``.
+            Figures of the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))``.
 
         axes : list of ~numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            :obj:`~numpy.ndarray` of length ``(n_rows * n_cols)``.
+            Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))`` where each entry is a 1D :obj:`~numpy.ndarray` of length
+            ``(n_rows * n_cols)``.
 
         Notes
         -----
-        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for
-        each connection on a new figure.
+        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for each
+        connection on a new figure.
         """
         figures, axes = self._plotting.plot(
             nodes=nodes,
@@ -732,8 +687,8 @@ class ResultsWaveShape(_ResultsBase):
     def __repr__(self) -> str:
         """Return printable representation of the object."""
         return repr(
-            f"<Result: {self.name} | [{self.n_nodes} nodes, "
-            f"{len(self.f1s)} f1s, {len(self.f2s)} f2s]>"
+            f"<Result: {self.name} | [{self.n_nodes} nodes, {len(self.f1s)} f1s, "
+            f"{len(self.f2s)} f2s]>"
         )
 
     def __init__(
@@ -769,7 +724,7 @@ class ResultsWaveShape(_ResultsBase):
         -------
         results : ~numpy.ndarray, shape of [nodes, low frequencies, high frequencies]
             The results.
-        """  # noqa: E501
+        """
         return self._data.copy()
 
     def plot(
@@ -794,16 +749,16 @@ class ResultsWaveShape(_ResultsBase):
         Parameters
         ----------
         nodes : int | tuple of int | None (default None)
-            Indices of results of channels to plot. If :obj:`None`, plot
-            results of all channels.
+            Indices of results of channels to plot. If :obj:`None`, plot results of all
+            channels.
 
         f1s : tuple of int or float | None (default None)
-            Start and end low frequencies of the results to plot, respectively.
-            If :obj:`None`, plot all low frequencies.
+            Start and end low frequencies of the results to plot, respectively. If
+            :obj:`None`, plot all low frequencies.
 
         f2s : tuple of int or float | None (default None)
-            Start and end high frequencies of the results to plot,
-            respectively. If :obj:`None`, plot all high frequencies.
+            Start and end high frequencies of the results to plot, respectively. If
+            :obj:`None`, plot all high frequencies.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -812,51 +767,49 @@ class ResultsWaveShape(_ResultsBase):
             Number of columns of subplots per figure.
 
         major_tick_intervals : int | float (default ``5.0``)
-            Intervals (in Hz) at which the major ticks of the x- and y-axes
-            should occur.
+            Intervals (in Hz) at which the major ticks of the x- and y-axes should
+            occur.
 
         minor_tick_intervals : int | float (default ``1.0``)
-            Intervals (in Hz) at which the minor ticks of the x- and y-axes
-            should occur.
+            Intervals (in Hz) at which the minor ticks of the x- and y-axes should
+            occur.
 
         plot_absolute : bool (default False)
-            Whether or not to plot the absolute values of the real and
-            imaginary parts of the results.
+            Whether or not to plot the absolute values of the real and imaginary parts
+            of the results.
 
         mirror_cbar_range : bool (default True)
-            Whether of not to mirror the colourbar ranges of the real and
-            imaginary results around 0. Only applied if ``plot_absolute`` is
-            :obj:`False`, and ``cbar_range_real`` and ``cbar_range_imag`` are
-            not :obj:`None`.
+            Whether of not to mirror the colourbar ranges of the real and imaginary
+            results around 0. Only applied if ``plot_absolute`` is :obj:`False`, and
+            ``cbar_range_real`` and ``cbar_range_imag`` are not :obj:`None`.
 
         cbar_range_abs : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the absolute
-            value of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
+            Range (in units of the data) for the colourbars of the absolute value of the
+            results, consisting of the lower and upper limits, respectively. If
+            :obj:`None`, the range is computed automatically. If a tuple of float, this
+            range is used for all plots. If a tuple of tuple of float, the ranges are
+            used for each individual plot.
 
         cbar_range_real : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the real value
-            of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
+            Range (in units of the data) for the colourbars of the real value of the
+            results, consisting of the lower and upper limits, respectively. If
+            :obj:`None`, the range is computed automatically. If a tuple of float, this
+            range is used for all plots. If a tuple of tuple of float, the ranges are
+            used for each individual plot.
 
         cbar_range_imag : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the imaginary
-            value of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
+            Range (in units of the data) for the colourbars of the imaginary value of
+            the results, consisting of the lower and upper limits, respectively. If
+            :obj:`None`, the range is computed automatically. If a tuple of float, this
+            range is used for all plots. If a tuple of tuple of float, the ranges are
+            used for each individual plot.
 
         cbar_range_phase : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the phase of the
-            results, consisting of the lower and upper limits, respectively. If
-            :obj:`None`, the range is computed automatically. If a tuple of
-            float, this range is used for all plots. If a tuple of tuple of
-            float, the ranges are used for each individual plot. Note that
-            results are limited to the range (-pi, pi].
+            Range (in units of the data) for the colourbars of the phase of the results,
+            consisting of the lower and upper limits, respectively. If :obj:`None`, the
+            range is computed automatically. If a tuple of float, this range is used for
+            all plots. If a tuple of tuple of float, the ranges are used for each
+            individual plot. Note that results are limited to the range (-pi, pi].
 
         show : bool (default True)
             Whether or not to show the plotted results.
@@ -864,22 +817,21 @@ class ResultsWaveShape(_ResultsBase):
         Returns
         -------
         figures : list of matplotlib Figure
-            Figures of the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))``.
+            Figures of the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))``.
 
         axes : list of ~numpy.ndarray of ~numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            :obj:`~numpy.ndarray` of length ``(n_rows * n_cols)``, whose
-            entries are themselves 1D :obj:`~numpy.ndarray` of length 4,
-            corresponding to the absolute, real, imaginary, and phase plots,
-            respectively.
+            Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))`` where each entry is a 1D :obj:`~numpy.ndarray` of length
+            ``(n_rows * n_cols)``, whose entries are themselves 1D :obj:`~numpy.ndarray`
+            of length 4, corresponding to the absolute, real, imaginary, and phase
+            plots, respectively.
 
         Notes
         -----
-        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for
-        each node on a new figure.
-        """  # noqa: E501
+        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for each node
+        on a new figure.
+        """
         figures, axes = self._plotting.plot(
             nodes=nodes,
             f1s=f1s,
@@ -909,9 +861,8 @@ class ResultsGeneral(_ResultsBase):
         Results to store.
 
     indices : tuple of tuple of int, length of 3
-        Indices of the channels for each combination of the results. Should
-        contain three tuples of equal length for the k, m, and n channel
-        indices, respectively.
+        Indices of the channels for each combination of the results. Should contain
+        three tuples of equal length for the k, m, and n channel indices, respectively.
 
     f1s : ~numpy.ndarray, shape of [low frequencies]
         Low frequencies (in Hz) in the results.
@@ -936,9 +887,8 @@ class ResultsGeneral(_ResultsBase):
         Name of the results.
 
     indices : tuple of tuple of int, length of 2
-        Indices of the channels for each connection of the results. Should
-        contain two tuples of equal length for the seed and target indices,
-        respectively.
+        Indices of the channels for each connection of the results. Should contain two
+        tuples of equal length for the seed and target indices, respectively.
 
     shape : tuple of int
         Shape of the results i.e. [nodes, low frequencies, high frequencies].
@@ -956,8 +906,8 @@ class ResultsGeneral(_ResultsBase):
     def __repr__(self) -> str:
         """Return printable representation of the object."""
         return repr(
-            f"<Result: {self.name} | [{self.n_nodes} nodes, "
-            f"{len(self.f1s)} f1s, {len(self.f2s)} f2s]>"
+            f"<Result: {self.name} | [{self.n_nodes} nodes, {len(self.f1s)} f1s, "
+            f"{len(self.f2s)} f2s]>"
         )
 
     def __init__(
@@ -980,10 +930,7 @@ class ResultsGeneral(_ResultsBase):
         )
 
     def _sort_init_inputs(
-        self,
-        indices: tuple[tuple[int]],
-        f1s: np.ndarray,
-        f2s: np.ndarray,
+        self, indices: tuple[tuple[int]], f1s: np.ndarray, f2s: np.ndarray
     ) -> None:
         """Sort inputs to the object."""
         super()._sort_indices_kmn(indices)
@@ -997,10 +944,9 @@ class ResultsGeneral(_ResultsBase):
         Parameters
         ----------
         form : str (default ``"raveled"``)
-            How the results should be returned: ``"raveled"`` - results have
-            shape `[nodes, ...]`; ``"compact"`` - results have shape
-            ``[k, m, n, ...]``, where ``...`` represents the data dimensions
-            (e.g. frequencies, times).
+            How the results should be returned: ``"raveled"`` - results have shape
+            `[nodes, ...]`; ``"compact"`` - results have shape ``[k, m, n, ...]``,where
+            ``...`` represents the data dimensions (e.g. frequencies, times).
 
         Returns
         -------
@@ -1008,8 +954,8 @@ class ResultsGeneral(_ResultsBase):
             The results.
 
         indices : tuple of tuple of int, length of 3
-            Channel indices of the k, m, and n channels. Only returned if
-            :attr:`form` is ``"compact"``.
+            Channel indices of the k, m, and n channels. Only returned if :attr:`form`
+            is ``"compact"``.
         """
         accepted_forms = ["raveled", "compact"]
         if form not in accepted_forms:
@@ -1030,8 +976,8 @@ class ResultsGeneral(_ResultsBase):
             Results with shape ``[k, m, n, f1s, f2s]``.
 
         indices : tuple of tuple of int, length of 3
-            Channel indices of ``compact_results`` for the k, m, and n
-            channels, respectively.
+            Channel indices of ``compact_results`` for the k, m, and n channels,
+            respectively.
         """
         compact_results = np.full(
             (
@@ -1063,10 +1009,7 @@ class ResultsGeneral(_ResultsBase):
         compact_results = compact_results[np.ix_(filled_rows, filled_cols)]
 
         indices = tuple(
-            [
-                tuple(np.unique(group_idcs).tolist())
-                for group_idcs in self.indices
-            ]
+            tuple(np.unique(group_idcs).tolist()) for group_idcs in self.indices
         )
 
         return compact_results.copy(), indices
@@ -1093,16 +1036,16 @@ class ResultsGeneral(_ResultsBase):
         Parameters
         ----------
         nodes : int | tuple of int | None (default None)
-            Indices of results of channels to plot. If :obj:`None`, plot
-            results of all channels.
+            Indices of results of channels to plot. If :obj:`None`, plot results of all
+            channels.
 
         f1s : tuple of int or float | None (default None)
-            Start and end low frequencies of the results to plot, respectively.
-            If :obj:`None`, plot all low frequencies.
+            Start and end low frequencies of the results to plot, respectively. If
+            :obj:`None`, plot all low frequencies.
 
         f2s : tuple of int or float | None (default None)
-            Start and end high frequencies of the results to plot,
-            respectively. If :obj:`None`, plot all high frequencies.
+            Start and end high frequencies of the results to plot, respectively. If
+            :obj:`None`, plot all high frequencies.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -1111,51 +1054,49 @@ class ResultsGeneral(_ResultsBase):
             Number of columns of subplots per figure.
 
         major_tick_intervals : int | float (default ``5.0``)
-            Intervals (in Hz) at which the major ticks of the x- and y-axes
-            should occur.
+            Intervals (in Hz) at which the major ticks of the x- and y-axes should
+            occur.
 
         minor_tick_intervals : int | float (default ``1.0``)
-            Intervals (in Hz) at which the minor ticks of the x- and y-axes
-            should occur.
+            Intervals (in Hz) at which the minor ticks of the x- and y-axes should
+            occur.
 
         plot_absolute : bool (default False)
-            Whether or not to plot the absolute values of the real and
-            imaginary parts of the results.
+            Whether or not to plot the absolute values of the real and imaginary parts
+            of the results.
 
         mirror_cbar_range : bool (default True)
-            Whether of not to mirror the colourbar ranges of the real and
-            imaginary results around 0. Only applied if ``plot_absolute`` is
-            :obj:`False`, and ``cbar_range_real`` and ``cbar_range_imag`` are
-            not :obj:`None`.
+            Whether of not to mirror the colourbar ranges of the real and imaginary
+            results around 0. Only applied if ``plot_absolute`` is :obj:`False`, and
+            ``cbar_range_real`` and ``cbar_range_imag`` are not :obj:`None`.
 
         cbar_range_abs : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the absolute
-            value of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
+            Range (in units of the data) for the colourbars of the absolute value of the
+            results, consisting of the lower and upper limits, respectively. If
+            :obj:`None`, the range is computed automatically. If a tuple of float, this
+            range is used for all plots. If a tuple of tuple of float, the ranges are
+            used for each individual plot.
 
         cbar_range_real : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the real value
-            of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
+            Range (in units of the data) for the colourbars of the real value of the
+            results, consisting of the lower and upper limits, respectively. If
+            :obj:`None`, the range is computed automatically. If a tuple of float, this
+            range is used for all plots. If a tuple of tuple of float, the ranges are
+            used for each individual plot.
 
         cbar_range_imag : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the imaginary
-            value of the results, consisting of the lower and upper limits,
-            respectively. If :obj:`None`, the range is computed automatically.
-            If a tuple of float, this range is used for all plots. If a tuple
-            of tuple of float, the ranges are used for each individual plot.
+            Range (in units of the data) for the colourbars of the imaginary value of
+            the results, consisting of the lower and upper limits, respectively. If
+            :obj:`None`, the range is computed automatically. If a tuple of float, this
+            range is used for all plots. If a tuple of tuple of float, the ranges are
+            used for each individual plot.
 
         cbar_range_phase : tuple of float | list of tuple of float | None (default None)
-            Range (in units of the data) for the colourbars of the phase of the
-            results, consisting of the lower and upper limits, respectively. If
-            :obj:`None`, the range is computed automatically. If a tuple of
-            float, this range is used for all plots. If a tuple of tuple of
-            float, the ranges are used for each individual plot. Note that
-            results are limited to the range (-pi, pi].
+            Range (in units of the data) for the colourbars of the phase of the results,
+            consisting of the lower and upper limits, respectively. If :obj:`None`, the
+            range is computed automatically. If a tuple of float, this range is used for
+            all plots. If a tuple of tuple of float, the ranges are used for each
+            individual plot. Note that results are limited to the range (-pi, pi].
 
         show : bool (default True)
             Whether or not to show the plotted results.
@@ -1163,21 +1104,20 @@ class ResultsGeneral(_ResultsBase):
         Returns
         -------
         figures : list of matplotlib Figure
-            Figures of the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))``.
+            Figures of the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))``.
 
         axes : list of ~numpy.ndarray of ~numpy.ndarray of matplotlib pyplot Axes
-            Subplot axes for the results in a list of length
-            ``ceil(n_nodes / (n_rows * n_cols))`` where each entry is a 1D
-            :obj:`~numpy.ndarray` of length ``(n_rows * n_cols)``, whose
-            entries are themselves 1D :obj:`~numpy.ndarray` of length 4,
-            corresponding to the absolute, real, imaginary, and phase plots,
-            respectively.
+            Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
+            n_cols))`` where each entry is a 1D :obj:`~numpy.ndarray` of length
+            ``(n_rows * n_cols)``, whose entries are themselves 1D
+            :obj:`~numpy.ndarray` of length 4, corresponding to the absolute, real,
+            imaginary, and phase plots, respectively.
 
         Notes
         -----
-        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for
-        each node on a new figure.
+        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for each node
+        on a new figure.
         """  # noqa: E501
         figures, axes = self._plotting.plot(
             nodes=nodes,

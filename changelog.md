@@ -11,7 +11,7 @@
 ##### Documentation
 - Added a new example for computing the bispectrum and threenorm using the general classes.
 
-## [Version 1.1.0](https://pybispectra.readthedocs.io/en/main/)
+## [Version 1.1.0](https://pybispectra.readthedocs.io/en/1.1.0/)
 
 ##### Enhancements
 - Reduced the memory requirement of bispectrum computations.

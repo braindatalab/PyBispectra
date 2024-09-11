@@ -3,18 +3,18 @@
 __version__ = "1.2.0dev"
 
 from .cfc import AAC, PAC, PPC
-from .tde import TDE
-from .waveshape import WaveShape
+from .data import get_example_data_paths
 from .general import Bispectrum, Threenorm
+from .tde import TDE
 from .utils import (
     ResultsCFC,
+    ResultsGeneral,
     ResultsTDE,
     ResultsWaveShape,
-    ResultsGeneral,
     SpatioSpectralFilter,
     compute_fft,
-    compute_tfr,
     compute_rank,
+    compute_tfr,
     set_precision,
 )
-from .data import get_example_data_paths
+from .waveshape import WaveShape

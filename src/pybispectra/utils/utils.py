@@ -4,10 +4,10 @@ from multiprocessing import cpu_count
 from typing import Callable
 from warnings import warn
 
-from mne import time_frequency
 import numpy as np
-from pqdm.processes import pqdm
 import scipy as sp
+from mne import time_frequency
+from pqdm.processes import pqdm
 
 from pybispectra.utils._defaults import _precision
 
@@ -22,8 +22,8 @@ def compute_fft(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute the fast Fourier transform (FFT) on real-valued data.
 
-    As the data is assumed to be real-valued, only those values corresponding
-    to the positive frequencies are returned.
+    As the data is assumed to be real-valued, only those values corresponding to the
+    positive frequencies are returned.
 
     Parameters
     ----------
@@ -34,19 +34,18 @@ def compute_fft(
         Sampling frequency (in Hz) of :attr:`data`.
 
     n_points : int | None (default None)
-        Number of points to use in the FFT. If :obj:`None`, is equal to the
-        number of timepoints in :attr:`data`. For time delay estimation, it is
-        recommended that :attr:`n_points=2 * n_times + 1`, where `n_times` is
-        the number of timepoints in each epoch of :attr:`data`.
+        Number of points to use in the FFT. If :obj:`None`, is equal to the number of
+        timepoints in :attr:`data`. For time delay estimation, it is recommended that
+        :attr:`n_points=2 * n_times + 1`, where `n_times` is the number of timepoints in
+        each epoch of :attr:`data`.
 
     window : str (default ``"hanning"``)
-        Type of window to apply to :attr:`data` before computing the FFT.
-        Accepts ``"hanning"`` and ``"hamming"``. See :func:`numpy.hanning` and
+        Type of window to apply to :attr:`data` before computing the FFT. Accepts
+        ``"hanning"`` and ``"hamming"``. See :func:`numpy.hanning` and
         :func:`numpy.hamming`.
 
     n_jobs : int (default ``1``)
-        Number of jobs to run in parallel. If ``-1``, all available CPUs are
-        used.
+        Number of jobs to run in parallel. If ``-1``, all available CPUs are used.
 
     verbose : bool (default True)
         Whether or not to report the status of the processing.
@@ -59,17 +58,8 @@ def compute_fft(
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`coeffs`.
     """
-    (
-        n_points,
-        window_func,
-        n_jobs,
-    ) = _compute_fft_input_checks(
-        data,
-        sampling_freq,
-        n_points,
-        window,
-        n_jobs,
-        verbose,
+    (n_points, window_func, n_jobs) = _compute_fft_input_checks(
+        data, sampling_freq, n_points, window, n_jobs, verbose
     )
 
     if verbose:
@@ -188,18 +178,18 @@ def compute_tfr(
         Frequencies (in Hz) to return the TFR for.
 
     tfr_mode : str (default ``"morlet"``)
-        Mode for computing the TFR. Accepts ``"morlet"`` and ``"multitaper"``.
-        See :func:`mne.time_frequency.tfr_array_morlet` and
+        Mode for computing the TFR. Accepts ``"morlet"`` and ``"multitaper"``. See
+        :func:`mne.time_frequency.tfr_array_morlet` and
         :func:`mne.time_frequency.tfr_array_multitaper`.
 
     n_cycles : ~numpy.ndarray, shape of [frequencies] | int | float (default ``7.0``)
-        Number of cycles in the wavelet when computing the TFR. If an array,
-        the number of cycles is given for each frequency, otherwise a fixed
-        value across all frequencies is used.
+        Number of cycles in the wavelet when computing the TFR. If an array, the number
+        of cycles is given for each frequency, otherwise a fixed value across all
+        frequencies is used.
 
     zero_mean_wavelets : bool | None (default None)
-        Whether or not to use wavelets with a mean of 0. If :obj:`None`, the
-        default argument of :func:`~mne.time_frequency.tfr_array_morlet` and
+        Whether or not to use wavelets with a mean of 0. If :obj:`None`, the default
+        argument of :func:`~mne.time_frequency.tfr_array_morlet` and
         :func:`~mne.time_frequency.tfr_array_multitaper` is used according to
         ``tfr_mode``.
 
@@ -207,14 +197,12 @@ def compute_tfr(
         Whether or not to use the fast Fourier transform for convolutions.
 
     multitaper_time_bandwidth : int | float (default ``4.0``)
-        Product between the temporal window length (in seconds) and the
-        frequency bandwidth (in Hz). Only used if ``tfr_mode = "multitaper"``.
-        See :func:`~mne.time_frequency.tfr_array_multitaper` for more
-        information.
+        Product between the temporal window length (in seconds) and the frequency
+        bandwidth (in Hz). Only used if ``tfr_mode = "multitaper"``. See
+        :func:`~mne.time_frequency.tfr_array_multitaper` for more information.
 
     n_jobs : int (default ``1``)
-        Number of jobs to run in parallel. If ``-1``, all available CPUs are
-        used.
+        Number of jobs to run in parallel. If ``-1``, all available CPUs are used.
 
     verbose : bool (default True)
         Whether or not to report the status of the processing.
@@ -232,7 +220,7 @@ def compute_tfr(
     This function acts as a wrapper around the MNE TFR computation functions
     :func:`mne.time_frequency.tfr_array_morlet` and
     :func:`mne.time_frequency.tfr_array_multitaper` with ``output = "power"``.
-    """  # noqa: E501
+    """
     tfr_func, n_jobs = _compute_tfr_input_checks(
         data,
         sampling_freq,
@@ -323,24 +311,18 @@ def _compute_tfr_input_checks(
         tfr_func = time_frequency.tfr_array_multitaper
 
     if not isinstance(n_cycles, (np.ndarray, int, float)):
-        raise TypeError(
-            "`n_cycles` must be a NumPy array, an int, or a float."
-        )
+        raise TypeError("`n_cycles` must be a NumPy array, an int, or a float.")
     if isinstance(n_cycles, np.ndarray):
         if n_cycles.shape != freqs.shape:
             raise ValueError(
-                "If `n_cycles` is an array, it must have the same shape as "
-                "`freqs`."
+                "If `n_cycles` is an array, it must have the same shape as `freqs`."
             )
         if n_cycles.min() <= 0:
             raise ValueError("Entries of `n_cycles` must be > 0.")
     elif n_cycles <= 0:
         raise ValueError("`n_cycles` must be > 0.")
 
-    if (
-        not isinstance(zero_mean_wavelets, bool)
-        and zero_mean_wavelets is not None
-    ):
+    if not isinstance(zero_mean_wavelets, bool) and zero_mean_wavelets is not None:
         raise TypeError("`zero_mean_wavelets` must be a bool or None.")
 
     if not isinstance(use_fft, bool):
@@ -348,9 +330,7 @@ def _compute_tfr_input_checks(
 
     if tfr_mode == "multitaper":
         if not isinstance(multitaper_time_bandwidth, (int, float)):
-            raise TypeError(
-                "`multitaper_time_bandwidth` must be an int or a float."
-            )
+            raise TypeError("`multitaper_time_bandwidth` must be an int or a float.")
 
     if not isinstance(n_jobs, int):
         raise TypeError("`n_jobs` must be an integer.")
@@ -376,10 +356,9 @@ def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
         Data to find the rank of.
 
     sv_tol : int | float (default ``1e-5``)
-        Tolerance to use to define non-zero singular values, based on the
-        largest singular value. Singular values greater than the largest
-        singular value multiplied by the tolerance are considered to be
-        non-zero.
+        Tolerance to use to define non-zero singular values, based on the largest
+        singular value. Singular values greater than the largest singular value
+        multiplied by the tolerance are considered to be non-zero.
 
     Returns
     -------
@@ -405,15 +384,14 @@ def set_precision(precision: str) -> None:
     Attributes
     ----------
     precision : str
-        Precision to use. Accepts ``"single"`` (real values are
-        :obj:`numpy.float32` and complex values are :obj:`numpy.complex64`) and
-        ``"double"`` (real values are :obj:`numpy.float64` and complex values
-        are :obj:`numpy.complex128`).
+        Precision to use. Accepts ``"single"`` (real values are :obj:`numpy.float32` and
+        complex values are :obj:`numpy.complex64`) and ``"double"`` (real values are
+        :obj:`numpy.float64` and complex values are :obj:`numpy.complex128`).
 
     Notes
     -----
-    By default, PyBispectra uses double precision. Single precision may be
-    desired to increase computational speed and reduce the likelihood of
-    memory errors when handling large datasets.
+    By default, PyBispectra uses double precision. Single precision may be desired to
+    increase computational speed and reduce the likelihood of memory errors when
+    handling large datasets.
     """
     _precision.set_precision(precision)

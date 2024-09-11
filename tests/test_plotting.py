@@ -1,21 +1,15 @@
 """Tests for results classes (plotting tested separately)."""
 
 import matplotlib
-import pytest
 import numpy as np
+import pytest
 from matplotlib import pyplot as plt
 
-from pybispectra.utils import (
-    ResultsCFC,
-    ResultsGeneral,
-    ResultsTDE,
-    ResultsWaveShape,
-)
+from pybispectra.utils import ResultsCFC, ResultsGeneral, ResultsTDE, ResultsWaveShape
 from pybispectra.utils._utils import _generate_data
 
-
-# interactive backends can fail seemingly randomly when using pytest, even if
-# plt.show() not called, so stick to non-interactive backend
+# interactive backends can fail seemingly randomly when using pytest, even if plt.show()
+# not called, so stick to non-interactive backend
 matplotlib.use("Agg")
 
 
@@ -34,13 +28,7 @@ def test_plotting_cfc_error_catch() -> None:
         tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
-    results = ResultsCFC(
-        data=data,
-        indices=indices,
-        f1s=f1s,
-        f2s=f2s,
-        name=name,
-    )
+    results = ResultsCFC(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
 
     with pytest.raises(TypeError, match="`nodes` must be an int or tuple."):
         results.plot(nodes=[0])
@@ -53,22 +41,14 @@ def test_plotting_cfc_error_catch() -> None:
     ):
         results.plot(nodes=n_cons + 1)
 
-    with pytest.raises(
-        TypeError, match="`n_rows` and `n_cols` must be integers."
-    ):
+    with pytest.raises(TypeError, match="`n_rows` and `n_cols` must be integers."):
         results.plot(n_rows=0.5)
-    with pytest.raises(
-        TypeError, match="`n_rows` and `n_cols` must be integers."
-    ):
+    with pytest.raises(TypeError, match="`n_rows` and `n_cols` must be integers."):
         results.plot(n_cols=0.5)
 
-    with pytest.raises(
-        ValueError, match="`n_rows` and `n_cols` must be >= 1."
-    ):
+    with pytest.raises(ValueError, match="`n_rows` and `n_cols` must be >= 1."):
         results.plot(n_rows=0)
-    with pytest.raises(
-        ValueError, match="`n_rows` and `n_cols` must be >= 1."
-    ):
+    with pytest.raises(ValueError, match="`n_rows` and `n_cols` must be >= 1."):
         results.plot(n_cols=0)
 
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
@@ -76,13 +56,9 @@ def test_plotting_cfc_error_catch() -> None:
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
         results.plot(f2s=0)
 
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of 2."
-    ):
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must have lengths of 2."):
         results.plot(f1s=(f1s[0], f1s[1], f1s[2]))
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of 2."
-    ):
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must have lengths of 2."):
         results.plot(f2s=(f2s[0], f2s[1], f2s[2]))
     with pytest.raises(
         ValueError,
@@ -108,50 +84,41 @@ def test_plotting_cfc_error_catch() -> None:
     with pytest.raises(
         TypeError,
         match=(
-            "`major_tick_intervals` and `minor_tick_intervals` should be ints "
-            "or floats."
+            "`major_tick_intervals` and `minor_tick_intervals` should be ints or "
+            "floats."
         ),
     ):
         results.plot(major_tick_intervals="5")
     with pytest.raises(
         TypeError,
         match=(
-            "`major_tick_intervals` and `minor_tick_intervals` should be ints "
-            "or floats."
+            "`major_tick_intervals` and `minor_tick_intervals` should be ints or "
+            "floats."
         ),
     ):
         results.plot(minor_tick_intervals="1")
     with pytest.raises(
         ValueError,
-        match=(
-            r"`major_tick_intervals` and `minor_tick_intervals` should be \> "
-            "0."
-        ),
+        match=(r"`major_tick_intervals` and `minor_tick_intervals` should be \> 0."),
     ):
         results.plot(major_tick_intervals=0)
     with pytest.raises(
         ValueError,
-        match=(
-            r"`major_tick_intervals` and `minor_tick_intervals` should be \> "
-            "0."
-        ),
+        match=(r"`major_tick_intervals` and `minor_tick_intervals` should be \> 0."),
     ):
         results.plot(minor_tick_intervals=0)
     with pytest.raises(
-        ValueError,
-        match=r"`major_tick_intervals` should be \> `minor_tick_intervals`.",
+        ValueError, match=r"`major_tick_intervals` should be \> `minor_tick_intervals`."
     ):
         results.plot(major_tick_intervals=5, minor_tick_intervals=7)
 
-    with pytest.raises(
-        TypeError, match="`cbar_range` must be a list, tuple, or None."
-    ):
+    with pytest.raises(TypeError, match="`cbar_range` must be a list, tuple, or None."):
         results.plot(cbar_range=np.array([0, 1]))
     with pytest.raises(
         ValueError,
         match=(
-            "If `cbar_range` is a list, one entry must be provided for each "
-            "node being plotted."
+            "If `cbar_range` is a list, one entry must be provided for each node being "
+            "plotted."
         ),
     ):
         results.plot(cbar_range=[None])
@@ -180,13 +147,7 @@ def test_plotting_cfc_runs() -> None:
         tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
-    results = ResultsCFC(
-        data=data,
-        indices=indices,
-        f1s=f1s,
-        f2s=f2s,
-        name=name,
-    )
+    results = ResultsCFC(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
 
     figs, axes = results.plot(show=False)
     assert len(figs) == n_cons
@@ -207,15 +168,11 @@ def test_plotting_cfc_runs() -> None:
     assert axes[0].size == 3
     plt.close("all")
 
-    figs, axes = results.plot(
-        f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False
-    )
+    figs, axes = results.plot(f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False)
     plt.close("all")
 
     # check it works with non-exact frequencies
-    figs, axes = results.plot(
-        f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False
-    )
+    figs, axes = results.plot(f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False)
     plt.close("all")
 
 
@@ -233,12 +190,7 @@ def test_plotting_tde_error_catch() -> None:
         tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
-    results = ResultsTDE(
-        data=data,
-        indices=indices,
-        times=times,
-        name=name,
-    )
+    results = ResultsTDE(data=data, indices=indices, times=times, name=name)
 
     with pytest.raises(TypeError, match="`nodes` must be an int or tuple."):
         results.plot(nodes=[0])
@@ -251,40 +203,25 @@ def test_plotting_tde_error_catch() -> None:
     ):
         results.plot(nodes=n_cons + 1)
 
-    with pytest.raises(
-        TypeError, match="`freq_bands` must be an int or tuple."
-    ):
+    with pytest.raises(TypeError, match="`freq_bands` must be an int or tuple."):
         results.plot(freq_bands=[0])
-    with pytest.raises(
-        TypeError, match="`freq_bands` must be an int or tuple."
-    ):
+    with pytest.raises(TypeError, match="`freq_bands` must be an int or tuple."):
         results.plot(freq_bands=0.5)
-    with pytest.raises(
-        TypeError, match="Entries of `freq_bands` must be ints."
-    ):
+    with pytest.raises(TypeError, match="Entries of `freq_bands` must be ints."):
         results.plot(freq_bands=(0.5,))
     with pytest.raises(
-        ValueError,
-        match="The requested frequency band is not present in the results.",
+        ValueError, match="The requested frequency band is not present in the results."
     ):
         results.plot(freq_bands=n_fbands + 1)
 
-    with pytest.raises(
-        TypeError, match="`n_rows` and `n_cols` must be integers."
-    ):
+    with pytest.raises(TypeError, match="`n_rows` and `n_cols` must be integers."):
         results.plot(n_rows=0.5)
-    with pytest.raises(
-        TypeError, match="`n_rows` and `n_cols` must be integers."
-    ):
+    with pytest.raises(TypeError, match="`n_rows` and `n_cols` must be integers."):
         results.plot(n_cols=0.5)
 
-    with pytest.raises(
-        ValueError, match="`n_rows` and `n_cols` must be >= 1."
-    ):
+    with pytest.raises(ValueError, match="`n_rows` and `n_cols` must be >= 1."):
         results.plot(n_rows=0)
-    with pytest.raises(
-        ValueError, match="`n_rows` and `n_cols` must be >= 1."
-    ):
+    with pytest.raises(ValueError, match="`n_rows` and `n_cols` must be >= 1."):
         results.plot(n_cols=0)
 
     with pytest.raises(TypeError, match="`times` must be a tuple."):
@@ -293,66 +230,51 @@ def test_plotting_tde_error_catch() -> None:
         results.plot(times=(times[0], times[1], times[2]))
     with pytest.raises(
         ValueError,
-        match=(
-            "At least one entry of `times` is outside the range of the "
-            "results."
-        ),
+        match=("At least one entry of `times` is outside the range of the " "results."),
     ):
         results.plot(times=(times[0] - 1, times[-1]))
     with pytest.raises(
         ValueError,
-        match=(
-            "At least one entry of `times` is outside the range of the "
-            "results."
-        ),
+        match=("At least one entry of `times` is outside the range of the " "results."),
     ):
         results.plot(times=(times[0], times[-1] + 1))
     with pytest.raises(
-        ValueError,
-        match=("No times are present in the data for the range in `times`."),
+        ValueError, match=("No times are present in the data for the range in `times`.")
     ):
         results.plot(times=(times[-1], times[0]))
     with pytest.raises(
-        ValueError,
-        match=("No times are present in the data for the range in `times`."),
+        ValueError, match=("No times are present in the data for the range in `times`.")
     ):
         results.plot(times=(0.1, 0.2))
 
     with pytest.raises(
         TypeError,
         match=(
-            "`major_tick_intervals` and `minor_tick_intervals` should be ints "
-            "or floats."
+            "`major_tick_intervals` and `minor_tick_intervals` should be ints or "
+            "floats."
         ),
     ):
         results.plot(major_tick_intervals="5")
     with pytest.raises(
         TypeError,
         match=(
-            "`major_tick_intervals` and `minor_tick_intervals` should be ints "
-            "or floats."
+            "`major_tick_intervals` and `minor_tick_intervals` should be ints or "
+            "floats."
         ),
     ):
         results.plot(minor_tick_intervals="1")
     with pytest.raises(
         ValueError,
-        match=(
-            r"`major_tick_intervals` and `minor_tick_intervals` should be \> "
-            "0."
-        ),
+        match=(r"`major_tick_intervals` and `minor_tick_intervals` should be \> 0."),
     ):
         results.plot(major_tick_intervals=0)
     with pytest.raises(
         ValueError,
-        match=(
-            r"`major_tick_intervals` and `minor_tick_intervals` should be \> "
-            "0."
-        ),
+        match=(r"`major_tick_intervals` and `minor_tick_intervals` should be \> 0."),
     ):
         results.plot(minor_tick_intervals=0)
     with pytest.raises(
-        ValueError,
-        match=r"`major_tick_intervals` should be \> `minor_tick_intervals`.",
+        ValueError, match=r"`major_tick_intervals` should be \> `minor_tick_intervals`."
     ):
         results.plot(major_tick_intervals=5, minor_tick_intervals=7)
 
@@ -373,11 +295,7 @@ def test_plotting_tde_runs() -> None:
     )
 
     results = ResultsTDE(
-        data=data,
-        indices=indices,
-        times=times,
-        freq_bands=freq_bands,
-        name=name,
+        data=data, indices=indices, times=times, freq_bands=freq_bands, name=name
     )
 
     figs, axes = results.plot(show=False)
@@ -410,25 +328,16 @@ def test_plotting_tde_runs() -> None:
 
     if results.tau[0, 0] == times[-1]:
         figs, axes = results.plot(
-            nodes=0,
-            freq_bands=0,
-            times=(times[0], results.tau[0, 0] - 1),
-            show=False,
+            nodes=0, freq_bands=0, times=(times[0], results.tau[0, 0] - 1), show=False
         )
     else:
         figs, axes = results.plot(
-            nodes=0,
-            freq_bands=0,
-            times=(results.tau[0, 0] + 1, times[-1]),
-            show=False,
+            nodes=0, freq_bands=0, times=(results.tau[0, 0] + 1, times[-1]), show=False
         )
     plt.close("all")
 
     # check it works with non-exact times
-    figs, axes = results.plot(
-        times=(times[0] + 1e-5, times[-1] - 1e-5),
-        show=False,
-    )
+    figs, axes = results.plot(times=(times[0] + 1e-5, times[-1] - 1e-5), show=False)
     plt.close("all")
 
 
@@ -443,13 +352,7 @@ def test_plotting_waveshape_error_catch() -> None:
     name = "test"
     indices = tuple(range(n_chans))
 
-    results = ResultsWaveShape(
-        data=data,
-        indices=indices,
-        f1s=f1s,
-        f2s=f2s,
-        name=name,
-    )
+    results = ResultsWaveShape(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
 
     with pytest.raises(TypeError, match="`nodes` must be an int or tuple."):
         results.plot(nodes=[0])
@@ -462,22 +365,14 @@ def test_plotting_waveshape_error_catch() -> None:
     ):
         results.plot(nodes=n_chans + 1)
 
-    with pytest.raises(
-        TypeError, match="`n_rows` and `n_cols` must be integers."
-    ):
+    with pytest.raises(TypeError, match="`n_rows` and `n_cols` must be integers."):
         results.plot(n_rows=0.5)
-    with pytest.raises(
-        TypeError, match="`n_rows` and `n_cols` must be integers."
-    ):
+    with pytest.raises(TypeError, match="`n_rows` and `n_cols` must be integers."):
         results.plot(n_cols=0.5)
 
-    with pytest.raises(
-        ValueError, match="`n_rows` and `n_cols` must be >= 1."
-    ):
+    with pytest.raises(ValueError, match="`n_rows` and `n_cols` must be >= 1."):
         results.plot(n_rows=0)
-    with pytest.raises(
-        ValueError, match="`n_rows` and `n_cols` must be >= 1."
-    ):
+    with pytest.raises(ValueError, match="`n_rows` and `n_cols` must be >= 1."):
         results.plot(n_cols=0)
 
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
@@ -485,13 +380,9 @@ def test_plotting_waveshape_error_catch() -> None:
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
         results.plot(f2s=0)
 
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of 2."
-    ):
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must have lengths of 2."):
         results.plot(f1s=(f1s[0], f1s[1], f1s[2]))
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of 2."
-    ):
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must have lengths of 2."):
         results.plot(f2s=(f2s[0], f2s[1], f2s[2]))
     with pytest.raises(
         ValueError,
@@ -517,38 +408,31 @@ def test_plotting_waveshape_error_catch() -> None:
     with pytest.raises(
         TypeError,
         match=(
-            "`major_tick_intervals` and `minor_tick_intervals` should be ints "
-            "or floats."
+            "`major_tick_intervals` and `minor_tick_intervals` should be ints or "
+            "floats."
         ),
     ):
         results.plot(major_tick_intervals="5")
     with pytest.raises(
         TypeError,
         match=(
-            "`major_tick_intervals` and `minor_tick_intervals` should be ints "
-            "or floats."
+            "`major_tick_intervals` and `minor_tick_intervals` should be ints or "
+            "floats."
         ),
     ):
         results.plot(minor_tick_intervals="1")
     with pytest.raises(
         ValueError,
-        match=(
-            r"`major_tick_intervals` and `minor_tick_intervals` should be \> "
-            "0."
-        ),
+        match=(r"`major_tick_intervals` and `minor_tick_intervals` should be \> 0."),
     ):
         results.plot(major_tick_intervals=0)
     with pytest.raises(
         ValueError,
-        match=(
-            r"`major_tick_intervals` and `minor_tick_intervals` should be \> "
-            "0."
-        ),
+        match=(r"`major_tick_intervals` and `minor_tick_intervals` should be \> 0."),
     ):
         results.plot(minor_tick_intervals=0)
     with pytest.raises(
-        ValueError,
-        match=r"`major_tick_intervals` should be \> `minor_tick_intervals`.",
+        ValueError, match=r"`major_tick_intervals` should be \> `minor_tick_intervals`."
     ):
         results.plot(major_tick_intervals=5, minor_tick_intervals=7)
 
@@ -562,19 +446,17 @@ def test_plotting_waveshape_error_catch() -> None:
         with pytest.raises(
             ValueError,
             match=(
-                f"If `{kwarg_name}` is a list, one entry must be provided "
-                "for each node being plotted."
+                f"If `{kwarg_name}` is a list, one entry must be provided for each "
+                "node being plotted."
             ),
         ):
             results.plot(**{kwarg_name: [None]})
         with pytest.raises(
-            ValueError,
-            match=f"Limits in `{kwarg_name}` must have length of 2.",
+            ValueError, match=f"Limits in `{kwarg_name}` must have length of 2."
         ):
             results.plot(**{kwarg_name: (0, 1, 2)})
         with pytest.raises(
-            ValueError,
-            match=f"Limits in `{kwarg_name}` must have length of 2.",
+            ValueError, match=f"Limits in `{kwarg_name}` must have length of 2."
         ):
             results.plot(**{kwarg_name: [(0, 1, 2) for _ in range(n_chans)]})
 
@@ -587,9 +469,7 @@ def test_plotting_waveshape_error_catch() -> None:
 
 @pytest.mark.parametrize("plot_absolute", [True, False])
 @pytest.mark.parametrize("mirror_cbar_range", [True, False])
-def test_plotting_waveshape_runs(
-    plot_absolute: bool, mirror_cbar_range: bool
-) -> None:
+def test_plotting_waveshape_runs(plot_absolute: bool, mirror_cbar_range: bool) -> None:
     """Test plotting in `ResultsWaveShape` runs with correct inputs."""
     n_chans = 9
     n_f1 = 50
@@ -600,13 +480,7 @@ def test_plotting_waveshape_runs(
     name = "test"
     indices = tuple(range(n_chans))
 
-    results = ResultsWaveShape(
-        data=data,
-        indices=indices,
-        f1s=f1s,
-        f2s=f2s,
-        name=name,
-    )
+    results = ResultsWaveShape(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
 
     figs, axes = results.plot(show=False)
     assert len(figs) == n_chans
@@ -627,15 +501,11 @@ def test_plotting_waveshape_runs(
     assert axes[0].shape == (3, 4)
     plt.close("all")
 
-    figs, axes = results.plot(
-        f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False
-    )
+    figs, axes = results.plot(f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False)
     plt.close("all")
 
     # check it works with non-exact frequencies
-    figs, axes = results.plot(
-        f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False
-    )
+    figs, axes = results.plot(f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False)
     plt.close("all")
 
     # check it works with non-exact frequencies
@@ -662,23 +532,14 @@ def test_plotting_general_error_catch() -> None:
             tuple(np.tile(range(n_unique_chans), n_unique_chans**2).tolist()),
             tuple(
                 np.repeat(
-                    np.tile(range(n_unique_chans), n_unique_chans),
-                    n_unique_chans,
+                    np.tile(range(n_unique_chans), n_unique_chans), n_unique_chans
                 ).tolist()
             ),
-            tuple(
-                np.repeat(range(n_unique_chans), n_unique_chans**2).tolist()
-            ),
+            tuple(np.repeat(range(n_unique_chans), n_unique_chans**2).tolist()),
         ]
     )
 
-    results = ResultsGeneral(
-        data=data,
-        indices=indices,
-        f1s=f1s,
-        f2s=f2s,
-        name=name,
-    )
+    results = ResultsGeneral(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
 
     with pytest.raises(TypeError, match="`nodes` must be an int or tuple."):
         results.plot(nodes=[0])
@@ -691,22 +552,14 @@ def test_plotting_general_error_catch() -> None:
     ):
         results.plot(nodes=n_chans + 1)
 
-    with pytest.raises(
-        TypeError, match="`n_rows` and `n_cols` must be integers."
-    ):
+    with pytest.raises(TypeError, match="`n_rows` and `n_cols` must be integers."):
         results.plot(n_rows=0.5)
-    with pytest.raises(
-        TypeError, match="`n_rows` and `n_cols` must be integers."
-    ):
+    with pytest.raises(TypeError, match="`n_rows` and `n_cols` must be integers."):
         results.plot(n_cols=0.5)
 
-    with pytest.raises(
-        ValueError, match="`n_rows` and `n_cols` must be >= 1."
-    ):
+    with pytest.raises(ValueError, match="`n_rows` and `n_cols` must be >= 1."):
         results.plot(n_rows=0)
-    with pytest.raises(
-        ValueError, match="`n_rows` and `n_cols` must be >= 1."
-    ):
+    with pytest.raises(ValueError, match="`n_rows` and `n_cols` must be >= 1."):
         results.plot(n_cols=0)
 
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
@@ -714,13 +567,9 @@ def test_plotting_general_error_catch() -> None:
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be tuples."):
         results.plot(f2s=0)
 
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of 2."
-    ):
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must have lengths of 2."):
         results.plot(f1s=(f1s[0], f1s[1], f1s[2]))
-    with pytest.raises(
-        ValueError, match="`f1s` and `f2s` must have lengths of 2."
-    ):
+    with pytest.raises(ValueError, match="`f1s` and `f2s` must have lengths of 2."):
         results.plot(f2s=(f2s[0], f2s[1], f2s[2]))
     with pytest.raises(
         ValueError,
@@ -746,33 +595,27 @@ def test_plotting_general_error_catch() -> None:
     with pytest.raises(
         TypeError,
         match=(
-            "`major_tick_intervals` and `minor_tick_intervals` should be ints "
-            "or floats."
+            "`major_tick_intervals` and `minor_tick_intervals` should be ints or "
+            "floats."
         ),
     ):
         results.plot(major_tick_intervals="5")
     with pytest.raises(
         TypeError,
         match=(
-            "`major_tick_intervals` and `minor_tick_intervals` should be ints "
-            "or floats."
+            "`major_tick_intervals` and `minor_tick_intervals` should be ints or "
+            "floats."
         ),
     ):
         results.plot(minor_tick_intervals="1")
     with pytest.raises(
         ValueError,
-        match=(
-            r"`major_tick_intervals` and `minor_tick_intervals` should be \> "
-            "0."
-        ),
+        match=(r"`major_tick_intervals` and `minor_tick_intervals` should be \> 0."),
     ):
         results.plot(major_tick_intervals=0)
     with pytest.raises(
         ValueError,
-        match=(
-            r"`major_tick_intervals` and `minor_tick_intervals` should be \> "
-            "0."
-        ),
+        match=(r"`major_tick_intervals` and `minor_tick_intervals` should be \> " "0."),
     ):
         results.plot(minor_tick_intervals=0)
     with pytest.raises(
@@ -791,19 +634,17 @@ def test_plotting_general_error_catch() -> None:
         with pytest.raises(
             ValueError,
             match=(
-                f"If `{kwarg_name}` is a list, one entry must be provided "
-                "for each node being plotted."
+                f"If `{kwarg_name}` is a list, one entry must be provided for each "
+                "node being plotted."
             ),
         ):
             results.plot(**{kwarg_name: [None]})
         with pytest.raises(
-            ValueError,
-            match=f"Limits in `{kwarg_name}` must have length of 2.",
+            ValueError, match=f"Limits in `{kwarg_name}` must have length of 2."
         ):
             results.plot(**{kwarg_name: (0, 1, 2)})
         with pytest.raises(
-            ValueError,
-            match=f"Limits in `{kwarg_name}` must have length of 2.",
+            ValueError, match=f"Limits in `{kwarg_name}` must have length of 2."
         ):
             results.plot(**{kwarg_name: [(0, 1, 2) for _ in range(n_chans)]})
 
@@ -816,9 +657,7 @@ def test_plotting_general_error_catch() -> None:
 
 @pytest.mark.parametrize("plot_absolute", [True, False])
 @pytest.mark.parametrize("mirror_cbar_range", [True, False])
-def test_plotting_general_runs(
-    plot_absolute: bool, mirror_cbar_range: bool
-) -> None:
+def test_plotting_general_runs(plot_absolute: bool, mirror_cbar_range: bool) -> None:
     """Test plotting in `ResultsGeneral` runs with correct inputs."""
     n_chans = 27
     n_f1 = 50
@@ -833,23 +672,14 @@ def test_plotting_general_runs(
             tuple(np.tile(range(n_unique_chans), n_unique_chans**2).tolist()),
             tuple(
                 np.repeat(
-                    np.tile(range(n_unique_chans), n_unique_chans),
-                    n_unique_chans,
+                    np.tile(range(n_unique_chans), n_unique_chans), n_unique_chans
                 ).tolist()
             ),
-            tuple(
-                np.repeat(range(n_unique_chans), n_unique_chans**2).tolist()
-            ),
+            tuple(np.repeat(range(n_unique_chans), n_unique_chans**2).tolist()),
         ]
     )
 
-    results = ResultsGeneral(
-        data=data,
-        indices=indices,
-        f1s=f1s,
-        f2s=f2s,
-        name=name,
-    )
+    results = ResultsGeneral(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
 
     figs, axes = results.plot(show=False)
     assert len(figs) == n_chans
@@ -857,9 +687,7 @@ def test_plotting_general_runs(
     plt.close("all")
 
     # check it works with nodes and row * cols matching
-    figs, axes = results.plot(
-        nodes=(0, 1, 2, 3), n_rows=2, n_cols=2, show=False
-    )
+    figs, axes = results.plot(nodes=(0, 1, 2, 3), n_rows=2, n_cols=2, show=False)
     assert len(figs) == 1
     assert len(axes) == 1
     assert axes[0].shape == (4, 4)
@@ -872,21 +700,15 @@ def test_plotting_general_runs(
     assert axes[0].shape == (n_chans, 4)
     plt.close("all")
 
-    figs, axes = results.plot(
-        f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False
-    )
+    figs, axes = results.plot(f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False)
+    plt.close("all")
+
+    # check it works with non-exact frequencies
+    figs, axes = results.plot(f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False)
     plt.close("all")
 
     # check it works with non-exact frequencies
     figs, axes = results.plot(
-        f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False
-    )
-    plt.close("all")
-
-    # check it works with non-exact frequencies
-    figs, axes = results.plot(
-        plot_absolute=plot_absolute,
-        mirror_cbar_range=mirror_cbar_range,
-        show=False,
+        plot_absolute=plot_absolute, mirror_cbar_range=mirror_cbar_range, show=False
     )
     plt.close("all")

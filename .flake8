@@ -1,7 +1,0 @@
-[flake8]
-exclude =
-    docs
-    examples/compute_*.py
-per-file-ignores =
-    __init__.py: F401,
-    *.py: E203, E741

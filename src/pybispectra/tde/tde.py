@@ -4,8 +4,8 @@ from copy import deepcopy
 from typing import Callable
 
 import numpy as np
-from pqdm.processes import pqdm
 from numba import njit
+from pqdm.processes import pqdm
 from scipy.linalg import hankel
 
 from pybispectra.utils import ResultsTDE
@@ -19,19 +19,17 @@ class TDE(_ProcessBispectrum):
     Parameters
     ----------
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
-        Fourier coefficients. Must contain a coefficient for the zero
-        frequency. Coefficients should be computed with the number of points
-        equal to twice the number of timepoints in each epoch of the original
-        data plus one (i.e. ``n_points=2 * n_times + 1`` in
-        :func:`pybispectra.utils.compute_fft`).
+        Fourier coefficients. Must contain a coefficient for the zero frequency.
+        Coefficients should be computed with the number of points equal to twice the
+        number of timepoints in each epoch of the original data plus one (i.e.
+        ``n_points=2 * n_times + 1`` in :func:`pybispectra.utils.compute_fft`).
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be
-        evenly spaced.
+        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be evenly
+        spaced.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was
-        derived.
+        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -53,12 +51,10 @@ class TDE(_ProcessBispectrum):
         Fourier coefficients, with negative frequencies appended.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`, with negative frequencies
-        appended.
+        Frequencies (in Hz) in :attr:`data`, with negative frequencies appended.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was
-        derived.
+        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -67,16 +63,16 @@ class TDE(_ProcessBispectrum):
     -----
     TDE with the bispectrum requires the Fourier coefficients of the negative
     frequencies of the original signals, however since these are expected to be
-    real-valued, they can be inferred from the positive frequencies.
-    Accordingly, only the coefficients corresponding to the zero and positive
-    frequencies should be passed to :attr:`data`.
+    real-valued, they can be inferred from the positive frequencies. Accordingly, only
+    the coefficients corresponding to the zero and positive frequencies should be passed
+    to :attr:`data`.
 
-    It is recommended to compute the Fourier coefficients with ``n_points=2 *
-    n_times + 1``. Using a smaller number of points than this will reduce the
-    time range in which a delay estimate can be generated below that of the
-    length of the epochs. Furthermore, a larger number of points than this will
-    only artificially increase the time range in which a delay estimate can be
-    generated beyond the length of the epochs.
+    It is recommended to compute the Fourier coefficients with ``n_points=2 * n_times +
+    1``. Using a smaller number of points than this will reduce the time range in which
+    a delay estimate can be generated below that of the length of the epochs.
+    Furthermore, a larger number of points than this will only artificially increase the
+    time range in which a delay estimate can be generated beyond the length of the
+    epochs.
     """
 
     _data: np.ndarray = None
@@ -130,9 +126,7 @@ class TDE(_ProcessBispectrum):
         self.data = np.concatenate(
             (self.data, np.conjugate(self.data[..., 1:][..., ::-1])), axis=2
         )
-        self.freqs = np.concatenate(
-            (self.freqs, -self.freqs[1:][::-1]), axis=0
-        )
+        self.freqs = np.concatenate((self.freqs, -self.freqs[1:][::-1]), axis=0)
 
         self._n_unique_freqs = np.unique(np.abs(self.freqs)).shape[0]
 
@@ -150,31 +144,30 @@ class TDE(_ProcessBispectrum):
         Parameters
         ----------
         indices : tuple of tuple of int, length of 2 | None (default None)
-            Indices of the seed and target channels, respectively, to compute
-            TDE between. If :obj:`None`, coupling between all channels is
-            computed.
+            Indices of the seed and target channels, respectively, to compute TDE
+            between. If :obj:`None`, coupling between all channels is computed.
 
         fmin : int | float | tuple of int or float (default ``0.0``)
-            The low frequency of interest (in Hz) to compute time delays for.
-            If a tuple of float, specifies the low frequencies for each
-            frequency band of interest (must have the same length as `fmax`).
+            The low frequency of interest (in Hz) to compute time delays for. If a tuple
+            of float, specifies the low frequencies for each frequency band of interest
+            (must have the same length as `fmax`).
 
         fmax : int | float | tuple of int or float (default np.inf)
-            The high frequency of interest (in Hz) to compute time delays for.
-            If a tuple of float, specifies the high frequencies for each
-            frequency band of interest (must have the same length as `fmin`).
+            The high frequency of interest (in Hz) to compute time delays for. If a
+            tuple of float, specifies the high frequencies for each frequency band of
+            interest (must have the same length as `fmin`).
 
         antisym : bool | tuple of bool (default False)
-            Whether to antisymmetrise the PAC results. If a tuple of bool, both
-            forms of PAC are computed in turn.
+            Whether to antisymmetrise the PAC results. If a tuple of bool, both forms of
+            PAC are computed in turn.
 
         method : int | tuple of int (default ``1``)
-            The method to use to compute TDE :footcite:`Nikias1988`. Can
-            include ``[1, 2, 3, 4]``.
+            The method to use to compute TDE :footcite:`Nikias1988`. Can include ``[1,
+            2, 3, 4]``.
 
         n_jobs : int (default ``1``)
-            The number of jobs to run in parallel. If ``-1``, all available
-            CPUs are used.
+            The number of jobs to run in parallel. If ``-1``, all available CPUs are
+            used.
 
         Notes
         -----
@@ -186,68 +179,64 @@ class TDE(_ProcessBispectrum):
         \textbf{n}^*(f_2+f_1)>` ,
 
         where :math:`kmn` is a combination of signals with Fourier coefficients
-        :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`,
-        respectively; :math:`f_1` and :math:`f_2` correspond to a lower and
-        higher frequency, respectively; and :math:`<>` represents the average
-        value over epochs. When computing TDE, information from
-        :math:`\textbf{n}` is taken not only from the positive frequencies, but
-        also the negative frequencies.
+        :math:`\textbf{k}`, :math:`\textbf{m}`, and :math:`\textbf{n}`, respectively;
+        :math:`f_1` and :math:`f_2` correspond to a lower and higher frequency,
+        respectively; and :math:`<>` represents the average value over epochs. When
+        computing TDE, information from :math:`\textbf{n}` is taken not only from the
+        positive frequencies, but also the negative frequencies.
 
         Four methods exist for computing TDE based on the bispectrum
         :footcite:`Nikias1988`. The fundamental equation is as follows
 
-        :math:`\textrm{TDE}_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}
-        \textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2` ,
+        :math:`\textrm{TDE}_{xy}(\tau)=\int_{-\pi}^{+\pi}\int_{-\pi}^{+\pi}\textbf{I}
+        (\textbf{x}_{f_1},\textbf{y}_{f_2})e^{-if_1\tau}df_1df_2` ,
 
-        where :math:`\textbf{I}` varies depending on the method; and
-        :math:`\tau` is a given time delay. Phase information of the signals is
-        extracted from the bispectrum in two variants used by the different
-        methods:
+        where :math:`\textbf{I}` varies depending on the method; and :math:`\tau` is a
+        given time delay. Phase information of the signals is extracted from the
+        bispectrum in two variants used by the different methods:
 
-        :math:`\boldsymbol{\phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})=
-        \boldsymbol{\varphi}_{\textbf{B}_{xyx}} (f_1,f_2)-\boldsymbol{
-        \varphi}_{\textbf{B}_{xxx}}(f_1,f_2)` ;
+        :math:`\boldsymbol{\phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\boldsymbol{\varphi}
+        _{\textbf{B}_{xyx}} (f_1,f_2)-\boldsymbol{\varphi}_{\textbf{B}_{xxx}}
+        (f_1,f_2)` ;
 
         :math:`\boldsymbol{\phi}'(\textbf{x}_{f_1},\textbf{y}_{f_2})=
         \boldsymbol{\varphi}_{\textbf{B}_{xyx}}(f_1,f_2)-\frac{1}{2}(
-        \boldsymbol{\varphi}_{\textbf{B}_{xxx}}(f_1,f_2) + \boldsymbol{
-        \varphi}_{\textbf{B}_{yyy}}(f_1,f_2))` .
+        \boldsymbol{\varphi}_{\textbf{B}_{xxx}}(f_1,f_2) + \boldsymbol{\varphi}_{
+        \textbf{B}_{yyy}}(f_1,f_2))` .
 
         **Method I**:
-        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=e^{i\boldsymbol{
-        \phi}(\textbf{x}_{f_1},\textbf{y}_{f_2})}`
+        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=e^{i\boldsymbol{\phi}
+        (\textbf{x}_{f_1},\textbf{y}_{f_2})}`
 
         **Method II**:
-        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=e^{i\boldsymbol{
-        \phi}'(\textbf{x}_{f_1},\textbf{y}_{f_2})}`
+        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=e^{i\boldsymbol{\phi}'
+        (\textbf{x}_{f_1},\textbf{y}_{f_2})}`
 
         **Method III**:
-        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{
-        \textbf{B}_{xyx}(f_1,f_2)}{\textbf{B}_{xxx}(f_1,f_2)}`
+        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{\textbf{B}_
+        {xyx}(f_1,f_2)}{\textbf{B}_{xxx}(f_1,f_2)}`
 
         **Method IV**:
-        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{
-        |\textbf{B}_{xyx}(f_1,f_2)|e^{i\boldsymbol{\phi}'(\textbf{x}_{f_1},
-        \textbf{y}_{f_2})}}{\sqrt{|\textbf{B}_{xxx}(f_1,f_2)||\textbf{B}_{yyy}
-        (f_1,f_2)|}}`
+        :math:`\textbf{I}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{|\textbf{B}_
+        {xyx}(f_1,f_2)|e^{i\boldsymbol{\phi}'(\textbf{x}_{f_1},\textbf{y}_{f_2})}}{
+        \sqrt{|\textbf{B}_{xxx}(f_1,f_2)||\textbf{B}_{yyy}(f_1,f_2)|}}`
 
-        where :math:`\boldsymbol{\varphi}_{\textbf{B}}` is the phase of the
-        bispectrum. All four methods aim to capture the phase difference
-        between :math:`\textbf{x}` and :math:`\textbf{y}`. Method I involves
-        the extraction of phase spectrum periodicity and monotony, with method
-        III involving an additional amplitude weighting from the bispectrum of
-        :math:`\textbf{x}`. Method II instead relies on a combination of phase
-        spectra of the different frequency components, with method IV
-        containing an additional amplitude weighting from the bispectrum of
-        :math:`\textbf{x}` and :math:`\textbf{y}`. No single method is superior
-        to another.
+        where :math:`\boldsymbol{\varphi}_{\textbf{B}}` is the phase of the bispectrum.
+        All four methods aim to capture the phase difference between :math:`\textbf{x}`
+        and :math:`\textbf{y}`. Method I involves the extraction of phase spectrum
+        periodicity and monotony, with method III involving an additional amplitude
+        weighting from the bispectrum of :math:`\textbf{x}`. Method II instead relies on
+        a combination of phase spectra of the different frequency components, with
+        method IV containing an additional amplitude weighting from the bispectrum of
+        :math:`\textbf{x}` and :math:`\textbf{y}`. No single method is superior to
+        another.
 
-        Antisymmetrisation of the bispectrum is implemented as the replacement
-        of :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xyx} -
-        \textbf{B}_{yxx})` in the above equations :footcite:`JurharInPrep`.
+        Antisymmetrisation of the bispectrum is implemented as the replacement of
+        :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xyx} - \textbf{B}_{yxx})` in
+        the above equations :footcite:`JurharInPrep`.
 
-        If the seed and target for a given connection is the same channel, an
-        error is raised.
+        If the seed and target for a given connection is the same channel, an error is
+        raised.
 
         References
         ----------
@@ -325,12 +314,8 @@ class TDE(_ProcessBispectrum):
         if any(freq < 0 for freq in fmin):
             raise ValueError("Entries of `fmin` must be >= 0.")
         if any(freq > self.sampling_freq / 2 for freq in fmax):
-            raise ValueError(
-                "Entries of `fmax` must be <= the Nyquist frequency."
-            )
-        if any(
-            this_fmin > this_fmax for this_fmin, this_fmax in zip(fmin, fmax)
-        ):
+            raise ValueError("Entries of `fmax` must be <= the Nyquist frequency.")
+        if any(this_fmin > this_fmax for this_fmin, this_fmax in zip(fmin, fmax)):
             raise ValueError(
                 "At least one entry of `fmin` is > the corresponding entry of "
                 "`fmax`."
@@ -341,9 +326,7 @@ class TDE(_ProcessBispectrum):
         for this_fmin, this_fmax in zip(fmin, fmax):
             freq_mask = np.zeros((self._n_unique_freqs,), dtype=np.int32)
             freq_mask[
-                np.nonzero(
-                    (self.freqs >= this_fmin) & (self.freqs <= this_fmax)
-                )
+                np.nonzero((self.freqs >= this_fmin) & (self.freqs <= this_fmax))
             ] = 1
             if np.all(freq_mask == 0):
                 raise ValueError(
@@ -395,10 +378,7 @@ class TDE(_ProcessBispectrum):
         indices = deepcopy(indices)
         if indices is None:
             indices = tuple(
-                map(
-                    tuple,
-                    np.array(np.triu_indices(self._n_chans, 1)).tolist(),
-                )
+                map(tuple, np.array(np.triu_indices(self._n_chans, 1)).tolist())
             )
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
@@ -417,15 +397,14 @@ class TDE(_ProcessBispectrum):
                 )
             if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
                 raise ValueError(
-                    "`indices` contains indices for channels not present in "
-                    "the data."
+                    "`indices` contains indices for channels not present in the data."
                 )
         if len(seeds) != len(targets):
             raise ValueError("Entries of `indices` must have equal length.")
         if any(seed == target for seed, target in zip(indices[0], indices[1])):
             raise ValueError(
-                "Seeds and targets in `indices` must not be the same channel "
-                "for any connection."
+                "Seeds and targets in `indices` must not be the same channel for any "
+                "connection."
             )
         self._seeds = seeds
         self._targets = targets
@@ -472,10 +451,9 @@ class TDE(_ProcessBispectrum):
             ).transpose(1, 0, 2, 3)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
-                "Memory allocation for the bispectrum computation failed. "
-                "Try reducing the sampling frequency of the data, or "
-                "reduce the precision of the computation with "
-                "`pybispectra.set_precision('single')`."
+                "Memory allocation for the bispectrum computation failed. Try reducing "
+                "the sampling frequency of the data, or reduce the precision of the "
+                "computation with `pybispectra.set_precision('single')`."
             ) from error
 
         if self.verbose:
@@ -512,8 +490,7 @@ class TDE(_ProcessBispectrum):
             )
         if self._return_method_ii:
             self._tde_ii_nosym = self._compute_tde_form_parallel(
-                _compute_tde_ii,
-                {"B_xyx": B_xyx, "B_xxx": B_xxx, "B_yyy": B_yyy},
+                _compute_tde_ii, {"B_xyx": B_xyx, "B_xxx": B_xxx, "B_yyy": B_yyy}
             )
         if self._return_method_iii:
             self._tde_iii_nosym = self._compute_tde_form_parallel(
@@ -521,8 +498,7 @@ class TDE(_ProcessBispectrum):
             )
         if self._return_method_iv:
             self._tde_iv_nosym = self._compute_tde_form_parallel(
-                _compute_tde_iv,
-                {"B_xyx": B_xyx, "B_xxx": B_xxx, "B_yyy": B_yyy},
+                _compute_tde_iv, {"B_xyx": B_xyx, "B_xxx": B_xxx, "B_yyy": B_yyy}
             )
 
     def _compute_tde_antisym(self) -> None:
@@ -543,8 +519,7 @@ class TDE(_ProcessBispectrum):
             )
         if self._return_method_ii:
             self._tde_ii_antisym = self._compute_tde_form_parallel(
-                _compute_tde_ii,
-                {"B_xyx": B_xyx, "B_xxx": B_xxx, "B_yyy": B_yyy},
+                _compute_tde_ii, {"B_xyx": B_xyx, "B_xxx": B_xxx, "B_yyy": B_yyy}
             )
         if self._return_method_iii:
             self._tde_iii_antisym = self._compute_tde_form_parallel(
@@ -552,13 +527,10 @@ class TDE(_ProcessBispectrum):
             )
         if self._return_method_iv:
             self._tde_iv_antisym = self._compute_tde_form_parallel(
-                _compute_tde_iv,
-                {"B_xyx": B_xyx, "B_xxx": B_xxx, "B_yyy": B_yyy},
+                _compute_tde_iv, {"B_xyx": B_xyx, "B_xxx": B_xxx, "B_yyy": B_yyy}
             )
 
-    def _compute_tde_form_parallel(
-        self, func: Callable, kwargs: dict
-    ) -> np.ndarray:
+    def _compute_tde_form_parallel(self, func: Callable, kwargs: dict) -> np.ndarray:
         """Compute TDE in parallel across connections for a single form.
 
         Parameters
@@ -575,15 +547,13 @@ class TDE(_ProcessBispectrum):
             Time delay estimates.
         """
         assert isinstance(kwargs, dict), (
-            "PyBispectra Internal Error: `kwargs` passed to `pqdm` must be a "
-            "dict. Please contact the PyBispectra developers."
+            "PyBispectra Internal Error: `kwargs` passed to `pqdm` must be a dict. "
+            "Please contact the PyBispectra developers."
         )
 
         con_kwargs = []
         for con_i in range(self._n_cons):
-            con_kwargs.append(
-                {key: value[con_i] for key, value in kwargs.items()}
-            )
+            con_kwargs.append({key: value[con_i] for key, value in kwargs.items()})
             con_kwargs[con_i]["freq_masks"] = self._freq_masks
 
         return np.array(
@@ -603,10 +573,7 @@ class TDE(_ProcessBispectrum):
         epoch_dur = (self._n_unique_freqs - 1) / self.sampling_freq
         self._times = (
             np.linspace(
-                -epoch_dur,
-                epoch_dur,
-                2 * self._n_unique_freqs - 1,
-                dtype=np.float32,
+                -epoch_dur, epoch_dur, 2 * self._n_unique_freqs - 1, dtype=np.float32
             )
             * 1000
         ).astype(dtype=_precision.real)
@@ -706,10 +673,9 @@ class TDE(_ProcessBispectrum):
         Returns
         -------
         results : ~pybispectra.utils.ResultsTDE | tuple of ~pybispectra.utils.ResultsTDE
-            The results of the TDE computation returned as a single results
-            object (if only one TDE variant was computed) or a tuple of results
-            objects.
-        """  # noqa: E501
+            The results of the TDE computation returned as a single results object (if
+            only one TDE variant was computed) or a tuple of results objects.
+        """
         if len(self._results) == 1:
             return deepcopy(self._results[0])
         return deepcopy(self._results)
@@ -717,51 +683,44 @@ class TDE(_ProcessBispectrum):
 
 @njit
 def _compute_bispectrum_tde(
-    data: np.ndarray,
-    hankel_freq_mask: np.ndarray,
-    kmn: np.ndarray,
-    precision: type,
+    data: np.ndarray, hankel_freq_mask: np.ndarray, kmn: np.ndarray, precision: type
 ) -> np.ndarray:  # pragma: no cover
     """Compute the bispectrum for a single connection for use in TDE.
 
     Parameters
     ----------
     data : numpy.ndarray, shape of [epochs, 2, frequencies]
-        Fourier coefficients, where the second dimension contains the data for
-        the seed and target channel of a single connection, respectively.
-        Contains coefficients for the zero frequency, the positive frequencies,
-        and the negative frequencies, respectively.
+        Fourier coefficients, where the second dimension contains the data for the seed
+        and target channel of a single connection, respectively. Contains coefficients
+        for the zero frequency, the positive frequencies, and the negative frequencies,
+        respectively.
 
     hankel_freq_mask : numpy.ndarray, shape of [frequencies, frequencies]
-        Hankel matrix to use as a frequency mask for the frequencies in channel
-        n of ``data``, where ``fs`` is the zero and positive frequencies.
-        Can be generated with ``scipy.linalg.hankel(c=numpy.arange(0, fs),
-        r=(numpy.arange(fs-1 : fs*2))``.
+        Hankel matrix to use as a frequency mask for the frequencies in channel n of
+        ``data``, where ``fs`` is the zero and positive frequencies. Can be generated
+        with ``scipy.linalg.hankel(c=numpy.arange(0, fs), r=(numpy.arange(fs-1 :
+        fs*2))``.
 
     kmn : numpy.ndarray of int, shape of [x, 3]
-        Array of variable length (x) of arrays, where each sub-array contains
-        the k, m, and n channel indices in ``data``, respectively, to compute
-        the bispectrum for.
+        Array of variable length (x) of arrays, where each sub-array contains the k, m,
+        and n channel indices in ``data``, respectively, to compute the bispectrum for.
 
     precision : type
-        Precision to use for the computation. Either ``numpy.complex64``
-        (single) or ``numpy.complex128`` (double).
+        Precision to use for the computation. Either ``numpy.complex64`` (single) or
+        ``numpy.complex128`` (double).
 
     Returns
     -------
     results : numpy.ndarray, shape of [x, frequencies, frequencies]
-        Complex-valued array containing the bispectrum of a single connection,
-        where the first dimension corresponds to the different channel indices
-        given in ``kmn``.
+        Complex-valued array containing the bispectrum of a single connection, where the
+        first dimension corresponds to the different channel indices given in ``kmn``.
 
     Notes
     -----
     No checks on the input data are performed for speed.
     """
     n_unique_freqs = hankel_freq_mask.shape[0]
-    results = np.zeros(
-        (kmn.shape[0], n_unique_freqs, n_unique_freqs), dtype=precision
-    )
+    results = np.zeros((kmn.shape[0], n_unique_freqs, n_unique_freqs), dtype=precision)
 
     for kmn_i, (k, m, n) in enumerate(kmn):
         for epoch_data in data:
@@ -774,12 +733,8 @@ def _compute_bispectrum_tde(
                     ]
 
             results[kmn_i] += np.multiply(
-                np.transpose(
-                    np.expand_dims(epoch_data[k, :n_unique_freqs], 0)
-                ),
-                np.multiply(
-                    epoch_data[m, :n_unique_freqs], np.conjugate(hankel_n)
-                ),
+                np.transpose(np.expand_dims(epoch_data[k, :n_unique_freqs], 0)),
+                np.multiply(epoch_data[m, :n_unique_freqs], np.conjugate(hankel_n)),
             )
 
     return np.divide(results, data.shape[0]).astype(precision)
