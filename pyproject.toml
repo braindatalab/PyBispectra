@@ -17,7 +17,6 @@ dependencies = [
   "mne>1.6",
   "numba",
   "numpy",
-  "pqdm",
   "scipy",
 ]
 description = "A Python signal processing package for computing spectral-domain and time-domain interactions using the bispectrum."
