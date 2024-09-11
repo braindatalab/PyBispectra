@@ -63,9 +63,7 @@ def _compute_in_parallel(
     """
     n_steps = len(loop_kwargs)
     n_blocks = int(np.ceil(n_steps / n_jobs))
-    parallel, my_parallel_func, _ = parallel_func(
-        func, n_jobs, prefer="threads", verbose=verbose
-    )
+    parallel, my_parallel_func, _ = parallel_func(func, n_jobs, verbose=verbose)
     for block_i in ProgressBar(range(n_blocks), mesg=message):
         idcs = _get_block_indices(block_i, n_steps, n_jobs)
         output[idcs] = parallel(
