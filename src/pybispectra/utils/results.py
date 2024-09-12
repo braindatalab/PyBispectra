@@ -901,6 +901,11 @@ class ResultsGeneral(_ResultsBase):
 
     f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
+
+    Notes
+    -----
+
+    .. versionadded:: 1.2
     """
 
     def __repr__(self) -> str:

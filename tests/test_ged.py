@@ -211,7 +211,10 @@ def test_error_catch(method: str) -> None:
         ssf.get_transformed_data(min_ratio=ssf.ratios.max() + 1)
 
 
-@pytest.mark.filterwarnings(r"ignore:No signal\-to\-noise ratios are greater than the requested minimum:UserWarning")
+@pytest.mark.filterwarnings(
+    r"ignore:No signal\-to\-noise ratios are greater than the requested minimum:"
+    "UserWarning"
+)
 @pytest.mark.parametrize("bandpass_filter", [True, False])
 @pytest.mark.parametrize("rank", [3, 1])
 def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
@@ -233,7 +236,7 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
         rank=rank,
     )
 
-    transformed_data = ssf.get_transformed_data(min_ratio=ssf.ratios.min())
+    transformed_data = ssf.get_transformed_data()
     assert isinstance(
         transformed_data, np.ndarray
     ), "`transformed_data` should be a NumPy array."
@@ -242,6 +245,14 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
         rank,
         n_times,
     ), "`transformed_data` should have shape (n_epochs, rank, n_times)."
+
+    if rank > 1:
+        transformed_data = ssf.get_transformed_data(min_ratio=ssf.ratios[-2])
+        assert transformed_data.shape == (
+            n_epochs,
+            rank - 1,
+            n_times,
+        ), "`transformed_data` should have shape (n_epochs, rank - 1, n_times)."
 
     assert isinstance(ssf.filters, np.ndarray), "`filters` should be a NumPy array."
     assert ssf.filters.shape == (
@@ -264,7 +275,10 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
     ), "`transformed_data` should be empty when too high a ratio is requested."
 
 
-@pytest.mark.filterwarnings(r"ignore:No signal\-to\-noise ratios are greater than the requested minimum:UserWarning")
+@pytest.mark.filterwarnings(
+    r"ignore:No signal\-to\-noise ratios are greater than the requested minimum:"
+    "UserWarning"
+)
 @pytest.mark.parametrize("csd_method", ["fourier", "multitaper"])
 @pytest.mark.parametrize("rank", [3, 1])
 def test_ged_hpmax_runs(csd_method: str, rank: int) -> None:

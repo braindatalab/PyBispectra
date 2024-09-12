@@ -8,6 +8,9 @@
 ##### Bug Fixes
 - Fixed error where the number of subplots exceeding the number of nodes would cause plotting to fail.
 
+##### API
+- Changed the default value of `min_ratio` in `SpatioSpectralFilter.get_transformed_data()` from `1.0` to `-inf`.
+
 ##### Documentation
 - Added a new example for computing the bispectrum and threenorm using the general classes.
 

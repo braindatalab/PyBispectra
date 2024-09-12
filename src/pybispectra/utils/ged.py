@@ -700,14 +700,17 @@ class SpatioSpectralFilter:
 
         return cov_signal, cov_noise, projection
 
-    def get_transformed_data(self, min_ratio: int | float = 1.0) -> np.ndarray:
+    def get_transformed_data(self, min_ratio: int | float = -np.inf) -> np.ndarray:
         """Return the transformed data.
 
         Parameters
         ----------
-        min_ratio : int | float (default ``1.0``)
+        min_ratio : int | float (default - numpy.inf)
             Only returns the transformed data for those spatial filters whose
             :attr:`ratios` values is greater or equal to this value.
+
+            .. versionchanged:: 1.2
+               Default value changed from ``1.0`` to ``-inf``.
 
         Returns
         -------
