@@ -152,7 +152,7 @@ class TDE(_ProcessBispectrum):
             of float, specifies the low frequencies for each frequency band of interest
             (must have the same length as `fmax`).
 
-        fmax : int | float | tuple of int or float (default np.inf)
+        fmax : int | float | tuple of int or float (default numpy.inf)
             The high frequency of interest (in Hz) to compute time delays for. If a
             tuple of float, specifies the high frequencies for each frequency band of
             interest (must have the same length as `fmin`).
