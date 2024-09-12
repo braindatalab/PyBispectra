@@ -12,7 +12,7 @@ on:
 
 jobs:
   # Run unit tests
-  test:
+  test_pip:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -58,4 +58,35 @@ jobs:
           which python
       - run: pip install -e .
       - run: python -c "import pybispectra; import mne; print(f'PyBispectra {pybispectra.__version__}\n'); mne.sys_info()"
-      - run: python -m coverage run --source=pybispectra -m pytest -v tests && coverage report -m
+      - name: Run pytest
+        run: python -m coverage run --source=pybispectra -m pytest -v tests && coverage report -m
+
+  test_conda:
+    timeout-minutes: 90
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash -el {0}
+    env:
+      MKL_NUM_THREADS: '1'
+      PYTHONUNBUFFERED: '1'
+      PYTHON_VERSION: '3.12'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pyvista/setup-headless-display-action@main
+        with:
+          qt: true
+          pyvista: false
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yml
+          create-args: >- # beware the >- instead of |, we don't split on newlines but on spaces
+            python=${{ env.PYTHON_VERSION }}
+      - name: Install package and test dependencies
+        run: |
+          pip install -e .
+          pip install .[test]
+      - name: Display versions and environment information
+        run: python -c "import pybispectra; import mne; print(f'PyBispectra {pybispectra.__version__}\n'); mne.sys_info()"
+      - name: Run pytest
+        run: python -m coverage run --source=pybispectra -m pytest -v tests && coverage report -m
