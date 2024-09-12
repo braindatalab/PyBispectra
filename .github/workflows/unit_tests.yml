@@ -63,7 +63,6 @@ jobs:
 
   test_conda:
     timeout-minutes: 90
-    name: 'py3.12'
     runs-on: ubuntu-20.04
     defaults:
       run:
