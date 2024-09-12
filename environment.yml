@@ -1,0 +1,11 @@
+name: pybispectra
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - joblib
+  - matplotlib
+  - mne>1.6
+  - numba
+  - numpy
+  - scipy
