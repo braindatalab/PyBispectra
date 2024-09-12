@@ -102,6 +102,11 @@ class Bispectrum(_General):
 
     verbose : bool
         Whether or not to report the progress of the processing.
+
+    Notes
+    -----
+
+    .. versionadded:: 1.2
     """
 
     def compute(
@@ -268,6 +273,11 @@ class Threenorm(_General):
 
     verbose : bool
         Whether or not to report the progress of the processing.
+
+    Notes
+    -----
+
+    .. versionadded:: 1.2
     """
 
     def compute(
