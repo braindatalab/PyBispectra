@@ -11,20 +11,20 @@
    :alt: PyBispectra
 
 |br|
-A Python signal processing package for computing spectral- and time-domain
-interactions using the bispectrum.
+A Python signal processing package for computing spectral- and time-domain interactions
+using the bispectrum.
 
-This package provides the tools for computing phase-amplitude coupling, time
-delay estimation, and waveshape features using the bispectrum and bicoherence.
-Additional tools for computing amplitude-amplitude coupling, phase-phase
-coupling, and spatio-spectral filters are also provided.
+This package provides the tools for computing phase-amplitude coupling, time delay
+estimation, and waveshape features using the bispectrum and bicoherence. Additional
+tools for computing amplitude-amplitude coupling, phase-phase coupling, and
+spatio-spectral filters are also provided.
 
 Parallel processing and `Numba <https://numba.pydata.org/>`_ optimisation are
-implemented to reduce computation times. There is a minor reliance on the
-`MNE <https://mne.tools/stable/index.html>`_ signal processing toolbox.
+implemented to reduce computation times.
 
 If you use this toolbox in your work, please include the following citation:|br|
-Binns, T. S., Pellegrini, F., Jurhar, T., & Haufe, S. (2023). PyBispectra. DOI: `10.5281/zenodo.8377820 <https://doi.org/10.5281/zenodo.8377820>`_
+Binns, T. S., Pellegrini, F., Jurhar, T., & Haufe, S. (2023). PyBispectra. DOI:
+`10.5281/zenodo.8377820 <https://doi.org/10.5281/zenodo.8377820>`_
 
 .. toctree::
    :maxdepth: 2
