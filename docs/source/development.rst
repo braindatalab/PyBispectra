@@ -16,10 +16,10 @@ To do so, first clone the `GitHub repository
 cloned, navigate to this location and install the package alongside its development
 requirements using pip:
 
-.. code-block:: console
+.. code-block::
     
-    $ pip install -e .
-    $ pip install .[dev]
+    pip install -e .
+    pip install .[dev]
 
 
 Contributing to PyBispectra
@@ -38,18 +38,18 @@ however these tests can also be run locally by calling `coverage
 <https://coverage.readthedocs.io/en/>`_ with `pytest <https://docs.pytest.org/en/>`_ in
 the base directory:
 
-.. code-block:: console
+.. code-block::
     
-    $ coverage run && coverage report
+    coverage run && coverage report
 
 Please also check that the documentation can be built following any changes. The
 documentation is built when a pull request is submitted, however the documentation can
 also be built locally using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ in the
 ``/docs`` directory (outputs are in the ``/docs/build/html`` directory):
 
-.. code-block:: console
+.. code-block::
     
-    $ make html
+    make html
 
 Finally, features of the code such as compliance with established styles and spelling
 errors in the documentation are also checked. These checks are run when a pull request
@@ -57,6 +57,6 @@ is submitted, however they can also be run locally using `pre-commit
 <https://pre-commit.com/>`_. To have these checks run automatically whenever you commit
 changes, install ``pre-commit`` with the following command in the base directory:
 
-.. code-block:: console
+.. code-block::
     
-    $ pre-commit install
+    pre-commit install

@@ -26,6 +26,7 @@ doc = [
   "numpydoc",
   "pydata-sphinx-theme",
   "sphinx",
+  "sphinx-copybutton",
   "sphinx-gallery",
   "sphinxcontrib-bibtex",
 ]
