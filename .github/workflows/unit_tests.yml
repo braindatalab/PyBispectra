@@ -59,7 +59,7 @@ jobs:
       - run: pip install -e .
       - run: python -c "import pybispectra; import mne; print(f'PyBispectra {pybispectra.__version__}\n'); mne.sys_info()"
       - name: Run pytest
-        run: python -m coverage run --source=pybispectra -m pytest -v tests && coverage report -m
+        run: python -m coverage run && coverage report
 
   test_conda:
     timeout-minutes: 90
@@ -89,4 +89,4 @@ jobs:
       - name: Display versions and environment information
         run: python -c "import pybispectra; import mne; print(f'PyBispectra {pybispectra.__version__}\n'); mne.sys_info()"
       - name: Run pytest
-        run: python -m coverage run --source=pybispectra -m pytest -v tests && coverage report -m
+        run: python -m coverage run && coverage report
