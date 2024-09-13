@@ -171,7 +171,7 @@ waveshape_peaks_troughs = WaveShape(
 waveshape_peaks_troughs.compute(f1s=(5, 35), f2s=(5, 35))  # compute waveshape
 
 # return results as an array
-waveshape_results = waveshape_sawtooths.results.get_results()
+waveshape_results = waveshape_sawtooths.results.get_results(copy=False)
 
 print(
     f"Waveshape results: [{waveshape_results.shape[0]} channels x "

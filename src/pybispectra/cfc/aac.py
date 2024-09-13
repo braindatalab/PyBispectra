@@ -1,7 +1,5 @@
 """Tools for handling AAC analysis."""
 
-from copy import deepcopy
-
 import numpy as np
 from numba import njit
 
@@ -43,7 +41,7 @@ class AAC(_ProcessFreqBase):
 
     Attributes
     ----------
-    results : tuple of ~pybispectra.utils.ResultsCFC
+    results : ~pybispectra.utils.ResultsCFC
         AAC results.
 
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies, times]
@@ -165,14 +163,8 @@ class AAC(_ProcessFreqBase):
 
     @property
     def results(self) -> ResultsCFC:
-        """Return the results.
-
-        Returns
-        -------
-        results : ~pybispectra.utils.ResultsCFC
-            The results of the AAC computation.
-        """
-        return deepcopy(self._results)
+        """AAC results."""
+        return self._results
 
 
 @njit

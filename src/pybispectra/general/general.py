@@ -1,7 +1,5 @@
 """Tools for handling general bispectrum and threenorm computations."""
 
-from copy import deepcopy
-
 import numpy as np
 
 from pybispectra.utils import ResultsGeneral
@@ -23,7 +21,6 @@ class _General(_ProcessBispectrum):
 
     def _sort_indices(self, indices: tuple[tuple[int]] | None) -> None:
         """Sort kmn channel indices inputs."""
-        indices = deepcopy(indices)
         if indices is None:
             indices = tuple(
                 [
@@ -40,7 +37,7 @@ class _General(_ProcessBispectrum):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 3:
             raise ValueError("`indices` must have length of 3.")
-        self._indices = deepcopy(indices)
+        self._indices = indices
 
         for group_idcs in indices:
             if not isinstance(group_idcs, tuple):
@@ -89,7 +86,7 @@ class Bispectrum(_General):
     Attributes
     ----------
     results : ~pybispectra.utils.ResultsGeneral
-        Computed bispectrum.
+        Bispectrum results.
 
     data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
         Fourier coefficients.
@@ -221,14 +218,8 @@ class Bispectrum(_General):
 
     @property
     def results(self) -> ResultsGeneral:
-        """Return the results.
-
-        Returns
-        -------
-        results : ~pybispectra.utils.ResultsGeneral
-            The computed bispectrum.
-        """
-        return deepcopy(self._results)
+        """Bispectrum results."""
+        return self._results
 
 
 class Threenorm(_General):
@@ -260,7 +251,7 @@ class Threenorm(_General):
     Attributes
     ----------
     results : ~pybispectra.utils.ResultsGeneral
-        Computed threenorm.
+        Threenorm results.
 
     data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
         Fourier coefficients.
@@ -397,11 +388,5 @@ class Threenorm(_General):
 
     @property
     def results(self) -> ResultsGeneral:
-        """Return the results.
-
-        Returns
-        -------
-        results : ~pybispectra.utils.ResultsGeneral
-            The computed threenorm.
-        """
-        return deepcopy(self._results)
+        """Threenorm results."""
+        return self._results

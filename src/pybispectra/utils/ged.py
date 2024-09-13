@@ -1,6 +1,5 @@
 """Tools for performing generalised eigendecompositions."""
 
-from copy import deepcopy
 from multiprocessing import cpu_count
 from warnings import warn
 
@@ -152,7 +151,7 @@ class SpatioSpectralFilter:
         sampling_freq: int | float,
         verbose: bool = True,
     ) -> None:  # noqa: D107
-        self.verbose = deepcopy(verbose)
+        self.verbose = verbose
         self._sort_init_inputs(data, sampling_freq)
 
     def _sort_init_inputs(self, data: np.ndarray, sampling_freq: float) -> None:
@@ -164,11 +163,11 @@ class SpatioSpectralFilter:
 
         if not isinstance(sampling_freq, (int, float)):
             raise TypeError("`sampling_freq` must be an int or a float.")
-        self.sampling_freq = deepcopy(sampling_freq)
+        self.sampling_freq = sampling_freq
 
         self._n_epochs, self._n_chans, self._n_times = data.shape
 
-        self.data = data.copy().astype(_precision.real)
+        self.data = np.asarray(data, dtype=_precision.real)
 
     def _sort_freq_bounds(
         self,
@@ -202,9 +201,9 @@ class SpatioSpectralFilter:
                 "+/- `signal_noise_gap`."
             )
 
-        self.signal_bounds = deepcopy(signal_bounds)
-        self.noise_bounds = deepcopy(noise_bounds)
-        self.signal_noise_gap = deepcopy(signal_noise_gap)
+        self.signal_bounds = signal_bounds
+        self.noise_bounds = noise_bounds
+        self.signal_noise_gap = signal_noise_gap
         self._n_noise_freqs = [
             self.signal_bounds[0] - self.noise_bounds[0],
             self.noise_bounds[1] - self.signal_bounds[1],
@@ -242,12 +241,10 @@ class SpatioSpectralFilter:
                 "beyond the Nyquist frequency."
             )
 
-        self.n_harmonics = deepcopy(n_harmonics)
+        self.n_harmonics = n_harmonics
 
     def _sort_indices(self, indices: tuple[int] | None) -> None:
         """Sort channel indices input."""
-        indices = deepcopy(indices)
-
         if indices is None:
             indices = tuple(np.arange(self._n_chans, dtype=np.int32).tolist())
 
@@ -267,8 +264,6 @@ class SpatioSpectralFilter:
 
     def _sort_rank(self, rank: int | None) -> None:
         """Sort rank subspace projection input."""
-        rank = deepcopy(rank)
-
         if rank is None:
             rank = compute_rank(self.data)
 
@@ -415,9 +410,9 @@ class SpatioSpectralFilter:
         )
         self._transformed_data = ssd.fit_transform(self.data[:, self.indices])
 
-        self.filters = ssd.filters_.copy()
-        self.patterns = ssd.patterns_.copy()
-        self.ratios = ssd.eigvals_.copy()
+        self.filters = ssd.filters_
+        self.patterns = ssd.patterns_
+        self.ratios = ssd.eigvals_
 
     def fit_transform_hpmax(
         self,
@@ -584,10 +579,9 @@ class SpatioSpectralFilter:
                 verbose=False,
             )
 
-        freqs = csd.frequencies.copy()
+        freqs = csd.frequencies
         csd = np.array(
-            [csd.get_data(freq) for freq in csd.frequencies],
-            dtype=_precision.complex,
+            [csd.get_data(freq) for freq in freqs], dtype=_precision.complex
         ).transpose(1, 2, 0)
 
         if self.verbose:
@@ -700,7 +694,9 @@ class SpatioSpectralFilter:
 
         return cov_signal, cov_noise, projection
 
-    def get_transformed_data(self, min_ratio: int | float = -np.inf) -> np.ndarray:
+    def get_transformed_data(
+        self, min_ratio: int | float = -np.inf, copy: bool = True
+    ) -> np.ndarray:
         """Return the transformed data.
 
         Parameters
@@ -711,6 +707,11 @@ class SpatioSpectralFilter:
 
             .. versionchanged:: 1.2
                Default value changed from ``1.0`` to ``-inf``.
+
+        copy : bool (default True)
+            Whether or not to return a copy of the data.
+
+            .. versionadded:: 1.2
 
         Returns
         -------
@@ -725,6 +726,8 @@ class SpatioSpectralFilter:
         """
         if not isinstance(min_ratio, (int, float)):
             raise TypeError("`min_ratio` must be an int or a float")
+        if not isinstance(copy, bool):
+            raise TypeError("`copy` must be a bool.")
 
         data = self._transformed_data[:, np.where(self.ratios >= min_ratio)[0]]
         if self.verbose and data.size == 0:
@@ -734,4 +737,6 @@ class SpatioSpectralFilter:
                 UserWarning,
             )
 
-        return data.copy()
+        if copy:
+            return data.copy()
+        return data

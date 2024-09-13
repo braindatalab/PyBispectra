@@ -53,7 +53,7 @@ def compute_fft(
     Returns
     -------
     coeffs : ~numpy.ndarray, shape of [epochs, channels, frequencies]
-        Fourier coefficients of `:attr:`data`.
+        Fourier coefficients of :attr:`data`.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in :attr:`coeffs`.
@@ -218,7 +218,7 @@ def compute_tfr(
         Amplitude/power of the TFR of :attr:`data`.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
-        Frequencies (in Hz) in :attr`tfr`.
+        Frequencies (in Hz) in :attr:`tfr`.
 
     Notes
     -----

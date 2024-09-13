@@ -83,6 +83,9 @@ def test_results_cfc_error_catch() -> None:
     with pytest.raises(ValueError, match="`form` is not recognised."):
         results.get_results(form="not_a_form")
 
+    with pytest.raises(TypeError, match="`copy` must be a bool."):
+        results.get_results(copy="True")
+
 
 def test_results_cfc_runs() -> None:
     """Test `ResultsCFC` runs with correct inputs."""
@@ -232,6 +235,9 @@ def test_results_tde_error_catch() -> None:
     with pytest.raises(ValueError, match="`form` is not recognised."):
         results.get_results(form="not_a_form")
 
+    with pytest.raises(TypeError, match="`copy` must be a bool."):
+        results.get_results(copy="True")
+
 
 @pytest.mark.parametrize("freq_bands", [None, ((5, 15),), ((5, 15), (10, 20))])
 def test_results_tde_runs(freq_bands: tuple) -> None:
@@ -328,6 +334,11 @@ def test_results_waveshape_error_catch() -> None:
     with pytest.raises(TypeError, match="`name` must be a string."):
         ResultsWaveShape(data=data, indices=indices, f1s=f1s, f2s=f2s, name=1)
 
+    results = ResultsWaveShape(data=data, indices=indices, f1s=f1s, f2s=f2s)
+
+    with pytest.raises(TypeError, match="`copy` must be a bool."):
+        results.get_results(copy="True")
+
 
 def test_results_waveshape_runs() -> None:
     """Test `ResultsWaveShape` runs with correct inputs."""
@@ -346,7 +357,8 @@ def test_results_waveshape_runs() -> None:
         f"'<Result: {name} | [{n_chans} nodes, {n_f1} f1s, {n_f2} f2s]>'"
     )
 
-    results_array = results.get_results()
+    results_array = results.get_results(copy=True)
+    results_array = results.get_results(copy=False)
     assert isinstance(results_array, np.ndarray)
     assert results_array.shape == (n_chans, n_f1, n_f2)
 
@@ -433,6 +445,9 @@ def test_results_general_error_catch() -> None:
 
     with pytest.raises(ValueError, match="`form` is not recognised."):
         results.get_results(form="not_a_form")
+
+    with pytest.raises(TypeError, match="`copy` must be a bool."):
+        results.get_results(copy="True")
 
 
 def test_results_general_runs() -> None:
