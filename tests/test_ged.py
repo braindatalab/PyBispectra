@@ -12,8 +12,8 @@ def test_error_catch(method: str) -> None:
     """Check that SpatioSpectralFilter class catches errors."""
     n_chans = 3
     n_epochs = 5
-    n_times = 100
-    sampling_freq = 100
+    n_times = 200
+    sampling_freq = 50
     data = _generate_data(n_epochs, n_chans, n_times)
     signal_bounds = (10, 15)
     noise_bounds = (8, 17)
@@ -196,9 +196,29 @@ def test_error_catch(method: str) -> None:
                 signal_bounds=signal_bounds, noise_bounds=noise_bounds, n_jobs=-2
             )
 
-    # return transformed data
-    ssf.fit_transform_hpmax(signal_bounds=signal_bounds, noise_bounds=noise_bounds)
+    # transform data
+    with pytest.raises(ValueError, match="No filters have been fit."):
+        ssf.transform()
 
+    # get transformed data
+    with pytest.raises(ValueError, match="No data has been transformed."):
+        ssf.get_transformed_data()
+
+    fit_method = ssf.fit_ssd if method == "ssd" else ssf.fit_hpmax
+    fit_method(signal_bounds=signal_bounds, noise_bounds=noise_bounds)
+
+    with pytest.raises(TypeError, match="`data` must be a NumPy array."):
+        ssf.transform(data=data.tolist())
+    with pytest.raises(ValueError, match="`data` must be a 3D array."):
+        ssf.transform(data=data[0])
+    with pytest.raises(
+        ValueError, match="`data` must have the same number of channels as the filters."
+    ):
+        ssf.transform(data=data[:, 1:])
+
+    ssf.transform()
+
+    # return transformed data
     with pytest.raises(TypeError, match="`min_ratio` must be an int or a float"):
         ssf.get_transformed_data(min_ratio=None)
     with pytest.warns(
@@ -231,14 +251,13 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
 
     ssf = SpatioSpectralFilter(data, sampling_freq)
 
-    ssf.fit_transform_ssd(
+    transformed_data = ssf.fit_transform_ssd(
         signal_bounds=signal_bounds,
         noise_bounds=noise_bounds,
         bandpass_filter=bandpass_filter,
         rank=rank,
     )
 
-    transformed_data = ssf.get_transformed_data()
     assert isinstance(
         transformed_data, np.ndarray
     ), "`transformed_data` should be a NumPy array."
@@ -247,6 +266,10 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
         rank,
         n_times,
     ), "`transformed_data` should have shape (n_epochs, rank, n_times)."
+    assert np.allclose(transformed_data, ssf.get_transformed_data(), rtol=0, atol=0), (
+        "data returned from `fit_transform_ssd()` and `get_transformed_data()` should "
+        "be identical."
+    )
 
     if rank > 1:
         transformed_data = ssf.get_transformed_data(
@@ -296,14 +319,13 @@ def test_ged_hpmax_runs(csd_method: str, rank: int) -> None:
     noise_bounds = (8, 17)
 
     ssf = SpatioSpectralFilter(data, sampling_freq)
-    ssf.fit_transform_hpmax(
+    transformed_data = ssf.fit_transform_hpmax(
         signal_bounds=signal_bounds,
         noise_bounds=noise_bounds,
         rank=rank,
         csd_method=csd_method,
     )
 
-    transformed_data = ssf.get_transformed_data(min_ratio=ssf.ratios.min(), copy=False)
     assert isinstance(
         transformed_data, np.ndarray
     ), "`transformed_data` should be a NumPy array."
@@ -312,6 +334,10 @@ def test_ged_hpmax_runs(csd_method: str, rank: int) -> None:
         rank,
         n_times,
     ), "`transformed_data` should have shape (n_epochs, rank, n_times)."
+    assert np.allclose(transformed_data, ssf.get_transformed_data(), rtol=0, atol=0), (
+        "data returned from `fit_transform_ssd()` and `get_transformed_data()` should "
+        "be identical."
+    )
 
     assert isinstance(ssf.filters, np.ndarray), "`filters` should be a NumPy array."
     assert ssf.filters.shape == (
