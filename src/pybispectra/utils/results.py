@@ -1,7 +1,6 @@
 """Helper tools for storing results."""
 
 from abc import ABC, abstractmethod
-from copy import deepcopy
 
 import numpy as np
 from matplotlib.figure import Figure
@@ -31,12 +30,12 @@ class _ResultsBase(ABC):
             raise TypeError("`data` must be a NumPy array.")
         if data.ndim != data_ndim:
             raise ValueError(f"`data` must be a {data_ndim}D array.")
-        self._data = data.copy()
+        self._data = data
         self.shape = data.shape
 
         if not isinstance(name, str):
             raise TypeError("`name` must be a string.")
-        self.name = deepcopy(name)
+        self.name = name
 
     @abstractmethod
     def _sort_init_inputs(self) -> None:
@@ -48,8 +47,8 @@ class _ResultsBase(ABC):
             raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
         if f1s.ndim != 1 or f2s.ndim != 1:
             raise ValueError("`f1s` and `f2s` must be 1D arrays.")
-        self.f1s = f1s.copy()
-        self.f2s = f2s.copy()
+        self.f1s = f1s
+        self.f2s = f2s
 
         if self._data.shape != (self.n_nodes, len(f1s), len(f2s)):
             raise ValueError("`data` must have shape [nodes, f1s, f2s].")
@@ -78,10 +77,10 @@ class _ResultsBase(ABC):
                 raise ValueError(
                     "`indices` contains indices for nodes not present in the data."
                 )
-        self._seeds = deepcopy(seeds)
-        self._targets = deepcopy(targets)
+        self._seeds = seeds
+        self._targets = targets
         self.n_nodes = len(seeds)
-        self.indices = deepcopy(indices)
+        self.indices = indices
 
     def _sort_indices_channels(self, indices: tuple[int]) -> None:
         """Sort `indices` with inputs format [channels]."""
@@ -95,7 +94,7 @@ class _ResultsBase(ABC):
                 "`indices` contains indices for channels not present in the data."
             )
         self.n_nodes = len(indices)
-        self.indices = deepcopy(indices)
+        self.indices = indices
 
     def _sort_indices_kmn(self, indices: tuple[tuple[int]]) -> None:
         """Sort `indices` inputs with format ([k], [m], [n])."""
@@ -118,12 +117,12 @@ class _ResultsBase(ABC):
                     "`indices` contains indices for nodes not present in the data."
                 )
         self.n_nodes = len(indices[0])
-        self.indices = deepcopy(indices)
+        self.indices = indices
 
     def get_results(
-        self, form: str = "raveled"
+        self, form: str = "raveled", copy: bool = True
     ) -> np.ndarray | tuple[np.ndarray, tuple[tuple[int]]]:
-        """Return a copy of the results.
+        """Return the results.
 
         Parameters
         ----------
@@ -132,6 +131,11 @@ class _ResultsBase(ABC):
             `[nodes, ...]`; ``"compact"`` - results have shape ``[seeds, targets,
             ...]``, where ``...`` represents the data dimensions (e.g. frequencies,
             times).
+
+        copy : bool (default True)
+            Whether or not to return a copy of the results.
+
+            .. versionadded:: 1.2
 
         Returns
         -------
@@ -145,12 +149,22 @@ class _ResultsBase(ABC):
         accepted_forms = ["raveled", "compact"]
         if form not in accepted_forms:
             raise ValueError("`form` is not recognised.")
+        if not isinstance(copy, bool):
+            raise TypeError("`copy` must be a bool.")
 
         if form == "raveled":
-            return self._data.copy()
-        return self._get_compact_results_child()
+            results = self._data
+        else:
+            results, indices = self._get_compact_results_child()
 
-    def _get_compact_results_child(self) -> None:
+        if copy:
+            results = results.copy()
+
+        if form == "raveled":
+            return results
+        return results, indices
+
+    def _get_compact_results_child(self) -> tuple:
         """Return a compacted form of the results."""
 
     def _get_compact_results_parent(
@@ -193,7 +207,7 @@ class _ResultsBase(ABC):
             tuple(np.unique(self._targets).tolist()),
         )
 
-        return compact_results.copy(), indices
+        return compact_results, indices
 
 
 class ResultsCFC(_ResultsBase):
@@ -220,7 +234,7 @@ class ResultsCFC(_ResultsBase):
     Methods
     -------
     get_results :
-        Return a copy of the results.
+        Return the results.
 
     plot :
         Plot the results.
@@ -408,7 +422,7 @@ class ResultsTDE(_ResultsBase):
     Methods
     -------
     get_results :
-        Return a copy of the results.
+        Return the results.
 
     plot :
         Plot the results.
@@ -504,7 +518,7 @@ class ResultsTDE(_ResultsBase):
         if times.ndim != 1:
             raise ValueError("`times` must be a 1D array.")
 
-        self.times = times.copy()
+        self.times = times
         self._n_times = times.shape[0]
 
     def _sort_freq_bands(self, freq_bands: tuple[tuple[int | float]]) -> None:
@@ -525,7 +539,7 @@ class ResultsTDE(_ResultsBase):
                         "Each entry of `freq_bands` must have length of 2."
                     )
 
-            self.freq_bands = deepcopy(freq_bands)
+            self.freq_bands = freq_bands
             self._n_fbands = len(freq_bands)
         else:
             self._n_fbands = self._data.shape[1]
@@ -658,7 +672,7 @@ class ResultsWaveShape(_ResultsBase):
     Methods
     -------
     get_results :
-        Return a copy of the results.
+        Return the results.
 
     plot :
         Plot the results.
@@ -717,15 +731,27 @@ class ResultsWaveShape(_ResultsBase):
         super()._sort_indices_channels(indices)
         super()._sort_freq_inputs(f1s, f2s)
 
-    def get_results(self) -> np.ndarray:
-        """Return a copy of the results.
+    def get_results(self, copy: bool = True) -> np.ndarray:
+        """Return the results.
+
+        Parameters
+        ----------
+        copy : bool (default True)
+            Whether or not to return a copy of the results.
+
+            .. versionadded:: 1.2
 
         Returns
         -------
         results : ~numpy.ndarray, shape of [nodes, low frequencies, high frequencies]
             The results.
         """
-        return self._data.copy()
+        if not isinstance(copy, bool):
+            raise TypeError("`copy` must be a bool.")
+
+        if copy:
+            return self._data.copy()
+        return self._data
 
     def plot(
         self,
@@ -876,7 +902,7 @@ class ResultsGeneral(_ResultsBase):
     Methods
     -------
     get_results :
-        Return a copy of the results.
+        Return the results.
 
     plot :
         Plot the results.
@@ -942,9 +968,9 @@ class ResultsGeneral(_ResultsBase):
         super()._sort_freq_inputs(f1s, f2s)
 
     def get_results(
-        self, form: str = "raveled"
+        self, form: str = "raveled", copy=True
     ) -> np.ndarray | tuple[np.ndarray, tuple[tuple[int]]]:
-        """Return a copy of the results.
+        """Return the results.
 
         Parameters
         ----------
@@ -952,6 +978,11 @@ class ResultsGeneral(_ResultsBase):
             How the results should be returned: ``"raveled"`` - results have shape
             `[nodes, ...]`; ``"compact"`` - results have shape ``[k, m, n, ...]``,where
             ``...`` represents the data dimensions (e.g. frequencies, times).
+
+        copy : bool (default True)
+            Whether to return a copy of the results.
+
+            .. versionadded:: 1.2
 
         Returns
         -------
@@ -965,14 +996,22 @@ class ResultsGeneral(_ResultsBase):
         accepted_forms = ["raveled", "compact"]
         if form not in accepted_forms:
             raise ValueError("`form` is not recognised.")
+        if not isinstance(copy, bool):
+            raise TypeError("`copy` must be a bool.")
 
         if form == "raveled":
-            return self._data.copy()
-        return self._get_compact_results_child()
+            results = self._data
+        else:
+            results, indices = self._get_compact_results_child()
 
-    def _get_compact_results_child(
-        self,
-    ) -> tuple[np.ndarray, tuple[tuple[int]]]:
+        if copy:
+            results = results.copy()
+
+        if form == "raveled":
+            return results
+        return results, indices
+
+    def _get_compact_results_child(self) -> tuple[np.ndarray, tuple[tuple[int]]]:
         """Return a compacted form of the results.
 
         Returns
@@ -1017,7 +1056,7 @@ class ResultsGeneral(_ResultsBase):
             tuple(np.unique(group_idcs).tolist()) for group_idcs in self.indices
         )
 
-        return compact_results.copy(), indices
+        return compact_results, indices
 
     def plot(
         self,

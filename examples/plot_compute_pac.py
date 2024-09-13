@@ -116,7 +116,7 @@ pac = PAC(
 )  # initialise object
 pac.compute(indices=((0,), (1,)))  # compute PAC
 
-pac_results = pac.results.get_results()  # return results as array
+pac_results = pac.results.get_results(copy=False)  # return results as array
 
 print(
     f"PAC results: [{pac_results.shape[0]} connection x {pac_results.shape[1]} f1s x "
@@ -179,12 +179,10 @@ pac.compute(
 )
 pac_standard, pac_antisym = pac.results
 
-vmin = np.min(
-    (np.nanmin(pac_standard.get_results()), np.nanmin(pac_antisym.get_results()))
-)
-vmax = np.max(
-    (np.nanmax(pac_standard.get_results()), np.nanmax(pac_antisym.get_results()))
-)
+pac_standard_array = pac_standard.get_results(copy=False)
+pac_antisym_array = pac_antisym.get_results(copy=False)
+vmin = np.min((np.nanmin(pac_standard_array), np.nanmin(pac_antisym_array)))
+vmax = np.max((np.nanmax(pac_standard_array), np.nanmax(pac_antisym_array)))
 
 # plot unsymmetrised PAC within & between signals
 fig_standard, axes_standard = pac_standard.plot(

@@ -1,7 +1,6 @@
 """Private helper tools for plotting results."""
 
 from abc import ABC, abstractmethod
-from copy import deepcopy
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -22,15 +21,15 @@ class _PlotBase(ABC):
     f2s: np.ndarray = None
 
     def __init__(self, data: np.ndarray, indices: tuple, name: str) -> None:
-        self._data = data.copy()
-        self._indices = deepcopy(indices)
+        self._data = data
+        self._indices = indices
 
         if len(indices) > 1 and np.all([isinstance(group, tuple) for group in indices]):
             self.n_nodes = len(indices[0])
         else:
             self.n_nodes = len(indices)
 
-        self.name = deepcopy(name)
+        self.name = name
 
     @abstractmethod
     def plot(self) -> None:
@@ -944,8 +943,8 @@ class _PlotTDE(_PlotBase):
     ) -> None:  # noqa: D107
         super().__init__(data, indices, name)
 
-        self.tau = deepcopy(tau)
-        self.freq_bands = deepcopy(freq_bands)
+        self.tau = tau
+        self.freq_bands = freq_bands
         self.times = times.copy()
 
         if self.freq_bands is None:

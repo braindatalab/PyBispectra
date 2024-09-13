@@ -3,13 +3,14 @@
 ## [Version 1.2.0dev](https://pybispectra.readthedocs.io/en/main/)
 
 ##### Enhancements
-- Added general classes for computing the bispectrum and threenorm with flexible kmn channel combinations.
+- Added general `Bispectrum` and `Threenorm` classes for computing with flexible kmn channel combinations.
 
 ##### Bug Fixes
 - Fixed error where the number of subplots exceeding the number of nodes would cause plotting to fail.
 
 ##### API
 - Changed the default value of `min_ratio` in `SpatioSpectralFilter.get_transformed_data()` from `1.0` to `-inf`.
+- Added the option to control whether a copy is returned from the `get_results()` method of all `Results...` classes and from `SpatioSpectralFilter.get_transformed_data()` (default behaviour returns a copy, like in previous versions).
 
 ##### Documentation
 - Added a new example for computing the bispectrum and threenorm using the general classes.

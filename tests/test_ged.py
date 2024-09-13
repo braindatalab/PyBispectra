@@ -209,6 +209,8 @@ def test_error_catch(method: str) -> None:
         ),
     ):
         ssf.get_transformed_data(min_ratio=ssf.ratios.max() + 1)
+    with pytest.raises(TypeError, match="`copy` must be a bool."):
+        ssf.get_transformed_data(copy="True")
 
 
 @pytest.mark.filterwarnings(
@@ -247,7 +249,9 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
     ), "`transformed_data` should have shape (n_epochs, rank, n_times)."
 
     if rank > 1:
-        transformed_data = ssf.get_transformed_data(min_ratio=ssf.ratios[-2])
+        transformed_data = ssf.get_transformed_data(
+            min_ratio=ssf.ratios[-2], copy=False
+        )
         assert transformed_data.shape == (
             n_epochs,
             rank - 1,
@@ -299,7 +303,7 @@ def test_ged_hpmax_runs(csd_method: str, rank: int) -> None:
         csd_method=csd_method,
     )
 
-    transformed_data = ssf.get_transformed_data(min_ratio=ssf.ratios.min())
+    transformed_data = ssf.get_transformed_data(min_ratio=ssf.ratios.min(), copy=False)
     assert isinstance(
         transformed_data, np.ndarray
     ), "`transformed_data` should be a NumPy array."

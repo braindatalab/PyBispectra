@@ -81,7 +81,7 @@ pac = PAC(
     data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
 pac.compute(indices=((0,), (1,)))  # compute PAC
-pac_results = pac.results.get_results()  # extract results array
+pac_results = pac.results.get_results(copy=False)  # extract results array
 pac.results.plot(f1s=(5, 15), f2s=(55, 65))  # plot PAC
 
 ########################################################################################
@@ -125,7 +125,7 @@ bs_pac = ResultsCFC(
     f2s=bs.results.f2s,
     name="PAC | Bispectrum (manual)",
 )
-bs_pac_results = bs_pac.get_results()
+bs_pac_results = bs_pac.get_results(copy=False)
 
 # compare general and dedicated class results
 if np.all(
@@ -133,7 +133,7 @@ if np.all(
 ):
     print("Results are identical!")
 else:
-    print("Results are not identical!")
+    raise ValueError("Results are not identical!")
 
 pac.results.plot(f1s=(5, 15), f2s=(55, 65))  # dedicated class
 bs_pac.plot(f1s=(5, 15), f2s=(55, 65))  # general class
@@ -170,7 +170,9 @@ norm = Threenorm(
 norm.compute(indices=((0,), (1,), (1,)))  # kmn = xyy
 
 # normalise the bispectrum
-bicoh = np.abs(bs.results.get_results() / norm.results.get_results())
+bicoh = np.abs(
+    bs.results.get_results(copy=False) / norm.results.get_results(copy=False)
+)
 
 # package bicoherence results
 bicoh_pac = ResultsCFC(
@@ -180,7 +182,7 @@ bicoh_pac = ResultsCFC(
     f2s=bs.results.f2s,
     name="PAC | Bicoherence (manual)",
 )
-bicoh_pac_results = bicoh_pac.get_results()
+bicoh_pac_results = bicoh_pac.get_results(copy=False)
 
 ########################################################################################
 # Comparing these bicoherence values with those obtained from the dedicated
@@ -194,7 +196,7 @@ pac_norm = PAC(
     data=fft_coeffs, freqs=freqs, sampling_freq=sampling_freq, verbose=False
 )  # initialise object
 pac_norm.compute(indices=((0,), (1,)), norm=True)  # compute PAC
-pac_norm_results = pac_norm.results.get_results()  # extract results array
+pac_norm_results = pac_norm.results.get_results(copy=False)  # extract results array
 
 # compare general and dedicated class results
 if np.all(
@@ -203,7 +205,7 @@ if np.all(
 ):
     print("Results are identical!")
 else:
-    print("Results are not identical!")
+    raise ValueError("Results are not identical!")
 
 pac_norm.results.plot(f1s=(5, 15), f2s=(55, 65))  # dedicated class
 bicoh_pac.plot(f1s=(5, 15), f2s=(55, 65))  # general class
