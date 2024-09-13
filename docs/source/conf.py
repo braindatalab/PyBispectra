@@ -32,6 +32,7 @@ extensions = [
     "numpydoc",
     "sphinxcontrib.bibtex",
     "sphinx_gallery.gen_gallery",
+    "sphinx_copybutton",
 ]
 
 source_suffix = [".rst", ".md"]

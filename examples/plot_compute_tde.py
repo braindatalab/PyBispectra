@@ -159,7 +159,7 @@ tde = TDE(
 tde.compute(indices=((0, 1), (1, 0)), method=1)  # compute TDE
 tde_times = tde.results.times
 
-tde_results = tde.results.get_results()  # return results as array
+tde_results = tde.results.get_results(copy=False)  # return results as array
 
 print(
     f"TDE results: [{tde_results.shape[0]} connections x {tde_results.shape[1]} "

@@ -1,7 +1,5 @@
 """Tools for handling PPC analysis."""
 
-from copy import deepcopy
-
 import numpy as np
 from numba import njit
 
@@ -39,8 +37,8 @@ class PPC(_ProcessFreqBase):
 
     Attributes
     ----------
-    results : tuple of ~pybispectra.utils.ResultsCFC
-        PPC results for each of the computed metrics.
+    results : ~pybispectra.utils.ResultsCFC
+        PPC results.
 
     data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
         Fourier coefficients.
@@ -165,14 +163,8 @@ class PPC(_ProcessFreqBase):
 
     @property
     def results(self) -> ResultsCFC:
-        """Return the results.
-
-        Returns
-        -------
-        results : ~pybispectra.utils.ResultsCFC
-            The results of the PPC computation.
-        """
-        return deepcopy(self._results)
+        """PPC results."""
+        return self._results
 
 
 @njit

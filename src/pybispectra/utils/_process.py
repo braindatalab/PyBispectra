@@ -89,14 +89,13 @@ class _ProcessFreqBase(ABC):
         if not isinstance(verbose, bool):
             raise TypeError("`verbose` must be a bool.")
 
-        self.data = data.copy().astype(self._data_precision)
-        self.freqs = freqs.copy().astype(_precision.real)
-        self.sampling_freq = deepcopy(sampling_freq)
-        self.verbose = deepcopy(verbose)
+        self.data = np.asarray(data, dtype=self._data_precision)
+        self.freqs = np.asarray(freqs, dtype=_precision.real)
+        self.sampling_freq = sampling_freq
+        self.verbose = verbose
 
     def _sort_indices(self, indices: tuple[tuple[int]] | None) -> None:
         """Sort seed-target indices inputs."""
-        indices = deepcopy(indices)
         if indices is None:
             indices = tuple(
                 [
@@ -108,7 +107,7 @@ class _ProcessFreqBase(ABC):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
             raise ValueError("`indices` must have length of 2.")
-        self._indices = deepcopy(indices)
+        self._indices = indices
 
         seeds = indices[0]
         targets = indices[1]
@@ -125,8 +124,8 @@ class _ProcessFreqBase(ABC):
                 )
         if len(seeds) != len(targets):
             raise ValueError("Entries of `indices` must have equal length.")
-        self._seeds = deepcopy(seeds)
-        self._targets = deepcopy(targets)
+        self._seeds = seeds
+        self._targets = targets
 
         self._n_cons = len(seeds)
 
@@ -137,10 +136,10 @@ class _ProcessFreqBase(ABC):
         check_f1s = True
         check_f2s = True
         if f1s is None:
-            self._f1s = self.freqs.copy()
+            self._f1s = self.freqs
             check_f1s = False
         if f2s is None:
-            self._f2s = self.freqs.copy()
+            self._f2s = self.freqs
             check_f2s = False
 
         for freqs, check_freqs in zip([f1s, f2s], [check_f1s, check_f2s]):
@@ -162,14 +161,14 @@ class _ProcessFreqBase(ABC):
                 raise ValueError(
                     "No frequencies are present in the data for the range in `f1s`."
                 )
-            self._f1s = self.freqs[f1_idcs].copy()
+            self._f1s = self.freqs[f1_idcs]
         if check_f2s:
             f2_idcs = np.argwhere((self.freqs >= f2s[0]) & (self.freqs <= f2s[1])).T[0]
             if f2_idcs.size == 0:
                 raise ValueError(
                     "No frequencies are present in the data for the range in `f2s`."
                 )
-            self._f2s = self.freqs[f2_idcs].copy()
+            self._f2s = self.freqs[f2_idcs]
 
         if self.verbose:
             if self._f1s.max() >= self._f2s.min():
@@ -188,7 +187,7 @@ class _ProcessFreqBase(ABC):
         if n_jobs == -1:
             n_jobs = cpu_count()
 
-        self._n_jobs = deepcopy(n_jobs)
+        self._n_jobs = n_jobs
 
     @abstractmethod
     def compute(self):
@@ -215,7 +214,7 @@ class _ProcessFreqBase(ABC):
     @property
     @abstractmethod
     def results(self) -> None:
-        """Return a copy of the results."""
+        """Return the results."""
 
     def copy(self):
         """Return a copy of the object."""

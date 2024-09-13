@@ -1,7 +1,5 @@
 """Tools for handling waveshape analysis."""
 
-from copy import deepcopy
-
 import numpy as np
 
 from pybispectra.utils._defaults import _precision
@@ -44,8 +42,8 @@ class WaveShape(_ProcessBispectrum):
 
     Attributes
     ----------
-    results : tuple of ~pybispectra.utils.ResultsWaveShape
-        Bicoherence of the data.
+    results : ~pybispectra.utils.ResultsWaveShape
+        Waveshape results.
 
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
         Fourier coefficients.
@@ -162,7 +160,6 @@ class WaveShape(_ProcessBispectrum):
 
     def _sort_indices(self, indices: tuple[int]) -> None:
         """Sort channel indices inputs."""
-        indices = deepcopy(indices)
         if indices is None:
             indices = tuple(range(self._n_chans))
         if not isinstance(indices, tuple):
@@ -264,11 +261,5 @@ class WaveShape(_ProcessBispectrum):
 
     @property
     def results(self) -> ResultsWaveShape:
-        """Return the results.
-
-        Returns
-        -------
-        results : ~pybispectra.utils.ResultsWaveShape
-            The results of the waveshape computation.
-        """
-        return deepcopy(self._results)
+        """Waveshape results."""
+        return self._results

@@ -3,22 +3,13 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [project]
-authors = [
-  {email = "t.s.binns@outlook.com", name = "Thomas Samuel Binns"},
-]
+authors = [{email = "t.s.binns@outlook.com", name = "Thomas Samuel Binns"}]
 classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
 ]
-dependencies = [
-  "joblib",
-  "matplotlib",
-  "mne>1.6",
-  "numba",
-  "numpy",
-  "scipy",
-]
+dependencies = ["joblib", "matplotlib", "mne>1.6", "numba", "numpy", "scipy"]
 description = "A Python signal processing package for computing spectral-domain and time-domain interactions using the bispectrum."
 name = "pybispectra"
 readme = "README.md"
@@ -26,11 +17,7 @@ requires-python = ">=3.10"
 version = "1.2.0dev"
 
 [project.optional-dependencies]
-dev = [
-  "pybispectra[doc]",
-  "pybispectra[lint]",
-  "pybispectra[test]",
-]
+dev = ["pybispectra[doc]", "pybispectra[lint]", "pybispectra[test]"]
 doc = [
   "ipykernel",
   "ipython",
@@ -39,6 +26,7 @@ doc = [
   "numpydoc",
   "pydata-sphinx-theme",
   "sphinx",
+  "sphinx-copybutton",
   "sphinx-gallery",
   "sphinxcontrib-bibtex",
 ]
@@ -53,10 +41,7 @@ lint = [
   "toml-sort",
   "yamllint",
 ]
-test = [
-  "coverage",
-  "pytest",
-]
+test = ["coverage", "pytest"]
 
 [project.urls]
 "Bug Tracker" = "https://github.com/braindatalab/PyBispectra/issues"
@@ -66,12 +51,13 @@ test = [
 ignore-words-list = "trough"
 skip = "./docs/build,./docs/source/auto_examples,./docs/source/refs.bib"
 
+[tool.coverage.report]
+show_missing = true
+
 [tool.coverage.run]
-omit = [
-  "__init__.py",
-  "src/pybispectra/utils/_docs.py",
-  "tests/*",
-]
+command_line = "-m pytest -v tests"
+omit = ["__init__.py", "src/pybispectra/utils/_docs.py", "tests/*"]
+source = ["pybispectra"]
 
 [tool.isort]
 profile = "black"
@@ -133,10 +119,7 @@ ignore_roles = [
 report_level = "WARNING"
 
 [tool.ruff]
-extend-exclude = [
-  "docs",
-  "examples/compute_*.py",
-]
+extend-exclude = ["docs", "examples/compute_*.py"]
 line-length = 88
 
 [tool.ruff.lint.per-file-ignores]

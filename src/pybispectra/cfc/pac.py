@@ -1,7 +1,5 @@
 """Tools for handling PAC analysis."""
 
-from copy import deepcopy
-
 import numpy as np
 
 from pybispectra.utils import ResultsCFC
@@ -44,7 +42,7 @@ class PAC(_ProcessBispectrum):
 
     Attributes
     ----------
-    results : tuple of ~pybispectra.utils.ResultsCFC
+    results : ~pybispectra.utils.ResultsCFC | tuple of ~pybispectra.utils.ResultsCFC
         PAC results for each of the computed metrics.
 
     data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
@@ -407,14 +405,10 @@ class PAC(_ProcessBispectrum):
 
     @property
     def results(self) -> ResultsCFC | tuple[ResultsCFC]:
-        """Return the results.
+        """PAC results for each of the computed metrics.
 
-        Returns
-        -------
-        results : ~pybispectra.utils.ResultsCFC | tuple of ~pybispectra.utils.ResultsCFC
-            The results of the PAC computation returned as a single results object (if
-            only one PAC variant was computed) or a tuple of results objects.
+        Returns a single results object if only one PAC variant was computed.
         """
         if len(self._results) == 1:
-            return deepcopy(self._results[0])
-        return deepcopy(self._results)
+            return self._results[0]
+        return self._results

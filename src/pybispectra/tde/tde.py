@@ -44,7 +44,7 @@ class TDE(_ProcessBispectrum):
 
     Attributes
     ----------
-    results : tuple of ~pybispectra.utils.ResultsTDE
+    results : ~pybispectra.utils.ResultsTDE | tuple of ~pybispectra.utils.ResultsTDE
         TDE results for each of the computed metrics.
 
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
@@ -374,7 +374,6 @@ class TDE(_ProcessBispectrum):
 
     def _sort_indices(self, indices: tuple[tuple[int]] | None) -> None:
         """Sort seed-target indices inputs."""
-        indices = deepcopy(indices)
         if indices is None:
             indices = tuple(
                 map(tuple, np.array(np.triu_indices(self._n_chans, 1)).tolist())
@@ -383,7 +382,7 @@ class TDE(_ProcessBispectrum):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
             raise ValueError("`indices` must have length of 2.")
-        self._indices = deepcopy(indices)
+        self._indices = indices
 
         seeds = indices[0]
         targets = indices[1]
@@ -670,17 +669,13 @@ class TDE(_ProcessBispectrum):
 
     @property
     def results(self) -> ResultsTDE | tuple[ResultsTDE]:
-        """Return the results.
+        """TDE results for each of the computed metrics.
 
-        Returns
-        -------
-        results : ~pybispectra.utils.ResultsTDE | tuple of ~pybispectra.utils.ResultsTDE
-            The results of the TDE computation returned as a single results object (if
-            only one TDE variant was computed) or a tuple of results objects.
+        Returns a single results object if only one TDE variant was computed.
         """
         if len(self._results) == 1:
-            return deepcopy(self._results[0])
-        return deepcopy(self._results)
+            return self._results[0]
+        return self._results
 
 
 @njit

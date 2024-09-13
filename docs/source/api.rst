@@ -1,6 +1,8 @@
 API
 ===
 
+Here are the API references for the classes and functions of PyBispectra.
+
 .. container:: d-none
 
     :py:mod:`pybispectra`:
