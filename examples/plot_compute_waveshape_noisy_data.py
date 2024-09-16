@@ -88,10 +88,12 @@ sampling_freq = 1000  # Hz
 
 # perform spatio-spectral filtering
 ssf = SpatioSpectralFilter(data=data, sampling_freq=sampling_freq, verbose=False)
-ssf.fit_transform_hpmax(signal_bounds=(18, 22), noise_bounds=(15, 25), n_harmonics=2)
+transformed_data = ssf.fit_transform_hpmax(
+    signal_bounds=(18, 22), noise_bounds=(15, 25), n_harmonics=2
+)
 
-# return the first component of the filtered data
-transformed_data = (ssf.get_transformed_data()[:, 0])[:, np.newaxis, :]
+# select the first component of the filtered data
+transformed_data = transformed_data[:, [0], :]
 
 print(
     f"Original timeseries data: [{data.shape[0]} epochs x {data.shape[1]} channel(s) x "

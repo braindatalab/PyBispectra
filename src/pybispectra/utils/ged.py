@@ -20,6 +20,7 @@ class SpatioSpectralFilter:
     Parameters
     ----------
     data : ~numpy.ndarray, shape of [epochs, channels, times]
+        Data to perform spatiospectral filtering on.
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of :attr:`data`.
@@ -29,6 +30,15 @@ class SpatioSpectralFilter:
 
     Methods
     -------
+    fit_hpmax :
+        Fit HPMax filters to the data.
+
+    fit_ssd :
+        Fit SSD filters to the data.
+
+    transform :
+        Transform the data with the fitted filters.
+
     fit_transform_hpmax :
         Fit HPMax filters and transform the data.
 
@@ -141,9 +151,12 @@ class SpatioSpectralFilter:
     filters = None
     patterns = None
     ratios = None
+    _ssd = None
     _transformed_data = None
 
     _fitted = False
+    _fitted_method = None
+    _transformed = False
 
     def __init__(
         self,
@@ -214,7 +227,7 @@ class SpatioSpectralFilter:
         if not isinstance(bandpass_filter, bool):
             raise TypeError("`bandpass_filter` must be a bool.")
 
-        self.bandpass_filter = True
+        self.bandpass_filter = bandpass_filter
 
     def _sort_n_harmonics(self, n_harmonics: int) -> None:
         """Sort harmonic use input."""
@@ -283,7 +296,7 @@ class SpatioSpectralFilter:
         if csd_method not in accepted_methods:
             raise ValueError("`csd_method` is not recognised.")
 
-    def fit_transform_ssd(
+    def fit_ssd(
         self,
         signal_bounds: tuple[int | float],
         noise_bounds: tuple[int | float],
@@ -292,7 +305,7 @@ class SpatioSpectralFilter:
         indices: tuple[int] | None = None,
         rank: int | None = None,
     ) -> None:
-        """Fit SSD filters and transform the data.
+        """Fit SSD filters to the data.
 
         Parameters
         ----------
@@ -325,6 +338,8 @@ class SpatioSpectralFilter:
         -----
         The SSD implementation in MNE is used to compute the filters
         (:class:`mne.decoding.SSD`).
+
+        .. versionadded:: 1.2
         """
         self._sort_freq_bounds(signal_bounds, noise_bounds, signal_noise_gap)
         self._sort_bandpass_filter(bandpass_filter)
@@ -342,6 +357,7 @@ class SpatioSpectralFilter:
         self._compute_ssd(info, filt_params_signal, filt_params_noise)
 
         self._fitted = True
+        self._fitted_method = "SSD"
 
         if self.verbose:
             print("    ... SSD filter fitting finished\n")
@@ -397,7 +413,7 @@ class SpatioSpectralFilter:
             "PyBispectra Internal Error: channel types in `info` should all be 'eeg'. "
             "Please contact the PyBispectra developers."
         )
-        ssd = SSD(
+        self._ssd = SSD(
             info,
             filt_params_signal,
             filt_params_noise,
@@ -408,13 +424,13 @@ class SpatioSpectralFilter:
             return_filtered=self.bandpass_filter,
             rank={"eeg": self.rank},
         )
-        self._transformed_data = ssd.fit_transform(self.data[:, self.indices])
+        self._ssd.fit(self.data[:, self.indices])
 
-        self.filters = ssd.filters_
-        self.patterns = ssd.patterns_
-        self.ratios = ssd.eigvals_
+        self.filters = self._ssd.filters_
+        self.patterns = self._ssd.patterns_
+        self.ratios = self._ssd.eigvals_
 
-    def fit_transform_hpmax(
+    def fit_hpmax(
         self,
         signal_bounds: tuple[int | float],
         noise_bounds: tuple[int | float],
@@ -428,7 +444,7 @@ class SpatioSpectralFilter:
         mt_low_bias: bool = True,
         n_jobs: int = 1,
     ) -> None:
-        """Fit HPMax filters and transform the data.
+        """Fit HPMax filters to the data.
 
         Parameters
         ----------
@@ -484,6 +500,8 @@ class SpatioSpectralFilter:
         MNE is used to compute the CSD, from which the covariance matrices are obtained
         :footcite:`Bartz2019` (:func:`mne.time_frequency.csd_array_multitaper` and
         :func:`mne.time_frequency.csd_array_fourier`).
+
+        .. versionadded:: 1.2
         """
         self._sort_freq_bounds(signal_bounds, noise_bounds, 0.0)
         self._sort_n_harmonics(n_harmonics)
@@ -506,6 +524,7 @@ class SpatioSpectralFilter:
         self._compute_hpmax(csd, freqs)
 
         self._fitted = True
+        self._fitted_method = "HPMax"
 
         if self.verbose:
             print("    ... HPMax filter fitting finished\n")
@@ -613,13 +632,6 @@ class SpatioSpectralFilter:
         self.patterns = np.linalg.pinv(self.filters).astype(_precision.real)
         self.ratios = eigvals[eig_idx].astype(_precision.real)
 
-        self._transformed_data = np.einsum(
-            "ijk,jl->ilk",
-            self.data[:, self.indices],
-            self.filters,
-            dtype=_precision.real,
-        )
-
         if self.verbose:
             print("        ... HPMax filter computation finished\n")
 
@@ -694,6 +706,108 @@ class SpatioSpectralFilter:
 
         return cov_signal, cov_noise, projection
 
+    def transform(self, data: np.ndarray | None = None) -> np.ndarray:
+        """Transform the data with the fitted filters.
+
+        Parameters
+        ----------
+        data : ~numpy.ndarray, shape of [epochs, channels, times] | None (default None)
+            Data to transform with the fitted filters. If :obj:`None`, the data used to
+            fit the filters is transformed.
+
+        Returns
+        -------
+        transformed_data : ~numpy.ndarray, shape of [epochs, components, times]
+            Transformed data.
+
+        Notes
+        -----
+
+        .. versionadded:: 1.2
+        """
+        if not self._fitted:
+            raise ValueError(
+                "No filters have been fit. Please call `fit_ssd` or `fit_hpmax` before "
+                "transforming the data."
+            )
+
+        if data is None:
+            data = self.data
+        if not isinstance(data, np.ndarray):
+            raise TypeError("`data` must be a NumPy array.")
+        if data.ndim != 3:
+            raise ValueError("`data` must be a 3D array.")
+        if data.shape[1] != self.filters.shape[0]:
+            raise ValueError(
+                "`data` must have the same number of channels as the filters."
+            )
+
+        if self.verbose:
+            print("Transforming data with filters...\n")
+
+        if self.bandpass_filter and self._fitted_method == "SSD":
+            self._transformed_data = self._ssd.transform(data)
+        else:
+            self._transformed_data = np.einsum(
+                "ijk,jl->ilk",
+                data[:, self.indices],
+                self.filters,
+                dtype=_precision.real,
+            )
+
+        if self.verbose:
+            print("    ... Data transformation finished\n")
+
+        self._transformed = True
+
+        return self._transformed_data
+
+    def fit_transform_ssd(self, *args: tuple, **kwargs: dict) -> np.ndarray:
+        """Fit SSD filters and transform the data.
+
+        Parameters
+        ----------
+        args : tuple
+            Positional parameters to pass to :meth:`fit_ssd`.
+
+        kwargs : dict
+            Keyword parameters to pass to :meth:`fit_ssd`.
+
+        Returns
+        -------
+        transformed_data : ~numpy.ndarray, shape of [epochs, components, times]
+            Transformed data.
+
+        Notes
+        -----
+        Equivalent to calling :meth:`fit_ssd` followed by :meth:`transform`.
+        """
+        self.fit_ssd(*args, **kwargs)
+        return self.transform()
+
+    def fit_transform_hpmax(self, *args: tuple, **kwargs: dict) -> np.ndarray:
+        """Fit HPMax filters and transform the data.
+
+        Parameters
+        ----------
+        args : tuple
+            Positional parameters to pass to :meth:`fit_hpmax`.
+
+        kwargs : dict
+            Keyword parameters to pass to :meth:`fit_hpmax`.
+
+        Returns
+        -------
+        transformed_data : ~numpy.ndarray, shape of [epochs, components, times]
+            Transformed data.
+
+        Notes
+        -----
+        Equivalent to calling :meth:`fit_hpmax` followed by :meth:`transform`.
+        """
+        self.fit_hpmax(*args, **kwargs)
+        return self.transform()
+
     def get_transformed_data(
         self, min_ratio: int | float = -np.inf, copy: bool = True
     ) -> np.ndarray:
@@ -724,6 +838,13 @@ class SpatioSpectralFilter:
         Raises a warning if no components have a signal-to-noise ratio > ``min_ratio``
         and :attr:`verbose` is :obj:`True`.
         """
+        if not self._transformed:
+            raise ValueError(
+                "No data has been transformed. Please call `transform`, "
+                "`fit_transform_ssd`, or `fit_transform_hpmax` before getting the "
+                "transformed data."
+            )
+
         if not isinstance(min_ratio, (int, float)):
             raise TypeError("`min_ratio` must be an int or a float")
         if not isinstance(copy, bool):
