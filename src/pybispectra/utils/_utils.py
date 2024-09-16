@@ -3,7 +3,7 @@
 import numpy as np
 from mne import Info, create_info
 from mne.parallel import parallel_func
-from mne.utils import ProgressBar
+from mne.utils import ProgressBar, set_log_level
 from numba import njit
 
 from pybispectra.utils._defaults import _precision
@@ -66,11 +66,15 @@ def _compute_in_parallel(
     parallel, my_parallel_func, _ = parallel_func(
         func, n_jobs, prefer=prefer, verbose=verbose
     )
+    old_log_level = set_log_level(
+        verbose="INFO" if verbose else "WARNING", return_old_level=True
+    )  # need to set log level that is passed to tqdm
     for block_i in ProgressBar(range(n_blocks), mesg=message):
         idcs = _get_block_indices(block_i, n_steps, n_jobs)
         output[idcs] = parallel(
             my_parallel_func(**loop_kwargs[idx], **static_kwargs) for idx in idcs
         )
+    set_log_level(verbose=old_log_level)  # reset log level
 
     return output
 

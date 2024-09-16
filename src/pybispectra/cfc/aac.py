@@ -150,8 +150,8 @@ class AAC(_ProcessFreqBase):
             )
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
-                "Memory allocation for the bispectrum computation failed. Try reducing "
-                "the sampling frequency of the data, or reduce the precision of the "
+                "Memory allocation for the AAC computation failed. Try reducing the "
+                "sampling frequency of the data, or reduce the precision of the "
                 "computation with `pybispectra.set_precision('single')`."
             ) from error
 
