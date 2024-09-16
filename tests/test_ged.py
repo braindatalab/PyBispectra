@@ -335,8 +335,8 @@ def test_ged_hpmax_runs(csd_method: str, rank: int) -> None:
         n_times,
     ), "`transformed_data` should have shape (n_epochs, rank, n_times)."
     assert np.allclose(transformed_data, ssf.get_transformed_data(), rtol=0, atol=0), (
-        "data returned from `fit_transform_ssd()` and `get_transformed_data()` should "
-        "be identical."
+        "data returned from `fit_transform_hpmax()` and `get_transformed_data()` "
+        "should be identical."
     )
 
     assert isinstance(ssf.filters, np.ndarray), "`filters` should be a NumPy array."
