@@ -339,7 +339,7 @@ class SpatioSpectralFilter:
         The SSD implementation in MNE is used to compute the filters
         (:class:`mne.decoding.SSD`).
 
-        ..versionadded:: 1.2
+        .. versionadded:: 1.2
         """
         self._sort_freq_bounds(signal_bounds, noise_bounds, signal_noise_gap)
         self._sort_bandpass_filter(bandpass_filter)
