@@ -371,7 +371,7 @@ class Threenorm(_General):
             ).transpose(1, 0, 2, 3)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
-                "Memory allocation for the bispectrum computation failed. Try reducing "
+                "Memory allocation for the threenorm computation failed. Try reducing "
                 "the sampling frequency of the data, or reduce the precision of the "
                 "computation with `pybispectra.set_precision('single')`."
             ) from error
