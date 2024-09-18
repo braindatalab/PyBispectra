@@ -1,5 +1,10 @@
 [
     {
+        "name": "1.2.1dev",
+        "version": "1.2.1dev",
+        "url": "https://pybispectra.readthedocs.io/en/main/"
+    },
+    {
         "name": "1.2.0",
         "version": "1.2.0",
         "url": "https://pybispectra.readthedocs.io/en/1.2.0/"

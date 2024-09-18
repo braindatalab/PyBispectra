@@ -1,5 +1,7 @@
 # PyBispectra Changelog
 
+## [Version 1.2.1dev](https://pybispectra.readthedocs.io/en/main/)
+
 ## [Version 1.2.0](https://pybispectra.readthedocs.io/en/1.2.0/)
 
 ##### Enhancements
