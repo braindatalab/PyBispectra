@@ -3,7 +3,7 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [project]
-authors = [{email = "t.s.binns@outlook.com", name = "Thomas Samuel Binns"}]
+authors = [{email = "t.s.binns@outlook.com", name = "Thomas S. Binns"}]
 classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
@@ -14,7 +14,7 @@ description = "A Python signal processing package for computing spectral-domain 
 name = "pybispectra"
 readme = "README.md"
 requires-python = ">=3.10"
-version = "1.2.0dev"
+version = "1.2.0"
 
 [project.optional-dependencies]
 dev = ["pybispectra[doc]", "pybispectra[lint]", "pybispectra[test]"]
