@@ -1,6 +1,6 @@
 # PyBispectra Changelog
 
-## [Version 1.2.0dev](https://pybispectra.readthedocs.io/en/main/)
+## [Version 1.2.0](https://pybispectra.readthedocs.io/en/1.2.0/)
 
 ##### Enhancements
 - Added general `Bispectrum` and `Threenorm` classes for computing with flexible kmn channel combinations.
