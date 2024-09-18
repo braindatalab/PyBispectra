@@ -8,7 +8,7 @@ Parallel processing and [Numba](https://numba.pydata.org/) optimisation are impl
 
 ## Installation & Requirements:
 Install the package into the desired environment using pip `pip install pybispectra`<br/>
-More information [here](https://pybispectra.readthedocs.io/en/1.2.0/installation.html)
+More information on the [installation](https://pybispectra.readthedocs.io/en/1.2.0/installation.html) page.
 
 ## Use:
 To get started with the toolbox, check out the [documentation](https://pybispectra.readthedocs.io/en/1.2.0/) and [examples](https://pybispectra.readthedocs.io/en/1.2.0/examples.html).
