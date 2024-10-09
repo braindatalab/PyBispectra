@@ -10,6 +10,8 @@ can be computed with PyBispectra.
 # Author(s):
 #   Thomas S. Binns | github.com/tsbinns
 
+# sphinx_gallery_multi_image = "single"
+
 # %%
 
 import numpy as np

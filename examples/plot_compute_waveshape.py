@@ -9,6 +9,8 @@ This example demonstrates how waveshape features can be computed with PyBispectr
 # Author(s):
 #   Thomas S. Binns | github.com/tsbinns
 
+# sphinx_gallery_multi_image = "single"
+
 # %%
 
 import numpy as np
