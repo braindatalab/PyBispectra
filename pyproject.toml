@@ -27,7 +27,7 @@ doc = [
   "pydata-sphinx-theme",
   "sphinx",
   "sphinx-copybutton",
-  "sphinx-gallery",
+  "sphinx-gallery>=0.18",
   "sphinxcontrib-bibtex",
 ]
 lint = [

@@ -9,6 +9,8 @@ This example demonstrates how the bispectrum and threenorm can be computed.
 # Author(s):
 #   Thomas S. Binns | github.com/tsbinns
 
+# sphinx_gallery_multi_image = "single"
+
 # %%
 
 import numpy as np
