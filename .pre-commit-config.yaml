@@ -1,7 +1,7 @@
 repos:
   # ruff PyBispectra
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.0
+    rev: v0.7.1
     hooks:
       - id: ruff
         name: ruff lint pybispectra
@@ -10,7 +10,7 @@ repos:
 
   # ruff examples
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.0
+    rev: v0.7.1
     hooks:
       - id: ruff
         name: ruff lint examples
