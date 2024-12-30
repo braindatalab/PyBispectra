@@ -8,4 +8,5 @@ dependencies:
   - mne>1.6
   - numba
   - numpy
+  - scikit-learn
   - scipy
