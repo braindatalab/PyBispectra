@@ -1,8 +1,8 @@
 # PyBispectra Changelog
 
-## [Version 1.2.1dev](https://pybispectra.readthedocs.io/en/main/)
+## [Version 1.3dev](https://pybispectra.readthedocs.io/en/main/)
 
-## [Version 1.2.0](https://pybispectra.readthedocs.io/en/1.2.0/)
+## [Version 1.2](https://pybispectra.readthedocs.io/en/1.2.1/)
 
 ##### Enhancements
 - Added general `Bispectrum` and `Threenorm` classes for computing with flexible kmn channel combinations.
@@ -19,7 +19,7 @@
 ##### Documentation
 - Added a new example for computing the bispectrum and threenorm using the general classes.
 
-## [Version 1.1.0](https://pybispectra.readthedocs.io/en/1.1.0/)
+## [Version 1.1](https://pybispectra.readthedocs.io/en/1.1.0/)
 
 ##### Enhancements
 - Reduced the memory requirement of bispectrum computations.
@@ -37,6 +37,6 @@
 - Added a new example for computing time delays on specific frequency bands.
 
 
-## [Version 1.0.0](https://pybispectra.readthedocs.io/en/1.0.0/)
+## [Version 1.0](https://pybispectra.readthedocs.io/en/1.0.0/)
 
 - Initial release.
