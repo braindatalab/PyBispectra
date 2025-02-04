@@ -49,9 +49,9 @@ def test_results_cfc_error_catch() -> None:
         )
     with pytest.raises(
         ValueError,
-        match=("`indices` contains indices for nodes not present in the data."),
+        match=("Entries for seeds and targets in `indices` must be >= 0."),
     ):
-        ResultsCFC(data=data, indices=((0,), (n_cons + 1,)), f1s=f1s, f2s=f2s)
+        ResultsCFC(data=data, indices=((0,), (-1,)), f1s=f1s, f2s=f2s)
 
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be NumPy arrays."):
         ResultsCFC(data=data, indices=indices, f1s=f1s.tolist(), f2s=f2s)
@@ -115,7 +115,25 @@ def test_results_cfc_runs() -> None:
     results_array, array_indices = results.get_results(form="compact")
     assert isinstance(results_array, np.ndarray)
     assert results_array.shape == (n_unique_chans, n_unique_chans, n_f1, n_f2)
-    assert array_indices == (tuple(range(n_unique_chans)), tuple(range(n_unique_chans)))
+    assert array_indices == indices
+
+    # Try also with unordered indices that aren't just [0, ..., n_chans]
+    subset_n = 4
+    subset = np.random.RandomState().choice(range(n_cons), subset_n, replace=False)
+    indices_subset = (
+        tuple(indices[0][idx] for idx in subset),
+        tuple(indices[1][idx] for idx in subset),
+    )
+    results = ResultsCFC(
+        data=data[subset], indices=indices_subset, f1s=f1s, f2s=f2s, name=name
+    )
+    results_array, array_indices = results.get_results(form="compact")
+    assert np.max(array_indices) == np.unique(indices_subset).max()
+    # Check that the results array is NaN for missing nodes
+    array_subset_mask = np.zeros(results_array.shape[:2], dtype=bool)
+    array_subset_mask[*indices_subset] = True
+    assert not np.isnan(results_array[array_subset_mask]).all()
+    assert np.isnan(results_array[~array_subset_mask]).all()
 
 
 def test_results_tde_error_catch() -> None:
@@ -169,11 +187,9 @@ def test_results_tde_error_catch() -> None:
         )
     with pytest.raises(
         ValueError,
-        match=("`indices` contains indices for nodes not present in the data."),
+        match=("Entries for seeds and targets in `indices` must be >= 0."),
     ):
-        ResultsTDE(
-            data=data, indices=((0,), (n_cons + 1,)), freq_bands=freq_bands, times=times
-        )
+        ResultsTDE(data=data, indices=((0,), (-1,)), freq_bands=freq_bands, times=times)
 
     with pytest.raises(TypeError, match="`freq_bands` must be a tuple."):
         ResultsTDE(data=data, indices=indices, freq_bands=list(freq_bands), times=times)
@@ -276,7 +292,31 @@ def test_results_tde_runs(freq_bands: tuple) -> None:
     results_array, array_indices = results.get_results(form="compact")
     assert isinstance(results_array, np.ndarray)
     assert results_array.shape == (n_unique_chans, n_unique_chans, n_fbands, n_times)
-    assert array_indices == (tuple(range(n_unique_chans)), tuple(range(n_unique_chans)))
+    assert array_indices == indices
+
+    # Try also with unordered indices that aren't just [0, ..., n_chans]
+    subset_n = 4
+    subset = np.random.RandomState().choice(range(n_cons), subset_n, replace=False)
+    indices_subset = (
+        tuple(indices[0][idx] for idx in subset),
+        tuple(indices[1][idx] for idx in subset),
+    )
+    results = ResultsTDE(
+        data=data[subset],
+        indices=indices_subset,
+        times=times,
+        name=name,
+        freq_bands=freq_bands,
+    )
+
+    results_array, array_indices = results.get_results(form="compact")
+
+    assert np.max(array_indices) == np.unique(indices_subset).max()
+    # Check that the results array is NaN for missing nodes
+    array_subset_mask = np.zeros(results_array.shape[:2], dtype=bool)
+    array_subset_mask[*indices_subset] = True
+    assert not np.isnan(results_array[array_subset_mask]).all()
+    assert np.isnan(results_array[~array_subset_mask]).all()
 
 
 def test_results_waveshape_error_catch() -> None:
@@ -300,14 +340,9 @@ def test_results_waveshape_error_catch() -> None:
         ResultsWaveShape(data=data, indices=(0.5,), f1s=f1s, f2s=f2s)
     with pytest.raises(
         ValueError,
-        match=("`indices` contains indices for channels not present in the data."),
+        match=("Entries of `indices` must be >= 0."),
     ):
         ResultsWaveShape(data=data, indices=(-1,), f1s=f1s, f2s=f2s)
-    with pytest.raises(
-        ValueError,
-        match=("`indices` contains indices for channels not present in the data."),
-    ):
-        ResultsWaveShape(data=data, indices=(n_chans + 1,), f1s=f1s, f2s=f2s)
 
     with pytest.raises(TypeError, match="`f1s` and `f2s` must be NumPy arrays."):
         ResultsWaveShape(data=data, indices=indices, f1s=f1s.tolist(), f2s=f2s)
@@ -401,16 +436,9 @@ def test_results_general_error_catch() -> None:
         ResultsGeneral(data=data, indices=((0.5,), (1.5,), (2.5,)), f1s=f1s, f2s=f2s)
     with pytest.raises(
         ValueError,
-        match=("`indices` contains indices for nodes not present in the data."),
+        match=("Entries for groups in `indices` must be >= 0."),
     ):
         ResultsGeneral(data=data, indices=((-1,), (0,), (1,)), f1s=f1s, f2s=f2s)
-    with pytest.raises(
-        ValueError,
-        match=("`indices` contains indices for nodes not present in the data."),
-    ):
-        ResultsGeneral(
-            data=data, indices=((0,), (1,), (n_chans + 1,)), f1s=f1s, f2s=f2s
-        )
     with pytest.raises(
         ValueError, match=("Entries of `indices` must have equal length.")
     ):
@@ -491,8 +519,23 @@ def test_results_general_runs() -> None:
         n_f1,
         n_f2,
     )
-    assert array_indices == (
-        tuple(range(n_unique_chans)),
-        tuple(range(n_unique_chans)),
-        tuple(range(n_unique_chans)),
+    assert array_indices == indices
+
+    # Try also with unordered indices that aren't just [0, ..., n_chans]
+    subset_n = 8
+    subset = np.random.RandomState().choice(range(n_cons), subset_n, replace=False)
+    indices_subset = (
+        tuple(indices[0][idx] for idx in subset),
+        tuple(indices[1][idx] for idx in subset),
+        tuple(indices[2][idx] for idx in subset),
     )
+    results = ResultsGeneral(
+        data=data[subset], indices=indices_subset, f1s=f1s, f2s=f2s, name=name
+    )
+    results_array, array_indices = results.get_results(form="compact")
+    assert np.max(array_indices) == np.unique(indices_subset).max()
+    # Check that the results array is NaN for missing nodes
+    array_subset_mask = np.zeros(results_array.shape[:3], dtype=bool)
+    array_subset_mask[*indices_subset] = True
+    assert not np.isnan(results_array[array_subset_mask]).all()
+    assert np.isnan(results_array[~array_subset_mask]).all()

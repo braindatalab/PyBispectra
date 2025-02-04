@@ -18,6 +18,7 @@ class _ResultsBase(ABC):
     n_nodes: int = None
     _seeds: tuple[int] = None
     _targets: tuple[int] = None
+    _kmn: tuple[tuple[int]] = None
     _n_chans: int = None
 
     def __init__(
@@ -69,16 +70,14 @@ class _ResultsBase(ABC):
                 raise TypeError(
                     "Entries for seeds and targets in `indices` must be ints."
                 )
+            if any(idx < 0 for idx in group_idcs):
+                raise ValueError(
+                    "Entries for seeds and targets in `indices` must be >= 0."
+                )
         if len(seeds) != len(targets):
             raise ValueError("Entries of `indices` must have equal length.")
         self._n_chans = len(np.unique([*seeds, *targets]))
-        for group_idcs in (seeds, targets):
-            if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
-                raise ValueError(
-                    "`indices` contains indices for nodes not present in the data."
-                )
-        self._seeds = seeds
-        self._targets = targets
+        self._seeds, self._targets = self._remap_indices_groups(indices)
         self.n_nodes = len(seeds)
         self.indices = indices
 
@@ -88,11 +87,9 @@ class _ResultsBase(ABC):
             raise TypeError("`indices` must be a tuple.")
         if not all(isinstance(idx, int) for idx in indices):
             raise TypeError("Entries of `indices` must be ints.")
+        if any(idx < 0 for idx in indices):
+            raise ValueError("Entries of `indices` must be >= 0.")
         self._n_chans = len(np.unique(indices))
-        if any(idx < 0 or idx >= self._n_chans for idx in indices):
-            raise ValueError(
-                "`indices` contains indices for channels not present in the data."
-            )
         self.n_nodes = len(indices)
         self.indices = indices
 
@@ -108,16 +105,21 @@ class _ResultsBase(ABC):
                 raise TypeError("Entries of `indices` must be tuples.")
             if any(not isinstance(idx, int) for idx in group_idcs):
                 raise TypeError("Entries for groups in `indices` must be ints.")
+            if any(idx < 0 for idx in group_idcs):
+                raise ValueError(r"Entries for groups in `indices` must be >= 0.")
         if len(np.unique([len(group) for group in indices])) != 1:
             raise ValueError("Entries of `indices` must have equal length.")
         self._n_chans = len(np.unique(np.ravel(indices)))
-        for group_idcs in indices:
-            if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
-                raise ValueError(
-                    "`indices` contains indices for nodes not present in the data."
-                )
+        self._kmn = self._remap_indices_groups(indices)
         self.n_nodes = len(indices[0])
         self.indices = indices
+
+    def _remap_indices_groups(self, indices: tuple[tuple[int]]) -> tuple[tuple[int]]:
+        """Remap groups of indices (seeds/targets; kmn) to range from 0 to n_chans."""
+        signal_indices = np.unique(np.r_[*indices])
+        return tuple(
+            [tuple(np.searchsorted(signal_indices, group)) for group in indices]
+        )
 
     def get_results(
         self, form: str = "raveled", copy: bool = True
@@ -143,7 +145,8 @@ class _ResultsBase(ABC):
             The results.
 
         indices : tuple of tuple of int, length of 2
-            Channel indices of the seeds and targets. Only returned if :attr:`form` is
+            Channel indices of the seeds and targets in ``results``, according to the
+            node order in the original data indices. Only returned if :attr:`form` is
             ``"compact"``.
         """
         accepted_forms = ["raveled", "compact"]
@@ -191,23 +194,7 @@ class _ResultsBase(ABC):
         for con_result, seed, target in zip(self._data, self._seeds, self._targets):
             compact_results[seed, target] = con_result
 
-        # remove empty rows and cols
-        filled_rows = []
-        for row_i, row in enumerate(compact_results):
-            if not all(np.isnan(entry).all() for entry in row):
-                filled_rows.append(row_i)
-        filled_cols = []
-        for col_i, col in enumerate(compact_results.swapaxes(1, 0)):
-            if not all(np.isnan(entry).all() for entry in col):
-                filled_cols.append(col_i)
-        compact_results = compact_results[np.ix_(filled_rows, filled_cols)]
-
-        indices = (
-            tuple(np.unique(self._seeds).tolist()),
-            tuple(np.unique(self._targets).tolist()),
-        )
-
-        return compact_results, indices
+        return compact_results, (self._seeds, self._targets)
 
 
 class ResultsCFC(_ResultsBase):
@@ -990,26 +977,11 @@ class ResultsGeneral(_ResultsBase):
             The results.
 
         indices : tuple of tuple of int, length of 3
-            Channel indices of the k, m, and n channels. Only returned if :attr:`form`
-            is ``"compact"``.
+            Channel indices of the k, m, and n channels in ``results``, according to the
+            node order in the original data indices. Only returned if :attr:`form` is
+            ``"compact"``.
         """
-        accepted_forms = ["raveled", "compact"]
-        if form not in accepted_forms:
-            raise ValueError("`form` is not recognised.")
-        if not isinstance(copy, bool):
-            raise TypeError("`copy` must be a bool.")
-
-        if form == "raveled":
-            results = self._data
-        else:
-            results, indices = self._get_compact_results_child()
-
-        if copy:
-            results = results.copy()
-
-        if form == "raveled":
-            return results
-        return results, indices
+        return super().get_results(form, copy)
 
     def _get_compact_results_child(self) -> tuple[np.ndarray, tuple[tuple[int]]]:
         """Return a compacted form of the results.
@@ -1037,24 +1009,11 @@ class ResultsGeneral(_ResultsBase):
         )
 
         for con_result, k, m, n in zip(
-            self._data, self.indices[0], self.indices[1], self.indices[2]
+            self._data, self._kmn[0], self._kmn[1], self._kmn[2]
         ):
             compact_results[k, m, n] = con_result
 
-        # remove empty rows and cols
-        filled_rows = []
-        for row_i, row in enumerate(compact_results):
-            if not all(np.isnan(entry).all() for entry in row):
-                filled_rows.append(row_i)
-        filled_cols = []
-        for col_i, col in enumerate(compact_results.swapaxes(1, 0)):
-            if not all(np.isnan(entry).all() for entry in col):
-                filled_cols.append(col_i)
-        compact_results = compact_results[np.ix_(filled_rows, filled_cols)]
-
-        indices = tuple(
-            tuple(np.unique(group_idcs).tolist()) for group_idcs in self.indices
-        )
+        indices = tuple(group_idcs for group_idcs in self._kmn)
 
         return compact_results, indices
 
