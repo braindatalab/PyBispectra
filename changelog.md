@@ -2,6 +2,9 @@
 
 ## [Version 1.3dev](https://pybispectra.readthedocs.io/en/main/)
 
+##### Bug Fixes
+- Fixed error where `indices` in `ResultsCFC`, `ResultsTDE`, and `ResultsGeneral` classes were not being mapped to results correctly.
+
 ## [Version 1.2](https://pybispectra.readthedocs.io/en/1.2.1/)
 
 ##### Enhancements
