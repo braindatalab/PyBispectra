@@ -240,8 +240,8 @@ class ResultsCFC(_ResultsBase):
         Name of the results.
 
     indices : tuple of tuple of int, length of 2
-        Indices of the channels for each connection of the results. Should contain two
-        tuples of equal length for the seed and target indices, respectively.
+        Indices of the channels for each connection of the results. Contains two tuples
+        of equal length for the seed and target indices, respectively.
 
     shape : tuple of int
         Shape of the results i.e. [nodes, low frequencies, high frequencies].
@@ -908,8 +908,8 @@ class ResultsGeneral(_ResultsBase):
         Name of the results.
 
     indices : tuple of tuple of int, length of 2
-        Indices of the channels for each connection of the results. Should contain two
-        tuples of equal length for the seed and target indices, respectively.
+        Indices of the channels for each connection of the results. Contains three
+        tuples of equal length for the k, m, and n channel indices, respectively.
 
     shape : tuple of int
         Shape of the results i.e. [nodes, low frequencies, high frequencies].
