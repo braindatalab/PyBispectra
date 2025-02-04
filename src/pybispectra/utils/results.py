@@ -116,10 +116,18 @@ class _ResultsBase(ABC):
 
     def _remap_indices_groups(self, indices: tuple[tuple[int]]) -> tuple[tuple[int]]:
         """Remap groups of indices (seeds/targets; kmn) to range from 0 to n_chans."""
-        signal_indices = np.unique(np.r_[*indices])
-        return tuple(
-            [tuple(np.searchsorted(signal_indices, group)) for group in indices]
-        )
+        # FIXME: This is really ugly. Replace with `np.unique(np.r_[*indices])`` when
+        # support for Python 3.10 dropped.
+        if len(indices) == 2:
+            signal_indices = np.unique(np.r_[indices[0], indices[1]])
+        else:
+            assert len(indices) == 3, (
+                "The number of groups in `indices` is not as expected. Please contact "
+                "the PyBispectra developers."
+            )
+            signal_indices = np.unique(np.r_[indices[0], indices[1], indices[2]])
+
+        return tuple(tuple(np.searchsorted(signal_indices, group)) for group in indices)
 
     def get_results(
         self, form: str = "raveled", copy: bool = True

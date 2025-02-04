@@ -131,7 +131,7 @@ def test_results_cfc_runs() -> None:
     assert np.max(array_indices) == np.unique(indices_subset).max()
     # Check that the results array is NaN for missing nodes
     array_subset_mask = np.zeros(results_array.shape[:2], dtype=bool)
-    array_subset_mask[*indices_subset] = True
+    array_subset_mask[indices_subset[0], indices_subset[1]] = True
     assert not np.isnan(results_array[array_subset_mask]).all()
     assert np.isnan(results_array[~array_subset_mask]).all()
 
@@ -314,7 +314,7 @@ def test_results_tde_runs(freq_bands: tuple) -> None:
     assert np.max(array_indices) == np.unique(indices_subset).max()
     # Check that the results array is NaN for missing nodes
     array_subset_mask = np.zeros(results_array.shape[:2], dtype=bool)
-    array_subset_mask[*indices_subset] = True
+    array_subset_mask[indices_subset[0], indices_subset[1]] = True
     assert not np.isnan(results_array[array_subset_mask]).all()
     assert np.isnan(results_array[~array_subset_mask]).all()
 
@@ -536,6 +536,6 @@ def test_results_general_runs() -> None:
     assert np.max(array_indices) == np.unique(indices_subset).max()
     # Check that the results array is NaN for missing nodes
     array_subset_mask = np.zeros(results_array.shape[:3], dtype=bool)
-    array_subset_mask[*indices_subset] = True
+    array_subset_mask[indices_subset[0], indices_subset[1], indices_subset[2]] = True
     assert not np.isnan(results_array[array_subset_mask]).all()
     assert np.isnan(results_array[~array_subset_mask]).all()
