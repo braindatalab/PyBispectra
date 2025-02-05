@@ -134,6 +134,7 @@ numpydoc_xref_ignore = {
     "times",
     "components",
     "frequencies",
+    "frequency_bands",
     "x",
     "n_vertices",
     "n_faces",
