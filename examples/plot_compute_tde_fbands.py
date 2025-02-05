@@ -54,8 +54,7 @@ from pybispectra import TDE, compute_fft, get_example_data_paths
 # number of time points in each epoch of the data, plus one.
 #
 # When computing time delay estimation, we extract information for the broadband
-# spectrum, 20-30 Hz band, and 30-40 Hz band, using the :attr:`fmin` and :attr:`fmax`
-# arguments.
+# spectrum, 20-30 Hz band, and 30-40 Hz band, using the ``fmin`` and ``fmax`` arguments.
 
 # %%
 
@@ -82,7 +81,7 @@ print(
 )
 
 ########################################################################################
-# We can see that time delays have been computed for one connection (0 -> 1) and three
+# We can see that time delays have been computed for one connection (0 → 1) and three
 # frequency bands (0-100 Hz; 20-30 Hz; and 30-40 Hz), with 401 timepoints. The
 # timepoints correspond to time delay estimates for every 5 ms (i.e. the sampling rate
 # of the data), ranging from -1000 ms to +1000 ms.
