@@ -142,16 +142,16 @@ print(
 # class object with the Fourier coefficients and the frequency information and call the
 # :meth:`~pybispectra.tde.TDE.compute` method. For simplicity, we will focus on TDE
 # using method I. To demonstrate that TDE can show the directionality of information
-# flow as well as the particular time lag, we will compute TDE from signals 0 -> 1 (the
+# flow as well as the particular time lag, we will compute TDE from signals 0 → 1 (the
 # genuine direction of information flow where the time delay should have a positive
-# value) and from signals 1 -> 0 (the reverse direction of information flow where the
+# value) and from signals 1 → 0 (the reverse direction of information flow where the
 # time delay should have a negative value).
 #
-# Using the :attr:`fmin` and :attr:`fmax` arguments, time delay information for
-# frequency band(s) of interest can be isolated by specifying the lower and higher
-# frequencies of interest. Here, we will compute time delays for all frequencies.
-# Performing time delay estimation on frequency bands is discussed in the following
-# example: :doc:`plot_compute_tde_fbands`.
+# Using the ``fmin`` and ``fmax`` arguments, time delay information for frequency bands
+# of interest can be isolated by specifying the lower and higher frequencies of
+# interest. Here, we will compute time delays for all frequencies. Performing time delay
+# estimation on frequency bands is discussed in the following example:
+# :doc:`plot_compute_tde_fbands`.
 
 # %%
 
@@ -169,7 +169,7 @@ print(
 )
 
 ########################################################################################
-# We can see that time delays have been computed for two connections (0 -> 1 and 1 -> 0)
+# We can see that time delays have been computed for two connections (0 → 1 and 1 → 0)
 # and one frequency band (0-100 Hz), with 401 timepoints, and averaged across our 30
 # epochs. The timepoints correspond to time delay estimates for every 5 ms (i.e. the
 # sampling rate of the data), ranging from -1000 ms to +1000 ms.
@@ -183,11 +183,10 @@ print(
 # strength of the estimate is maximal as our :math:`\tau`. Doing so, we indeed see that
 # the time delay is identified as 250 ms. Furthermore, comparing the two connections, we
 # see that the direction of information flow is also correctly identified, with the
-# result for connection 0 -> 1 being positive and the result for connection 1 -> 0 being
+# result for connection 0 → 1 being positive and the result for connection 1 → 0 being
 # negative (i.e. information flow from signal 0 to signal 1). Here, we manually find
 # :math:`\tau` based on the maximal value of the TDE results, however this information
-# is also precomputed and can be accessed via the
-# :attr:`~pybispectra.utils.ResultsTDE.tau` attribute.
+# is also precomputed and can be accessed via the ``tau`` attribute.
 #
 # Taking the time at which the estimate is maximal as our :math:`\tau` is one approach
 # to use when estimating time delays. For interest, however, we can also plot the full

@@ -23,11 +23,10 @@ class PAC(_ProcessBispectrum):
         Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be evenly
-        spaced.
+        Frequencies (in Hz) in ``data``. Frequencies are expected to be evenly spaced.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -49,10 +48,10 @@ class PAC(_ProcessBispectrum):
         Fourier coefficients.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`.
+        Frequencies (in Hz) in ``data``.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -90,8 +89,8 @@ class PAC(_ProcessBispectrum):
             :obj:`None`, all frequencies are used.
 
         f2s : tuple of int or float, length of 2 | None (default None)
-            Start and end higher frequencies to compute PAC on, respectively.
-            If :obj:`None`, all frequencies are used.
+            Start and end higher frequencies to compute PAC on, respectively. If
+            :obj:`None`, all frequencies are used.
 
         antisym : bool | tuple of bool (default False)
             Whether to antisymmetrise the PAC results. If a tuple of bool, both forms of
@@ -149,8 +148,8 @@ class PAC(_ProcessBispectrum):
         If the seed and target for a given connection is the same channel and
         antisymmetrisation is being performed, :obj:`numpy.nan` values are returned.
 
-        PAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If any value
-        of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan` value is returned.
+        PAC is computed between all values of ``f1s`` and ``f2s``. If any value of
+        ``f1s`` is higher than ``f2s``, a :obj:`numpy.nan` value is returned.
 
         References
         ----------
@@ -405,10 +404,6 @@ class PAC(_ProcessBispectrum):
 
     @property
     def results(self) -> ResultsCFC | tuple[ResultsCFC]:
-        """PAC results for each of the computed metrics.
-
-        Returns a single results object if only one PAC variant was computed.
-        """
         if len(self._results) == 1:
             return self._results[0]
         return self._results

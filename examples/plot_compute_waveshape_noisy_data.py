@@ -112,13 +112,13 @@ print(
 # filters are being generated must be full rank (i.e. a non-zero determinant). The
 # :meth:`~pybispectra.utils.SpatioSpectralFilter.fit_transform_ssd` and
 # :meth:`~pybispectra.utils.SpatioSpectralFilter.fit_transform_hpmax` methods have a
-# :attr:`rank` argument where the rank of the data can be specified, according to which
-# the data will be projected to. If the rank is not specified, it will be computed
+# ``rank`` argument where the rank of the data can be specified, according to which the
+# data will be projected to. If the rank is not specified, it will be computed
 # automatically using the :func:`~pybispectra.utils.compute_rank` function. Here, the
 # rank is determined based on the number of non-zero singular values. Non-zero singular
 # values are defined as those which are greater than the largest singular value
-# multiplied by a tolerance value specified by the :attr:`sv_tol` argument
-# (:math:`1e^{-5}` by default).
+# multiplied by a tolerance value specified by the ``sv_tol`` argument (:math:`1e^{-5}`
+# by default).
 #
 # Below we see that our original timeseries data of 20 channels has a rank of 20, and is
 # therefore full rank. Although the rank of the data is automatically computed, the

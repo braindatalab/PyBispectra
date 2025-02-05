@@ -101,13 +101,11 @@ print(
 # between all channel and frequency combinations, however we can also specify particular
 # combinations of interest.
 #
-# Here, we specify the :attr:`~pybispectra.cfc.PAC.indices` to compute PAC on.
-# :attr:`~pybispectra.cfc.PAC.indices` is expected to be a tuple containing two lists
-# for the indices of the seed and target channels, respectively. The indices specified
-# below mean that PAC will only be computed across frequencies between the channels
-# (i.e. 0 -> 1). By leaving the frequency arguments :attr:`~pybispectra.cfc.PAC.f1s` and
-# :attr:`~pybispectra.cfc.PAC.f2s` blank, we will look at all possible frequency
-# combinations.
+# Here, we specify the ``indices`` to compute PAC on. ``indices`` is expected to be a
+# tuple containing two lists for the indices of the seed and target channels,
+# respectively. The indices specified below mean that PAC will only be computed across
+# frequencies between the channels (i.e. 0 → 1). By leaving the frequency arguments
+# ``f1s`` and ``f2s`` blank, we will look at all possible frequency combinations.
 
 # %%
 
@@ -124,7 +122,7 @@ print(
 )
 
 ########################################################################################
-# We can see that PAC has been computed for one connection (0 -> 1), and all possible
+# We can see that PAC has been computed for one connection (0 → 1), and all possible
 # frequency combinations, averaged across our 30 epochs. Whilst there are > 10,000 such
 # frequency combinations in our [101 x 101] matrix, PAC for those entries where
 # :math:`f_1` would be higher than :math:`f_2`, as well as where :math:`f_2 + f_1`

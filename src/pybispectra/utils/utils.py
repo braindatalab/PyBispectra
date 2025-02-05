@@ -31,18 +31,17 @@ def compute_fft(
         Real-valued data to compute the FFT on.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of :attr:`data`.
+        Sampling frequency (in Hz) of ``data``.
 
     n_points : int | None (default None)
         Number of points to use in the FFT. If :obj:`None`, is equal to the number of
-        timepoints in :attr:`data`. For time delay estimation, it is recommended that
-        :attr:`n_points=2 * n_times + 1`, where `n_times` is the number of timepoints in
-        each epoch of :attr:`data`.
+        timepoints in ``data``. For time delay estimation, it is recommended that
+        ``n_points=2 * n_times + 1``, where ``n_times`` is the number of timepoints in
+        each epoch of ``data``.
 
-    window : str (default ``"hanning"``)
-        Type of window to apply to :attr:`data` before computing the FFT. Accepts
-        ``"hanning"`` and ``"hamming"``. See :func:`numpy.hanning` and
-        :func:`numpy.hamming`.
+    window : ``"hanning"`` | ``"hamming"`` (default ``"hanning"``)
+        Type of window to apply to ``data`` before computing the FFT. See
+        :func:`numpy.hanning` and :func:`numpy.hamming`.
 
     n_jobs : int (default ``1``)
         Number of jobs to run in parallel. If ``-1``, all available CPUs are used.
@@ -53,10 +52,10 @@ def compute_fft(
     Returns
     -------
     coeffs : ~numpy.ndarray, shape of [epochs, channels, frequencies]
-        Fourier coefficients of :attr:`data`.
+        Fourier coefficients of ``data``.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`coeffs`.
+        Frequencies (in Hz) in ``coeffs``.
     """
     (n_points, window_func, n_jobs) = _compute_fft_input_checks(
         data, sampling_freq, n_points, window, n_jobs, verbose
@@ -177,14 +176,13 @@ def compute_tfr(
         Real-valued data to compute the amplitude TFR of.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of :attr:`data`.
+        Sampling frequency (in Hz) of ``data``.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) to return the TFR for.
 
-    tfr_mode : str (default ``"morlet"``)
-        Mode for computing the TFR. Accepts ``"morlet"`` and ``"multitaper"``. See
-        :func:`mne.time_frequency.tfr_array_morlet` and
+    tfr_mode : ``"morlet"`` | ``"multitaper"`` (default ``"morlet"``)
+        Mode for computing the TFR. See :func:`mne.time_frequency.tfr_array_morlet` and
         :func:`mne.time_frequency.tfr_array_multitaper`.
 
     n_cycles : ~numpy.ndarray, shape of [frequencies] | int | float (default ``7.0``)
@@ -194,8 +192,8 @@ def compute_tfr(
 
     zero_mean_wavelets : bool | None (default None)
         Whether or not to use wavelets with a mean of 0. If :obj:`None`, the default
-        argument of :func:`~mne.time_frequency.tfr_array_morlet` and
-        :func:`~mne.time_frequency.tfr_array_multitaper` is used according to
+        argument of :func:`mne.time_frequency.tfr_array_morlet` and
+        :func:`mne.time_frequency.tfr_array_multitaper` is used according to
         ``tfr_mode``.
 
     use_fft : bool default (True)
@@ -204,7 +202,7 @@ def compute_tfr(
     multitaper_time_bandwidth : int | float (default ``4.0``)
         Product between the temporal window length (in seconds) and the frequency
         bandwidth (in Hz). Only used if ``tfr_mode = "multitaper"``. See
-        :func:`~mne.time_frequency.tfr_array_multitaper` for more information.
+        :func:`mne.time_frequency.tfr_array_multitaper` for more information.
 
     n_jobs : int (default ``1``)
         Number of jobs to run in parallel. If ``-1``, all available CPUs are used.
@@ -215,10 +213,10 @@ def compute_tfr(
     Returns
     -------
     tfr : ~numpy.ndarray, shape of [epochs, channels, frequencies, times]
-        Amplitude/power of the TFR of :attr:`data`.
+        Amplitude/power of the TFR of ``data``.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`tfr`.
+        Frequencies (in Hz) in ``tfr``.
 
     Notes
     -----
@@ -357,7 +355,7 @@ def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs, channels, times]
+    data : ~numpy.ndarray, shape of [epochs, channels, times]
         Data to find the rank of.
 
     sv_tol : int | float (default ``1e-5``)
@@ -368,7 +366,7 @@ def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
     Returns
     -------
     rank : int
-        Minimum rank of :attr:`data` over epochs.
+        Minimum rank of ``data`` over epochs.
     """
     if not isinstance(data, np.ndarray):
         raise TypeError("`data` must be a NumPy array.")
@@ -388,7 +386,7 @@ def set_precision(precision: str) -> None:
 
     Attributes
     ----------
-    precision : str
+    precision : ``"single"`` | ``"double"``
         Precision to use. Accepts ``"single"`` (real values are :obj:`numpy.float32` and
         complex values are :obj:`numpy.complex64`) and ``"double"`` (real values are
         :obj:`numpy.float64` and complex values are :obj:`numpy.complex128`).

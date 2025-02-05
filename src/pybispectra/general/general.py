@@ -66,11 +66,10 @@ class Bispectrum(_General):
         Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be evenly
-        spaced.
+        Frequencies (in Hz) in ``data``. Frequencies are expected to be evenly spaced.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -92,10 +91,10 @@ class Bispectrum(_General):
         Fourier coefficients.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`.
+        Frequencies (in Hz) in ``data``.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -146,9 +145,8 @@ class Bispectrum(_General):
         :math:`f_1` and :math:`f_2` correspond to a lower and higher frequency,
         respectively; and :math:`<>` represents the average value over epochs.
 
-        The bispectrum is computed between all values of :attr:`f1s` and :attr:`f2s`. If
-        any value of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan` value is
-        returned.
+        The bispectrum is computed between all values of ``f1s`` and ``f2s``. If any
+        value of ``f1s`` is higher than ``f2s``, a :obj:`numpy.nan` value is returned.
         """
         self._reset_attrs()
 
@@ -218,7 +216,6 @@ class Bispectrum(_General):
 
     @property
     def results(self) -> ResultsGeneral:
-        """Bispectrum results."""
         return self._results
 
 
@@ -231,11 +228,10 @@ class Threenorm(_General):
         Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be evenly
-        spaced.
+        Frequencies (in Hz) in ``data``. Frequencies are expected to be evenly spaced.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -257,10 +253,10 @@ class Threenorm(_General):
         Fourier coefficients.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`.
+        Frequencies (in Hz) in ``data``.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -312,9 +308,8 @@ class Threenorm(_General):
         :math:`f_1` and :math:`f_2` correspond to a lower and higher frequency,
         respectively; and :math:`<>` represents the average value over epochs.
 
-        The threenorm is computed between all values of :attr:`f1s` and :attr:`f2s`. If
-        any value of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan` value is
-        returned.
+        The threenorm is computed between all values of ``f1s`` and ``f2s``. If any
+        value of ``f1s`` is higher than ``f2s``, a :obj:`numpy.nan` value is returned.
 
         References
         ----------
@@ -388,5 +383,4 @@ class Threenorm(_General):
 
     @property
     def results(self) -> ResultsGeneral:
-        """Threenorm results."""
         return self._results

@@ -23,7 +23,7 @@ class SpatioSpectralFilter:
         Data to perform spatiospectral filtering on.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of :attr:`data`.
+        Sampling frequency (in Hz) of ``data``.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -52,7 +52,7 @@ class SpatioSpectralFilter:
     ----------
     filters : ~numpy.ndarray, shape of [channels, rank]
         Spatial filters (eigenvectors of the eigendecomposition). Sorted in descending
-        order according to the size of the signal-to-noise ratios of :attr:`ratios`.
+        order according to the size of the signal-to-noise ratios of ``ratios``.
 
     patterns : ~numpy.ndarray, shape of [rank, channels]
         Spatial patterns for each of the spatial filters.
@@ -315,12 +315,12 @@ class SpatioSpectralFilter:
 
         noise_bounds : tuple of int or float, length of 2
             Lower and upper frequencies (in Hz) to treat as the noise, excluding the
-            frequencies in :attr:`signal_bounds`.
+            frequencies in ``signal_bounds``.
 
         signal_noise_gap : int | float (default ``1.0``)
             Frequency count (in Hz) to treat as a transition boundary between
-            :attr:`signal_bounds` and :attr:`noise_bounds`. Used to reduce spectral
-            leakage between the signal and noise frequencies.
+            ``signal_bounds`` and ``noise_bounds``. Used to reduce spectral leakage
+            between the signal and noise frequencies.
 
         bandpass_filter : bool (default False)
             Whether or not to bandpass filter the data before transforming with the SSD
@@ -454,12 +454,12 @@ class SpatioSpectralFilter:
 
         noise_bounds : tuple of int or float, length of 2
             Lower and upper frequencies (in Hz) to treat as the noise, excluding the
-            frequencies in :attr:`signal_bounds`. For harmonics, the same number of
+            frequencies in ``signal_bounds``. For harmonics, the same number of
             frequency bins around the harmonic frequencies are taken as noise
             frequencies.
 
         n_harmonics : int (default ``-1``)
-            Number of harmonic frequencies of :attr:`signal_bounds` to use when
+            Number of harmonic frequencies of ``signal_bounds`` to use when
             computing the filters. If ``0``, no harmonics are used. If ``-1``, all
             harmonics are used.
 
@@ -471,9 +471,8 @@ class SpatioSpectralFilter:
             Rank subspace to project the data to. If :obj:`None`, the rank of the data
             is automatically computed and projected to.
 
-        csd_method : str (default ``"multitaper"``)
-            Method to use when computing the CSD. Can be ``"multitaper"`` or
-            ``"fourier"``.
+        csd_method : ``"multitaper`` | ``"fourier"`` (default ``"multitaper"``)
+            Method to use when computing the CSD.
 
         n_fft : int | None (default None)
             Number of samples in the FFT. If :obj:`None`, the number of times in each
@@ -481,15 +480,15 @@ class SpatioSpectralFilter:
 
         mt_bandwidth : int | float (default ``5.0``)
             Bandwidth of the multitaper windowing function (in Hz). Only used if
-            :attr:`csd_method` is ``"multitaper"``.
+            ``csd_method`` is ``"multitaper"``.
 
         mt_adaptive : bool (default True)
             Whether to use adaptive weights when combining tapered spectra. Only used
-            if :attr:`csd_method` is ``"multitaper"``.
+            if ``csd_method`` is ``"multitaper"``.
 
         mt_low_bias : bool (default True)
             Whether to only use tapers with > 90% spectral concentration within the
-            bandwidth. Only used if :attr:`csd_method` is ``"multitaper"``.
+            bandwidth. Only used if ``csd_method`` is ``"multitaper"``.
 
         n_jobs : int (default ``1``)
             Number of jobs to use when computing the CSD. If ``-1``, all available CPUs
@@ -816,8 +815,8 @@ class SpatioSpectralFilter:
         Parameters
         ----------
         min_ratio : int | float (default - numpy.inf)
-            Only returns the transformed data for those spatial filters whose
-            :attr:`ratios` values is greater or equal to this value.
+            Only returns the transformed data for those spatial filters whose ``ratios``
+            values is greater or equal to this value.
 
             .. versionchanged:: 1.2
                Default value changed from ``1.0`` to ``-inf``.
@@ -836,7 +835,7 @@ class SpatioSpectralFilter:
         Notes
         -----
         Raises a warning if no components have a signal-to-noise ratio > ``min_ratio``
-        and :attr:`verbose` is :obj:`True`.
+        and ``verbose`` is :obj:`True`.
         """
         if not self._transformed:
             raise ValueError(

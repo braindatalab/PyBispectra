@@ -147,10 +147,10 @@ fft_coeffs_peaks_troughs, _ = compute_fft(
 # computed for all channels and all frequency combinations, however we can also specify
 # particular channels and combinations of interest.
 #
-# Here, we specify the frequency arguments :attr:`~pybispectra.waveshape.WaveShape.f1s`
-# and :attr:`~pybispectra.waveshape.WaveShape.f2s` to compute waveshape on in the range
-# 5-35 Hz (around the frequency at which the signal features were simulated). By leaving
-# the indices argument blank, we will look at all channels in the data.
+# Here, we specify the frequency arguments ``f1s`` and ``f2s`` to compute waveshape on
+# in the range 5-35 Hz (around the frequency at which the signal features were
+# simulated). By leaving the indices argument blank, we will look at all channels in the
+# data.
 
 # %%
 

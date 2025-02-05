@@ -19,15 +19,14 @@ class WaveShape(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
         Fourier coefficients.
 
-    freqs : numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be evenly
-        spaced.
+    freqs : ~numpy.ndarray, shape of [frequencies]
+        Frequencies (in Hz) in ``data``. Frequencies are expected to be evenly spaced.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -49,10 +48,10 @@ class WaveShape(_ProcessBispectrum):
         Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`.
+        Frequencies (in Hz) in ``data``.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -64,7 +63,7 @@ class WaveShape(_ProcessBispectrum):
     :footcite:`Bartz2019`. This can enhance the signal-to-noise ratio of your data as
     well as mitigate the risks of source-mixing in the sensor space compromising the
     bicoherence patterns of the data :footcite:`Bartz2019`. Filtering can be performed
-    with :class:`~pybispectra.utils.SpatioSpectralFilter`.
+    with :class:`pybispectra.utils.SpatioSpectralFilter`.
 
     References
     ----------
@@ -125,9 +124,8 @@ class WaveShape(_ProcessBispectrum):
 
         where the resulting values lie in the range :math:`[-1, 1]`.
 
-        Bicoherence is computed for all values of :attr:`f1s` and :attr:`f2s`. If any
-        value of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan` value is
-        returned.
+        Bicoherence is computed for all values of ``f1s`` and ``f2s``. If any value of
+        ``f1s`` is higher than ``f2s``, a :obj:`numpy.nan` value is returned.
 
         References
         ----------
@@ -261,5 +259,4 @@ class WaveShape(_ProcessBispectrum):
 
     @property
     def results(self) -> ResultsWaveShape:
-        """Waveshape results."""
         return self._results

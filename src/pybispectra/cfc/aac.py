@@ -22,11 +22,10 @@ class AAC(_ProcessFreqBase):
         Amplitude (power) of the time-frequency representation of data.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be evenly
-        spaced.
+        Frequencies (in Hz) in ``data``. Frequencies are expected to be evenly spaced.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -48,10 +47,10 @@ class AAC(_ProcessFreqBase):
         Amplitude (power) of the time-frequency representation of data.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`.
+        Frequencies (in Hz) in ``data``.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of :attr:`data`.
+        Sampling frequency (in Hz) of ``data``.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -83,8 +82,8 @@ class AAC(_ProcessFreqBase):
             :obj:`None`, all frequencies are used.
 
         f2s : tuple of int or float, length of 2 | None (default None)
-            Start and end higher frequencies to compute AAC on, respectively.
-            If :obj:`None`, all frequencies are used.
+            Start and end higher frequencies to compute AAC on, respectively. If
+            :obj:`None`, all frequencies are used.
 
         n_jobs : int (default ``1``)
             Number of jobs to run in parallel. If ``-1``, all available CPUs are used.
@@ -95,8 +94,8 @@ class AAC(_ProcessFreqBase):
         frequency in each epoch, with coupling being averaged across epochs
         :footcite:`Giehl2021`.
 
-        AAC is computed between all values of :attr:`f1s` and :attr:`f2s`. If any value
-        of :attr:`f1s` is higher than :attr:`f2s`, a :obj:`numpy.nan` value is returned.
+        AAC is computed between all values of ``f1s`` and ``f2s``. If any value of
+        ``f1s`` is higher than ``f2s``, a :obj:`numpy.nan` value is returned.
 
         References
         ----------
@@ -163,7 +162,6 @@ class AAC(_ProcessFreqBase):
 
     @property
     def results(self) -> ResultsCFC:
-        """AAC results."""
         return self._results
 
 
