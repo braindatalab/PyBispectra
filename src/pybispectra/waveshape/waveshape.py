@@ -63,7 +63,7 @@ class WaveShape(_ProcessBispectrum):
     :footcite:`Bartz2019`. This can enhance the signal-to-noise ratio of your data as
     well as mitigate the risks of source-mixing in the sensor space compromising the
     bicoherence patterns of the data :footcite:`Bartz2019`. Filtering can be performed
-    with :class:`~pybispectra.utils.SpatioSpectralFilter`.
+    with :class:`pybispectra.utils.SpatioSpectralFilter`.
 
     References
     ----------
