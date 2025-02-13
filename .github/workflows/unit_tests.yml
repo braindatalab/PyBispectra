@@ -63,7 +63,7 @@ jobs:
 
   test_conda:
     timeout-minutes: 90
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -el {0}

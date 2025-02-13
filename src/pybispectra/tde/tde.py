@@ -25,11 +25,10 @@ class TDE(_ProcessBispectrum):
         ``n_points=2 * n_times + 1`` in :func:`pybispectra.utils.compute_fft`).
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`. Frequencies are expected to be evenly
-        spaced.
+        Frequencies (in Hz) in ``data``. Frequencies are expected to be evenly spaced.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -51,10 +50,10 @@ class TDE(_ProcessBispectrum):
         Fourier coefficients, with negative frequencies appended.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
-        Frequencies (in Hz) in :attr:`data`, with negative frequencies appended.
+        Frequencies (in Hz) in ``data``, with negative frequencies appended.
 
     sampling_freq : int | float
-        Sampling frequency (in Hz) of the data from which :attr:`data` was derived.
+        Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -65,7 +64,7 @@ class TDE(_ProcessBispectrum):
     frequencies of the original signals, however since these are expected to be
     real-valued, they can be inferred from the positive frequencies. Accordingly, only
     the coefficients corresponding to the zero and positive frequencies should be passed
-    to :attr:`data`.
+    to ``data``.
 
     It is recommended to compute the Fourier coefficients with ``n_points=2 * n_times +
     1``. Using a smaller number of points than this will reduce the time range in which
@@ -150,12 +149,12 @@ class TDE(_ProcessBispectrum):
         fmin : int | float | tuple of int or float (default ``0.0``)
             The low frequency of interest (in Hz) to compute time delays for. If a tuple
             of float, specifies the low frequencies for each frequency band of interest
-            (must have the same length as `fmax`).
+            (must have the same length as ``fmax``).
 
         fmax : int | float | tuple of int or float (default numpy.inf)
             The high frequency of interest (in Hz) to compute time delays for. If a
             tuple of float, specifies the high frequencies for each frequency band of
-            interest (must have the same length as `fmin`).
+            interest (must have the same length as ``fmin``).
 
         antisym : bool | tuple of bool (default False)
             Whether to antisymmetrise the PAC results. If a tuple of bool, both forms of
@@ -669,10 +668,6 @@ class TDE(_ProcessBispectrum):
 
     @property
     def results(self) -> ResultsTDE | tuple[ResultsTDE]:
-        """TDE results for each of the computed metrics.
-
-        Returns a single results object if only one TDE variant was computed.
-        """
         if len(self._results) == 1:
             return self._results[0]
         return self._results
@@ -750,12 +745,12 @@ def _compute_tde_i(
     B_xxx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xxx``.
 
-    freq_masks : numpy.ndarray, shape of [frequency bands, frequencies]
+    freq_masks : numpy.ndarray, shape of [frequency_bands, frequencies]
         Indices masks for the frequencies to use in each frequency band.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [frequency bands, times]
+    tde : numpy.ndarray, shape of [frequency_bands, times]
         Time delay estimates for each frequency band.
 
     Notes
@@ -787,12 +782,12 @@ def _compute_tde_ii(
     B_yyy : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``yyy``.
 
-    freq_masks : numpy.ndarray, shape of [frequency bands, frequencies]
+    freq_masks : numpy.ndarray, shape of [frequency_bands, frequencies]
         Indices masks for the frequencies to use in each frequency band.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [frequency bands, times]
+    tde : numpy.ndarray, shape of [frequency_bands, times]
         Time delay estimates for each frequency band.
 
     Notes
@@ -818,12 +813,12 @@ def _compute_tde_iii(
     B_xxx : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``xxx``.
 
-    freq_masks : numpy.ndarray, shape of [frequency bands, frequencies]
+    freq_masks : numpy.ndarray, shape of [frequency_bands, frequencies]
         Indices masks for the frequencies to use in each frequency band.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [frequency bands, times]
+    tde : numpy.ndarray, shape of [frequency_bands, times]
         Time delay estimates for each frequency band.
 
     Notes
@@ -854,12 +849,12 @@ def _compute_tde_iv(
     B_yyy : numpy.ndarray, shape of [frequencies, frequencies]
         Bispectrum for channel combination ``yyy``.
 
-    freq_masks : numpy.ndarray, shape of [frequency bands, frequencies]
+    freq_masks : numpy.ndarray, shape of [frequency_bands, frequencies]
         Indices masks for the frequencies to use in each frequency band.
 
     Returns
     -------
-    tde : numpy.ndarray, shape of [frequency bands, times]
+    tde : numpy.ndarray, shape of [frequency_bands, times]
         Time delay estimates for each frequency band.
 
     Notes

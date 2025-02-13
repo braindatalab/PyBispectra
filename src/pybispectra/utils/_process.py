@@ -214,7 +214,7 @@ class _ProcessFreqBase(ABC):
     @property
     @abstractmethod
     def results(self) -> None:
-        """Return the results."""
+        pass
 
     def copy(self):
         """Return a copy of the object."""

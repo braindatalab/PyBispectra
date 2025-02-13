@@ -18,6 +18,7 @@ class _ResultsBase(ABC):
     n_nodes: int = None
     _seeds: tuple[int] = None
     _targets: tuple[int] = None
+    _kmn: tuple[tuple[int]] = None
     _n_chans: int = None
 
     def __init__(
@@ -54,7 +55,7 @@ class _ResultsBase(ABC):
             raise ValueError("`data` must have shape [nodes, f1s, f2s].")
 
     def _sort_indices_seeds_targets(self, indices: tuple[tuple[int]]) -> None:
-        """Sort `indices` inputs with format ([seeds], [targets])."""
+        """Sort ``indices`` inputs with format ([seeds], [targets])."""
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 2:
@@ -69,35 +70,31 @@ class _ResultsBase(ABC):
                 raise TypeError(
                     "Entries for seeds and targets in `indices` must be ints."
                 )
+            if any(idx < 0 for idx in group_idcs):
+                raise ValueError(
+                    "Entries for seeds and targets in `indices` must be >= 0."
+                )
         if len(seeds) != len(targets):
             raise ValueError("Entries of `indices` must have equal length.")
         self._n_chans = len(np.unique([*seeds, *targets]))
-        for group_idcs in (seeds, targets):
-            if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
-                raise ValueError(
-                    "`indices` contains indices for nodes not present in the data."
-                )
-        self._seeds = seeds
-        self._targets = targets
+        self._seeds, self._targets = self._remap_indices_groups(indices)
         self.n_nodes = len(seeds)
         self.indices = indices
 
     def _sort_indices_channels(self, indices: tuple[int]) -> None:
-        """Sort `indices` with inputs format [channels]."""
+        """Sort ``indices`` with inputs format [channels]."""
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
         if not all(isinstance(idx, int) for idx in indices):
             raise TypeError("Entries of `indices` must be ints.")
+        if any(idx < 0 for idx in indices):
+            raise ValueError("Entries of `indices` must be >= 0.")
         self._n_chans = len(np.unique(indices))
-        if any(idx < 0 or idx >= self._n_chans for idx in indices):
-            raise ValueError(
-                "`indices` contains indices for channels not present in the data."
-            )
         self.n_nodes = len(indices)
         self.indices = indices
 
     def _sort_indices_kmn(self, indices: tuple[tuple[int]]) -> None:
-        """Sort `indices` inputs with format ([k], [m], [n])."""
+        """Sort ``indices`` inputs with format ([k], [m], [n])."""
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
         if len(indices) != 3:
@@ -108,16 +105,29 @@ class _ResultsBase(ABC):
                 raise TypeError("Entries of `indices` must be tuples.")
             if any(not isinstance(idx, int) for idx in group_idcs):
                 raise TypeError("Entries for groups in `indices` must be ints.")
+            if any(idx < 0 for idx in group_idcs):
+                raise ValueError(r"Entries for groups in `indices` must be >= 0.")
         if len(np.unique([len(group) for group in indices])) != 1:
             raise ValueError("Entries of `indices` must have equal length.")
         self._n_chans = len(np.unique(np.ravel(indices)))
-        for group_idcs in indices:
-            if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
-                raise ValueError(
-                    "`indices` contains indices for nodes not present in the data."
-                )
+        self._kmn = self._remap_indices_groups(indices)
         self.n_nodes = len(indices[0])
         self.indices = indices
+
+    def _remap_indices_groups(self, indices: tuple[tuple[int]]) -> tuple[tuple[int]]:
+        """Remap groups of indices (seeds/targets; kmn) to range from 0 to n_chans."""
+        # FIXME: This is really ugly. Replace with `np.unique(np.r_[*indices])`` when
+        # support for Python 3.10 dropped.
+        if len(indices) == 2:
+            signal_indices = np.unique(np.r_[indices[0], indices[1]])
+        else:
+            assert len(indices) == 3, (
+                "The number of groups in `indices` is not as expected. Please contact "
+                "the PyBispectra developers."
+            )
+            signal_indices = np.unique(np.r_[indices[0], indices[1], indices[2]])
+
+        return tuple(tuple(np.searchsorted(signal_indices, group)) for group in indices)
 
     def get_results(
         self, form: str = "raveled", copy: bool = True
@@ -126,9 +136,9 @@ class _ResultsBase(ABC):
 
         Parameters
         ----------
-        form : str (default ``"raveled"``)
+        form : ``"raveled"`` | ``"compact"`` (default ``"raveled"``)
             How the results should be returned: ``"raveled"`` - results have shape
-            `[nodes, ...]`; ``"compact"`` - results have shape ``[seeds, targets,
+            ``[nodes, ...]``; ``"compact"`` - results have shape ``[seeds, targets,
             ...]``, where ``...`` represents the data dimensions (e.g. frequencies,
             times).
 
@@ -143,7 +153,8 @@ class _ResultsBase(ABC):
             The results.
 
         indices : tuple of tuple of int, length of 2
-            Channel indices of the seeds and targets. Only returned if :attr:`form` is
+            Channel indices of the seeds and targets in ``results``, according to the
+            node order in the original data indices. Only returned if ``form`` is
             ``"compact"``.
         """
         accepted_forms = ["raveled", "compact"]
@@ -191,23 +202,7 @@ class _ResultsBase(ABC):
         for con_result, seed, target in zip(self._data, self._seeds, self._targets):
             compact_results[seed, target] = con_result
 
-        # remove empty rows and cols
-        filled_rows = []
-        for row_i, row in enumerate(compact_results):
-            if not all(np.isnan(entry).all() for entry in row):
-                filled_rows.append(row_i)
-        filled_cols = []
-        for col_i, col in enumerate(compact_results.swapaxes(1, 0)):
-            if not all(np.isnan(entry).all() for entry in col):
-                filled_cols.append(col_i)
-        compact_results = compact_results[np.ix_(filled_rows, filled_cols)]
-
-        indices = (
-            tuple(np.unique(self._seeds).tolist()),
-            tuple(np.unique(self._targets).tolist()),
-        )
-
-        return compact_results, indices
+        return compact_results, (self._seeds, self._targets)
 
 
 class ResultsCFC(_ResultsBase):
@@ -245,11 +240,11 @@ class ResultsCFC(_ResultsBase):
         Name of the results.
 
     indices : tuple of tuple of int, length of 2
-        Indices of the channels for each connection of the results. Should contain two
-        tuples of equal length for the seed and target indices, respectively.
+        Indices of the channels for each connection of the results. Contains two tuples
+        of equal length for the seed and target indices, respectively.
 
     shape : tuple of int
-        Shape of the results i.e. [nodes, low frequencies, high frequencies].
+        Shape of the results i.e. ``[nodes, low frequencies, high frequencies]``.
 
     n_nodes : int
         Number of connections in the the results.
@@ -373,13 +368,13 @@ class ResultsCFC(_ResultsBase):
 
         axes : list of ~numpy.ndarray of matplotlib pyplot Axes
             Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
-            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
+            n_cols))`` where each entry is a 1D ``~numpy.ndarray`` of length ``(n_rows *
             n_cols)``.
 
         Notes
         -----
-        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for each
-        connection on a new figure.
+        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each connection on
+        a new figure.
         """
         figures, axes = self._plotting.plot(
             nodes=nodes,
@@ -401,20 +396,19 @@ class ResultsTDE(_ResultsBase):
 
     Parameters
     ----------
-    data : ~numpy.ndarray, shape of [nodes, frequency bands, times]
+    data : ~numpy.ndarray, shape of [nodes, frequency_bands, times]
         Results to store.
 
     indices : tuple of tuple of int, length of 2
-        Indices of the channels for each connection of the results. Should
-        contain two tuples of equal length for the seed and target indices,
-        respectively.
+        Indices of the channels for each connection of the results. Should contain two
+        tuples of equal length for the seed and target indices, respectively.
 
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
     freq_bands : tuple of tuple of int or float, length of 2 | None (default None)
-        Lower and higher frequencies (in Hz) of each frequency band used to
-        compute the results.
+        Lower and higher frequencies (in Hz) of each frequency band used to compute the
+        results.
 
     name : str (default ``"TDE"``)
         Name of the results being stored.
@@ -433,24 +427,23 @@ class ResultsTDE(_ResultsBase):
         Name of the results.
 
     indices : tuple of tuple of int, length of 2
-        Indices of the channels for each connection in the results. Contains
-        two tuples of equal length for the seed and target indices,
-        respectively.
+        Indices of the channels for each connection in the results. Contains two tuples
+        of equal length for the seed and target indices, respectively.
 
     shape : tuple of int
-        Shape of the results i.e. [nodes, frequency bands, times].
+        Shape of the results i.e. ``[nodes, frequency bands, times]``.
 
-    n_nodes : str
+    n_nodes : int
         Number of connections in the results.
 
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
     freq_bands : tuple of tuple of int or float, length of 2 | None
-        Lower and higher frequencies (in Hz) of each frequency band used to
-        compute the results.
+        Lower and higher frequencies (in Hz) of each frequency band used to compute the
+        results.
 
-    tau :  ~numpy.ndarray, shape of [nodes, frequency bands]
+    tau : ~numpy.ndarray, shape of [nodes, frequency_bands]
         Estimated time delay (in ms) for each connection and frequency band.
     """  # noqa: E501
 
@@ -512,7 +505,7 @@ class ResultsTDE(_ResultsBase):
             raise ValueError("`data` must have shape [nodes, frequency bands, times].")
 
     def _sort_times(self, times: np.ndarray) -> None:
-        """Sort `times` input."""
+        """Sort ``times`` input."""
         if not isinstance(times, np.ndarray):
             raise TypeError("`times` must be a NumPy array.")
         if times.ndim != 1:
@@ -522,7 +515,7 @@ class ResultsTDE(_ResultsBase):
         self._n_times = times.shape[0]
 
     def _sort_freq_bands(self, freq_bands: tuple[tuple[int | float]]) -> None:
-        """Sort `freq_bands` input."""
+        """Sort ``freq_bands`` input."""
         if freq_bands is not None:
             if not isinstance(freq_bands, tuple):
                 raise TypeError("`freq_bands` must be a tuple.")
@@ -620,8 +613,8 @@ class ResultsTDE(_ResultsBase):
 
         Notes
         -----
-        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for each
-        connection on a new figure.
+        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each connection on
+        a new figure.
         """
         figures, axes = self._plotting.plot(
             nodes=nodes,
@@ -645,7 +638,6 @@ class ResultsTDE(_ResultsBase):
 
     @property
     def tau(self) -> np.ndarray:
-        """Return the estimated time delay for each connection (in ms)."""
         return self._tau.copy()
 
 
@@ -686,7 +678,7 @@ class ResultsWaveShape(_ResultsBase):
         Indices of the channels in the results.
 
     shape : tuple of int
-        Shape of the results i.e. [nodes, low frequencies, high frequencies].
+        Shape of the results i.e. ``[nodes, low frequencies, high frequencies]``.
 
     n_nodes : int
         Number of channels in the results.
@@ -855,8 +847,8 @@ class ResultsWaveShape(_ResultsBase):
 
         Notes
         -----
-        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for each node
-        on a new figure.
+        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node on a new
+        figure.
         """
         figures, axes = self._plotting.plot(
             nodes=nodes,
@@ -913,11 +905,11 @@ class ResultsGeneral(_ResultsBase):
         Name of the results.
 
     indices : tuple of tuple of int, length of 2
-        Indices of the channels for each connection of the results. Should contain two
-        tuples of equal length for the seed and target indices, respectively.
+        Indices of the channels for each connection of the results. Contains three
+        tuples of equal length for the k, m, and n channel indices, respectively.
 
     shape : tuple of int
-        Shape of the results i.e. [nodes, low frequencies, high frequencies].
+        Shape of the results i.e. ``[nodes, low frequencies, high frequencies]``.
 
     n_nodes : int
         Number of connections in the the results.
@@ -974,10 +966,10 @@ class ResultsGeneral(_ResultsBase):
 
         Parameters
         ----------
-        form : str (default ``"raveled"``)
+        form : ``"raveled"`` | ``"compact"`` (default ``"raveled"``)
             How the results should be returned: ``"raveled"`` - results have shape
-            `[nodes, ...]`; ``"compact"`` - results have shape ``[k, m, n, ...]``,where
-            ``...`` represents the data dimensions (e.g. frequencies, times).
+            ``[nodes, ...]``; ``"compact"`` - results have shape ``[k, m, n, ...]``,
+            where ``...`` represents the data dimensions (e.g. frequencies, times).
 
         copy : bool (default True)
             Whether to return a copy of the results.
@@ -990,26 +982,11 @@ class ResultsGeneral(_ResultsBase):
             The results.
 
         indices : tuple of tuple of int, length of 3
-            Channel indices of the k, m, and n channels. Only returned if :attr:`form`
-            is ``"compact"``.
+            Channel indices of the k, m, and n channels in ``results``, according to the
+            node order in the original data indices. Only returned if ``form`` is
+            ``"compact"``.
         """
-        accepted_forms = ["raveled", "compact"]
-        if form not in accepted_forms:
-            raise ValueError("`form` is not recognised.")
-        if not isinstance(copy, bool):
-            raise TypeError("`copy` must be a bool.")
-
-        if form == "raveled":
-            results = self._data
-        else:
-            results, indices = self._get_compact_results_child()
-
-        if copy:
-            results = results.copy()
-
-        if form == "raveled":
-            return results
-        return results, indices
+        return super().get_results(form, copy)
 
     def _get_compact_results_child(self) -> tuple[np.ndarray, tuple[tuple[int]]]:
         """Return a compacted form of the results.
@@ -1037,24 +1014,11 @@ class ResultsGeneral(_ResultsBase):
         )
 
         for con_result, k, m, n in zip(
-            self._data, self.indices[0], self.indices[1], self.indices[2]
+            self._data, self._kmn[0], self._kmn[1], self._kmn[2]
         ):
             compact_results[k, m, n] = con_result
 
-        # remove empty rows and cols
-        filled_rows = []
-        for row_i, row in enumerate(compact_results):
-            if not all(np.isnan(entry).all() for entry in row):
-                filled_rows.append(row_i)
-        filled_cols = []
-        for col_i, col in enumerate(compact_results.swapaxes(1, 0)):
-            if not all(np.isnan(entry).all() for entry in col):
-                filled_cols.append(col_i)
-        compact_results = compact_results[np.ix_(filled_rows, filled_cols)]
-
-        indices = tuple(
-            tuple(np.unique(group_idcs).tolist()) for group_idcs in self.indices
-        )
+        indices = tuple(group_idcs for group_idcs in self._kmn)
 
         return compact_results, indices
 
@@ -1160,8 +1124,8 @@ class ResultsGeneral(_ResultsBase):
 
         Notes
         -----
-        :attr:`n_rows` and :attr:`n_cols` of ``1`` will plot the results for each node
-        on a new figure.
+        ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node on a new
+        figure.
         """  # noqa: E501
         figures, axes = self._plotting.plot(
             nodes=nodes,

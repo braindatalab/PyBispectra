@@ -87,7 +87,7 @@ class _PlotBase(ABC):
     def _sort_freq_inputs(
         self, f1s: np.ndarray, f2s: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """Sort `f1s` and `f2s` inputs.
+        """Sort ``f1s`` and ``f2s`` inputs.
 
         Returns
         -------
@@ -294,10 +294,10 @@ class _PlotGeneral(_PlotBase):
             Figures of the results in a list of length ``ceil(n_nodes / (n_rows *
             n_cols))``.
 
-        axes : list of numpy.ndarray of numpy.ndarray of matplotlib pyplot Axes
+        axes : list of ~numpy.ndarray of ~numpy.ndarray of matplotlib pyplot Axes
             Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
-            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
-            n_cols)``, whose entries are themselves 1D ``numpy.ndarray`` of length 4,
+            n_cols))`` where each entry is a 1D ``~numpy.ndarray`` of length ``(n_rows *
+            n_cols)``, whose entries are themselves 1D ``~numpy.ndarray`` of length 4,
             corresponding to the absolute, real, imaginary, and phase plots,
             respectively.
 
@@ -731,9 +731,9 @@ class _PlotCFC(_PlotBase):
             Figures of the results in a list of length ``ceil(n_nodes / (n_rows *
             n_cols))``.
 
-        axes : list of numpy.ndarray of matplotlib pyplot Axes
+        axes : list of ~numpy.ndarray of matplotlib pyplot Axes
             Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
-            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
+            n_cols))`` where each entry is a 1D ``~numpy.ndarray`` of length ``(n_rows *
             n_cols)``.
 
         Notes
@@ -1001,9 +1001,9 @@ class _PlotTDE(_PlotBase):
             Figures of the results in a list of length ``ceil(n_nodes / (n_rows *
             n_cols))``.
 
-        axes : list of numpy.ndarray of matplotlib pyplot Axes
+        axes : list of ~numpy.ndarray of matplotlib pyplot Axes
             Subplot axes for the results in a list of length ``ceil(n_nodes / (n_rows *
-            n_cols))`` where each entry is a 1D ``numpy.ndarray`` of length ``(n_rows *
+            n_cols))`` where each entry is a 1D ``~numpy.ndarray`` of length ``(n_rows *
             n_cols)``.
 
         Notes
