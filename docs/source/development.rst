@@ -25,6 +25,10 @@ requirements using pip:
 Contributing to PyBispectra
 ---------------------------
 
+    This project and everyone participating in it is governed by our `Code of Conduct
+    <https://github.com/braindatalab/PyBispectra/CODE_OF_CONDUCT.md>`_. By
+    participating, you are expected to uphold this code.
+
 If you encounter any issues with the package or wish to suggest improvements, please
 submit a report on the `issues page
 <https://github.com/braindatalab/PyBispectra/issues>`_.
