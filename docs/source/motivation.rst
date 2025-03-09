@@ -96,13 +96,13 @@ frequency-resolved manner, without the need to bandpass filter.
 Finally, traditional forms of time delay estimation often rely on
 cross-correlation. This method is perfectly adequate in noiseless situations or
 those where the noise of the signals are uncorrelated with one another as well
-as with the sources of interest :footcite:`Nikias1988,JurharInPrep`. This,
+as with the sources of interest :footcite:`Nikias1988,JurharPreprint`. This,
 however, is often not the case in many real-world contexts, leading to spurious
 time delay estimates. In contrast, the bispectrum is able to suppress the
 contribution of Gaussian noise sources to time delay estimates
 :footcite:`Nikias1988`, and additional steps can be taken to minimise the
 effects of non-Gaussian noise sources, such as those associated with volume
-conduction :footcite:`JurharInPrep`.
+conduction :footcite:`JurharPreprint`.
 
 
 What is available in PyBispectra?

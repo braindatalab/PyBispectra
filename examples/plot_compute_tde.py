@@ -89,7 +89,7 @@ from pybispectra import TDE, compute_fft, get_example_data_paths
 # Thankfully, antisymmetrisation of the bispectrum can be used to address these mixing
 # artefacts :footcite:`Chella2014`, which is implemented here as the replacement of
 # :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xyx} - \textbf{B}_{yxx})` in the
-# above equations :footcite:`JurharInPrep`.
+# above equations :footcite:`JurharPreprint`.
 
 ########################################################################################
 # Loading data and computing Fourier coefficients
@@ -217,7 +217,7 @@ fig, axes = tde.results.plot()
 # sources of noise in the data are often correlated across signals, such as due to
 # volume conduction, resulting in a bias of TDE methods towards zero time delay. To
 # mitigate such bias, we can employ antisymmetrisation of the bispectrum
-# :footcite:`JurharInPrep`. To demonstrate this, we will now look at simulated data
+# :footcite:`JurharPreprint`. To demonstrate this, we will now look at simulated data
 # (still with a 250 ms delay) with the addition of a common underlying noise source
 # between the signals.
 #
