@@ -40,7 +40,7 @@ affiliations:
    index: 6
  - name: Physikalisch-Technische Bundesanstalt Braunschweig und Berlin, Germany
    index: 7
-date: 3 February 2025
+date: 9 March 2025
 bibliography: paper.bib
 ---
 
@@ -64,7 +64,7 @@ Phase-amplitude coupling is the interaction between the phase of a lower frequen
 
 ## Time delays
 
-Time delay analysis identifies latencies of information transfer between signals, providing  insight into the physical connections between brain regions [@Silchenko2010;@Binns2024]. A traditional analysis method is cross-correlation, quantifying the similarity of signals at a set of time lags. However, this approach has a limited robustness to noise [@Nikias1988] and a vulnerability to spurious zero time lag interactions arising due to volume conduction and source mixing in the sensor space. On the other hand, the bispectrum is resilient to Gaussian noise [@Nikias1988], and antisymmetrisation can be used to correct for spurious zero time lag interactions [@Chella2014]. `PyBispectra` provides tools for bispectral time delay analysis, with options for antisymmetrisation.
+Time delay analysis identifies latencies of information transfer between signals, providing  insight into the physical connections between brain regions [@Silchenko2010;@Binns2024]. A traditional analysis method is cross-correlation, quantifying the similarity of signals at a set of time lags. However, this approach has a limited robustness to noise [@Nikias1988] and a vulnerability to spurious zero time lag interactions arising due to volume conduction and source mixing in the sensor space. On the other hand, the bispectrum is resilient to Gaussian noise [@Nikias1988], and antisymmetrisation can be used to correct for spurious zero time lag interactions [@Chella2014;@JurharPreprint]. `PyBispectra` provides tools for bispectral time delay analysis, with options for antisymmetrisation.
 
 ## Non-sinusoidal waveshape
 
