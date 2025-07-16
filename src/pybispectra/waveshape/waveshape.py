@@ -125,7 +125,8 @@ class WaveShape(_ProcessBispectrum):
         where the resulting values lie in the range :math:`[-1, 1]`.
 
         Bicoherence is computed for all values of ``f1s`` and ``f2s``. If any value of
-        ``f1s`` is higher than ``f2s``, a :obj:`numpy.nan` value is returned.
+        ``f1s`` is higher than ``f2s`` or if :math:`f_2 + f_1` exceeds the frequency
+        bounds of our data, a :obj:`numpy.nan` value is returned.
 
         References
         ----------
