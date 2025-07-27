@@ -6,6 +6,8 @@ This package provides the tools for computing phase-amplitude coupling, time del
 
 Parallel processing and [Numba](https://numba.pydata.org/) optimisation are implemented to reduce computation times.
 
+Analysis of phase-amplitude coupling, time delays, and non-sinusoidal waveshape provide important insights into interneuronal communication, but traditional analysis methods have critical limitations. In contrast, the bispectrum - the Fourier transform of the third order moment - offers approaches to perform such analyses whilst overcoming many of the limitations of traditional methods.
+
 ## Installation & Requirements:
 Install the package into the desired environment using pip `pip install pybispectra`<br/>
 More information on the [installation](https://pybispectra.readthedocs.io/en/main/installation.html) page.
