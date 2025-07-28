@@ -38,7 +38,7 @@ environment:
     python -m venv pybispectra_env
 
 Activate the environment using the
-`appropriate command for your operating system and shell <https://docs.python.org/3/library/venv.html#how-venvs-work>`_,
+`appropriate venv command for your operating system and shell <https://docs.python.org/3/library/venv.html#how-venvs-work>`_,
 then install the package:
 
 .. code-block::
@@ -56,7 +56,7 @@ environment:
     uv venv pybispectra_env
 
 Activate the environment using the
-`appropriate command for your operating system and shell <https://docs.astral.sh/uv/pip/environments/#using-a-virtual-environment>`_,
+`appropriate uv command for your operating system and shell <https://docs.astral.sh/uv/pip/environments/#using-a-virtual-environment>`_,
 then install the package:
 
 .. code-block::
