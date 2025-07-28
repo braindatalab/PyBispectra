@@ -14,7 +14,7 @@ If you want to make changes to PyBispectra, you may wish to install it in editab
 To do so, first clone the `GitHub repository
 <https://github.com/braindatalab/PyBispectra/tree/main>`_ to your desired location. Once
 cloned, navigate to this location and install the package alongside its development
-requirements using pip:
+requirements in your desured environment using `pip <https://pip.pypa.io/en/stable/>`_:
 
 .. code-block::
     
