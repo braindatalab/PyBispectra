@@ -138,8 +138,7 @@ def test_error_catch(method: str) -> None:
         with pytest.raises(
             ValueError,
             match=(
-                "The frequencies of `noise_bounds` must lie outside of "
-                "`signal_bounds`"
+                "The frequencies of `noise_bounds` must lie outside of `signal_bounds`"
             ),
         ):
             ssf.fit_transform_ssd(
@@ -258,9 +257,9 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
         rank=rank,
     )
 
-    assert isinstance(
-        transformed_data, np.ndarray
-    ), "`transformed_data` should be a NumPy array."
+    assert isinstance(transformed_data, np.ndarray), (
+        "`transformed_data` should be a NumPy array."
+    )
     assert transformed_data.shape == (
         n_epochs,
         rank,
@@ -297,9 +296,9 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
     assert ssf.ratios.shape == (rank,), "`ratios` should have shape (rank)."
 
     empty_transformed_data = ssf.get_transformed_data(min_ratio=ssf.ratios.max() + 1)
-    assert (
-        empty_transformed_data.size == 0
-    ), "`transformed_data` should be empty when too high a ratio is requested."
+    assert empty_transformed_data.size == 0, (
+        "`transformed_data` should be empty when too high a ratio is requested."
+    )
 
 
 @pytest.mark.filterwarnings(
@@ -326,9 +325,9 @@ def test_ged_hpmax_runs(csd_method: str, rank: int) -> None:
         csd_method=csd_method,
     )
 
-    assert isinstance(
-        transformed_data, np.ndarray
-    ), "`transformed_data` should be a NumPy array."
+    assert isinstance(transformed_data, np.ndarray), (
+        "`transformed_data` should be a NumPy array."
+    )
     assert transformed_data.shape == (
         n_epochs,
         rank,
@@ -355,9 +354,9 @@ def test_ged_hpmax_runs(csd_method: str, rank: int) -> None:
     assert ssf.ratios.shape == (rank,), "`ratios` should have shape (rank)."
 
     empty_transformed_data = ssf.get_transformed_data(min_ratio=ssf.ratios.max() + 1)
-    assert (
-        empty_transformed_data.size == 0
-    ), "`transformed_data` should be empty when too high a ratio is requested."
+    assert empty_transformed_data.size == 0, (
+        "`transformed_data` should be empty when too high a ratio is requested."
+    )
 
     # test it works with parallelisation
     ssf.fit_transform_hpmax(

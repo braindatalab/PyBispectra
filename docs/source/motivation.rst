@@ -65,6 +65,10 @@ technologies :footcite:`Chen2004`, but also in neuroscience, where time delays
 can be used to infer features of the physical relationships between interacting
 brain regions :footcite:`Silchenko2010`.
 
+Ultimately, the bispectrum is a useful technique for the analysis of
+electrophysiological signals. This includes (non-)invasive neural data such as
+EEG, MEG, ECoG, and LFP, but also non-neural data like EMG and ECG.
+
 
 Why use the bispectrum for these analyses?
 ------------------------------------------
@@ -111,8 +115,7 @@ PyBispectra offers tools for computing phase-amplitude coupling, time delay
 estimation, and waveshape feature analysis using the bispectrum and
 bicoherence. Additional tools are included for computing phase-phase coupling,
 amplitude-amplitude coupling, Fourier coefficients, time-frequency
-representations of data, spatio-spectral filters, as well as tools plotting
-results.
+representations of data, spatio-spectral filters, as well as plotting results.
 
 You can find the installation instructions :doc:`here <installation>`, as well
 as examples of how the package can be used :doc:`here <examples>`.
