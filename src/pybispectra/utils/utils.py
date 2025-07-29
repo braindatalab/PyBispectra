@@ -462,7 +462,7 @@ _pooch = pooch.create(
 )
 
 
-def get_example_data_paths(name: str, verbose: bool = True) -> str:
+def get_example_data_paths(name: str, verbose: bool = False) -> str:
     """Return the path to the requested example data.
 
     Parameters
@@ -470,7 +470,7 @@ def get_example_data_paths(name: str, verbose: bool = True) -> str:
     name : str
         Name of the example data.
 
-    verbose : bool (default True)
+    verbose : bool (default False)
         Whether or not to report the download progress (if the file is not already
         cached).
 
