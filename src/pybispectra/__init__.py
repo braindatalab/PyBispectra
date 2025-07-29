@@ -5,7 +5,6 @@ from importlib.metadata import version
 __version__ = version("pybispectra")
 
 from .cfc import AAC, PAC, PPC
-from .data import get_example_data_paths
 from .general import Bispectrum, Threenorm
 from .tde import TDE
 from .utils import (
@@ -17,6 +16,7 @@ from .utils import (
     compute_fft,
     compute_rank,
     compute_tfr,
+    get_example_data_paths,
     set_precision,
 )
 from .waveshape import WaveShape

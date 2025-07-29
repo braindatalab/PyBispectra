@@ -9,7 +9,7 @@ import numpy as np
 import scipy as sp
 from mne import time_frequency
 
-from pybispectra import __version__
+from pybispectra import __version__ as version
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._utils import _compute_in_parallel
 
@@ -454,8 +454,8 @@ DATASETS = {alias: filename for alias, filename, _ in _DATA_ALIAS_FILE_HASH}
 
 _pooch = pooch.create(
     path=pooch.os_cache("PyBispectra"),
-    base_url="https://github.com/braindatalab/PyBispectra/raw/{__version__}/data/",
-    version=__version__,
+    base_url="https://github.com/braindatalab/PyBispectra/raw/{version}/data/",
+    version=version,
     version_dev="main",  # if a development version, use the "main" branch
     registry={filename: filehash for _, filename, filehash in _DATA_ALIAS_FILE_HASH},
     retry_if_failed=3,  # try to avoid CI failures
