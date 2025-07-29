@@ -1,13 +1,15 @@
-"""Public tools for processing results."""
+"""Public tools for handling data and processing results."""
 
 from multiprocessing import cpu_count
 from typing import Callable
 from warnings import warn
 
+import pooch
 import numpy as np
 import scipy as sp
 from mne import time_frequency
 
+from pybispectra import __version__
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._utils import _compute_in_parallel
 
@@ -398,3 +400,91 @@ def set_precision(precision: str) -> None:
     handling large datasets.
     """
     _precision.set_precision(precision)
+
+
+# Example/test data ####################################################################
+
+_DATA_ALIAS_FILE_HASH = [
+    # PAC
+    (
+        "sim_data_pac_univariate",
+        "sim_data_pac_univariate.npy",
+        "sha256:BB0EC7AC8B8578C2BA785D5298DD6F92C554104D441F6DB1E5C2971243FFB4BF",
+    ),
+    (
+        "sim_data_pac_bivariate",
+        "sim_data_pac_bivariate.npy",
+        "sha256:8A0EAB4F4AFC676FE6DEDEA6410414376257A18703CCE0DA9C0A5848295BD5A6",
+    ),
+    # TDE
+    (
+        "sim_data_tde_independent_noise",
+        "sim_data_tde_independent_noise.npy",
+        "sha256:11C22DC5B5F23F3FA12359A2DA164F3996310EB7E6B43116BAF1935EB38EDF35",
+    ),
+    (
+        "sim_data_tde_correlated_noise",
+        "sim_data_tde_correlated_noise.npy",
+        "sha256:136B30BA687C6894ABBF4398FA8F22951F5540324209A18668B3B659649CD75B",
+    ),
+    (
+        "sim_data_tde_fbands",
+        "sim_data_tde_fbands.npy",
+        "sha256:7AF83DED751DCFD23C263E847D92BDE5BDE7AE3250F26CA97A7CD3106D5EA8B8",
+    ),
+    # Waveshape
+    (
+        "sim_data_waveshape_peaks_troughs",
+        "sim_data_waveshape_peaks_troughs.npy",
+        "sha256:5D228E3547EB035F80307FE53D33A852497A3F2256CD87CEC7C926DD5E5A16B8",
+    ),
+    (
+        "sim_data_waveshape_sawtooths",
+        "sim_data_waveshape_sawtooths.npy",
+        "sha256:7EBD3CF248918E299BEF37D06806A108207F0AE302C6DE57692648BE04DF9743",
+    ),
+    (
+        "sim_data_waveshape_noisy",
+        "sim_data_waveshape_noisy.npy",
+        "sha256:13D9668FD8574D0ACC972B46F7FDDAE08817FBF8BAD0CA57F4BC4E9703EAFF54",
+    ),
+]
+
+DATASETS = {alias: filename for alias, filename, _ in _DATA_ALIAS_FILE_HASH}
+
+_pooch = pooch.create(
+    path=pooch.os_cache("PyBispectra"),
+    base_url="https://github.com/braindatalab/PyBispectra/raw/{__version__}/data/",
+    version=__version__,
+    version_dev="main",  # if a development version, use the "main" branch
+    registry={filename: filehash for _, filename, filehash in _DATA_ALIAS_FILE_HASH},
+    retry_if_failed=3,  # try to avoid CI failures
+)
+
+
+def get_example_data_paths(name: str, verbose: bool = True) -> str:
+    """Return the path to the requested example data.
+
+    Parameters
+    ----------
+    name : str
+        Name of the example data.
+
+    verbose : bool (default True)
+        Whether or not to report the download progress (if the file is not already
+        cached).
+
+    Returns
+    -------
+    path : str
+        Path to the example data.
+
+    Notes
+    -----
+    If the file is not found in the local cache (see :func:`pooch.os_cache` for the
+    location), it will be downloaded automatically.
+    """
+    if name not in DATASETS.keys():
+        raise ValueError(f"`name` must be one of: {list(DATASETS.keys())}")
+
+    return _pooch.fetch(fname=DATASETS[name], progressbar=verbose)

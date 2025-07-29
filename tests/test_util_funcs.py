@@ -7,8 +7,14 @@ import pytest
 import scipy as sp
 from mne import Info
 
-from pybispectra.data import DATASETS, get_example_data_paths
-from pybispectra.utils import compute_fft, compute_rank, compute_tfr, set_precision
+from pybispectra.utils import (
+    compute_fft,
+    compute_rank,
+    compute_tfr,
+    set_precision,
+    get_example_data_paths,
+    DATASETS,
+)
 from pybispectra.utils._defaults import _precision, _Precision
 from pybispectra.utils._utils import (
     _compute_pearsonr_2d,
@@ -41,9 +47,9 @@ def test_compute_fft(window: str) -> None:
     ), "The first 2 dimensions of `fft` should have shape [epochs x channels]."
     assert isinstance(freqs, np.ndarray), "`freqs` should be a NumPy array."
     assert freqs.ndim == 1, "`freqs` should have 1 dimension."
-    assert (
-        fft.shape[2] == freqs.shape[0]
-    ), "The 3rd dimension of `fft` should have the same length as `freqs`."
+    assert fft.shape[2] == freqs.shape[0], (
+        "The 3rd dimension of `fft` should have the same length as `freqs`."
+    )
     assert freqs[0] == 0, "The first entry of `freqs` should be 0."
     max_freq_idx = np.where(freqs == freqs.max())[0][0]
     assert max_freq_idx != 0 and np.all(
@@ -52,12 +58,12 @@ def test_compute_fft(window: str) -> None:
         "Entries of `freqs` corresponding to positive frequencies must be in ascending "
         "order."
     )
-    assert (
-        max(freqs) <= sampling_freq / 2
-    ), "The maximum of `freqs` should be <= the Nyquist frequency."
-    assert (
-        freqs[-1] == sampling_freq / 2
-    ), "The last entry of `freqs` should be the Nyquist frequency."
+    assert max(freqs) <= sampling_freq / 2, (
+        "The maximum of `freqs` should be <= the Nyquist frequency."
+    )
+    assert freqs[-1] == sampling_freq / 2, (
+        "The last entry of `freqs` should be the Nyquist frequency."
+    )
 
     # check it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
@@ -125,9 +131,9 @@ def test_compute_tfr(tfr_mode: str, zero_mean_wavelets: bool | None) -> None:
         "frequencies]."
     )
     assert isinstance(freqs_out, np.ndarray), "`freqs_out` should be a NumPy array."
-    assert np.all(
-        freqs_in == freqs_out
-    ), "`freqs_out` and `freqs_in` should be identical"
+    assert np.all(freqs_in == freqs_out), (
+        "`freqs_out` and `freqs_in` should be identical"
+    )
 
     # check it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
@@ -379,13 +385,13 @@ def test_fast_find_first() -> None:
 
     # test that a present value is found
     index = _fast_find_first(vector=vector, value=value)
-    assert (
-        index == true_index
-    ), f"The index of the value being found should be {true_index}."
+    assert index == true_index, (
+        f"The index of the value being found should be {true_index}."
+    )
     index = _fast_find_first(vector=vector, value=value, start_idx=1)
-    assert (
-        index == true_index
-    ), f"The index of the value being found should be {true_index}."
+    assert index == true_index, (
+        f"The index of the value being found should be {true_index}."
+    )
 
     # test that a missing value is not found
     with pytest.raises(ValueError, match="`value` is not present in `vector`."):
@@ -413,9 +419,9 @@ def test_compute_pearson_2d() -> None:
     for epoch_i in range(n_epochs):
         sp_pearsonr[epoch_i] = sp.stats.pearsonr(data[epoch_i, 0], data[epoch_i, 1])[0]
 
-    assert np.allclose(
-        pearsonr, sp_pearsonr
-    ), "`pearsonr` should match the statistic of SciPy's function."
+    assert np.allclose(pearsonr, sp_pearsonr), (
+        "`pearsonr` should match the statistic of SciPy's function."
+    )
 
 
 def test_create_mne_info() -> None:
@@ -427,13 +433,13 @@ def test_create_mne_info() -> None:
     info = _create_mne_info(n_chans=n_chans, sampling_freq=sampling_freq)
 
     assert isinstance(info, Info), "`info` should be an MNE Info object."
-    assert (
-        info["sfreq"] == sampling_freq
-    ), "`info['sfreq']` should be equal to `sampling_freq`."
+    assert info["sfreq"] == sampling_freq, (
+        "`info['sfreq']` should be equal to `sampling_freq`."
+    )
     assert len(info["chs"]) == n_chans, "`info['chs']` should have length `n_chans`."
-    assert info.get_channel_types() == [
-        "eeg" for _ in range(n_chans)
-    ], "Channels in `info` should be marked as EEG channels."
+    assert info.get_channel_types() == ["eeg" for _ in range(n_chans)], (
+        "Channels in `info` should be marked as EEG channels."
+    )
 
 
 def test_get_example_data_paths() -> None:

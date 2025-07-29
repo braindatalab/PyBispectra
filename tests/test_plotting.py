@@ -234,12 +234,12 @@ def test_plotting_tde_error_catch() -> None:
         results.plot(times=(times[0], times[1], times[2]))
     with pytest.raises(
         ValueError,
-        match=("At least one entry of `times` is outside the range of the " "results."),
+        match=("At least one entry of `times` is outside the range of the results."),
     ):
         results.plot(times=(times[0] - 1, times[-1]))
     with pytest.raises(
         ValueError,
-        match=("At least one entry of `times` is outside the range of the " "results."),
+        match=("At least one entry of `times` is outside the range of the results."),
     ):
         results.plot(times=(times[0], times[-1] + 1))
     with pytest.raises(

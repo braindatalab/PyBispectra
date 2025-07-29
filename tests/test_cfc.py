@@ -4,8 +4,12 @@ import numpy as np
 import pytest
 
 from pybispectra.cfc import AAC, PAC, PPC
-from pybispectra.data import get_example_data_paths
-from pybispectra.utils import ResultsCFC, compute_fft, compute_tfr
+from pybispectra.utils import (
+    ResultsCFC,
+    compute_fft,
+    compute_tfr,
+    get_example_data_paths,
+)
 from pybispectra.utils._utils import _generate_data
 
 
