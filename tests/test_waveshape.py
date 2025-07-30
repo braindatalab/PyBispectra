@@ -4,8 +4,7 @@ import numpy as np
 import pytest
 from numpy.random import RandomState
 
-from pybispectra.data import get_example_data_paths
-from pybispectra.utils import ResultsWaveShape, compute_fft
+from pybispectra.utils import ResultsWaveShape, compute_fft, get_example_data_paths
 from pybispectra.utils._utils import _generate_data
 from pybispectra.waveshape import WaveShape
 

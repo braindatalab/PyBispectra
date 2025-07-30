@@ -90,6 +90,7 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable", None),
     "numba": ("https://numba.readthedocs.io/en/latest", None),
     "mne": ("https://mne.tools/stable", None),
+    "pooch": ("https://www.fatiando.org/pooch/latest", None),
 }
 
 

@@ -3,10 +3,10 @@ channels:
   - conda-forge
 dependencies:
   - python>=3.10
-  - joblib
-  - matplotlib
-  - mne>1.6
-  - numba
-  - numpy
-  - scikit-learn
-  - scipy
+  - joblib>=1.0.0
+  - matplotlib>=3.5.0
+  - mne>=1.7
+  - numba>=0.55.0
+  - numpy>=1.21.2
+  - scikit-learn>=1.0
+  - scipy>=1.7.1

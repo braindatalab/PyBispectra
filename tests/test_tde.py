@@ -3,9 +3,8 @@
 import numpy as np
 import pytest
 
-from pybispectra.data import get_example_data_paths
 from pybispectra.tde import TDE
-from pybispectra.utils import ResultsTDE, compute_fft
+from pybispectra.utils import ResultsTDE, compute_fft, get_example_data_paths
 from pybispectra.utils._utils import _generate_data
 
 

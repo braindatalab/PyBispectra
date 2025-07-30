@@ -25,4 +25,5 @@ Utilities
     compute_fft
     compute_tfr
     compute_rank
+    get_example_data_paths
     set_precision

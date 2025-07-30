@@ -58,6 +58,8 @@ jobs:
           which python
       - run: pip install -e .
       - run: python -c "import pybispectra; import mne; print(f'PyBispectra {pybispectra.__version__}\n'); mne.sys_info()"
+      - name: Download testing data
+        run: python -c "from pybispectra.utils import DATASETS, get_example_data_paths; (get_example_data_paths(data) for data in DATASETS.keys())"
       - name: Run pytest
         run: python -m coverage run && coverage report
 
@@ -88,5 +90,7 @@ jobs:
           pip install .[test]
       - name: Display versions and environment information
         run: python -c "import pybispectra; import mne; print(f'PyBispectra {pybispectra.__version__}\n'); mne.sys_info()"
+      - name: Download testing data
+        run: python -c "from pybispectra.utils import DATASETS, get_example_data_paths; (get_example_data_paths(data) for data in DATASETS.keys())"
       - name: Run pytest
         run: python -m coverage run && coverage report
