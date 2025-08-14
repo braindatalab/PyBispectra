@@ -148,8 +148,11 @@ class PAC(_ProcessBispectrum):
         If the seed and target for a given connection is the same channel and
         antisymmetrisation is being performed, :obj:`numpy.nan` values are returned.
 
-        PAC is computed between all values of ``f1s`` and ``f2s``. If any value of
-        ``f1s`` is higher than ``f2s``, a :obj:`numpy.nan` value is returned.
+        PAC is computed between all values of ``f1s`` and ``f2s``.
+
+        .. warning::
+            For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
+            Nyquist frequency, a :obj:`numpy.nan` value is returned.
 
         References
         ----------

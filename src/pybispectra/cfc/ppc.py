@@ -95,8 +95,11 @@ class PPC(_ProcessFreqBase):
         and :math:`f_2` correspond to a lower and higher frequency, respectively; and
         :math:`<>` represents the average value over epochs.
 
-        PPC is computed between all values of ``f1s`` and ``f2s``. If any value of
-        ``f1s`` is higher than ``f2s``, a :obj:`numpy.nan` value is returned.
+        PPC is computed between all values of ``f1s`` and ``f2s``.
+        
+        .. warning::
+            For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
+            Nyquist frequency, a :obj:`numpy.nan` value is returned.
 
         References
         ----------
