@@ -5,6 +5,9 @@
 ##### Bug Fixes
 - Fixed error where `indices` in `ResultsCFC`, `ResultsTDE`, and `ResultsGeneral` classes were not being mapped to results correctly.
 
+##### Documentation
+- Improved the warning about invalid frequency combinations returning `np.nan` values.
+
 ## [Version 1.2](https://pybispectra.readthedocs.io/en/1.2.1/)
 
 ##### Enhancements
