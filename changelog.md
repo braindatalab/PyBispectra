@@ -2,13 +2,8 @@
 
 ## [Version 1.3dev](https://pybispectra.readthedocs.io/en/main/)
 
-##### Bug Fixes
-- Fixed error where `indices` in `ResultsCFC`, `ResultsTDE`, and `ResultsGeneral` classes were not being mapped to results correctly.
 
-##### Documentation
-- Improved the warning about invalid frequency combinations returning `np.nan` values.
-
-## [Version 1.2](https://pybispectra.readthedocs.io/en/1.2.1/)
+## [Version 1.2](https://pybispectra.readthedocs.io/en/1.2.2/)
 
 ##### Enhancements
 - Added general `Bispectrum` and `Threenorm` classes for computing with flexible kmn channel combinations.
@@ -16,6 +11,7 @@
 ##### Bug Fixes
 - Fixed error where the number of subplots exceeding the number of nodes would cause plotting to fail.
 - Fixed error where bandpass filter settings for the SSD method in `SpatioSpectralFilter` were not being applied correctly.
+- Fixed error where `indices` in `ResultsCFC`, `ResultsTDE`, and `ResultsGeneral` classes were not being mapped to results correctly.
 
 ##### API
 - Changed the default value of `min_ratio` in `SpatioSpectralFilter.get_transformed_data()` from `1.0` to `-inf`.
@@ -24,6 +20,7 @@
 
 ##### Documentation
 - Added a new example for computing the bispectrum and threenorm using the general classes.
+- Improved the warning about invalid frequency combinations returning `np.nan` values.
 
 ## [Version 1.1](https://pybispectra.readthedocs.io/en/1.1.0/)
 
