@@ -9,11 +9,11 @@ Parallel processing and [Numba](https://numba.pydata.org/) optimisation are impl
 Analysis of phase-amplitude coupling, time delays, and non-sinusoidal waveshape provide important insights into electrophysiology data, but traditional analysis methods have critical limitations. In contrast, the bispectrum - the Fourier transform of the third order moment - offers approaches to perform such analyses whilst overcoming many of the limitations of traditional methods.
 
 ## Installation & Requirements:
-Install the package into the desired environment using pip `pip install pybispectra`<br/>
-More information on the [installation](https://pybispectra.readthedocs.io/en/main/installation.html) page.
+Install the package into the desired environment using pip: `pip install pybispectra`<br/>
+More information on the [installation](https://pybispectra.readthedocs.io/en/1.2.2/installation.html) page.
 
 ## Use:
-To get started with the toolbox, check out the [documentation](https://pybispectra.readthedocs.io/en/main/) and [examples](https://pybispectra.readthedocs.io/en/main/examples.html).
+To get started with the toolbox, check out the [documentation](https://pybispectra.readthedocs.io/en/1.2.2/) and [examples](https://pybispectra.readthedocs.io/en/1.2.2/examples.html).
 
 For instance, given some epoched time series, `data`, phase-amplitude coupling can be computed as:
 
@@ -28,8 +28,8 @@ pac_results.plot()  # plot results
 ```
 
 ## Contributing & Development:
-If you encounter issues with the package, want to suggest improvements, or have made any changes which you would like to see officially supported, please refer to the [development](https://pybispectra.readthedocs.io/en/main/development.html) page. A unit test suite is included and must be expanded where necessary to validate any changes.
+If you encounter issues with the package, want to suggest improvements, or have made any changes which you would like to see officially supported, please refer to the [development](https://pybispectra.readthedocs.io/en/1.2.2/development.html) page. A unit test suite is included and must be expanded where necessary to validate any changes.
 
 ## Citing:
 If you use this toolbox in your work, please include the following citation:<br/>
-Binns, T. S., Pellegrini, F., Jurhar, T., & Haufe, S. (2023). PyBispectra. DOI: [10.5281/zenodo.8377820](https://doi.org/10.5281/zenodo.8377820)
+Binns, T. S., Pellegrini, F., Jurhar, T., Nguyen, T. D., Köhler, R. M., & Haufe, S. (2025). PyBispectra: A toolbox for advanced electrophysiological signal processing using the bispectrum. DOI: [10.5281/zenodo.8377820](https://doi.org/10.5281/zenodo.8377820)
