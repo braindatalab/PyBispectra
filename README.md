@@ -9,7 +9,7 @@ Parallel processing and [Numba](https://numba.pydata.org/) optimisation are impl
 Analysis of phase-amplitude coupling, time delays, and non-sinusoidal waveshape provide important insights into electrophysiology data, but traditional analysis methods have critical limitations. In contrast, the bispectrum - the Fourier transform of the third order moment - offers approaches to perform such analyses whilst overcoming many of the limitations of traditional methods.
 
 ## Installation & Requirements:
-Install the package into the desired environment using pip `pip install pybispectra`<br/>
+Install the package into the desired environment using pip: `pip install pybispectra`<br/>
 More information on the [installation](https://pybispectra.readthedocs.io/en/main/installation.html) page.
 
 ## Use:
@@ -32,4 +32,4 @@ If you encounter issues with the package, want to suggest improvements, or have 
 
 ## Citing:
 If you use this toolbox in your work, please include the following citation:<br/>
-Binns, T. S., Pellegrini, F., Jurhar, T., & Haufe, S. (2023). PyBispectra. DOI: [10.5281/zenodo.8377820](https://doi.org/10.5281/zenodo.8377820)
+Binns, T. S., Pellegrini, F., Jurhar, T., Nguyen, T. D., Köhler, R. M., & Haufe, S. (2025). PyBispectra: A toolbox for advanced electrophysiological signal processing using the bispectrum. DOI: [10.5281/zenodo.8377820](https://doi.org/10.5281/zenodo.8377820)
