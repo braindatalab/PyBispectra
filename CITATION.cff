@@ -1,20 +1,62 @@
-cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+cff-version: "1.2.0"
 authors:
-- family-names: "Binns"
-  given-names: "Thomas Samuel"
+- family-names: Binns
+  given-names: Thomas S.
   orcid: "https://orcid.org/0000-0003-0657-0891"
-- family-names: "Pellegrini"
-  given-names: "Franziska"
+- family-names: Pellegrini
+  given-names: Franziska
   orcid: "https://orcid.org/0000-0001-9769-1597"
-- family-names: "Jurhar"
-  given-names: "Tin"
+- family-names: Jurhar
+  given-names: Tin
   orcid: "https://orcid.org/0000-0002-8804-2349"
-- family-names: "Haufe"
-  given-names: "Stefan"
+- family-names: Nguyen
+  given-names: Tien D.
+  orcid: "https://orcid.org/0009-0008-9867-0964"
+- family-names: Köhler
+  given-names: Richard M.
+  orcid: "https://orcid.org/0000-0002-5219-1289"
+- family-names: Haufe
+  given-names: Stefan
   orcid: "https://orcid.org/0000-0003-1470-9195"
-title: "PyBispectra"
-version: 1.1.0
-doi: 10.5281/zenodo.10155044
-date-released: 2023-11-18
-url: "https://github.com/neuromodulation/PyBispectra/tree/1.1.0"
+contact:
+- family-names: Binns
+  given-names: Thomas S.
+  orcid: "https://orcid.org/0000-0003-0657-0891"
+doi: 10.5281/zenodo.16882137
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Binns
+    given-names: Thomas S.
+    orcid: "https://orcid.org/0000-0003-0657-0891"
+  - family-names: Pellegrini
+    given-names: Franziska
+    orcid: "https://orcid.org/0000-0001-9769-1597"
+  - family-names: Jurhar
+    given-names: Tin
+    orcid: "https://orcid.org/0000-0002-8804-2349"
+  - family-names: Nguyen
+    given-names: Tien D.
+    orcid: "https://orcid.org/0009-0008-9867-0964"
+  - family-names: Köhler
+    given-names: Richard M.
+    orcid: "https://orcid.org/0000-0002-5219-1289"
+  - family-names: Haufe
+    given-names: Stefan
+    orcid: "https://orcid.org/0000-0003-1470-9195"
+  date-published: 2025-08-20
+  doi: 10.21105/joss.08504
+  issn: 2475-9066
+  issue: 112
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 8504
+  title: "PyBispectra: A toolbox for advanced electrophysiological
+    signal processing using the bispectrum"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.08504"
+  volume: 10
+title: "PyBispectra: A toolbox for advanced electrophysiological signal
+  processing using the bispectrum"

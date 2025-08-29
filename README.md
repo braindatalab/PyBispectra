@@ -21,4 +21,4 @@ To get started with the toolbox, check out the [documentation](https://pybispect
 
 ## Citing:
 If you use this toolbox in your work, please include the following citation:<br/>
-Binns, T. S., Pellegrini, F., Jurhar, T., & Haufe, S. (2023). PyBispectra (Version 1.1.0). DOI: [10.5281/zenodo.10155044](https://doi.org/10.5281/zenodo.10155044)
+Binns, TS, Pellegrini, F, Jurhar, T, Nguyen, TD, Köhler, RM, & Haufe, S (2025). PyBispectra: A toolbox for advanced electrophysiological signal processing using the bispectrum. *Journal of Open Source Software*. DOI: [10.21105/joss.08504](https://doi.org/10.21105/joss.08504)
