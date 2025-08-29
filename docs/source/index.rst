@@ -23,8 +23,10 @@ Parallel processing and `Numba <https://numba.pydata.org/>`_ optimisation are
 implemented to reduce computation times.
 
 If you use this toolbox in your work, please include the following citation:|br|
-Binns, T. S., Pellegrini, F., Jurhar, T., & Haufe, S. (2023). PyBispectra. DOI:
-`10.5281/zenodo.8377820 <https://doi.org/10.5281/zenodo.8377820>`_
+Binns, TS, Pellegrini, F, Jurhar, T, Nguyen, TD, Köhler, RM, & Haufe, S (2025).
+PyBispectra: A toolbox for advanced electrophysiological signal processing using the
+bispectrum. *Journal of Open Source Software*. DOI:
+`10.21105/joss.08504 <https://doi.org/10.21105/joss.08504>`_
 
 .. toctree::
    :maxdepth: 2
