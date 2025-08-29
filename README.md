@@ -32,4 +32,4 @@ If you encounter issues with the package, want to suggest improvements, or have 
 
 ## Citing:
 If you use this toolbox in your work, please include the following citation:<br/>
-Binns, T. S., Pellegrini, F., Jurhar, T., Nguyen, T. D., Köhler, R. M., & Haufe, S. (2025). PyBispectra: A toolbox for advanced electrophysiological signal processing using the bispectrum. DOI: [10.5281/zenodo.8377820](https://doi.org/10.5281/zenodo.8377820)
+Binns, TS, Pellegrini, F, Jurhar, T, Nguyen, TD, Köhler, RM, & Haufe, S (2025). PyBispectra: A toolbox for advanced electrophysiological signal processing using the bispectrum. *Journal of Open Source Software*. DOI: [10.21105/joss.08504](https://doi.org/10.21105/joss.08504)
