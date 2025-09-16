@@ -1,7 +1,7 @@
 repos:
   # ruff PyBispectra
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.12
+    rev: v0.13.0
     hooks:
       - id: ruff
         name: ruff lint pybispectra
@@ -10,7 +10,7 @@ repos:
 
   # ruff examples
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.12
+    rev: v0.13.0
     hooks:
       - id: ruff
         name: ruff lint examples
@@ -45,7 +45,7 @@ repos:
 
   # toml-sort
   - repo: https://github.com/pappasam/toml-sort.git
-    rev: v0.24.2
+    rev: v0.24.3
     hooks:
       - id: toml-sort-fix
 
