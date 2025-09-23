@@ -1,6 +1,6 @@
 """Initialisation of the PyBispectra package."""
 
-__version__ = "1.3.0+dev"
+__version__ = "1.2.3"
 
 from .cfc import AAC, PAC, PPC
 from .general import Bispectrum, Threenorm
