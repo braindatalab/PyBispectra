@@ -9,7 +9,7 @@ from pybispectra.utils._process import (
     _ProcessBispectrum,
 )
 from pybispectra.utils.results import ResultsWaveShape
-from pybispectra.utils._utils import _compute_in_parallel
+from pybispectra.utils._utils import _compute_in_parallel, _int_like
 
 np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
 
@@ -125,7 +125,7 @@ class WaveShape(_ProcessBispectrum):
         where the resulting values lie in the range :math:`[-1, 1]`.
 
         Bicoherence is computed for all values of ``f1s`` and ``f2s``.
-        
+
         .. warning::
             For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
             Nyquist frequency, a :obj:`numpy.nan` value is returned.
@@ -165,7 +165,7 @@ class WaveShape(_ProcessBispectrum):
             indices = tuple(range(self._n_chans))
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
-        if any(not isinstance(idx, int) for idx in indices):
+        if any(not isinstance(idx, _int_like) for idx in indices):
             raise TypeError("Entries of `indices` must be ints.")
 
         if any(idx < 0 or idx >= self._n_chans for idx in indices):

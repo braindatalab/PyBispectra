@@ -9,7 +9,7 @@ from pybispectra.utils._process import (
     _compute_threenorm,
     _ProcessBispectrum,
 )
-from pybispectra.utils._utils import _compute_in_parallel
+from pybispectra.utils._utils import _compute_in_parallel, _int_like
 
 
 class _General(_ProcessBispectrum):
@@ -42,7 +42,7 @@ class _General(_ProcessBispectrum):
         for group_idcs in indices:
             if not isinstance(group_idcs, tuple):
                 raise TypeError("Entries of `indices` must be tuples.")
-            if any(not isinstance(idx, int) for idx in group_idcs):
+            if any(not isinstance(idx, _int_like) for idx in group_idcs):
                 raise TypeError("Entries for groups in `indices` must be ints.")
             if any(idx < 0 or idx >= self._n_chans for idx in group_idcs):
                 raise ValueError(
