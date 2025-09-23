@@ -9,7 +9,7 @@ import numpy as np
 from numba import njit
 
 from pybispectra.utils._defaults import _precision
-from pybispectra.utils._utils import _fast_find_first
+from pybispectra.utils._utils import _fast_find_first, _int_like, _number_like
 from pybispectra.utils.results import _ResultsBase
 
 
@@ -70,7 +70,7 @@ class _ProcessFreqBase(ABC):
                 "`data` and `freqs` must contain the same number of frequencies."
             )
 
-        if not isinstance(sampling_freq, (int, float)):
+        if not isinstance(sampling_freq, _number_like):
             raise TypeError("`sampling_freq` must be an int or a float.")
         if np.abs(freqs).max() > sampling_freq / 2:
             raise ValueError(
@@ -114,7 +114,7 @@ class _ProcessFreqBase(ABC):
         for group_idcs in (seeds, targets):
             if not isinstance(group_idcs, tuple):
                 raise TypeError("Entries of `indices` must be tuples.")
-            if any(not isinstance(idx, int) for idx in group_idcs):
+            if any(not isinstance(idx, _int_like) for idx in group_idcs):
                 raise TypeError(
                     "Entries for seeds and targets in `indices` must be ints."
                 )
@@ -180,7 +180,7 @@ class _ProcessFreqBase(ABC):
 
     def _sort_parallelisation(self, n_jobs: int) -> None:
         """Sort parallelisation inputs."""
-        if not isinstance(n_jobs, int):
+        if not isinstance(n_jobs, _int_like):
             raise TypeError("`n_jobs` must be an integer.")
         if n_jobs < 1 and n_jobs != -1:
             raise ValueError("`n_jobs` must be >= 1 or -1.")

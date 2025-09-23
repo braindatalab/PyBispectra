@@ -10,7 +10,7 @@ from mne.decoding import SSD
 from mne.time_frequency import csd_array_fourier, csd_array_multitaper
 
 from pybispectra.utils._defaults import _precision
-from pybispectra.utils._utils import _create_mne_info
+from pybispectra.utils._utils import _create_mne_info, _int_like, _number_like
 from pybispectra.utils.utils import compute_rank
 
 
@@ -174,7 +174,7 @@ class SpatioSpectralFilter:
         if data.ndim != 3:
             raise ValueError("`data` must be a 3D array.")
 
-        if not isinstance(sampling_freq, (int, float)):
+        if not isinstance(sampling_freq, _number_like):
             raise TypeError("`sampling_freq` must be an int or a float.")
         self.sampling_freq = sampling_freq
 
@@ -190,14 +190,14 @@ class SpatioSpectralFilter:
     ) -> None:
         """Sort frequency bound inputs."""
         if not isinstance(signal_bounds, tuple) or not all(
-            isinstance(entry, (int, float)) for entry in signal_bounds
+            isinstance(entry, _number_like) for entry in signal_bounds
         ):
             raise TypeError("`signal_bounds` must be a tuple of ints or floats.")
         if not isinstance(noise_bounds, tuple) or not all(
-            isinstance(entry, (int, float)) for entry in noise_bounds
+            isinstance(entry, _number_like) for entry in noise_bounds
         ):
             raise TypeError("`noise_bounds` must be a tuple of ints or floats.")
-        if not isinstance(signal_noise_gap, (int, float)):
+        if not isinstance(signal_noise_gap, _number_like):
             raise TypeError("`signal_noise_gap` must be an int or a float.")
 
         if len(signal_bounds) != 2 or len(noise_bounds) != 2:
@@ -231,7 +231,7 @@ class SpatioSpectralFilter:
 
     def _sort_n_harmonics(self, n_harmonics: int) -> None:
         """Sort harmonic use input."""
-        if not isinstance(n_harmonics, int):
+        if not isinstance(n_harmonics, _int_like):
             raise TypeError("`n_harmonics` must be an int.")
 
         if n_harmonics < -1:
@@ -262,7 +262,7 @@ class SpatioSpectralFilter:
             indices = tuple(np.arange(self._n_chans, dtype=np.int32).tolist())
 
         if not isinstance(indices, tuple) or not all(
-            isinstance(entry, int) for entry in indices
+            isinstance(entry, _int_like) for entry in indices
         ):
             raise TypeError("`indices` must be a tuple of ints.")
 
@@ -280,7 +280,7 @@ class SpatioSpectralFilter:
         if rank is None:
             rank = compute_rank(self.data)
 
-        if not isinstance(rank, int):
+        if not isinstance(rank, _int_like):
             raise TypeError("`rank` must be an int.")
 
         if rank < 1 or rank > self._use_n_chans:
@@ -531,7 +531,7 @@ class SpatioSpectralFilter:
 
     def _sort_parallelisation(self, n_jobs: int) -> int:
         """Sort parallelisation inputs."""
-        if not isinstance(n_jobs, int):
+        if not isinstance(n_jobs, _int_like):
             raise TypeError("`n_jobs` must be an integer.")
         if n_jobs < 1 and n_jobs != -1:
             raise ValueError("`n_jobs` must be >= 1 or -1.")
@@ -845,7 +845,7 @@ class SpatioSpectralFilter:
                 "transformed data."
             )
 
-        if not isinstance(min_ratio, (int, float)):
+        if not isinstance(min_ratio, _number_like):
             raise TypeError("`min_ratio` must be an int or a float")
         if not isinstance(copy, bool):
             raise TypeError("`copy` must be a bool.")

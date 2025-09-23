@@ -9,6 +9,12 @@ from numba import njit
 from pybispectra.utils._defaults import _precision
 
 
+# Aliases for type checking
+_int_like = (int, np.integer)
+_float_like = (float, np.floating)
+_number_like = _int_like + _float_like
+
+
 def _compute_in_parallel(
     func: callable,
     loop_kwargs: list[dict],
