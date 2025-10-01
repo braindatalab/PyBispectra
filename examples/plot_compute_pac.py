@@ -54,16 +54,16 @@ from pybispectra import PAC, compute_fft, get_example_data_paths
 #
 # where the resulting values lie in the range :math:`[0, 1]`. Furthermore, PAC can be
 # antisymmetrised by subtracting the results from those found using the transposed
-# bispectrum, :math:`\textbf{B}_{xyx}`, :footcite:`Chella2014`
+# bispectrum, :math:`\textbf{B}_{yxy}`, :footcite:`Chella2014`
 #
 # :math:`\textrm{PAC}_{\textrm{antisym}}(\textbf{x}_{f_1},\textbf{y}_{f_2})=|
-# \textbf{B}_{xyy}-\textbf{B}_{xyx}|` .
+# \textbf{B}_{xyy}(f_1,f_2)-\textbf{B}_{yxy}(f_1,f_2)|` .
 #
 # In the context of analysing PAC between two signals, antisymmetrisation allows you to
 # correct for spurious estimates of coupling arising from interactions within the
 # signals themselves in instances of source mixing, providing a more robust connectivity
 # metric :footcite:`PellegriniPreprint`. The same principle applies for the
-# antisymmetrisation of the bicoherence.
+# antisymmetrisation of the bicoherence :footcite:`Chella2016`.
 
 ########################################################################################
 # Loading data and computing Fourier coefficients
