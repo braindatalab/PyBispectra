@@ -140,10 +140,17 @@ class PAC(_ProcessBispectrum):
 
         where the resulting values lie in the range :math:`[0, 1]`. Furthermore, PAC can
         be antisymmetrised by subtracting the results from those found using the
-        transposed bispectrum, :math:`\textbf{B}_{xyx}`, :footcite:`Chella2014`
+        transposed bispectrum, :math:`\textbf{B}_{yxy}`, :footcite:`Chella2014`
 
         :math:`\textrm{PAC}_{\textrm{antisym}}(\textbf{x}_{f_1},\textbf{y}_{f_2})=
-        |\textbf{B}_{xyy}-\textbf{B}_{xyx}|` .
+        |\textbf{B}_{xyy}(f_1,f_2)-\textbf{B}_{yxy}(f_1,f_2)|` .
+
+        A modified approach is used for the normalisation of antisymmetrised PAC
+        :footcite:`Chella2016`
+
+        :math:`\textrm{PAC}_{\textrm{norm,antisym}}(\textbf{x}_{f_1},\textbf{y}_{f_2})=
+        \Large|\frac{\textbf{B}_{xyy}(f_1,f_2)-\textbf{B}_{yxy}(f_1,f_2)}
+        {\textbf{N}_{xyy}(f_1,f_2)+\textbf{N}_{yxy}(f_1,f_2)}|` .
 
         If the seed and target for a given connection is the same channel and
         antisymmetrisation is being performed, :obj:`numpy.nan` values are returned.
@@ -171,7 +178,6 @@ class PAC(_ProcessBispectrum):
         self._compute_bispectrum()
         if self._return_threenorm:
             self._compute_threenorm()
-            self._bicoherence = self._bispectrum / self._threenorm
         self._compute_pac()
         self._store_results()
 
@@ -189,7 +195,6 @@ class PAC(_ProcessBispectrum):
 
         self._bispectrum = None
         self._threenorm = None
-        self._bicoherence = None
 
         self._pac_nosym_nonorm = None
         self._pac_nosym_threenorm = None
@@ -340,10 +345,13 @@ class PAC(_ProcessBispectrum):
 
         if self._return_threenorm:
             if self._return_nosym:
-                self._pac_nosym_threenorm = np.abs(self._bicoherence[0])
+                self._pac_nosym_threenorm = np.abs(
+                    self._bispectrum[0] / self._threenorm[0]
+                )
             if self._return_antisym:
                 self._pac_antisym_threenorm = np.abs(
-                    self._bicoherence[0] - self._bicoherence[1]
+                    (self._bispectrum[0] - self._bispectrum[1])
+                    / (self._threenorm[0] + self._threenorm[1])
                 )
                 for con_i, seed, target in zip(
                     range(self._n_cons), self._seeds, self._targets

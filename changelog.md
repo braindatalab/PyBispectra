@@ -4,7 +4,7 @@
 - No changes.
 
 
-## [Version 1.2](https://pybispectra.readthedocs.io/en/1.2.2/)
+## [Version 1.2](https://pybispectra.readthedocs.io/en/1.2.3/)
 
 ##### Enhancements
 - Added general `Bispectrum` and `Threenorm` classes for computing with flexible kmn channel combinations.
@@ -14,6 +14,7 @@
 - Fixed error where bandpass filter settings for the SSD method in `SpatioSpectralFilter` were not being applied correctly.
 - Fixed error where `indices` in `ResultsCFC`, `ResultsTDE`, and `ResultsGeneral` classes were not being mapped to results correctly.
 - Fixed error where NumPy integers and floats were not being recognised as valid types.
+- Fixed error where univariate normalisation of antisymmetrised PAC was not being applied correctly.
 
 ##### API
 - Changed the default value of `min_ratio` in `SpatioSpectralFilter.get_transformed_data()` from `1.0` to `-inf`.
