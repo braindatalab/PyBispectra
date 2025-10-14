@@ -15,6 +15,7 @@ from pybispectra.utils._utils import (
     _create_mne_info,
     _fast_find_first,
     _generate_data,
+    _int_like,
 )
 
 set_precision("double")  # make sure precision is as default before testing
@@ -355,7 +356,7 @@ def test_compute_rank() -> None:
 
     # test it works with correct inputs
     rank = compute_rank(data=data)
-    assert isinstance(rank, int), "`rank` should be an int."
+    assert isinstance(rank, _int_like), "`rank` should be an int."
     non_full_rank_data = data.copy()
     non_full_rank_data[:, 1] = non_full_rank_data[:, 0]
     rank = compute_rank(data=non_full_rank_data)
