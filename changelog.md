@@ -1,10 +1,30 @@
 # PyBispectra Changelog
 
-## [Version 1.3dev](https://pybispectra.readthedocs.io/en/main/)
-- No changes.
+## [Version 1.3.0dev](https://pybispectra.readthedocs.io/en/main/)
+
+##### Bug Fixes
+- Fixed error where univariate normalisation of antisymmetrised PAC was not being applied correctly.
 
 
-## [Version 1.2](https://pybispectra.readthedocs.io/en/1.2.3/)
+## [Version 1.2.3](https://pybispectra.readthedocs.io/en/1.2.3/)
+
+##### Bug Fixes
+- Fixed error where NumPy integers and floats were not being recognised as valid types.
+
+## [Version 1.2.2](https://pybispectra.readthedocs.io/en/1.2.2/)
+
+##### Bug Fixes
+- Fixed error where `indices` in `ResultsCFC`, `ResultsTDE`, and `ResultsGeneral` classes were not being mapped to results correctly.
+
+##### Documentation
+- Improved the warning about invalid frequency combinations returning `np.nan` values.
+
+## [Version 1.2.1](https://pybispectra.readthedocs.io/en/1.2.1/)
+
+##### Dependencies
+- Added `scikit-learn` as a dependency for compatibility with `mne>=1.9`.
+
+## [Version 1.2.0](https://pybispectra.readthedocs.io/en/1.2.0/)
 
 ##### Enhancements
 - Added general `Bispectrum` and `Threenorm` classes for computing with flexible kmn channel combinations.
@@ -12,9 +32,6 @@
 ##### Bug Fixes
 - Fixed error where the number of subplots exceeding the number of nodes would cause plotting to fail.
 - Fixed error where bandpass filter settings for the SSD method in `SpatioSpectralFilter` were not being applied correctly.
-- Fixed error where `indices` in `ResultsCFC`, `ResultsTDE`, and `ResultsGeneral` classes were not being mapped to results correctly.
-- Fixed error where NumPy integers and floats were not being recognised as valid types.
-- Fixed error where univariate normalisation of antisymmetrised PAC was not being applied correctly.
 
 ##### API
 - Changed the default value of `min_ratio` in `SpatioSpectralFilter.get_transformed_data()` from `1.0` to `-inf`.
@@ -23,9 +40,8 @@
 
 ##### Documentation
 - Added a new example for computing the bispectrum and threenorm using the general classes.
-- Improved the warning about invalid frequency combinations returning `np.nan` values.
 
-## [Version 1.1](https://pybispectra.readthedocs.io/en/1.1.0/)
+## [Version 1.1.0](https://pybispectra.readthedocs.io/en/1.1.0/)
 
 ##### Enhancements
 - Reduced the memory requirement of bispectrum computations.
@@ -43,6 +59,6 @@
 - Added a new example for computing time delays on specific frequency bands.
 
 
-## [Version 1.0](https://pybispectra.readthedocs.io/en/1.0.0/)
+## [Version 1.0.0](https://pybispectra.readthedocs.io/en/1.0.0/)
 
 - Initial release.
