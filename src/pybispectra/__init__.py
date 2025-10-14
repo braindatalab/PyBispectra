@@ -1,6 +1,6 @@
 """Initialisation of the PyBispectra package."""
 
-__version__ = "1.2.1dev"
+__version__ = "1.2.1"
 
 from .cfc import AAC, PAC, PPC
 from .data import get_example_data_paths
