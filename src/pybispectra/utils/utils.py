@@ -11,7 +11,7 @@ from mne import time_frequency
 
 from pybispectra import __version__ as version
 from pybispectra.utils._defaults import _precision
-from pybispectra.utils._utils import _compute_in_parallel
+from pybispectra.utils._utils import _compute_in_parallel, _int_like, _number_like
 
 
 def compute_fft(
@@ -128,12 +128,12 @@ def _compute_fft_input_checks(
     if not np.isreal(data).all():
         raise ValueError("`data` must be real-valued.")
 
-    if not isinstance(sampling_freq, (int, float)):
+    if not isinstance(sampling_freq, _number_like):
         raise TypeError("`sampling_freq` must be an int or a float.")
 
     if n_points is None:
         n_points = data.shape[2]
-    if not isinstance(n_points, int):
+    if not isinstance(n_points, _int_like):
         raise TypeError("`n_points` must be an integer")
 
     if not isinstance(window, str):
@@ -145,7 +145,7 @@ def _compute_fft_input_checks(
     else:
         window_func = np.hamming
 
-    if not isinstance(n_jobs, int):
+    if not isinstance(n_jobs, _int_like):
         raise TypeError("`n_jobs` must be an integer.")
     if n_jobs < 1 and n_jobs != -1:
         raise ValueError("`n_jobs` must be >= 1 or -1.")
@@ -291,7 +291,7 @@ def _compute_tfr_input_checks(
     if data.ndim != 3:
         raise ValueError("`data` must be a 3D array.")
 
-    if not isinstance(sampling_freq, (int, float)):
+    if not isinstance(sampling_freq, _number_like):
         raise TypeError("`sampling_freq` must be an int or a float.")
 
     if not isinstance(freqs, np.ndarray):
@@ -315,7 +315,7 @@ def _compute_tfr_input_checks(
     else:
         tfr_func = time_frequency.tfr_array_multitaper
 
-    if not isinstance(n_cycles, (np.ndarray, int, float)):
+    if not isinstance(n_cycles, _number_like + (np.ndarray,)):
         raise TypeError("`n_cycles` must be a NumPy array, an int, or a float.")
     if isinstance(n_cycles, np.ndarray):
         if n_cycles.shape != freqs.shape:
@@ -334,10 +334,10 @@ def _compute_tfr_input_checks(
         raise TypeError("`use_fft` must be a bool.")
 
     if tfr_mode == "multitaper":
-        if not isinstance(multitaper_time_bandwidth, (int, float)):
+        if not isinstance(multitaper_time_bandwidth, _number_like):
             raise TypeError("`multitaper_time_bandwidth` must be an int or a float.")
 
-    if not isinstance(n_jobs, int):
+    if not isinstance(n_jobs, _int_like):
         raise TypeError("`n_jobs` must be an integer.")
     if n_jobs < 1 and n_jobs != -1:
         raise ValueError("`n_jobs` must be >= 1 or -1.")
@@ -375,7 +375,7 @@ def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
     if data.ndim != 3:
         raise ValueError("`data` must be a 3D array.")
 
-    if not isinstance(sv_tol, (int, float)):
+    if not isinstance(sv_tol, _number_like):
         raise TypeError("`sv_tol` must be a float or an int.")
 
     singular_vals = np.linalg.svd(data, compute_uv=False).min(axis=0)
