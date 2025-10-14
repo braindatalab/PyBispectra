@@ -10,6 +10,7 @@ Analysis of phase-amplitude coupling, time delays, and non-sinusoidal waveshape 
 
 ## Installation & Requirements:
 Install the package into the desired environment using pip: `pip install pybispectra`<br/>
+or conda: `conda install -c conda-forge pybispectra`<br/>
 More information on the [installation](https://pybispectra.readthedocs.io/en/1.2.3/installation.html) page.
 
 ## Use:
