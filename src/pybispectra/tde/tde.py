@@ -10,7 +10,7 @@ from scipy.linalg import hankel
 from pybispectra.utils import ResultsTDE
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import _ProcessBispectrum
-from pybispectra.utils._utils import _compute_in_parallel
+from pybispectra.utils._utils import _compute_in_parallel, _number_like, _int_like
 
 
 class TDE(_ProcessBispectrum):
@@ -292,14 +292,14 @@ class TDE(_ProcessBispectrum):
         fmax: int | float | tuple[int | float],
     ) -> None:
         """Sort inputs for the frequency bounds."""
-        if not isinstance(fmin, (int, float, tuple)):
+        if not isinstance(fmin, _number_like + (tuple,)):
             raise TypeError("`fmin` must be an int, float, or tuple.")
-        if not isinstance(fmax, (int, float, tuple)):
+        if not isinstance(fmax, _number_like + (tuple,)):
             raise TypeError("`fmax` must be an int, float, or tuple.")
 
-        if isinstance(fmin, (int, float)):
+        if isinstance(fmin, _number_like):
             fmin = (fmin,)
-        if isinstance(fmax, (int, float)):
+        if isinstance(fmax, _number_like):
             fmax = (fmax,)
 
         new_fmax = []
@@ -344,12 +344,12 @@ class TDE(_ProcessBispectrum):
         """Sort inputs for the form of results being requested."""
         if not isinstance(antisym, (bool, tuple)):
             raise TypeError("`antisym` must be a bool or tuple of bools.")
-        if not isinstance(method, (int, tuple)):
+        if not isinstance(method, _int_like + (tuple,)):
             raise TypeError("`method` must be an int or tuple of ints.")
 
         if isinstance(antisym, bool):
             antisym = (antisym,)
-        if isinstance(method, int):
+        if isinstance(method, _int_like):
             method = (method,)
 
         if any(not isinstance(entry, bool) for entry in antisym):
@@ -389,7 +389,7 @@ class TDE(_ProcessBispectrum):
         for group_idcs in (seeds, targets):
             if not isinstance(group_idcs, tuple):
                 raise TypeError("Entries of `indices` must be tuples.")
-            if any(not isinstance(idx, int) for idx in group_idcs):
+            if any(not isinstance(idx, _int_like) for idx in group_idcs):
                 raise TypeError(
                     "Entries for seeds and targets in `indices` must be ints."
                 )

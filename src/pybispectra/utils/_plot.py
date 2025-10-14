@@ -7,6 +7,8 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.ticker import ScalarFormatter, StrMethodFormatter
 
+from pybispectra.utils._utils import _int_like, _number_like
+
 
 class _PlotBase(ABC):
     """Base class for plotting results.
@@ -52,22 +54,22 @@ class _PlotBase(ABC):
         """
         if nodes is None:
             nodes = tuple(range(self.n_nodes))
-        if not isinstance(nodes, (int, tuple)):
+        if not isinstance(nodes, _int_like + (tuple,)):
             raise TypeError("`nodes` must be an int or tuple.")
         if isinstance(nodes, int):
             nodes = (nodes,)
-        if not all(isinstance(con, int) for con in nodes):
+        if not all(isinstance(con, _int_like) for con in nodes):
             raise TypeError("Entries of `nodes` must be ints.")
         if any(con >= self.n_nodes for con in nodes) or any(con < 0 for con in nodes):
             raise ValueError("The requested node is not present in the results.")
 
-        if not isinstance(n_rows, int) or not isinstance(n_cols, int):
+        if not isinstance(n_rows, _int_like) or not isinstance(n_cols, _int_like):
             raise TypeError("`n_rows` and `n_cols` must be integers.")
         if n_rows < 1 or n_cols < 1:
             raise ValueError("`n_rows` and `n_cols` must be >= 1.")
 
-        if not isinstance(major_tick_intervals, (int, float)) or not isinstance(
-            minor_tick_intervals, (int, float)
+        if not isinstance(major_tick_intervals, _number_like) or not isinstance(
+            minor_tick_intervals, _number_like
         ):
             raise TypeError(
                 "`major_tick_intervals` and `minor_tick_intervals` should be ints or "
@@ -1117,11 +1119,11 @@ class _PlotTDE(_PlotBase):
         if freq_bands is None:
             freq_bands = tuple(range(self._n_fbands))
         else:
-            if not isinstance(freq_bands, (int, tuple)):
+            if not isinstance(freq_bands, _int_like + (tuple,)):
                 raise TypeError("`freq_bands` must be an int or tuple.")
-            if isinstance(freq_bands, int):
+            if isinstance(freq_bands, _int_like):
                 freq_bands = (freq_bands,)
-            if not all(isinstance(fband, int) for fband in freq_bands):
+            if not all(isinstance(fband, _int_like) for fband in freq_bands):
                 raise TypeError("Entries of `freq_bands` must be ints.")
             if any(fband >= self._n_fbands for fband in freq_bands) or any(
                 fband < 0 for fband in freq_bands

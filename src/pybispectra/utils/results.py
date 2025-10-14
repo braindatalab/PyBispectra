@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib.figure import Figure
 
 from pybispectra.utils._plot import _PlotCFC, _PlotGeneral, _PlotTDE, _PlotWaveShape
+from pybispectra.utils._utils import _int_like
 
 
 class _ResultsBase(ABC):
@@ -65,7 +66,7 @@ class _ResultsBase(ABC):
         for group_idcs in (seeds, targets):
             if not isinstance(group_idcs, tuple):
                 raise TypeError("Entries of `indices` must be tuples.")
-            if any(not isinstance(idx, int) for idx in group_idcs):
+            if any(not isinstance(idx, _int_like) for idx in group_idcs):
                 raise TypeError(
                     "Entries for seeds and targets in `indices` must be ints."
                 )
@@ -86,7 +87,7 @@ class _ResultsBase(ABC):
         """Sort `indices` with inputs format [channels]."""
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
-        if not all(isinstance(idx, int) for idx in indices):
+        if not all(isinstance(idx, _int_like) for idx in indices):
             raise TypeError("Entries of `indices` must be ints.")
         self._n_chans = len(np.unique(indices))
         if any(idx < 0 or idx >= self._n_chans for idx in indices):
@@ -106,7 +107,7 @@ class _ResultsBase(ABC):
         for group_idcs in indices:
             if not isinstance(group_idcs, tuple):
                 raise TypeError("Entries of `indices` must be tuples.")
-            if any(not isinstance(idx, int) for idx in group_idcs):
+            if any(not isinstance(idx, _int_like) for idx in group_idcs):
                 raise TypeError("Entries for groups in `indices` must be ints.")
         if len(np.unique([len(group) for group in indices])) != 1:
             raise ValueError("Entries of `indices` must have equal length.")
