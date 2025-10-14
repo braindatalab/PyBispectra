@@ -8,8 +8,8 @@ then install it using `pip <https://pip.pypa.io/en/stable/>`_:
     
     pip install pybispectra
 
-or `conda <https://docs.conda.io/en/latest/>_` from
-`conda-forge <https://anaconda.org/conda-forge>_` (for PyBispectra >= 1.2.2):
+or `conda <https://docs.conda.io/en/latest/>`_ from
+`conda-forge <https://anaconda.org/conda-forge>`_ (for PyBispectra >= 1.2.2):
 
 .. code-block::
     
