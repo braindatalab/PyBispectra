@@ -74,7 +74,7 @@ html_theme_options = {
     "footer_start": ["copyright"],
     "switcher": {
         "json_url": "https://pybispectra.readthedocs.io/en/main/_static/versions.json",  # noqa E501
-        "version_match": pybispectra.__version__,
+        "version_match": pybispectra.__version__.replace("+", ""),
     },
     "pygment_light_style": "default",
     "pygment_dark_style": "github-dark",
