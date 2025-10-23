@@ -9,13 +9,13 @@ then install it using `pip <https://pip.pypa.io/en/stable/>`_:
     pip install pybispectra
 
 or `conda <https://docs.conda.io/en/latest/>`_ from
-`conda-forge <https://anaconda.org/conda-forge>`_ (for PyBispectra >= 1.2.2):
+`conda-forge <https://anaconda.org/conda-forge>`_ (for PyBispectra ≥ 1.2.2):
 
 .. code-block::
     
     conda install -c conda-forge pybispectra
 
-PyBispectra requires Python >= 3.10.
+PyBispectra requires Python ≥ 3.10.
 
 If you need to create an environment in which to install PyBispectra, you can do so
 using `conda <https://docs.conda.io/en/latest/>`_,
