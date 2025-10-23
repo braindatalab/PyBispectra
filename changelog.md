@@ -1,17 +1,22 @@
 # PyBispectra Changelog
 
-## [Version 1.3.0dev](https://pybispectra.readthedocs.io/en/main/)
+## [Version 1.3.0dev](https://pybispectra.readthedocs.io/latest/)
 
 ##### Bug Fixes
 - Fixed error where univariate normalisation of antisymmetrised PAC was not being applied correctly.
 
+<br>
 
-## [Version 1.2.3](https://pybispectra.readthedocs.io/en/1.2.3/)
+## [Version 1.2](https://pybispectra.readthedocs.io/1.2/)
+
+### Version 1.2.3
 
 ##### Bug Fixes
 - Fixed error where NumPy integers and floats were not being recognised as valid types.
 
-## [Version 1.2.2](https://pybispectra.readthedocs.io/en/1.2.2/)
+<br>
+
+### Version 1.2.2
 
 ##### Bug Fixes
 - Fixed error where `indices` in `ResultsCFC`, `ResultsTDE`, and `ResultsGeneral` classes were not being mapped to results correctly.
@@ -19,12 +24,16 @@
 ##### Documentation
 - Improved the warning about invalid frequency combinations returning `np.nan` values.
 
-## [Version 1.2.1](https://pybispectra.readthedocs.io/en/1.2.1/)
+<br>
+
+### Version 1.2.1
 
 ##### Dependencies
 - Added `scikit-learn` as a dependency for compatibility with `mne>=1.9`.
 
-## [Version 1.2.0](https://pybispectra.readthedocs.io/en/1.2.0/)
+<br>
+
+### Version 1.2.0
 
 ##### Enhancements
 - Added general `Bispectrum` and `Threenorm` classes for computing with flexible kmn channel combinations.
@@ -41,7 +50,11 @@
 ##### Documentation
 - Added a new example for computing the bispectrum and threenorm using the general classes.
 
-## [Version 1.1.0](https://pybispectra.readthedocs.io/en/1.1.0/)
+<br>
+
+## [Version 1.1](https://pybispectra.readthedocs.io/1.1/)
+
+### Version 1.1.0
 
 ##### Enhancements
 - Reduced the memory requirement of bispectrum computations.
@@ -58,7 +71,10 @@
 ##### Documentation
 - Added a new example for computing time delays on specific frequency bands.
 
+<br>
 
-## [Version 1.0.0](https://pybispectra.readthedocs.io/en/1.0.0/)
+## [Version 1.0](https://pybispectra.readthedocs.io/1.0/)
+
+### Version 1.0.0
 
 - Initial release.
