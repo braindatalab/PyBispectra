@@ -10,7 +10,6 @@ import os
 import sys
 
 import pybispectra
-from pybispectra.utils._docs import linkcode_resolve
 
 
 project = "PyBispectra"
@@ -73,7 +72,7 @@ html_theme_options = {
     "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"],
     "footer_start": ["copyright"],
     "switcher": {
-        "json_url": "https://pybispectra.readthedocs.io/en/main/_static/versions.json",  # noqa E501
+        "json_url": "https://pybispectra.readthedocs.io/latest/_static/versions.json",
         "version_match": pybispectra.__version__,
     },
     "pygment_light_style": "default",
