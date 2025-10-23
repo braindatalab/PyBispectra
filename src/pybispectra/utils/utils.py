@@ -3,6 +3,7 @@
 from multiprocessing import cpu_count
 from typing import Callable
 from warnings import warn
+from packaging.version import Version
 
 import pooch
 import numpy as np
@@ -451,6 +452,10 @@ _DATA_ALIAS_FILE_HASH = [
 ]
 
 DATASETS = {alias: filename for alias, filename, _ in _DATA_ALIAS_FILE_HASH}
+
+if "dev" not in version:
+    version = Version(version)
+    version = f"{version.major}.{version.minor}"  # take data from maj.min branch
 
 _pooch = pooch.create(
     path=pooch.os_cache("PyBispectra"),
