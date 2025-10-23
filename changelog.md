@@ -2,12 +2,18 @@
 
 ## [Version 1.3.0dev](https://pybispectra.readthedocs.io/latest/)
 
-##### Bug Fixes
-- Fixed error where univariate normalisation of antisymmetrised PAC was not being applied correctly.
+No changes.
 
 <br>
 
 ## [Version 1.2](https://pybispectra.readthedocs.io/1.2/)
+
+### Version 1.2.4
+
+##### Bug Fixes
+- Fixed error where univariate normalisation of antisymmetrised PAC was not being applied correctly.
+
+<br>
 
 ### Version 1.2.3
 
