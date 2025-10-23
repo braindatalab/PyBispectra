@@ -16,7 +16,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy",
+    "numpy<2",
     "scipy",
     "numba",
     "mne",
