@@ -2,7 +2,8 @@
 
 ## [Version 1.3.0dev](https://pybispectra.readthedocs.io/latest/)
 
-No changes.
+##### Enhancements
+- Added `norm` parameter to `WaveShape.compute()` to control normalisation of waveshape results.
 
 <br>
 
