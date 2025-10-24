@@ -62,6 +62,11 @@ def test_error_catch() -> None:
     # compute
     waveshape = WaveShape(coeffs, freqs, sampling_freq)
 
+    with pytest.raises(TypeError, match="`norm` must be a bool or tuple of bools."):
+        waveshape.compute(norm="true")
+    with pytest.raises(TypeError, match="Entries of `norm` must be bools."):
+        waveshape.compute(norm=("true",))
+
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
         waveshape.compute(indices=list(indices))
     with pytest.raises(TypeError, match="Entries of `indices` must be ints."):
@@ -93,14 +98,28 @@ def test_waveshape_runs() -> None:
 
     # check it runs with correct inputs
     waveshape = WaveShape(data=fft, freqs=freqs, sampling_freq=sampling_freq)
-    waveshape.compute()
+    waveshape.compute(norm=(False, True))
 
     # check the returned results have the correct shape
-    assert waveshape.results.shape == (n_chans, len(freqs), len(freqs))
+    assert (
+        results.shape == (n_chans, len(freqs), len(freqs))
+        for results in waveshape.results
+    )
 
     # check the returned results are of the correct type
-    assert waveshape.results.name == "Waveshape"
+    result_types = ["Waveshape | Bispectrum", "Waveshape | Bicoherence"]
+    assert (
+        results.name == result_types[i] for i, results in enumerate(waveshape.results)
+    )
+    assert (isinstance(results, ResultsWaveShape) for results in waveshape.results)
+
+    waveshape.compute(norm=False)
     assert isinstance(waveshape.results, ResultsWaveShape)
+    assert waveshape.results.name == result_types[0]
+
+    waveshape.compute(norm=True)
+    assert isinstance(waveshape.results, ResultsWaveShape)
+    assert waveshape.results.name == result_types[1]
 
     # check it runs with non-exact frequencies
     waveshape.compute(f1s=(10.25, 19.75), f2s=(10.25, 19.75))

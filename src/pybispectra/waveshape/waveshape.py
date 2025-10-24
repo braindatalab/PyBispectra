@@ -15,7 +15,7 @@ np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
 
 
 class WaveShape(_ProcessBispectrum):
-    """Class for computing waveshape properties using bicoherence.
+    """Class for computing waveshape properties using the bispectrum.
 
     Parameters
     ----------
@@ -41,8 +41,8 @@ class WaveShape(_ProcessBispectrum):
 
     Attributes
     ----------
-    results : ~pybispectra.utils.ResultsWaveShape
-        Waveshape results.
+    results : ~pybispectra.utils.ResultsWaveShape | tuple of ~pybispectra.utils.ResultsWaveShape
+        Waveshape results for each of the computed metrics.
 
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
         Fourier coefficients.
@@ -68,30 +68,38 @@ class WaveShape(_ProcessBispectrum):
     References
     ----------
     .. footbibliography::
-    """
+    """  # noqa: E501
+
+    _return_nonorm = False
+    _return_threenorm = False
 
     def compute(
         self,
         indices: tuple[int] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        norm: bool | tuple[bool] = True,
         n_jobs: int = 1,
     ) -> None:
-        r"""Compute bicoherence within channels, averaged over epochs.
+        r"""Compute waveshape within channels, averaged over epochs.
 
         Parameters
         ----------
         indices : tuple of int | None (default None)
-            Indices of the channels to compute bicoherence within. If :obj:`None`,
-            bicoherence within all channels is computed.
+            Indices of the channels to compute waveshape within. If :obj:`None`,
+            waveshape within all channels is computed.
 
         f1s : tuple of int or float, length of 2 | None (default None)
-            Start and end lower frequencies to compute bicoherence for, respectively. If
+            Start and end lower frequencies to compute waveshape for, respectively. If
             :obj:`None`, all frequencies are used.
 
         f2s : tuple of int or float, length of 2 | None (default None)
-            Start and end higher frequencies to compute bicoherence for, respectively.
+            Start and end higher frequencies to compute waveshape for, respectively.
             If :obj:`None`, all frequencies are used.
+
+        norm : bool | tuple of bool (default True)
+            Whether to normalise the waveshape results using the threenorm. If a tuple
+            of bool, both forms of waveshape are computed in turn.
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available CPUs are
@@ -124,7 +132,7 @@ class WaveShape(_ProcessBispectrum):
 
         where the resulting values lie in the range :math:`[-1, 1]`.
 
-        Bicoherence is computed for all values of ``f1s`` and ``f2s``.
+        Waveshape is computed for all values of ``f1s`` and ``f2s``.
 
         .. warning::
             For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
@@ -136,6 +144,7 @@ class WaveShape(_ProcessBispectrum):
         """
         self._reset_attrs()
 
+        self._sort_metrics(norm)
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
         self._sort_parallelisation(n_jobs)
@@ -144,8 +153,9 @@ class WaveShape(_ProcessBispectrum):
             print("Computing bicoherence...\n")
 
         self._compute_bispectrum()
-        self._compute_threenorm()
-        self._bicoherence = self._bispectrum / self._threenorm
+        if self._return_threenorm:
+            self._compute_threenorm()
+            self._bicoherence = self._bispectrum / self._threenorm
         self._store_results()
 
         if self.verbose:
@@ -155,9 +165,28 @@ class WaveShape(_ProcessBispectrum):
         """Reset attrs. of the object to prevent interference."""
         super()._reset_attrs()
 
+        self._return_nonorm = False
+        self._return_threenorm = False
+
         self._bispectrum = None
         self._threenorm = None
         self._bicoherence = None
+
+    def _sort_metrics(self, norm: bool | tuple[bool]) -> None:
+        """Sort inputs for the form of results being requested."""
+        if not isinstance(norm, (bool, tuple)):
+            raise TypeError("`norm` must be a bool or tuple of bools.")
+
+        if isinstance(norm, bool):
+            norm = (norm,)
+
+        if any(not isinstance(entry, bool) for entry in norm):
+            raise TypeError("Entries of `norm` must be bools.")
+
+        if False in norm:
+            self._return_nonorm = True
+        if True in norm:
+            self._return_threenorm = True
 
     def _sort_indices(self, indices: tuple[int]) -> None:
         """Sort channel indices inputs."""
@@ -252,14 +281,34 @@ class WaveShape(_ProcessBispectrum):
 
     def _store_results(self) -> None:
         """Store computed results in objects."""
-        self._results = ResultsWaveShape(
-            data=self._bicoherence,
-            indices=self._indices,
-            f1s=self._f1s,
-            f2s=self._f2s,
-            name="Waveshape",
-        )
+        results = []
+
+        if self._return_nonorm:
+            results.append(
+                ResultsWaveShape(
+                    data=self._bispectrum,
+                    indices=self._indices,
+                    f1s=self._f1s,
+                    f2s=self._f2s,
+                    name="Waveshape | Bispectrum",
+                )
+            )
+
+        if self._return_threenorm:
+            results.append(
+                ResultsWaveShape(
+                    data=self._bicoherence,
+                    indices=self._indices,
+                    f1s=self._f1s,
+                    f2s=self._f2s,
+                    name="Waveshape | Bicoherence",
+                )
+            )
+
+        self._results = tuple(results)
 
     @property
-    def results(self) -> ResultsWaveShape:
+    def results(self) -> ResultsWaveShape | tuple[ResultsWaveShape]:
+        if len(self._results) == 1:
+            return self._results[0]
         return self._results
