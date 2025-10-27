@@ -18,7 +18,7 @@ class _ProcessFreqBase(ABC):
 
     _data_precision: type = _precision.complex
 
-    _data_ndims: int = 3  # usu. [epochs, channels, frequencies, (times)]
+    _data_ndims: tuple = (3, 4)  # [epochs, channels, frequencies (, times)]
 
     _indices: tuple = None
     _seeds: tuple = None
@@ -28,6 +28,8 @@ class _ProcessFreqBase(ABC):
     sampling_freq: float = None
     _f1s: np.ndarray = None
     _f2s: np.ndarray = None
+    _times: np.ndarray = None
+    _time_idcs: np.ndarray = None
 
     _n_jobs: int = None
 
@@ -38,22 +40,30 @@ class _ProcessFreqBase(ABC):
         data: np.ndarray,
         freqs: np.ndarray,
         sampling_freq: int | float,
+        times: np.ndarray | None = None,
         verbose: bool = True,
     ) -> None:
-        self._sort_init_inputs(data, freqs, sampling_freq, verbose)
+        self._sort_init_inputs(data, freqs, sampling_freq, times, verbose)
 
     def _sort_init_inputs(
         self,
         data: np.ndarray,
         freqs: np.ndarray,
         sampling_freq: int | float,
+        times: np.ndarray | None,
         verbose: bool,
     ) -> None:
         """Check init. inputs are appropriate."""
         if not isinstance(data, np.ndarray):
             raise TypeError("`data` must be a NumPy array.")
-        if data.ndim != self._data_ndims:
-            raise ValueError(f"`data` must be a {self._data_ndims}D array.")
+        if data.ndim not in self._data_ndims:
+            raise ValueError(
+                "`data` must be a "
+                f"{' or '.join([(str(dim) + 'D') for dim in self._data_ndims])} array."
+            )
+        assert np.min(self._data_ndims) == 3 and np.max(self._data_ndims) == 4, ""
+        if data.ndim == 3 and np.max(self._data_ndims) == 4:
+            data = data[..., np.newaxis]  # Add placeholder time dimension
 
         if not isinstance(freqs, np.ndarray):
             raise TypeError("`freqs` must be a NumPy array.")
@@ -69,6 +79,21 @@ class _ProcessFreqBase(ABC):
             raise ValueError(
                 "`data` and `freqs` must contain the same number of frequencies."
             )
+
+        if data.ndim == 4:  # Times dimension present
+            if times is None:
+                times = (np.arange(data.shape[3]) / sampling_freq).astype(np.float32)
+            else:
+                if not isinstance(times, np.ndarray):
+                    raise TypeError("`times` must be a NumPy array.")
+                if times.ndim != 1:
+                    raise ValueError("`times` must be a 1D array.")
+                if data.shape[3] != len(times):
+                    raise ValueError(
+                        "`data` and `times` must contain the same number of timepoints."
+                    )
+        else:  # Discard times info
+            times = None
 
         if not isinstance(sampling_freq, _number_like):
             raise TypeError("`sampling_freq` must be an int or a float.")
@@ -91,6 +116,9 @@ class _ProcessFreqBase(ABC):
 
         self.data = np.asarray(data, dtype=self._data_precision)
         self.freqs = np.asarray(freqs, dtype=_precision.real)
+        self.times = (
+            np.asarray(times, dtype=_precision.real) if times is not None else None
+        )
         self.sampling_freq = sampling_freq
         self.verbose = verbose
 
@@ -178,6 +206,39 @@ class _ProcessFreqBase(ABC):
                     UserWarning,
                 )
 
+    def _sort_tmin_tmax(self, tmin_tmax: tuple[int | float | None]) -> None:
+        """Sort time range inputs."""
+        if not isinstance(tmin_tmax, tuple):
+            raise TypeError("`tmin_tmax` must be a tuple.")
+        if len(tmin_tmax) != 2:
+            raise ValueError("`tmin_tmax` must have length of 2.")
+
+        for time in tmin_tmax:
+            if time is not None and not isinstance(time, _number_like):
+                raise TypeError("Entries of `tmin_tmax` must be int, float, or None.")
+
+        if self.times is None:
+            _times = np.array([0])
+        else:
+            _times = self.times
+
+        _tmin_tmax = []
+        for idx, time in enumerate(tmin_tmax):
+            if time is None:
+                _tmin_tmax.append(-np.inf if idx == 0 else np.inf)
+            else:
+                _tmin_tmax.append(time)
+
+        if _tmin_tmax[0] >= _tmin_tmax[1]:
+            raise ValueError(
+                "The first entry of `tmin_tmax` must be less than the second entry."
+            )
+
+        self._time_idcs = np.argwhere(
+            (_times >= _tmin_tmax[0]) & (_times <= _tmin_tmax[1])
+        ).T[0]
+        self._times = _times[self._time_idcs]
+
     def _sort_parallelisation(self, n_jobs: int) -> None:
         """Sort parallelisation inputs."""
         if not isinstance(n_jobs, _int_like):
@@ -202,6 +263,8 @@ class _ProcessFreqBase(ABC):
 
         self._f1s = None
         self._f2s = None
+        self._times = None
+        self._time_idcs = None
 
         self._n_jobs = None
 
@@ -277,7 +340,7 @@ def _compute_bispectrum(
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
+    data : numpy.ndarray of float, shape of [epochs, 2, frequencies, times]
         FFT coefficients, where the second dimension contains the data for the seed and
         target channel of a single connection, respectively.
 
@@ -300,7 +363,7 @@ def _compute_bispectrum(
 
     Returns
     -------
-    results : numpy.ndarray of complex float, shape of [x, f1s, f2s]
+    results : numpy.ndarray of complex float, shape of [x, f1s, f2s, times]
         Complex-valued array containing the bispectrum of a single connection, where the
         first dimension corresponds to the different channel indices given in ``kmn``.
 
@@ -309,7 +372,7 @@ def _compute_bispectrum(
     No checks on the input data are performed for speed.
     """
     results = np.full(
-        (kmn.shape[0], f1s.shape[0], f2s.shape[0]),
+        (kmn.shape[0], f1s.shape[0], f2s.shape[0], data.shape[3]),
         fill_value=np.nan + np.nan * 1j,
         dtype=precision,
     )
@@ -324,7 +387,7 @@ def _compute_bispectrum(
             fdiff_fi = f1_fi + f2_fi
             if f1 <= f2 and fdiff_fi < freqs.size:
                 for kmn_i, (k, m, n) in enumerate(kmn):
-                    if np.isnan(results[kmn_i, f1_ri, f2_ri]):
+                    if np.isnan(results[kmn_i, f1_ri, f2_ri]).all():
                         results[kmn_i, f1_ri, f2_ri] = 0 + 0j
                     for epoch_data in data:
                         results[kmn_i, f1_ri, f2_ri] += (
@@ -349,7 +412,7 @@ def _compute_threenorm(
 
     Parameters
     ----------
-    data : numpy.ndarray of float, shape of [epochs, 2, frequencies]
+    data : numpy.ndarray of float, shape of [epochs, 2, frequencies, times]
         FFT coefficients, where the second dimension contains the data for the seed and
         target channel of a single connection, respectively.
 
@@ -372,7 +435,7 @@ def _compute_threenorm(
 
     Returns
     -------
-    results : numpy.ndarray of float, shape of [x, f1s, f2s]
+    results : numpy.ndarray of float, shape of [x, f1s, f2s, times]
         Threenorm of a single connection, where the first dimension corresponds to the
         different channel indices given in ``kmn``.
 
@@ -381,7 +444,7 @@ def _compute_threenorm(
     No checks on the input data are performed for speed.
     """
     results = np.full(
-        (kmn.shape[0], f1s.shape[0], f2s.shape[0]),
+        (kmn.shape[0], f1s.shape[0], f2s.shape[0], data.shape[3]),
         fill_value=np.nan,
         dtype=precision,
     )

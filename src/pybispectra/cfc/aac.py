@@ -27,6 +27,13 @@ class AAC(_ProcessFreqBase):
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``. If ``data`` has a times dimension and
+        ``times = None``, the time of the first sample in ``data`` is assumed to be 0
+        seconds.
+
+        .. versionadded:: 1.3
+
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
@@ -58,7 +65,7 @@ class AAC(_ProcessFreqBase):
 
     _data_precision: type = _precision.real  # TFR real-valued
 
-    _data_ndims: int = 4  # [epochs, channels, frequencies, times]
+    _data_ndims: int = (4,)  # [epochs, channels, frequencies, times]
 
     _aac: np.ndarray = None
 
@@ -67,6 +74,7 @@ class AAC(_ProcessFreqBase):
         indices: tuple[tuple[int]] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        tmin_tmax: tuple[int | float | None] = (None, None),
         n_jobs: int = 1,
     ) -> None:
         r"""Compute AAC, averaged over epochs.
@@ -85,6 +93,12 @@ class AAC(_ProcessFreqBase):
             Start and end higher frequencies to compute AAC on, respectively. If
             :obj:`None`, all frequencies are used.
 
+        tmin_tmax : tuple of int or float or None, length of 2 (default ``(None, None)``)
+            Start and end times (in seconds) to compute PAC on, respectively. If
+            ``(None, None)``, all timepoints are used.
+
+            .. versionadded:: 1.3
+
         n_jobs : int (default ``1``)
             Number of jobs to run in parallel. If ``-1``, all available CPUs are used.
 
@@ -95,7 +109,7 @@ class AAC(_ProcessFreqBase):
         :footcite:`Giehl2021`.
 
         AAC is computed between all values of ``f1s`` and ``f2s``.
-        
+
         .. warning::
             For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
             Nyquist frequency, a :obj:`numpy.nan` value is returned.
@@ -108,6 +122,7 @@ class AAC(_ProcessFreqBase):
 
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
+        self._sort_tmin_tmax(tmin_tmax)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
@@ -127,7 +142,7 @@ class AAC(_ProcessFreqBase):
     def _compute_aac(self) -> None:
         """Compute AAC between f1s of seeds and f2s of targets."""
         loop_kwargs = [
-            {"data": self.data[:, (seed, target)]}
+            {"data": self.data[:, (seed, target)][..., self._time_idcs]}
             for seed, target in zip(self._seeds, self._targets)
         ]
         static_kwargs = {
@@ -160,7 +175,12 @@ class AAC(_ProcessFreqBase):
     def _store_results(self) -> None:
         """Store computed results in an object."""
         self._results = ResultsCFC(
-            self._aac, self._indices, self._f1s, self._f2s, "AAC"
+            data=self._aac,
+            indices=self._indices,
+            f1s=self._f1s,
+            f2s=self._f2s,
+            times=None,
+            name="AAC",
         )
 
     @property

@@ -14,7 +14,7 @@ class PPC(_ProcessFreqBase):
 
     Parameters
     ----------
-    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies (, times)]
         Fourier coefficients.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
@@ -23,6 +23,13 @@ class PPC(_ProcessFreqBase):
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
+
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``. If ``data`` has a times dimension and
+        ``times = None``, the time of the first sample in ``data`` is assumed to be 0
+        seconds.
+
+        .. versionadded:: 1.3
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -40,7 +47,7 @@ class PPC(_ProcessFreqBase):
     results : ~pybispectra.utils.ResultsCFC
         PPC results.
 
-    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies (, times)]
         Fourier coefficients.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
@@ -49,17 +56,21 @@ class PPC(_ProcessFreqBase):
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``.
+
     verbose : bool
         Whether or not to report the progress of the processing.
     """
 
-    _ppc = None
+    _ppc: np.ndarray = None
 
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        tmin_tmax: tuple[int | float | None] = (None, None),
         n_jobs: int = 1,
     ) -> None:
         r"""Compute PPC, averaged over epochs.
@@ -77,6 +88,12 @@ class PPC(_ProcessFreqBase):
         f2s : tuple of int or float, length of 2 | None (default None)
             Start and end higher frequencies to compute PPC on, respectively.
             If :obj:`None`, all frequencies are used.
+
+        tmin_tmax : tuple of int or float or None, length of 2 (default ``(None, None)``)
+            Start and end times (in seconds) to compute PPC on, respectively. If
+            ``(None, None)``, all timepoints are used.
+
+            .. versionadded:: 1.3
 
         n_jobs : int (default ``1``)
             Number of jobs to run in parallel. If ``-1``, all available CPUs are used.
@@ -96,7 +113,7 @@ class PPC(_ProcessFreqBase):
         :math:`<>` represents the average value over epochs.
 
         PPC is computed between all values of ``f1s`` and ``f2s``.
-        
+
         .. warning::
             For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
             Nyquist frequency, a :obj:`numpy.nan` value is returned.
@@ -109,6 +126,7 @@ class PPC(_ProcessFreqBase):
 
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
+        self._sort_tmin_tmax(tmin_tmax)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
@@ -128,7 +146,7 @@ class PPC(_ProcessFreqBase):
     def _compute_ppc(self) -> None:
         """Compute PPC between f1s of seeds and f2s of targets."""
         loop_kwargs = [
-            {"data": self.data[:, (seed, target)]}
+            {"data": self.data[:, (seed, target)][..., self._time_idcs]}
             for seed, target in zip(self._seeds, self._targets)
         ]
         static_kwargs = {
@@ -143,7 +161,7 @@ class PPC(_ProcessFreqBase):
                 loop_kwargs=loop_kwargs,
                 static_kwargs=static_kwargs,
                 output=np.zeros(
-                    (self._n_cons, self._f1s.size, self._f2s.size),
+                    (self._n_cons, self._f1s.size, self._f2s.size, self._times.size),
                     dtype=_precision.real,
                 ),
                 message="Processing connections...",
@@ -158,10 +176,18 @@ class PPC(_ProcessFreqBase):
                 "computation with `pybispectra.set_precision('single')`."
             ) from error
 
+        if self.times is None:  # remove placeholder time dimension
+            self._ppc = self._ppc[..., 0]
+
     def _store_results(self) -> None:
         """Store computed results in an object."""
         self._results = ResultsCFC(
-            self._ppc, self._indices, self._f1s, self._f2s, "PPC"
+            data=self._ppc,
+            indices=self._indices,
+            f1s=self._f1s,
+            f2s=self._f2s,
+            times=self._times,
+            name="PPC",
         )
 
     @property
