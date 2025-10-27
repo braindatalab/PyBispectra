@@ -8,7 +8,7 @@ from packaging.version import Version
 import pooch
 import numpy as np
 import scipy as sp
-from mne import time_frequency
+from mne import time_frequency, __version__ as mne_version
 
 from pybispectra import __version__ as version
 from pybispectra.utils._defaults import _precision
@@ -168,15 +168,16 @@ def compute_tfr(
     zero_mean_wavelets: bool | None = None,
     use_fft: bool = True,
     multitaper_time_bandwidth: int | float = 4.0,
+    output: str = "power",
     n_jobs: int = 1,
     verbose: bool = True,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute the amplitude time-frequency representation (TFR) of data.
 
     Parameters
     ----------
     data : ~numpy.ndarray, shape of [epochs, channels, times]
-        Real-valued data to compute the amplitude TFR of.
+        Real-valued data to compute the TFR of.
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of ``data``.
@@ -207,6 +208,14 @@ def compute_tfr(
         bandwidth (in Hz). Only used if ``tfr_mode = "multitaper"``. See
         :func:`mne.time_frequency.tfr_array_multitaper` for more information.
 
+    output : ``"power"`` | ``"complex"`` (default ``"power"``)
+        Type of output to return.
+
+        .. note::
+            If ``output = "complex"`` and ``tfr_mode = "multitaper"``, returning weights
+            for each taper requires MNE version 1.10 or higher.
+        .. versionadded:: 1.3
+
     n_jobs : int (default ``1``)
         Number of jobs to run in parallel. If ``-1``, all available CPUs are used.
 
@@ -215,19 +224,24 @@ def compute_tfr(
 
     Returns
     -------
-    tfr : ~numpy.ndarray, shape of [epochs, channels, frequencies, times]
-        Amplitude/power of the TFR of ``data``.
+    tfr : ~numpy.ndarray, shape of [epochs, channels, (tapers,) frequencies, times]
+        TFR power or complex coefficients of ``data``. The ``tapers`` dimension is only
+        present if ``output = "complex"`` and ``tfr_mode = "multitaper"``.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in ``tfr``.
+
+    weights : ~numpy.ndarray, shape of [...]
+        Taper weights. Only returned if ``output = "complex"`` and ``tfr_mode =
+        "multitaper"``.
 
     Notes
     -----
     This function acts as a wrapper around the MNE TFR computation functions
     :func:`mne.time_frequency.tfr_array_morlet` and
-    :func:`mne.time_frequency.tfr_array_multitaper` with ``output = "power"``.
+    :func:`mne.time_frequency.tfr_array_multitaper`.
     """
-    tfr_func, n_jobs = _compute_tfr_input_checks(
+    tfr_func, return_weights, n_jobs = _compute_tfr_input_checks(
         data,
         sampling_freq,
         freqs,
@@ -236,6 +250,7 @@ def compute_tfr(
         zero_mean_wavelets,
         use_fft,
         multitaper_time_bandwidth,
+        output,
         n_jobs,
         verbose,
     )
@@ -246,7 +261,7 @@ def compute_tfr(
         "freqs": freqs,
         "n_cycles": n_cycles,
         "use_fft": use_fft,
-        "output": "power",
+        "output": output,
         "n_jobs": n_jobs,
         "verbose": verbose,
     }
@@ -254,16 +269,23 @@ def compute_tfr(
         tfr_func_kwargs["zero_mean"] = zero_mean_wavelets
     if tfr_mode == "multitaper":
         tfr_func_kwargs["time_bandwidth"] = multitaper_time_bandwidth
+        if output == "complex":
+            tfr_func_kwargs["return_weights"] = True
 
     if verbose:
         print("Computing TFR of the data...")
 
-    tfr = np.array(tfr_func(**tfr_func_kwargs), dtype=_precision.real)
+    out = np.array(
+        tfr_func(**tfr_func_kwargs),
+        dtype=_precision.real if output == "power" else _precision.complex,
+    )
 
     if verbose:
         print("    [TFR computation finished]\n")
 
-    return tfr, freqs.astype(_precision.real)
+    if return_weights:
+        return out[0], freqs.astype(_precision.real), out[1]  # tfr, freqs, weights
+    return out, freqs.astype(_precision.real)  # tfr, freqs
 
 
 def _compute_tfr_input_checks(
@@ -275,15 +297,19 @@ def _compute_tfr_input_checks(
     zero_mean_wavelets: bool | None,
     use_fft: bool,
     multitaper_time_bandwidth: int | float,
+    output: str,
     n_jobs: int,
     verbose: bool,
-) -> tuple[Callable, int]:
+) -> tuple[Callable, bool, int]:
     """Check inputs for computing TFR.
 
     Returns
     -------
     tfr_func
         Function to use to compute TFR.
+
+    return_weights : bool
+        Whether or not taper weights will be returned.
 
     n_jobs
     """
@@ -338,6 +364,15 @@ def _compute_tfr_input_checks(
         if not isinstance(multitaper_time_bandwidth, _number_like):
             raise TypeError("`multitaper_time_bandwidth` must be an int or a float.")
 
+    return_weights = False
+    if tfr_mode == "multitaper" and output == "complex":
+        if Version(mne_version) < Version("1.10"):
+            raise RuntimeError(
+                "If `tfr_mode='multitaper'` and `output='complex'`, MNE >= 1.10 is "
+                f"required to return taper weights (is {mne_version})."
+            )
+        return_weights = True
+
     if not isinstance(n_jobs, _int_like):
         raise TypeError("`n_jobs` must be an integer.")
     if n_jobs < 1 and n_jobs != -1:
@@ -350,7 +385,7 @@ def _compute_tfr_input_checks(
     if verbose and not np.isreal(data).all():
         warn("`data` is expected to be real-valued.", UserWarning)
 
-    return tfr_func, n_jobs
+    return tfr_func, return_weights, n_jobs
 
 
 def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
