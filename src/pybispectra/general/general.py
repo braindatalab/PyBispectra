@@ -120,7 +120,7 @@ class Bispectrum(_General):
         indices: tuple[tuple[int]] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
-        tmin_tmax: tuple[int | float | None] = (None, None),
+        times: tuple[int | float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute the bispectrum, averaged over epochs.
@@ -140,9 +140,9 @@ class Bispectrum(_General):
             Start and end higher frequencies to compute the bispectrum for,
             respectively. If :obj:`None`, all frequencies are used.
 
-        tmin_tmax : tuple of int or float or None, length of 2 (default ``(None, None)``)
+        times : tuple of int or float, length of 2 | None (default None)
             Start and end times (in seconds) to compute the bispectrum for,
-            respectively. If ``(None, None)``, all timepoints are used.
+            respectively. If :obj:`None`, all timepoints are used.
 
             .. versionadded:: 1.3
 
@@ -172,7 +172,7 @@ class Bispectrum(_General):
 
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
-        self._sort_tmin_tmax(tmin_tmax)
+        self._sort_tmin_tmax(times)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
@@ -307,7 +307,7 @@ class Threenorm(_General):
         indices: tuple[tuple[int]] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
-        tmin_tmax: tuple[int | float | None] = (None, None),
+        times: tuple[int | float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute the threenorm, averaged over epochs.
@@ -327,9 +327,9 @@ class Threenorm(_General):
             Start and end higher frequencies to compute the threenorm for, respectively.
             If :obj:`None`, all frequencies are used.
 
-        tmin_tmax : tuple of int or float or None, length of 2 (default ``(None, None)``)
+        times : tuple of int or float, length of 2 | None (default None)
             Start and end times (in seconds) to compute the threenorm for, respectively.
-            If ``(None, None)``, all timepoints are used.
+            If :obj:`None`, all timepoints are used.
 
             .. versionadded:: 1.3
 
@@ -364,7 +364,7 @@ class Threenorm(_General):
 
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
-        self._sort_tmin_tmax(tmin_tmax)
+        self._sort_tmin_tmax(times)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:

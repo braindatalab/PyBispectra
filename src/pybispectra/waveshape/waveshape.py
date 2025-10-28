@@ -86,8 +86,8 @@ class WaveShape(_ProcessBispectrum):
         indices: tuple[int] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         norm: bool | tuple[bool] = True,
-        tmin_tmax: tuple[int | float | None] = (None, None),
         n_jobs: int = 1,
     ) -> None:
         r"""Compute waveshape within channels, averaged over epochs.
@@ -106,17 +106,17 @@ class WaveShape(_ProcessBispectrum):
             Start and end higher frequencies to compute waveshape for, respectively.
             If :obj:`None`, all frequencies are used.
 
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) to compute waveshape for, respectively. If
+            :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
+
         norm : bool | tuple of bool (default True)
             Whether to normalise the waveshape results using the threenorm. If a tuple
             of bool, both forms of waveshape are computed in turn.
 
             ..versionadded:: 1.3
-
-        tmin_tmax : tuple of int or float or None, length of 2 (default ``(None, None)``)
-            Start and end times (in seconds) to compute waveshape for, respectively. If
-            ``(None, None)``, all timepoints are used.
-
-            .. versionadded:: 1.3
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available CPUs are
@@ -164,7 +164,7 @@ class WaveShape(_ProcessBispectrum):
         self._sort_metrics(norm)
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
-        self._sort_tmin_tmax(tmin_tmax)
+        self._sort_tmin_tmax(times)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:

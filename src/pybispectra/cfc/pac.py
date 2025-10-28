@@ -82,9 +82,9 @@ class PAC(_ProcessBispectrum):
         indices: tuple[tuple[int]] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         antisym: bool | tuple[bool] = False,
         norm: bool | tuple[bool] = False,
-        tmin_tmax: tuple[int | float | None] = (None, None),
         n_jobs: int = 1,
     ) -> None:
         r"""Compute PAC, averaged over epochs.
@@ -103,6 +103,12 @@ class PAC(_ProcessBispectrum):
             Start and end higher frequencies to compute PAC on, respectively. If
             :obj:`None`, all frequencies are used.
 
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) to compute PAC on, respectively. If
+            :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
+
         antisym : bool | tuple of bool (default False)
             Whether to antisymmetrise the PAC results. If a tuple of bool, both forms of
             PAC are computed in turn.
@@ -110,12 +116,6 @@ class PAC(_ProcessBispectrum):
         norm : bool | tuple of bool (default False)
             Whether to normalise the PAC results using the threenorm. If a tuple of
             bool, both forms of PAC are computed in turn.
-
-        tmin_tmax : tuple of int or float or None, length of 2 (default ``(None, None)``)
-            Start and end times (in seconds) to compute PAC on, respectively. If
-            ``(None, None)``, all timepoints are used.
-
-            .. versionadded:: 1.3
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available CPUs are
@@ -187,7 +187,7 @@ class PAC(_ProcessBispectrum):
         self._sort_metrics(antisym, norm)
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
-        self._sort_tmin_tmax(tmin_tmax)
+        self._sort_tmin_tmax(times)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:

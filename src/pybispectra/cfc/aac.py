@@ -74,7 +74,7 @@ class AAC(_ProcessFreqBase):
         indices: tuple[tuple[int]] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
-        tmin_tmax: tuple[int | float | None] = (None, None),
+        times: tuple[int | float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute AAC, averaged over epochs.
@@ -93,9 +93,9 @@ class AAC(_ProcessFreqBase):
             Start and end higher frequencies to compute AAC on, respectively. If
             :obj:`None`, all frequencies are used.
 
-        tmin_tmax : tuple of int or float or None, length of 2 (default ``(None, None)``)
-            Start and end times (in seconds) to compute PAC on, respectively. If
-            ``(None, None)``, all timepoints are used.
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) to compute AAC on, respectively. If
+            :obj:`None`, all timepoints are used.
 
             .. versionadded:: 1.3
 
@@ -122,7 +122,7 @@ class AAC(_ProcessFreqBase):
 
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
-        self._sort_tmin_tmax(tmin_tmax)
+        self._sort_tmin_tmax(times)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
