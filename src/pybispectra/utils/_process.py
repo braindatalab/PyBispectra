@@ -62,8 +62,6 @@ class _ProcessFreqBase(ABC):
                 f"{' or '.join([(str(dim) + 'D') for dim in self._data_ndims])} array."
             )
         assert np.min(self._data_ndims) == 3 and np.max(self._data_ndims) == 4, ""
-        if data.ndim == 3 and np.max(self._data_ndims) == 4:
-            data = data[..., np.newaxis]  # Add placeholder time dimension
 
         if not isinstance(freqs, np.ndarray):
             raise TypeError("`freqs` must be a NumPy array.")
@@ -94,6 +92,9 @@ class _ProcessFreqBase(ABC):
                     )
         else:  # Discard times info
             times = None
+
+        if data.ndim == 3 and np.max(self._data_ndims) == 4:
+            data = data[..., np.newaxis]  # Add placeholder time dimension
 
         if not isinstance(sampling_freq, _number_like):
             raise TypeError("`sampling_freq` must be an int or a float.")
@@ -206,38 +207,33 @@ class _ProcessFreqBase(ABC):
                     UserWarning,
                 )
 
-    def _sort_tmin_tmax(self, tmin_tmax: tuple[int | float | None]) -> None:
+    def _sort_tmin_tmax(self, times: tuple[int | float] | None) -> None:
         """Sort time range inputs."""
-        if not isinstance(tmin_tmax, tuple):
-            raise TypeError("`tmin_tmax` must be a tuple.")
-        if len(tmin_tmax) != 2:
-            raise ValueError("`tmin_tmax` must have length of 2.")
+        if times is None:
+            times = (-np.inf, np.inf)
 
-        for time in tmin_tmax:
-            if time is not None and not isinstance(time, _number_like):
-                raise TypeError("Entries of `tmin_tmax` must be int, float, or None.")
+        if not isinstance(times, tuple):
+            raise TypeError("`times` must be a tuple or None.")
+        if len(times) != 2:
+            raise ValueError("`times` must have length of 2.")
+
+        for time in times:
+            if not isinstance(time, _number_like):
+                raise TypeError("Entries of `times` must be int or float.")
 
         if self.times is None:
-            _times = np.array([0])
+            timepoints = np.array([0])
         else:
-            _times = self.times
-
-        _tmin_tmax = []
-        for idx, time in enumerate(tmin_tmax):
-            if time is None:
-                _tmin_tmax.append(-np.inf if idx == 0 else np.inf)
-            else:
-                _tmin_tmax.append(time)
-
-        if _tmin_tmax[0] >= _tmin_tmax[1]:
-            raise ValueError(
-                "The first entry of `tmin_tmax` must be less than the second entry."
-            )
+            timepoints = self.times
 
         self._time_idcs = np.argwhere(
-            (_times >= _tmin_tmax[0]) & (_times <= _tmin_tmax[1])
+            (timepoints >= times[0]) & (timepoints <= times[1])
         ).T[0]
-        self._times = _times[self._time_idcs]
+        if self._time_idcs.size == 0:
+            raise ValueError(
+                "No timepoints are present in the data for the range in `times`."
+            )
+        self._times = timepoints[self._time_idcs]
 
     def _sort_parallelisation(self, n_jobs: int) -> None:
         """Sort parallelisation inputs."""
