@@ -15,6 +15,8 @@ class _ResultsBase(ABC):
     f1s: np.ndarray = None
     f2s: np.ndarray = None
 
+    times: np.ndarray = None
+
     indices: tuple[tuple[int]] = None
     n_nodes: int = None
     _seeds: tuple[int] = None
@@ -30,8 +32,11 @@ class _ResultsBase(ABC):
     ) -> None:
         if not isinstance(data, np.ndarray):
             raise TypeError("`data` must be a NumPy array.")
-        if data.ndim != data_ndim:
-            raise ValueError(f"`data` must be a {data_ndim}D array.")
+        if data.ndim not in data_ndim:
+            raise ValueError(
+                "`data` must be a "
+                f"{' or '.join([(str(dim) + 'D') for dim in data_ndim])} array."
+            )
         self._data = data
         self.shape = data.shape
 
@@ -44,7 +49,7 @@ class _ResultsBase(ABC):
         """Sort inputs to the object."""
 
     def _sort_freq_inputs(self, f1s: np.ndarray, f2s: np.ndarray) -> None:
-        """Sort inputs to the object."""
+        """Sort ``f1s`` and ``f2s`` inputs."""
         if not isinstance(f1s, np.ndarray) or not isinstance(f2s, np.ndarray):
             raise TypeError("`f1s` and `f2s` must be NumPy arrays.")
         if f1s.ndim != 1 or f2s.ndim != 1:
@@ -52,8 +57,31 @@ class _ResultsBase(ABC):
         self.f1s = f1s
         self.f2s = f2s
 
-        if self._data.shape != (self.n_nodes, len(f1s), len(f2s)):
-            raise ValueError("`data` must have shape [nodes, f1s, f2s].")
+    def _sort_times(self, times: np.ndarray | None) -> None:
+        """Sort ``times`` input."""
+        if self._data.ndim == 3:  # times dimension absent
+            return
+
+        if times is None:
+            raise ValueError("`times` must be provided for time-resolved results.")
+        if not isinstance(times, np.ndarray):
+            raise TypeError("`times` must be a NumPy array.")
+        if times.ndim != 1:
+            raise ValueError("`times` must be a 1D array.")
+
+        self.times = times
+
+    def _check_data_shape(self) -> None:
+        """Check that ``data`` has the expected shape."""
+        expected_shape = (self.n_nodes, self.f1s.size, self.f2s.size)
+        expected_dims = "[nodes, f1s, f2s"
+        if self.times is not None:
+            expected_shape += (self.times.size,)
+            expected_dims += ", times"
+        expected_dims += "]"
+
+        if self._data.shape != expected_shape:
+            raise ValueError(f"`data` must have shape {expected_dims}.")
 
     def _sort_indices_seeds_targets(self, indices: tuple[tuple[int]]) -> None:
         """Sort ``indices`` inputs with format ([seeds], [targets])."""
@@ -211,7 +239,7 @@ class ResultsCFC(_ResultsBase):
 
     Parameters
     ----------
-    data : ~numpy.ndarray, shape of [nodes, low frequencies, high frequencies]
+    data : ~numpy.ndarray, shape of [nodes, low frequencies, high frequencies (, times)]
         Results to store.
 
     indices : tuple of tuple of int, length of 2
@@ -223,6 +251,12 @@ class ResultsCFC(_ResultsBase):
 
     f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
+
+    times : ~numpy.ndarray, shape of [times] | None (default None)
+        Timepoints in the results (in seconds). Must be provided if ``data`` has a times
+        dimension.
+
+        .. versionadded:: 1.3
 
     name : str  (default ``"CFC"``)
         Name of the results being stored.
@@ -255,14 +289,22 @@ class ResultsCFC(_ResultsBase):
 
     f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
+
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in the results.
     """
 
     def __repr__(self) -> str:
         """Return printable representation of the object."""
-        return repr(
-            f"<Result: {self.name} | [{self.n_nodes} nodes, {len(self.f1s)} f1s, "
-            f"{len(self.f2s)} f2s]>"
+        repr_ = (
+            f"<Result: {self.name} | [{self.n_nodes} nodes, {self.f1s.size} f1s, "
+            f"{self.f2s.size} f2s"
         )
+        if self.times is not None:
+            repr_ += f", {self.times.size} timepoints"
+        repr_ += "]>"
+
+        return repr_
 
     def __init__(
         self,
@@ -270,25 +312,33 @@ class ResultsCFC(_ResultsBase):
         indices: tuple[tuple[int]],
         f1s: np.ndarray,
         f2s: np.ndarray,
+        times: np.ndarray | None = None,
         name: str = "CFC",
     ) -> None:  # noqa: D107
-        super().__init__(data, 3, name)
-        self._sort_init_inputs(indices, f1s, f2s)
+        super().__init__(data, (3, 4), name)
+        self._sort_init_inputs(indices, f1s, f2s, times)
 
         self._plotting = _PlotCFC(
             data=self._data,
             indices=self.indices,
             f1s=self.f1s,
             f2s=self.f2s,
+            times=self.times,
             name=self.name,
         )
 
     def _sort_init_inputs(
-        self, indices: tuple[tuple[int]], f1s: np.ndarray, f2s: np.ndarray
+        self,
+        indices: tuple[tuple[int]],
+        f1s: np.ndarray,
+        f2s: np.ndarray,
+        times: np.ndarray | None,
     ) -> None:
         """Sort inputs to the object."""
         super()._sort_indices_seeds_targets(indices)
         super()._sort_freq_inputs(f1s, f2s)
+        super()._sort_times(times)
+        super()._check_data_shape()
 
     def _get_compact_results_child(self) -> tuple[np.ndarray, tuple[tuple[int]]]:
         """Return a compacted form of the results.
@@ -316,6 +366,7 @@ class ResultsCFC(_ResultsBase):
         nodes: int | tuple[int] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
@@ -337,6 +388,12 @@ class ResultsCFC(_ResultsBase):
         f2s : tuple of int or float | None (default None)
             Start and end high frequencies of the results to plot, respectively. If
             :obj:`None`, all high frequencies are plotted.
+
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) of the results to plot, respectively. If
+            :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -381,6 +438,7 @@ class ResultsCFC(_ResultsBase):
             nodes=nodes,
             f1s=f1s,
             f2s=f2s,
+            times=times,
             n_rows=n_rows,
             n_cols=n_cols,
             major_tick_intervals=major_tick_intervals,
@@ -448,8 +506,6 @@ class ResultsTDE(_ResultsBase):
         Estimated time delay (in ms) for each connection and frequency band.
     """  # noqa: E501
 
-    times: np.ndarray = None
-    _n_times: int = None
     freq_bands: tuple[tuple[int | float]] = None
     _n_fbands: int = None
 
@@ -463,8 +519,8 @@ class ResultsTDE(_ResultsBase):
             )
 
         repr_ += (
-            f"[{self.n_nodes} nodes, {self._n_fbands} frequency bands, {self._n_times} "
-            "times]>"
+            f"[{self.n_nodes} nodes, {self._n_fbands} frequency bands, "
+            f"{self.times.size} timepoints]>"
         )
 
         return repr_
@@ -477,7 +533,7 @@ class ResultsTDE(_ResultsBase):
         freq_bands: tuple[tuple[int | float]] | None = None,
         name: str = "TDE",
     ) -> None:  # noqa: D107
-        super().__init__(data, 3, name)
+        super().__init__(data, (3,), name)
         self._sort_init_inputs(indices, times, freq_bands)
 
         self._compute_tau()
@@ -513,7 +569,6 @@ class ResultsTDE(_ResultsBase):
             raise ValueError("`times` must be a 1D array.")
 
         self.times = times
-        self._n_times = times.shape[0]
 
     def _sort_freq_bands(self, freq_bands: tuple[tuple[int | float]]) -> None:
         """Sort ``freq_bands`` input."""
@@ -647,7 +702,7 @@ class ResultsWaveShape(_ResultsBase):
 
     Parameters
     ----------
-    data : ~numpy.ndarray, shape of [nodes, low frequencies, high frequencies]
+    data : ~numpy.ndarray, shape of [nodes, low frequencies, high frequencies (, times)]
         Results to store.
 
     indices : tuple of int
@@ -658,6 +713,12 @@ class ResultsWaveShape(_ResultsBase):
 
     f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
+
+    times : ~numpy.ndarray, shape of [times] | None (default None)
+        Timepoints in the results (in seconds). Must be provided if ``data`` has a times
+        dimension.
+
+        .. versionadded:: 1.3
 
     name : str (default ``"Waveshape"``)
         Name of the results being stored.
@@ -689,11 +750,14 @@ class ResultsWaveShape(_ResultsBase):
 
     f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
+
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in the results.
     """
 
     def __repr__(self) -> str:
         """Return printable representation of the object."""
-        return repr(
+        return (
             f"<Result: {self.name} | [{self.n_nodes} nodes, {len(self.f1s)} f1s, "
             f"{len(self.f2s)} f2s]>"
         )
@@ -704,25 +768,33 @@ class ResultsWaveShape(_ResultsBase):
         indices: tuple[int],
         f1s: np.ndarray,
         f2s: np.ndarray,
+        times: np.ndarray | None = None,
         name: str = "Waveshape",
     ) -> None:  # noqa: D107
-        super().__init__(data, 3, name)
-        self._sort_init_inputs(indices, f1s, f2s)
+        super().__init__(data, (3, 4), name)
+        self._sort_init_inputs(indices, f1s, f2s, times)
 
         self._plotting = _PlotWaveShape(
             data=self._data,
             indices=self.indices,
             f1s=self.f1s,
             f2s=self.f2s,
+            times=self.times,
             name=self.name,
         )
 
     def _sort_init_inputs(
-        self, indices: tuple[int], f1s: np.ndarray, f2s: np.ndarray
+        self,
+        indices: tuple[int],
+        f1s: np.ndarray,
+        f2s: np.ndarray,
+        times: np.ndarray | None,
     ) -> None:
         """Sort inputs to the object."""
         super()._sort_indices_channels(indices)
         super()._sort_freq_inputs(f1s, f2s)
+        super()._sort_times(times)
+        super()._check_data_shape()
 
     def get_results(self, copy: bool = True) -> np.ndarray:
         """Return the results.
@@ -751,6 +823,7 @@ class ResultsWaveShape(_ResultsBase):
         nodes: int | tuple[int] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
@@ -778,6 +851,12 @@ class ResultsWaveShape(_ResultsBase):
         f2s : tuple of int or float | None (default None)
             Start and end high frequencies of the results to plot, respectively. If
             :obj:`None`, plot all high frequencies.
+
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) of the results to plot, respectively. If
+            :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -855,6 +934,7 @@ class ResultsWaveShape(_ResultsBase):
             nodes=nodes,
             f1s=f1s,
             f2s=f2s,
+            times=times,
             n_rows=n_rows,
             n_cols=n_cols,
             major_tick_intervals=major_tick_intervals,
@@ -876,7 +956,7 @@ class ResultsGeneral(_ResultsBase):
 
     Parameters
     ----------
-    data : ~numpy.ndarray, shape of [nodes, low frequencies, high frequencies]
+    data : ~numpy.ndarray, shape of [nodes, low frequencies, high frequencies (, times)]
         Results to store.
 
     indices : tuple of tuple of int, length of 3
@@ -888,6 +968,12 @@ class ResultsGeneral(_ResultsBase):
 
     f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
+
+    times : ~numpy.ndarray, shape of [times] | None (default None)
+        Timepoints in the results (in seconds). Must be provided if ``data`` has a times
+        dimension.
+
+        .. versionadded:: 1.3
 
     name : str  (default ``"General"``)
         Name of the results being stored.
@@ -921,6 +1007,9 @@ class ResultsGeneral(_ResultsBase):
     f2s : ~numpy.ndarray, shape of [high frequencies]
         High frequencies (in Hz) in the results.
 
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in the results.
+
     Notes
     -----
 
@@ -929,7 +1018,7 @@ class ResultsGeneral(_ResultsBase):
 
     def __repr__(self) -> str:
         """Return printable representation of the object."""
-        return repr(
+        return (
             f"<Result: {self.name} | [{self.n_nodes} nodes, {len(self.f1s)} f1s, "
             f"{len(self.f2s)} f2s]>"
         )
@@ -940,25 +1029,33 @@ class ResultsGeneral(_ResultsBase):
         indices: tuple[tuple[int]],
         f1s: np.ndarray,
         f2s: np.ndarray,
+        times: np.ndarray | None = None,
         name: str = "General",
     ) -> None:  # noqa: D107
-        super().__init__(data, 3, name)
-        self._sort_init_inputs(indices, f1s, f2s)
+        super().__init__(data, (3, 4), name)
+        self._sort_init_inputs(indices, f1s, f2s, times)
 
         self._plotting = _PlotGeneral(
             data=self._data,
             indices=self.indices,
             f1s=self.f1s,
             f2s=self.f2s,
+            times=self.times,
             name=self.name,
         )
 
     def _sort_init_inputs(
-        self, indices: tuple[tuple[int]], f1s: np.ndarray, f2s: np.ndarray
+        self,
+        indices: tuple[tuple[int]],
+        f1s: np.ndarray,
+        f2s: np.ndarray,
+        times: np.ndarray | None,
     ) -> None:
         """Sort inputs to the object."""
         super()._sort_indices_kmn(indices)
         super()._sort_freq_inputs(f1s, f2s)
+        super()._sort_times(times)
+        super()._check_data_shape()
 
     def get_results(
         self, form: str = "raveled", copy=True
@@ -1028,6 +1125,7 @@ class ResultsGeneral(_ResultsBase):
         nodes: int | tuple[int] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
@@ -1055,6 +1153,12 @@ class ResultsGeneral(_ResultsBase):
         f2s : tuple of int or float | None (default None)
             Start and end high frequencies of the results to plot, respectively. If
             :obj:`None`, plot all high frequencies.
+
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) of the results to plot, respectively. If
+            :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -1132,6 +1236,7 @@ class ResultsGeneral(_ResultsBase):
             nodes=nodes,
             f1s=f1s,
             f2s=f2s,
+            times=times,
             n_rows=n_rows,
             n_cols=n_cols,
             major_tick_intervals=major_tick_intervals,
