@@ -21,6 +21,7 @@ class _PlotBase(ABC):
 
     f1s: np.ndarray = None
     f2s: np.ndarray = None
+    times: np.ndarray | None = None
 
     def __init__(self, data: np.ndarray, indices: tuple, name: str) -> None:
         self._data = data
@@ -140,6 +141,41 @@ class _PlotBase(ABC):
 
         return f1s, f2s, f1_idcs, f2_idcs
 
+    def _sort_time_inputs(
+        self, times: tuple[int | float] | None
+    ) -> tuple[np.ndarray | None, np.ndarray | None]:
+        """Sort `times` input.
+
+        Returns
+        -------
+        times : numpy.ndarray | None
+            Times of the results to plot.
+
+        time_idcs : numpy.ndarray | None
+            Indices of times in ``times``.
+        """
+        if times is None or self.times is None:
+            times = self.times
+            time_idcs = (
+                np.arange(times.size, dtype=np.int32) if times is not None else None
+            )
+        else:
+            if not isinstance(times, tuple):
+                raise TypeError("`times` must be a tuple.")
+            if len(times) != 2:
+                raise ValueError("`times` must have length of 2.")
+
+            time_idcs = np.argwhere(
+                (self.times >= times[0]) & (self.times <= times[1])
+            ).T[0]
+            if time_idcs.size == 0:
+                raise ValueError(
+                    "No timepoints are present in the data for the range in `times`."
+                )
+            times = self.times[time_idcs].copy()
+
+        return times, time_idcs
+
     def _create_plots(
         self,
         nodes: tuple[int],
@@ -196,18 +232,21 @@ class _PlotGeneral(_PlotBase):
         indices: tuple[tuple[int]] | tuple[int],
         f1s: np.ndarray,
         f2s: np.ndarray,
+        times: np.ndarray | None,
         name: str,
     ) -> None:  # noqa: D107
         super().__init__(data, indices, name)
 
         self.f1s = f1s.copy()
         self.f2s = f2s.copy()
+        self.times = times.copy() if times is not None else None
 
     def plot(
         self,
         nodes: int | tuple[int] | None = None,
-        f1s: np.ndarray | None = None,
-        f2s: np.ndarray | None = None,
+        f1s: tuple[int | float] | None = None,
+        f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
@@ -234,6 +273,12 @@ class _PlotGeneral(_PlotBase):
         f2s : tuple of int or float | None (default None)
             Start and end high frequencies of the results to plot, respectively. If
             :obj:`None`, plot all high frequencies.
+
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) of the results to plot, respectively. If
+            :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -308,20 +353,23 @@ class _PlotGeneral(_PlotBase):
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node on a new
         figure.
         """
-        (nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_ranges) = self._sort_plot_inputs(
-            nodes,
-            f1s,
-            f2s,
-            n_rows,
-            n_cols,
-            major_tick_intervals,
-            minor_tick_intervals,
-            plot_absolute,
-            mirror_cbar_range,
-            cbar_range_abs,
-            cbar_range_real,
-            cbar_range_imag,
-            cbar_range_phase,
+        (nodes, f1s, f2s, f1_idcs, f2_idcs, times, time_idcs, cbar_ranges) = (
+            self._sort_plot_inputs(
+                nodes,
+                f1s,
+                f2s,
+                times,
+                n_rows,
+                n_cols,
+                major_tick_intervals,
+                minor_tick_intervals,
+                plot_absolute,
+                mirror_cbar_range,
+                cbar_range_abs,
+                cbar_range_real,
+                cbar_range_imag,
+                cbar_range_phase,
+            )
         )
         figures, subfigures, axes = self._create_plots(nodes, n_rows, n_cols)
         figures, axes = self._plot_results(
@@ -333,6 +381,8 @@ class _PlotGeneral(_PlotBase):
             f2s,
             f1_idcs,
             f2_idcs,
+            times,
+            time_idcs,
             n_rows,
             n_cols,
             major_tick_intervals,
@@ -352,6 +402,7 @@ class _PlotGeneral(_PlotBase):
         nodes: int | tuple[int] | None,
         f1s: tuple[int | float] | None,
         f2s: tuple[int | float] | None,
+        times: tuple[int | float] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: int | float,
@@ -368,6 +419,8 @@ class _PlotGeneral(_PlotBase):
         np.ndarray,
         np.ndarray,
         np.ndarray,
+        np.ndarray | None,
+        np.ndarray | None,
         list[list[tuple[float | None]]],
     ]:
         """Sort the plotting inputs.
@@ -388,6 +441,12 @@ class _PlotGeneral(_PlotBase):
         f2_idcs : numpy.ndarray of int
             Indices of ``f2s`` in the results.
 
+        times : numpy.ndarray of float
+            Times in the results to plot.
+
+        time_idcs : numpy.ndarray of int
+            Indices of ``times`` in the results.
+
         cbar_ranges : list of list of tuple of float or None
             Colourbar ranges for the absolute, real, imaginary, and phase plots,
             respectively.
@@ -396,6 +455,7 @@ class _PlotGeneral(_PlotBase):
             nodes, n_rows, n_cols, major_tick_intervals, minor_tick_intervals
         )
         f1s, f2s, f1_idcs, f2_idcs = super()._sort_freq_inputs(f1s, f2s)
+        times, time_idcs = super()._sort_time_inputs(times)
 
         if not isinstance(plot_absolute, bool):
             raise TypeError("`plot_absolute` must be a bool.")
@@ -432,7 +492,7 @@ class _PlotGeneral(_PlotBase):
             cbar_ranges[cbar_idx] = cbar_range
             cbar_idx += 1
 
-        return (nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_ranges)
+        return (nodes, f1s, f2s, f1_idcs, f2_idcs, times, time_idcs, cbar_ranges)
 
     def _create_plots(
         self, nodes: tuple[int], n_rows: int, n_cols: int
@@ -491,6 +551,8 @@ class _PlotGeneral(_PlotBase):
         f2s: np.ndarray,
         f1_idcs: np.ndarray,
         f2_idcs: np.ndarray,
+        times: np.ndarray | None,
+        time_idcs: np.ndarray | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: int | float,
@@ -547,6 +609,21 @@ class _PlotGeneral(_PlotBase):
                             data = data_func(
                                 self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T
                             )
+
+                        if time_idcs is not None:
+                            assert data.ndim == 3, (
+                                "PyBispectra Internal Error: data to plot for a given "
+                                "node should be 3D prior to aggregating over time. "
+                                "Please contact the PyBispectra developers."
+                            )
+                            data = data[..., time_idcs].mean(axis=-1)
+                        else:
+                            assert data.ndim == 2, (
+                                "PyBispectra Internal Error: data to plot for a given "
+                                "node should be 2D prior to aggregating over time. "
+                                "Please contact the PyBispectra developers."
+                            )
+
                         if axis_title in ["Real", "Imaginary"]:
                             if plot_absolute:
                                 data = np.abs(data)
@@ -600,7 +677,7 @@ class _PlotGeneral(_PlotBase):
                         axis.set_xlabel("$f_1$ (Hz)")
                         axis.set_ylabel("$f_2$ (Hz)")
 
-                    subfig.suptitle(self._get_axis_title(node_i))
+                    subfig.suptitle(self._get_axis_title(node_i, times))
 
                     plot_n += 1
                     fig_plot_n += 1
@@ -642,7 +719,7 @@ class _PlotGeneral(_PlotBase):
         axis.yaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
         axis.yaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
 
-    def _get_axis_title(self, node_i: int) -> str:
+    def _get_axis_title(self, node_i: int, times: np.ndarray | None) -> str:
         """Get title for the axis.
 
         Parameters
@@ -650,15 +727,22 @@ class _PlotGeneral(_PlotBase):
         node_i : int
             Index of the node being plotted.
 
+        times : numpy.ndarray | None
+            Timepoints of the results being plotted.
+
         Returns
         -------
         title : str
             Title of the axis.
         """
-        return (
+        title = (
             f"k: {self._indices[0][node_i]} | m: {self._indices[1][node_i]} | "
-            f"n: {self._indices[2][node_i]} |"
+            f"n: {self._indices[2][node_i]}"
         )
+        if times is not None:
+            title += f" | {times[0]:.3f} - {times[-1]:.3f} s"
+
+        return title
 
 
 class _PlotCFC(_PlotBase):
@@ -670,18 +754,21 @@ class _PlotCFC(_PlotBase):
         indices: tuple[tuple[int]],
         f1s: np.ndarray,
         f2s: np.ndarray,
+        times: np.ndarray | None,
         name: str,
     ) -> None:  # noqa: D107
         super().__init__(data, indices, name)
 
         self.f1s = f1s.copy()
         self.f2s = f2s.copy()
+        self.times = times.copy() if times is not None else None
 
     def plot(
         self,
         nodes: int | tuple[int] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: int | float = 5.0,
@@ -703,6 +790,12 @@ class _PlotCFC(_PlotBase):
         f2s : tuple of int or float | None (default None)
             Start and end high frequencies of the results to plot, respectively. If
             :obj:`None`, plot all high frequencies.
+
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) of the results to plot, respectively. If
+            :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -743,15 +836,18 @@ class _PlotCFC(_PlotBase):
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node on a new
         figure.
         """  # noqa: E501
-        nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_range = self._sort_plot_inputs(
-            nodes,
-            f1s,
-            f2s,
-            n_rows,
-            n_cols,
-            major_tick_intervals,
-            minor_tick_intervals,
-            cbar_range,
+        nodes, f1s, f2s, f1_idcs, f2_idcs, times, time_idcs, cbar_range = (
+            self._sort_plot_inputs(
+                nodes,
+                f1s,
+                f2s,
+                times,
+                n_rows,
+                n_cols,
+                major_tick_intervals,
+                minor_tick_intervals,
+                cbar_range,
+            )
         )
         figures, axes = self._create_plots(nodes, n_rows, n_cols)
         figures, axes = self._plot_results(
@@ -762,6 +858,8 @@ class _PlotCFC(_PlotBase):
             f2s,
             f1_idcs,
             f2_idcs,
+            times,
+            time_idcs,
             n_rows,
             n_cols,
             major_tick_intervals,
@@ -777,8 +875,9 @@ class _PlotCFC(_PlotBase):
     def _sort_plot_inputs(
         self,
         nodes: int | tuple[int] | None,
-        f1s: np.ndarray | None,
-        f2s: np.ndarray | None,
+        f1s: tuple[int | float] | None,
+        f2s: tuple[int | float] | None,
+        times: tuple[int | float] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: int | float,
@@ -790,6 +889,8 @@ class _PlotCFC(_PlotBase):
         np.ndarray,
         np.ndarray,
         np.ndarray,
+        np.ndarray | None,
+        np.ndarray | None,
         tuple[tuple[float | None]],
     ]:
         """Sort the plotting inputs.
@@ -810,12 +911,19 @@ class _PlotCFC(_PlotBase):
         f2_idcs : numpy.ndarray of int
             Indices of ``f2s`` in the results.
 
+        times : numpy.ndarray of float | None
+            Times in the results to plot.
+
+        time_idcs : numpy.ndarray of int | None
+            Indices of ``times`` in the results.
+
         cbar_range : list of tuple of float or None
         """
         nodes = super()._sort_plot_inputs(
             nodes, n_rows, n_cols, major_tick_intervals, minor_tick_intervals
         )
         f1s, f2s, f1_idcs, f2_idcs = super()._sort_freq_inputs(f1s, f2s)
+        times, time_idcs = super()._sort_time_inputs(times)
 
         if not isinstance(cbar_range, (list, tuple, type(None))):
             raise TypeError("`cbar_range` must be a list, tuple, or None.")
@@ -832,7 +940,7 @@ class _PlotCFC(_PlotBase):
             if len(entry) != 2:
                 raise ValueError("Limits in `cbar_range` must have length of 2.")
 
-        return nodes, f1s, f2s, f1_idcs, f2_idcs, cbar_range
+        return nodes, f1s, f2s, f1_idcs, f2_idcs, times, time_idcs, cbar_range
 
     def _plot_results(
         self,
@@ -843,6 +951,8 @@ class _PlotCFC(_PlotBase):
         f2s: np.ndarray,
         f1_idcs: np.ndarray,
         f2_idcs: np.ndarray,
+        times: np.ndarray | None,
+        time_idcs: np.ndarray | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: int | float,
@@ -860,10 +970,25 @@ class _PlotCFC(_PlotBase):
                     node_i = nodes[plot_n]
                     axis = axes[fig_i][fig_plot_n]
 
+                    data = self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T
+                    if time_idcs is not None:
+                        assert data.ndim == 3, (
+                            "PyBispectra Internal Error: data to plot for a given node "
+                            "should be 3D prior to aggregating over time. Please "
+                            "contact the PyBispectra developers."
+                        )
+                        data = data[..., time_idcs].mean(axis=-1)
+                    else:
+                        assert data.ndim == 2, (
+                            "PyBispectra Internal Error: data to plot for a given node "
+                            "should be 2D prior to aggregating over time. Please "
+                            "contact the PyBispectra developers."
+                        )
+
                     mesh = axis.pcolormesh(
                         f1s,
                         f2s,
-                        self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T,
+                        data,
                         vmin=cbar_range[plot_n][0],
                         vmax=cbar_range[plot_n][1],
                     )
@@ -883,12 +1008,7 @@ class _PlotCFC(_PlotBase):
                     )
                     axis.set_xlabel("$f_1$ (Hz)")
                     axis.set_ylabel("$f_2$ (Hz)")
-                    axis.set_title(
-                        (
-                            f"Seed: {self._indices[0][node_i]} | "
-                            f"Target: {self._indices[1][node_i]}"
-                        )
-                    )
+                    axis.set_title(self._get_axis_title(node_i, times))
 
                     plot_n += 1
                     fig_plot_n += 1
@@ -929,6 +1049,28 @@ class _PlotCFC(_PlotBase):
         axis.xaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
         axis.yaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
         axis.yaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
+
+    def _get_axis_title(self, node_i: int, times: np.ndarray | None) -> str:
+        """Get title for the axis.
+
+        Parameters
+        ----------
+        node_i : int
+            Index of the node being plotted.
+
+        times : numpy.ndarray | None
+            Timepoints of the results being plotted.
+
+        Returns
+        -------
+        title : str
+            Title of the axis.
+        """
+        title = f"Seed: {self._indices[0][node_i]} | Target: {self._indices[1][node_i]}"
+        if times is not None:
+            title += f" | {times[0]:.3f} - {times[-1]:.3f} s"
+
+        return title
 
 
 class _PlotTDE(_PlotBase):
@@ -1073,46 +1215,9 @@ class _PlotTDE(_PlotBase):
             minor_tick_intervals,
         )
         freq_bands = self._sort_freq_band_inputs(freq_bands)
-        times, time_idcs = self._sort_time_inputs(times)
+        times, time_idcs = super()._sort_time_inputs(times)
 
         return nodes, freq_bands, times, time_idcs
-
-    def _sort_time_inputs(
-        self, times: tuple[int | float] | None
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """Sort `times` input.
-
-        Returns
-        -------
-        times : numpy.ndarray
-            Times of the results to plot.
-
-        time_idcs : numpy.ndarray
-            Indices of times in ``times``.
-        """
-        if times is None:
-            times = self.times.copy()
-            time_idcs = np.arange(len(self.times), dtype=np.int32)
-        else:
-            if not isinstance(times, tuple):
-                raise TypeError("`times` must be a tuple.")
-            if len(times) != 2:
-                raise ValueError("`times` must have length of 2.")
-            if any(time < self.times[0] or time > self.times[-1] for time in times):
-                raise ValueError(
-                    "At least one entry of `times` is outside the range of the results."
-                )
-
-            time_idcs = np.argwhere(
-                (self.times >= times[0]) & (self.times <= times[1])
-            ).T[0]
-            if time_idcs.size == 0:
-                raise ValueError(
-                    "No times are present in the data for the range in `times`."
-                )
-            times = self.times[time_idcs].copy()
-
-        return times, time_idcs
 
     def _sort_freq_band_inputs(self, freq_bands: int | tuple[int] | None) -> tuple[int]:
         """Sort `freq_bands` input."""
@@ -1294,7 +1399,7 @@ class _PlotTDE(_PlotBase):
 class _PlotWaveShape(_PlotGeneral):
     """Class for plotting waveshape results."""
 
-    def _get_axis_title(self, node_i: int) -> str:
+    def _get_axis_title(self, node_i: int, times: np.ndarray | None) -> str:
         """Get title for the axis.
 
         Parameters
@@ -1302,9 +1407,16 @@ class _PlotWaveShape(_PlotGeneral):
         node_i : int
             Index of the node being plotted.
 
+        times : np.ndarray | None
+            Timepoints of the results being plotted, respectively.
+
         Returns
         -------
         title : str
             Title of the axis.
         """
-        return f"Channel: {self._indices[node_i]}"
+        title = f"Channel: {self._indices[node_i]}"
+        if times is not None:
+            title += f" | {times[0]:.3f} - {times[-1]:.3f} s"
+
+        return title
