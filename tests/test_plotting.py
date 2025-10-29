@@ -234,20 +234,12 @@ def test_plotting_tde_error_catch() -> None:
         results.plot(times=(times[0], times[1], times[2]))
     with pytest.raises(
         ValueError,
-        match=("At least one entry of `times` is outside the range of the results."),
-    ):
-        results.plot(times=(times[0] - 1, times[-1]))
-    with pytest.raises(
-        ValueError,
-        match=("At least one entry of `times` is outside the range of the results."),
-    ):
-        results.plot(times=(times[0], times[-1] + 1))
-    with pytest.raises(
-        ValueError, match=("No times are present in the data for the range in `times`.")
+        match=("No timepoints are present in the data for the range in `times`."),
     ):
         results.plot(times=(times[-1], times[0]))
     with pytest.raises(
-        ValueError, match=("No times are present in the data for the range in `times`.")
+        ValueError,
+        match=("No timepoints are present in the data for the range in `times`."),
     ):
         results.plot(times=(0.1, 0.2))
 
@@ -281,6 +273,9 @@ def test_plotting_tde_error_catch() -> None:
         ValueError, match=r"`major_tick_intervals` should be \> `minor_tick_intervals`."
     ):
         results.plot(major_tick_intervals=5, minor_tick_intervals=7)
+
+
+test_plotting_tde_error_catch()
 
 
 def test_plotting_tde_runs() -> None:

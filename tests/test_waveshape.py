@@ -23,7 +23,7 @@ def test_error_catch() -> None:
     # initialisation
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         WaveShape(coeffs.tolist(), freqs, sampling_freq)
-    with pytest.raises(ValueError, match="`data` must be a 3D array."):
+    with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
         WaveShape(np.random.randn(2, 2), freqs, sampling_freq)
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
@@ -57,7 +57,7 @@ def test_error_catch() -> None:
         WaveShape(coeffs, freqs, None)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
-        WaveShape(coeffs, freqs, sampling_freq, "verbose")
+        WaveShape(coeffs, freqs, sampling_freq, verbose="verbose")
 
     # compute
     waveshape = WaveShape(coeffs, freqs, sampling_freq)

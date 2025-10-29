@@ -23,7 +23,7 @@ def test_results_cfc_error_catch() -> None:
 
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         ResultsCFC(data=data.tolist(), indices=indices, f1s=f1s, f2s=f2s)
-    with pytest.raises(ValueError, match="`data` must be a 3D array."):
+    with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
         ResultsCFC(data=data[..., 0], indices=indices, f1s=f1s, f2s=f2s)
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
@@ -105,7 +105,7 @@ def test_results_cfc_runs() -> None:
     results = ResultsCFC(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
 
     assert repr(results) == (
-        f"'<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s]>'"
+        f"<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s]>"
     )
 
     results_array = results.get_results(form="raveled")
@@ -277,12 +277,12 @@ def test_results_tde_runs(freq_bands: tuple) -> None:
     if freq_bands is None:
         assert repr(results) == (
             f"<Result: {name} | [{n_cons} nodes, {n_fbands} frequency bands, "
-            f"{n_times} times]>"
+            f"{n_times} timepoints]>"
         )
     else:
         assert repr(results) == (
             f"<Result: {name} | {np.min(freq_bands):.2f} - {np.max(freq_bands):.2f} Hz "
-            f"| [{n_cons} nodes, {n_fbands} frequency bands, {n_times} times]>"
+            f"| [{n_cons} nodes, {n_fbands} frequency bands, {n_times} timepoints]>"
         )
 
     results_array = results.get_results(form="raveled")
@@ -331,7 +331,7 @@ def test_results_waveshape_error_catch() -> None:
 
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         ResultsWaveShape(data=data.tolist(), indices=indices, f1s=f1s, f2s=f2s)
-    with pytest.raises(ValueError, match="`data` must be a 3D array."):
+    with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
         ResultsWaveShape(data=data[..., 0], indices=indices, f1s=f1s, f2s=f2s)
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
@@ -389,7 +389,7 @@ def test_results_waveshape_runs() -> None:
     results = ResultsWaveShape(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
 
     assert repr(results) == (
-        f"'<Result: {name} | [{n_chans} nodes, {n_f1} f1s, {n_f2} f2s]>'"
+        f"<Result: {name} | [{n_chans} nodes, {n_f1} f1s, {n_f2} f2s]>"
     )
 
     results_array = results.get_results(copy=True)
@@ -421,7 +421,7 @@ def test_results_general_error_catch() -> None:
 
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         ResultsGeneral(data=data.tolist(), indices=indices, f1s=f1s, f2s=f2s)
-    with pytest.raises(ValueError, match="`data` must be a 3D array."):
+    with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
         ResultsGeneral(data=data[..., 0], indices=indices, f1s=f1s, f2s=f2s)
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
@@ -503,7 +503,7 @@ def test_results_general_runs() -> None:
     results = ResultsGeneral(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
 
     assert repr(results) == (
-        f"'<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s]>'"
+        f"<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s]>"
     )
 
     results_array = results.get_results(form="raveled")

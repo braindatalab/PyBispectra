@@ -40,7 +40,7 @@ def test_error_catch(class_type: str) -> None:
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         TestClass(coeffs.tolist(), freqs, sampling_freq)
     if class_type in ["PAC", "PPC"]:
-        with pytest.raises(ValueError, match="`data` must be a 3D array."):
+        with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
             TestClass(np.random.randn(2, 2), freqs, sampling_freq)
     else:
         with pytest.raises(ValueError, match="`data` must be a 4D array."):
@@ -79,7 +79,7 @@ def test_error_catch(class_type: str) -> None:
         TestClass(coeffs, freqs, None)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
-        TestClass(coeffs, freqs, sampling_freq, "verbose")
+        TestClass(coeffs, freqs, sampling_freq, verbose="verbose")
 
     # compute
     test_class = TestClass(coeffs, freqs, sampling_freq)
