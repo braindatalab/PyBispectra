@@ -466,8 +466,8 @@ class ResultsTDE(_ResultsBase):
         Timepoints in the results (in ms).
 
     freq_bands : tuple of tuple of int or float, length of 2 | None (default None)
-        Lower and higher frequencies (in Hz) of each frequency band used to compute the
-        results.
+        Lower and higher frequencies (in Hz), respectively, of each frequency band used
+        to compute the results.
 
     name : str (default ``"TDE"``)
         Name of the results being stored.
@@ -498,9 +498,9 @@ class ResultsTDE(_ResultsBase):
     times : ~numpy.ndarray, shape of [times]
         Timepoints in the results (in ms).
 
-    freq_bands : tuple of tuple of int or float, length of 2 | None
-        Lower and higher frequencies (in Hz) of each frequency band used to compute the
-        results.
+    freq_bands : tuple of tuple of int or float, length of 2
+        Lower and higher frequencies (in Hz), respectively, of each frequency band used
+        to compute the results.
 
     tau : ~numpy.ndarray, shape of [nodes, frequency_bands]
         Estimated time delay (in ms) for each connection and frequency band.
@@ -757,10 +757,15 @@ class ResultsWaveShape(_ResultsBase):
 
     def __repr__(self) -> str:
         """Return printable representation of the object."""
-        return (
-            f"<Result: {self.name} | [{self.n_nodes} nodes, {len(self.f1s)} f1s, "
-            f"{len(self.f2s)} f2s]>"
+        repr_ = (
+            f"<Result: {self.name} | [{self.n_nodes} nodes, {self.f1s.size} f1s, "
+            f"{self.f2s.size} f2s"
         )
+        if self.times is not None:
+            repr_ += f", {self.times.size} timepoints"
+        repr_ += "]>"
+
+        return repr_
 
     def __init__(
         self,
@@ -1018,10 +1023,15 @@ class ResultsGeneral(_ResultsBase):
 
     def __repr__(self) -> str:
         """Return printable representation of the object."""
-        return (
-            f"<Result: {self.name} | [{self.n_nodes} nodes, {len(self.f1s)} f1s, "
-            f"{len(self.f2s)} f2s]>"
+        repr_ = (
+            f"<Result: {self.name} | [{self.n_nodes} nodes, {self.f1s.size} f1s, "
+            f"{self.f2s.size} f2s"
         )
+        if self.times is not None:
+            repr_ += f", {self.times.size} timepoints"
+        repr_ += "]>"
+
+        return repr_
 
     def __init__(
         self,

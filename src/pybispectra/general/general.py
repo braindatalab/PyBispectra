@@ -428,7 +428,7 @@ class Threenorm(_General):
             f1s=self._f1s,
             f2s=self._f2s,
             times=self._times,
-            names="Threenorm",
+            name="Threenorm",
         )
 
     @property

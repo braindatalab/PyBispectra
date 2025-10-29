@@ -1326,12 +1326,7 @@ class _PlotTDE(_PlotBase):
                     axis.set_xlabel("Time (ms)")
                     axis.set_ylabel("Estimate strength (A.U.)")
 
-                    axis.set_title(
-                        f"Seed: {self._indices[0][node_i]} | "
-                        f"Target: {self._indices[1][node_i]} | "
-                        f"{self.freq_bands[fband_i][0]:.2f} - "
-                        f"{self.freq_bands[fband_i][1]:.2f} Hz"
-                    )
+                    axis.set_title(self._get_axis_title(node_i, fband_i))
 
                     fband_n += 1
                     fig_plot_n += 1
@@ -1394,6 +1389,35 @@ class _PlotTDE(_PlotBase):
         """Set major and minor tick intervals of the x-axis."""
         axis.xaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
         axis.xaxis.set_minor_locator(plt.MultipleLocator(minor_tick_intervals))
+
+    def _get_axis_title(self, node_i: int, fband_i: int) -> str:
+        """Get title for the axis.
+
+        Parameters
+        ----------
+        node_i : int
+            Index of the connection being plotted.
+
+        fband_i : int
+            Index of the frequency band being plotted.
+
+        Returns
+        -------
+        title : str
+            Title of the axis.
+        """
+        title = (
+            f"Seed: {self._indices[0][node_i]} | Target: {self._indices[1][node_i]} | "
+        )
+        if self.freq_bands is not None:
+            title += (
+                f"{self.freq_bands[fband_i][0]:.2f} - "
+                f"{self.freq_bands[fband_i][1]:.2f} Hz"
+            )
+        else:
+            title += f"Band {fband_i + 1}"
+
+        return title
 
 
 class _PlotWaveShape(_PlotGeneral):

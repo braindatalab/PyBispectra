@@ -61,7 +61,10 @@ class _ProcessFreqBase(ABC):
                 "`data` must be a "
                 f"{' or '.join([(str(dim) + 'D') for dim in self._data_ndims])} array."
             )
-        assert np.min(self._data_ndims) == 3 and np.max(self._data_ndims) == 4, ""
+        assert np.min(self._data_ndims) >= 3 and np.max(self._data_ndims) <= 4, (
+            "PyBispectra Internal Error: data to process must be 3D or 4D. Please "
+            "contact the PyBispectra developers."
+        )
 
         if not isinstance(freqs, np.ndarray):
             raise TypeError("`freqs` must be a NumPy array.")
@@ -77,6 +80,22 @@ class _ProcessFreqBase(ABC):
             raise ValueError(
                 "`data` and `freqs` must contain the same number of frequencies."
             )
+
+        if not isinstance(sampling_freq, _number_like):
+            raise TypeError("`sampling_freq` must be an int or a float.")
+        if np.abs(freqs).max() > sampling_freq / 2:
+            raise ValueError(
+                "At least one entry of `freqs` is > the Nyquist frequency."
+            )
+
+        if np.any(freqs < 0):
+            raise ValueError("Entries of `freqs` must be >= 0.")
+
+        max_freq_idx = np.where(freqs == np.abs(freqs).max())[0][0]
+        if max_freq_idx == 0 or np.any(
+            freqs[:max_freq_idx] != np.sort(freqs[:max_freq_idx])
+        ):
+            raise ValueError("Entries of `freqs` must be in ascending order.")
 
         if data.ndim == 4:  # Times dimension present
             if times is None:
@@ -95,22 +114,6 @@ class _ProcessFreqBase(ABC):
 
         if data.ndim == 3 and np.max(self._data_ndims) == 4:
             data = data[..., np.newaxis]  # Add placeholder time dimension
-
-        if not isinstance(sampling_freq, _number_like):
-            raise TypeError("`sampling_freq` must be an int or a float.")
-        if np.abs(freqs).max() > sampling_freq / 2:
-            raise ValueError(
-                "At least one entry of `freqs` is > the Nyquist frequency."
-            )
-
-        if np.any(freqs < 0):
-            raise ValueError("Entries of `freqs` must be >= 0.")
-
-        max_freq_idx = np.where(freqs == np.abs(freqs).max())[0][0]
-        if max_freq_idx == 0 or np.any(
-            freqs[:max_freq_idx] != np.sort(freqs[:max_freq_idx])
-        ):
-            raise ValueError("Entries of `freqs` must be in ascending order.")
 
         if not isinstance(verbose, bool):
             raise TypeError("`verbose` must be a bool.")

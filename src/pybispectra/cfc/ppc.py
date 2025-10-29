@@ -207,7 +207,7 @@ def _compute_ppc(
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs, 2, frequencies]
+    data : numpy.ndarray, shape of [epochs, 2, frequencies, times]
         FFT coefficients where the second dimension contains the data for the seed and
         target channel of a single connection, respectively.
 
@@ -226,10 +226,12 @@ def _compute_ppc(
 
     Returns
     -------
-    results : numpy.ndarray, shape of [low frequencies, high frequencies]
+    results : numpy.ndarray, shape of [low frequencies, high frequencies, times]
         PPC for a single connection.
     """
-    results = np.full((f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=precision)
+    results = np.full(
+        (f1s.shape[0], f2s.shape[0], data.shape[3]), fill_value=np.nan, dtype=precision
+    )
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
     f2_start = _fast_find_first(freqs, f2s[0], 0)
