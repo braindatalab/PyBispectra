@@ -118,7 +118,7 @@ class _ProcessFreqBase(ABC):
         if not isinstance(verbose, bool):
             raise TypeError("`verbose` must be a bool.")
 
-        self.data = np.asarray(data, dtype=self._data_precision)
+        self._data = np.asarray(data, dtype=self._data_precision)
         self.freqs = np.asarray(freqs, dtype=_precision.real)
         self.times = (
             np.asarray(times, dtype=_precision.real) if times is not None else None
@@ -277,6 +277,12 @@ class _ProcessFreqBase(ABC):
     @abstractmethod
     def results(self) -> None:
         pass
+
+    @property
+    def data(self) -> np.ndarray:
+        if self.times is not None:
+            return self._data
+        return self._data[..., 0]  # Remove placeholder time dimension
 
     def copy(self):
         """Return a copy of the object."""

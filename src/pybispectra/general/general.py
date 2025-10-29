@@ -197,7 +197,7 @@ class Bispectrum(_General):
             for (k, m, n) in zip(self._k, self._m, self._n)
         ]
         static_kwargs = {
-            "data": self.data[..., self._time_idcs],
+            "data": self._data[..., self._time_idcs],
             "freqs": self.freqs,
             "f1s": self._f1s,
             "f2s": self._f2s,
@@ -389,7 +389,7 @@ class Threenorm(_General):
             for (k, m, n) in zip(self._k, self._m, self._n)
         ]
         static_kwargs = {
-            "data": self.data[..., self._time_idcs],
+            "data": self._data[..., self._time_idcs],
             "freqs": self.freqs,
             "f1s": self._f1s,
             "f2s": self._f2s,

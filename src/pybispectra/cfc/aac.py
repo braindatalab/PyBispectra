@@ -142,7 +142,7 @@ class AAC(_ProcessFreqBase):
     def _compute_aac(self) -> None:
         """Compute AAC between f1s of seeds and f2s of targets."""
         loop_kwargs = [
-            {"data": self.data[:, (seed, target)][..., self._time_idcs]}
+            {"data": self._data[:, (seed, target)][..., self._time_idcs]}
             for seed, target in zip(self._seeds, self._targets)
         ]
         static_kwargs = {

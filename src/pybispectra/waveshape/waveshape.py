@@ -229,7 +229,7 @@ class WaveShape(_ProcessBispectrum):
             print("    Computing bispectrum...")
 
         loop_kwargs = [
-            {"data": self.data[:, [channel]][..., self._time_idcs]}
+            {"data": self._data[:, [channel]][..., self._time_idcs]}
             for channel in self._indices
         ]
         static_kwargs = {
@@ -272,7 +272,7 @@ class WaveShape(_ProcessBispectrum):
             print("    Computing threenorm...")
 
         loop_kwargs = [
-            {"data": self.data[:, [channel]][..., self._time_idcs]}
+            {"data": self._data[:, [channel]][..., self._time_idcs]}
             for channel in self._indices
         ]
         static_kwargs = {

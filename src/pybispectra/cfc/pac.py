@@ -261,7 +261,7 @@ class PAC(_ProcessBispectrum):
             kmn = np.array([np.array([0, 1, 1])])
 
         loop_kwargs = [
-            {"data": self.data[:, (seed, target)][..., self._time_idcs]}
+            {"data": self._data[:, (seed, target)][..., self._time_idcs]}
             for seed, target in zip(self._seeds, self._targets)
         ]
         static_kwargs = {
@@ -317,7 +317,7 @@ class PAC(_ProcessBispectrum):
             kmn = np.array([np.array([0, 1, 1])])
 
         loop_kwargs = [
-            {"data": self.data[:, (seed, target)][..., self._time_idcs]}
+            {"data": self._data[:, (seed, target)][..., self._time_idcs]}
             for seed, target in zip(self._seeds, self._targets)
         ]
         static_kwargs = {

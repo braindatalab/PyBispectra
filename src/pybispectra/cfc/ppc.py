@@ -146,7 +146,7 @@ class PPC(_ProcessFreqBase):
     def _compute_ppc(self) -> None:
         """Compute PPC between f1s of seeds and f2s of targets."""
         loop_kwargs = [
-            {"data": self.data[:, (seed, target)][..., self._time_idcs]}
+            {"data": self._data[:, (seed, target)][..., self._time_idcs]}
             for seed, target in zip(self._seeds, self._targets)
         ]
         static_kwargs = {

@@ -74,8 +74,6 @@ class TDE(_ProcessBispectrum):
     epochs.
     """
 
-    _data: np.ndarray = None
-
     _data_ndims: tuple = (3,)  # [epochs, channels, frequencies]
 
     _freq_masks: np.ndarray = None
@@ -122,8 +120,8 @@ class TDE(_ProcessBispectrum):
         if self.freqs[0] != 0.0:
             raise ValueError("The first entry of `freqs` must be 0.")
 
-        self.data = np.concatenate(
-            (self.data, np.conjugate(self.data[..., 1:][..., ::-1])), axis=2
+        self._data = np.concatenate(
+            (self._data, np.conjugate(self._data[..., 1:][..., ::-1])), axis=2
         )
         self.freqs = np.concatenate((self.freqs, -self.freqs[1:][::-1]), axis=0)
 
@@ -426,7 +424,7 @@ class TDE(_ProcessBispectrum):
         )
 
         loop_kwargs = [
-            {"data": self.data[:, (seed, target)]}
+            {"data": self._data[:, (seed, target)]}
             for seed, target in zip(self._seeds, self._targets)
         ]
         static_kwargs = {
