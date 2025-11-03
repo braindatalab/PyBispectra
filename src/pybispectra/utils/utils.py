@@ -227,7 +227,7 @@ def compute_tfr(
     freqs : ~numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in ``tfr``.
 
-    weights : ~numpy.ndarray, shape of [...]
+    weights : ~numpy.ndarray, shape of [tapers, frequencies]
         Taper weights. Only returned if ``output = "complex"`` and ``tfr_mode =
         "multitaper"``.
 
@@ -271,17 +271,22 @@ def compute_tfr(
     if verbose:
         print("Computing TFR of the data...")
 
-    out = np.array(
-        tfr_func(**tfr_func_kwargs),
-        dtype=_precision.real if output == "power" else _precision.complex,
+    out = tfr_func(**tfr_func_kwargs)
+    if return_weights:
+        tfr = out[0]
+        weights = out[1]
+    else:
+        tfr = out
+    tfr = np.asarray(
+        tfr, dtype=_precision.real if output == "power" else _precision.complex
     )
 
     if verbose:
         print("    [TFR computation finished]\n")
 
     if return_weights:
-        return out[0], freqs.astype(_precision.real), out[1]  # tfr, freqs, weights
-    return out, freqs.astype(_precision.real)  # tfr, freqs
+        return tfr, freqs.astype(_precision.real), weights.astype(_precision.real)
+    return tfr, freqs.astype(_precision.real)
 
 
 def _compute_tfr_input_checks(
@@ -360,8 +365,14 @@ def _compute_tfr_input_checks(
         if not isinstance(multitaper_time_bandwidth, _number_like):
             raise TypeError("`multitaper_time_bandwidth` must be an int or a float.")
 
+    outputs = ["power", "complex"]
+    if not isinstance(output, str):
+        raise TypeError("`output` must be a str.")
+    if output not in outputs:
+        raise ValueError(f"`output` must be one of {outputs}.")
+
     return_weights = False
-    if tfr_mode == "multitaper" and output == "complex":
+    if tfr_mode == "multitaper" and output == "complex":  # pragma: no cover
         if Version(mne_version) < Version("1.10"):
             raise RuntimeError(
                 "If `tfr_mode='multitaper'` and `output='complex'`, MNE >= 1.10 is "
