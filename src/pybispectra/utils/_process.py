@@ -275,7 +275,7 @@ class _ProcessFreqBase(ABC):
 
     @property
     @abstractmethod
-    def results(self) -> None:
+    def results(self) -> None:  # pragma: no cover
         pass
 
     @property
