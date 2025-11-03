@@ -454,7 +454,7 @@ def test_ppc_runs() -> None:
 
     # check times are handled correctly
     ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times)
-    assert ppc.times is None, "`times` should be ignored for time-resolved_data"
+    assert ppc.times is None, "`times` should be ignored for non-time-resolved_data"
     ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
     assert np.all(ppc.times == times), "`times` should be stored for time-resolved_data"
     ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
