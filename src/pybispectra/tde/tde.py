@@ -573,10 +573,13 @@ class TDE(_ProcessBispectrum):
         epoch_dur = (self._n_unique_freqs - 1) / self.sampling_freq
         self._times = (
             np.linspace(
-                -epoch_dur, epoch_dur, 2 * self._n_unique_freqs - 1, dtype=np.float32
+                -epoch_dur,
+                epoch_dur,
+                2 * self._n_unique_freqs - 1,
+                dtype=_precision.real,
             )
             * 1000
-        ).astype(dtype=_precision.real)
+        )
 
     def _store_results(self) -> None:
         """Store computed results in objects."""
