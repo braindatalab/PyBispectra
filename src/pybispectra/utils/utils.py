@@ -449,7 +449,7 @@ _DATA_ALIAS_FILE_HASH = [
 
 DATASETS = {alias: filename for alias, filename, _ in _DATA_ALIAS_FILE_HASH}
 
-if "dev" not in version:
+if "dev" not in version:  # pragma: no cover
     version = Version(version)
     version = f"{version.major}.{version.minor}"  # take data from maj.min branch
 
