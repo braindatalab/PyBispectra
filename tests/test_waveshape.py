@@ -159,6 +159,12 @@ def test_waveshape_runs() -> None:
         output="complex",
     )
 
+    # check data is stored correctly
+    waveshape = WaveShape(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(waveshape.data == fft), "FFT data not stored correctly"
+    waveshape_tr = WaveShape(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(waveshape_tr.data == tfr), "TFR data not stored correctly"
+
     # check times are handled correctly
     waveshape = WaveShape(
         data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times

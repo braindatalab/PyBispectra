@@ -250,6 +250,12 @@ def test_pac_runs() -> None:
         output="complex",
     )
 
+    # check data is stored correctly
+    pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(pac.data == fft), "FFT data not stored correctly"
+    pac_tr = PAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(pac_tr.data == tfr), "TFR data not stored correctly"
+
     # check times are handled correctly
     pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times)
     assert pac.times is None, "`times` should be ignored for time-resolved_data"
@@ -452,6 +458,12 @@ def test_ppc_runs() -> None:
         output="complex",
     )
 
+    # check data is stored correctly
+    ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(ppc.data == fft), "FFT data not stored correctly"
+    ppc_tr = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(ppc_tr.data == tfr), "TFR data not stored correctly"
+
     # check times are handled correctly
     ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times)
     assert ppc.times is None, "`times` should be ignored for non-time-resolved_data"
@@ -526,6 +538,10 @@ def test_aac_runs() -> None:
     freqs = np.arange(5, 25, 0.5)
 
     tfr, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3)
+
+    # check data is stored correctly
+    aac = AAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(aac.data == tfr), "TFR data not stored correctly"
 
     # check times are handled correctly
     aac = AAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)

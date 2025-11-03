@@ -233,6 +233,12 @@ def test_general_runs(class_type: str) -> None:
         output="complex",
     )
 
+    # check data is stored correctly
+    test_class = TestClass(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(test_class.data == fft), "FFT data not stored correctly"
+    test_class_tr = TestClass(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(test_class_tr.data == tfr), "TFR data not stored correctly"
+
     # check times are handled correctly
     test_class = TestClass(
         data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times

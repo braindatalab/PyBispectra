@@ -157,6 +157,10 @@ def test_tde_runs(freq_bands: tuple) -> None:
         window="hamming",
     )
 
+    # check data is stored correctly
+    tde = TDE(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    assert tde.data.ndim == 3, "TDE data not stored correctly"
+
     # check it runs with correct inputs
     tde = TDE(data=fft, freqs=freqs, sampling_freq=sampling_freq)
     tde.compute(
