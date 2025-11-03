@@ -99,7 +99,7 @@ class _ProcessFreqBase(ABC):
 
         if data.ndim == 4:  # Times dimension present
             if times is None:
-                times = (np.arange(data.shape[3]) / sampling_freq).astype(np.float32)
+                times = np.arange(data.shape[3]) / sampling_freq
             else:
                 if not isinstance(times, np.ndarray):
                     raise TypeError("`times` must be a NumPy array.")

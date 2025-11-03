@@ -67,11 +67,7 @@ def compute_fft(
     if verbose:
         print("Computing FFT on the data...")
 
-    freqs = (
-        sp.fft.rfftfreq(n=n_points, d=1 / sampling_freq)
-        .astype(np.float32)  # reduce rounding errors
-        .astype(_precision.real)
-    )
+    freqs = sp.fft.rfftfreq(n=n_points, d=1 / sampling_freq).astype(_precision.real)
 
     window = window_func(data.shape[2])
 
