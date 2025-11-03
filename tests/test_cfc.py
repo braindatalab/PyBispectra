@@ -16,13 +16,6 @@ from pybispectra.utils._utils import _generate_data
 @pytest.mark.parametrize("class_type", ["PAC", "PPC", "AAC"])
 def test_error_catch(class_type: str) -> None:
     """Check that CFC classes catch errors."""
-    if class_type == "PAC":
-        TestClass = PAC
-    elif class_type == "PPC":
-        TestClass = PPC
-    else:
-        TestClass = AAC
-
     n_chans = 3
     n_epochs = 5
     n_times = 100
@@ -31,15 +24,17 @@ def test_error_catch(class_type: str) -> None:
     indices = ([0, 1, 2], [0, 1, 2])
     freqs = np.arange(5, 20)
 
-    if class_type in ["PAC", "PPC"]:
+    if class_type in ("PAC", "PPC"):
+        TestClass = PAC if class_type == "PAC" else PPC
         coeffs, freqs = compute_fft(data, sampling_freq)
     else:
+        TestClass = AAC
         coeffs, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3)
 
     # initialisation
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         TestClass(coeffs.tolist(), freqs, sampling_freq)
-    if class_type in ["PAC", "PPC"]:
+    if class_type in ("PAC", "PPC"):
         with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
             TestClass(np.random.randn(2, 2), freqs, sampling_freq)
     else:
@@ -178,22 +173,104 @@ def test_error_catch(class_type: str) -> None:
         test_class.compute(n_jobs=0)
 
 
+@pytest.mark.parametrize("class_type", ["PAC", "PPC", "AAC"])
+def test_error_catch_time_resolved(class_type: str) -> None:
+    """Check that CFC classes catch errors for time-resolved data."""
+    n_chans = 3
+    n_epochs = 5
+    n_times = 100
+    sampling_freq = 50
+    data = _generate_data(n_epochs, n_chans, n_times)
+    freqs = np.arange(5, 20)
+    times = np.arange(n_times) / sampling_freq
+
+    output = "power" if class_type == "AAC" else "complex"
+    coeffs, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3, output=output)
+
+    if class_type == "PAC":
+        TestClass = PAC
+    elif class_type == "PPC":
+        TestClass = PPC
+    else:
+        TestClass = AAC
+
+    # initialisation
+    if class_type in ("PAC", "PPC"):
+        with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
+            TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+    else:
+        with pytest.raises(ValueError, match="`data` must be a 4D array."):
+            TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+
+    with pytest.raises(TypeError, match="`times` must be a NumPy array."):
+        TestClass(coeffs, freqs, sampling_freq, times.tolist())
+    with pytest.raises(ValueError, match="`times` must be a 1D array."):
+        TestClass(coeffs, freqs, sampling_freq, times[:, np.newaxis])
+
+    with pytest.raises(
+        ValueError,
+        match=("`data` and `times` must contain the same number of timepoints."),
+    ):
+        TestClass(coeffs, freqs, sampling_freq, times[:-1])
+
+    # compute
+    test_class = TestClass(coeffs, freqs, sampling_freq, times)
+
+    # test that errors for incorrect inputs are caught
+    with pytest.raises(TypeError, match="`times` must be a tuple or None."):
+        test_class.compute(times=[times[0], times[-1]])
+    with pytest.raises(ValueError, match="`times` must have length of 2."):
+        test_class.compute(times=(times[0], times[1], times[-1]))
+    with pytest.raises(TypeError, match="Entries of `times` must be int or float."):
+        test_class.compute(times=("start", "end"))
+    with pytest.raises(
+        ValueError,
+        match="No timepoints are present in the data for the range in `times`.",
+    ):
+        test_class.compute(times=(-1, -0.1))
+
+
 def test_pac_runs() -> None:
     """Test that PAC runs correctly."""
     n_chans = 3
+    n_times = 100
     sampling_freq = 50
-    data = _generate_data(5, n_chans, 100)
+    data = _generate_data(5, n_chans, n_times)
+    default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
+    times = default_times + 10  # offset to distinguish from auto-generated ones
+    freqs = np.arange(5, 25, 0.5)
 
-    fft, freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
+    fft, fft_freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
+    fft = fft[..., np.intersect1d(fft_freqs, freqs, return_indices=True)[1]]
+    tfr, _ = compute_tfr(
+        data=data,
+        sampling_freq=sampling_freq,
+        freqs=freqs,
+        n_cycles=3,
+        output="complex",
+    )
+
+    # check times are handled correctly
+    pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    assert pac.times is None, "`times` should be ignored for time-resolved_data"
+    pac = PAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    assert np.all(pac.times == times), "`times` should be stored for time-resolved_data"
+    pac = PAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(pac.times == default_times), (
+        "Auto-generated `times` are incorrect for time-resolved_data"
+    )
 
     # check it runs with correct inputs
     pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
     pac.compute(antisym=(False, True), norm=(False, True))
+    pac_tr = PAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    pac_tr.compute()
 
     # check the returned results have the correct shape
     assert (
         results.shape == (n_chans**2, len(freqs), len(freqs)) for results in pac.results
     )
+    assert pac_tr.results.shape == (n_chans**2, len(freqs), len(freqs), len(times))
 
     # check the returned results are of the correct type
     result_types = [
@@ -234,7 +311,30 @@ def test_pac_runs() -> None:
     )
 
     # check it runs with non-exact frequencies
-    pac.compute(f1s=(10.25, 19.75), f2s=(10.25, 19.75))
+    fmin, fmax = 10.25, 19.75
+    freqs_sel = freqs[np.argwhere((freqs >= fmin) & (freqs <= fmax)).squeeze()]
+    pac.compute(f1s=(fmin, fmax), f2s=(fmin, fmax))
+    assert pac.results.get_results().shape[1:3] == (len(freqs_sel), len(freqs_sel)), (
+        "Number of frequencies in results does not match the selection"
+    )
+    assert (
+        pac.results.f1s[0] == freqs_sel[0]
+        and pac.results.f1s[-1] == freqs_sel[-1]
+        and pac.results.f2s[0] == freqs_sel[0]
+        and pac.results.f2s[-1] == freqs_sel[-1]
+    ), "`f1s` and `f2s` in results do not match the selection"
+
+    # check it runs with non-exact times
+    tmin, tmax = 10.55, 11.55
+    times_sel = times[np.argwhere((times >= tmin) & (times <= tmax)).squeeze()]
+    pac_tr.compute(times=(tmin, tmax))
+    assert pac_tr.results.get_results().shape[3] == len(times_sel), (
+        "Number of timepoints in results does not match the selection"
+    )
+    assert (
+        pac_tr.results.times[0] == times_sel[0]
+        and pac_tr.results.times[-1] == times_sel[-1]
+    ), "`times` in results do not match the selection"
 
     # test it runs with parallelisation
     pac.compute(n_jobs=2)
@@ -335,24 +435,72 @@ def test_pac_results():
 def test_ppc_runs() -> None:
     """Test that PPC runs correctly."""
     n_chans = 3
+    n_times = 100
     sampling_freq = 50
-    data = _generate_data(5, n_chans, 100)
+    data = _generate_data(5, n_chans, n_times)
+    default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
+    times = default_times + 10  # offset to distinguish from auto-generated ones
+    freqs = np.arange(5, 25, 0.5)
 
-    fft, freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
+    fft, fft_freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
+    fft = fft[..., np.intersect1d(fft_freqs, freqs, return_indices=True)[1]]
+    tfr, _ = compute_tfr(
+        data=data,
+        sampling_freq=sampling_freq,
+        freqs=freqs,
+        n_cycles=3,
+        output="complex",
+    )
+
+    # check times are handled correctly
+    ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    assert ppc.times is None, "`times` should be ignored for time-resolved_data"
+    ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    assert np.all(ppc.times == times), "`times` should be stored for time-resolved_data"
+    ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(ppc.times == default_times), (
+        "Auto-generated `times` are incorrect for time-resolved_data"
+    )
 
     # check it runs with correct inputs
     ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
     ppc.compute()
+    ppc_tr = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    ppc_tr.compute()
 
     # check the returned results have the correct shape
     assert ppc.results.shape == (n_chans**2, len(freqs), len(freqs))
+    assert ppc_tr.results.shape == (n_chans**2, len(freqs), len(freqs), len(times))
 
     # check the returned results are of the correct type
     assert ppc.results.name == "PPC"
     assert isinstance(ppc.results, ResultsCFC)
 
     # check it runs with non-exact frequencies
-    ppc.compute(f1s=(10.25, 19.75), f2s=(10.25, 19.75))
+    fmin, fmax = 10.25, 19.75
+    freqs_sel = freqs[np.argwhere((freqs >= fmin) & (freqs <= fmax)).squeeze()]
+    ppc.compute(f1s=(fmin, fmax), f2s=(fmin, fmax))
+    assert ppc.results.get_results().shape[1:3] == (len(freqs_sel), len(freqs_sel)), (
+        "Number of frequencies in results does not match the selection"
+    )
+    assert (
+        ppc.results.f1s[0] == freqs_sel[0]
+        and ppc.results.f1s[-1] == freqs_sel[-1]
+        and ppc.results.f2s[0] == freqs_sel[0]
+        and ppc.results.f2s[-1] == freqs_sel[-1]
+    ), "`f1s` and `f2s` in results do not match the selection"
+
+    # check it runs with non-exact times
+    tmin, tmax = 10.55, 11.55
+    times_sel = times[np.argwhere((times >= tmin) & (times <= tmax)).squeeze()]
+    ppc_tr.compute(times=(tmin, tmax))
+    assert ppc_tr.results.get_results().shape[3] == len(times_sel), (
+        "Number of timepoints in results does not match the selection"
+    )
+    assert (
+        ppc_tr.results.times[0] == times_sel[0]
+        and ppc_tr.results.times[-1] == times_sel[-1]
+    ), "`times` in results do not match the selection"
 
     # test it runs with parallelisation
     ppc.compute(n_jobs=2)
@@ -370,14 +518,25 @@ def test_ppc_runs() -> None:
 def test_aac_runs() -> None:
     """Test that AAC runs correctly."""
     n_chans = 3
+    n_times = 100
     sampling_freq = 50
-    data = _generate_data(5, n_chans, 100)
-    freqs = np.arange(5, 20)
+    data = _generate_data(5, n_chans, n_times)
+    default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
+    times = default_times + 10  # offset to distinguish from auto-generated ones
+    freqs = np.arange(5, 25, 0.5)
 
     tfr, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3)
 
-    # check it runs with correct inputs
+    # check times are handled correctly
+    aac = AAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    assert np.all(aac.times == times), "`times` should be stored for time-resolved_data"
     aac = AAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(aac.times == default_times), (
+        "Auto-generated `times` are incorrect for time-resolved_data"
+    )
+
+    # check it runs with correct inputs
+    aac = AAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
     aac.compute()
 
     # check the returned results have the correct shape
@@ -388,7 +547,21 @@ def test_aac_runs() -> None:
     assert isinstance(aac.results, ResultsCFC)
 
     # check it runs with non-exact frequencies
-    aac.compute(f1s=(10.25, 19.75), f2s=(10.25, 19.75))
+    fmin, fmax = 10.25, 19.75
+    freqs_sel = freqs[np.argwhere((freqs >= fmin) & (freqs <= fmax)).squeeze()]
+    aac.compute(f1s=(fmin, fmax), f2s=(fmin, fmax))
+    assert aac.results.get_results().shape[1:3] == (len(freqs_sel), len(freqs_sel)), (
+        "Number of frequencies in results does not match the selection"
+    )
+    assert (
+        aac.results.f1s[0] == freqs_sel[0]
+        and aac.results.f1s[-1] == freqs_sel[-1]
+        and aac.results.f2s[0] == freqs_sel[0]
+        and aac.results.f2s[-1] == freqs_sel[-1]
+    ), "`f1s` and `f2s` in results do not match the selection"
+
+    # check it runs with non-exact times
+    aac.compute(times=(10.55, 11.55))
 
     # test it runs with parallelisation
     aac.compute(n_jobs=2)
