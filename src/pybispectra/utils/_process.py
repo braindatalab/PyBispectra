@@ -19,6 +19,7 @@ class _ProcessFreqBase(ABC):
     _data_precision: type = _precision.complex
 
     _data_ndims: tuple = (3, 4)  # [epochs, channels, frequencies (, times)]
+    _has_time_dim_placeholder: bool = False
 
     _indices: tuple = None
     _seeds: tuple = None
@@ -114,6 +115,7 @@ class _ProcessFreqBase(ABC):
 
         if data.ndim == 3 and np.max(self._data_ndims) == 4:
             data = data[..., np.newaxis]  # Add placeholder time dimension
+            self._has_time_dim_placeholder = True
 
         if not isinstance(verbose, bool):
             raise TypeError("`verbose` must be a bool.")
@@ -280,9 +282,9 @@ class _ProcessFreqBase(ABC):
 
     @property
     def data(self) -> np.ndarray:
-        if self.times is not None:
-            return self._data
-        return self._data[..., 0]  # Remove placeholder time dimension
+        if self._has_time_dim_placeholder:
+            return self._data[..., 0]
+        return self._data
 
     def copy(self):
         """Return a copy of the object."""
