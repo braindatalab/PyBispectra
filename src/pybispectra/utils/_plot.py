@@ -602,13 +602,14 @@ class _PlotGeneral(_PlotBase):
                             # If data is real, np.imag and np.angle return 0, resulting
                             # in coloured panels, so instead set to NaN for empty panels
                             data = np.full_like(
-                                self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T,
+                                self._data[node_i][np.ix_(f1_idcs, f2_idcs)],
                                 fill_value=np.nan,
                             )
                         else:
                             data = data_func(
-                                self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T
+                                self._data[node_i][np.ix_(f1_idcs, f2_idcs)]
                             )
+                        data = np.moveaxis(data, 0, 1)
 
                         if time_idcs is not None:
                             assert data.ndim == 3, (
@@ -970,7 +971,8 @@ class _PlotCFC(_PlotBase):
                     node_i = nodes[plot_n]
                     axis = axes[fig_i][fig_plot_n]
 
-                    data = self._data[node_i][np.ix_(f1_idcs, f2_idcs)].T
+                    data = self._data[node_i][np.ix_(f1_idcs, f2_idcs)]
+                    data = np.moveaxis(data, 0, 1)
                     if time_idcs is not None:
                         assert data.ndim == 3, (
                             "PyBispectra Internal Error: data to plot for a given node "
