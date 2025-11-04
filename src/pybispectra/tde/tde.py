@@ -230,7 +230,7 @@ class TDE(_ProcessBispectrum):
 
         Antisymmetrisation of the bispectrum is implemented as the replacement of
         :math:`\textbf{B}_{xyx}` with :math:`(\textbf{B}_{xyx} - \textbf{B}_{yxx})` in
-        the above equations :footcite:`JurharInPrep`.
+        the above equations :footcite:`JurharPrePrint`.
 
         If the seed and target for a given connection is the same channel, an error is
         raised.
