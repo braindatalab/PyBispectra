@@ -558,7 +558,7 @@ class ResultsTDE(_ResultsBase):
         self._sort_times(times)
         self._sort_freq_bands(freq_bands)
 
-        if self._data.shape != (self.n_nodes, self._n_fbands, times.shape[0]):
+        if self._data.shape != (self.n_nodes, self._n_fbands, self.times.size):
             raise ValueError("`data` must have shape [nodes, frequency bands, times].")
 
     def _sort_times(self, times: np.ndarray) -> None:
@@ -606,10 +606,8 @@ class ResultsTDE(_ResultsBase):
             respectively.
         """
         compact_results = np.full(
-            (self._n_chans, self._n_chans, self._n_fbands, self.times.shape[0]),
-            fill_value=np.full(
-                (self._n_fbands, self.times.shape[0]), fill_value=np.nan
-            ),
+            (self._n_chans, self._n_chans, self._n_fbands, self.times.size),
+            fill_value=np.full((self._n_fbands, self.times.size), fill_value=np.nan),
         )
 
         return super()._get_compact_results_parent(compact_results)

@@ -223,7 +223,7 @@ def _compute_aac(
     results : numpy.ndarray, shape of [low frequencies, high frequencies]
         AAC averaged across epochs for a single connection.
     """
-    results = np.full((f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=precision)
+    results = np.full((f1s.size, f2s.size), fill_value=np.nan, dtype=precision)
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
     f2_start = _fast_find_first(freqs, f2s[0], 0)

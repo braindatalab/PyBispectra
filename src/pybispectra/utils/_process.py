@@ -379,7 +379,7 @@ def _compute_bispectrum(
     No checks on the input data are performed for speed.
     """
     results = np.full(
-        (kmn.shape[0], f1s.shape[0], f2s.shape[0], data.shape[3]),
+        (kmn.shape[0], f1s.size, f2s.size, data.shape[3]),
         fill_value=np.nan + np.nan * 1j,
         dtype=precision,
     )
@@ -451,7 +451,7 @@ def _compute_threenorm(
     No checks on the input data are performed for speed.
     """
     results = np.full(
-        (kmn.shape[0], f1s.shape[0], f2s.shape[0], data.shape[3]),
+        (kmn.shape[0], f1s.size, f2s.size, data.shape[3]),
         fill_value=np.nan,
         dtype=precision,
     )

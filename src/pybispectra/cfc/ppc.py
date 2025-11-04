@@ -230,7 +230,7 @@ def _compute_ppc(
         PPC for a single connection.
     """
     results = np.full(
-        (f1s.shape[0], f2s.shape[0], data.shape[3]), fill_value=np.nan, dtype=precision
+        (f1s.size, f2s.size, data.shape[3]), fill_value=np.nan, dtype=precision
     )
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)

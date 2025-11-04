@@ -125,7 +125,7 @@ class TDE(_ProcessBispectrum):
         )
         self.freqs = np.concatenate((self.freqs, -self.freqs[1:][::-1]), axis=0)
 
-        self._n_unique_freqs = np.unique(np.abs(self.freqs)).shape[0]
+        self._n_unique_freqs = np.unique(np.abs(self.freqs)).size
 
     def compute(
         self,
