@@ -466,10 +466,13 @@ def _compute_threenorm(
             fdiff_fi = f1_fi + f2_fi
             if f1 <= f2 and fdiff_fi < freqs.size:
                 for kmn_i, (k, m, n) in enumerate(kmn):
-                    results[kmn_i, f1_ri, f2_ri] = (
-                        (np.abs(data[:, k, f1_fi]) ** 3).mean()
-                        * (np.abs(data[:, m, f2_fi]) ** 3).mean()
-                        * (np.abs(data[:, n, fdiff_fi]) ** 3).mean()
-                    ) ** (1 / 3)
+                    if np.isnan(results[kmn_i, f1_ri, f2_ri]).all():
+                        results[kmn_i, f1_ri, f2_ri] = 0
+                    for epoch_data in data:
+                        results[kmn_i, f1_ri, f2_ri] += (
+                            np.abs(epoch_data[k, f1_fi]) ** 3
+                            * np.abs(epoch_data[m, f2_fi]) ** 3
+                            * np.abs(epoch_data[n, fdiff_fi]) ** 3
+                        ) ** (1 / 3)
 
-    return results
+    return np.divide(results, data.shape[0]).astype(precision)
