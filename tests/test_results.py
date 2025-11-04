@@ -12,7 +12,7 @@ def test_results_cfc_error_catch() -> None:
     n_cons = 9
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_cons, n_f1, n_f2)
+    data = _generate_data((n_cons, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     n_unique_chans = 3
@@ -141,7 +141,7 @@ def test_results_tde_error_catch() -> None:
     n_cons = 9
     n_fbands = 2
     n_times = 50
-    data = _generate_data(n_cons, n_fbands, n_times)
+    data = _generate_data((n_cons, n_fbands, n_times))
     times = np.arange(n_times)
     freq_bands = ((5, 10), (20, 30))
     n_unique_chans = 3
@@ -261,7 +261,7 @@ def test_results_tde_runs(freq_bands: tuple) -> None:
     n_cons = 9
     n_fbands = len(freq_bands) if freq_bands is not None else 1
     n_times = 50
-    data = _generate_data(n_cons, n_fbands, n_times)
+    data = _generate_data((n_cons, n_fbands, n_times))
     times = np.arange(n_times)
     name = "test"
     n_unique_chans = 3
@@ -324,7 +324,7 @@ def test_results_waveshape_error_catch() -> None:
     n_chans = 3
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    data = _generate_data((n_chans, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     indices = tuple(range(n_chans))

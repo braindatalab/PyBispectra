@@ -14,7 +14,7 @@ def test_error_catch() -> None:
     n_epochs = 5
     n_times = 100
     sampling_freq = 50
-    data = _generate_data(n_epochs, n_chans, n_times)
+    data = _generate_data((n_epochs, n_chans, n_times))
     indices = ((0, 1, 2), (0, 1, 2))
 
     coeffs, freqs = compute_fft(
@@ -148,7 +148,7 @@ def test_tde_runs(freq_bands: tuple) -> None:
     n_chans = 3
     n_times = 100
     sampling_freq = 50
-    data = _generate_data(5, n_chans, n_times)
+    data = _generate_data((5, n_chans, n_times))
 
     fft, freqs = compute_fft(
         data=data,

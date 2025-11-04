@@ -18,7 +18,7 @@ def test_plotting_cfc_error_catch() -> None:
     n_cons = 9
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_cons, n_f1, n_f2)
+    data = _generate_data((n_cons, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -141,7 +141,7 @@ def test_plotting_cfc_runs() -> None:
     n_cons = 9
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_cons, n_f1, n_f2)
+    data = _generate_data((n_cons, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -185,7 +185,7 @@ def test_plotting_tde_error_catch() -> None:
     n_cons = 9
     n_fbands = 2
     n_times = 51
-    data = _generate_data(n_cons, n_fbands, n_times)
+    data = _generate_data((n_cons, n_fbands, n_times))
     times = np.arange((n_times - 1) * -0.5, n_times * 0.5)
     name = "test"
     n_unique_chans = 3
@@ -283,7 +283,7 @@ def test_plotting_tde_runs() -> None:
     n_cons = 9
     n_fbands = 2
     n_times = 51
-    data = _generate_data(n_cons, n_fbands, n_times)
+    data = _generate_data((n_cons, n_fbands, n_times))
     freq_bands = ((5, 10), (15, 20))
     times = np.arange((n_times - 1) * -0.5, n_times * 0.5)
     name = "test"
@@ -345,7 +345,7 @@ def test_plotting_waveshape_error_catch() -> None:
     n_chans = 3
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    data = _generate_data((n_chans, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -478,7 +478,7 @@ def test_plotting_waveshape_runs(plot_absolute: bool, mirror_cbar_range: bool) -
     n_chans = 9
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    data = _generate_data((n_chans, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -526,7 +526,7 @@ def test_plotting_general_error_catch() -> None:
     n_chans = 27
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    data = _generate_data((n_chans, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -674,7 +674,7 @@ def test_plotting_general_runs(plot_absolute: bool, mirror_cbar_range: bool) -> 
     n_chans = 27
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    data = _generate_data((n_chans, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"

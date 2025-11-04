@@ -20,7 +20,7 @@ def test_error_catch(class_type: str) -> None:
     n_epochs = 5
     n_times = 100
     sampling_freq = 50
-    data = _generate_data(n_epochs, n_chans, n_times)
+    data = _generate_data((n_epochs, n_chans, n_times))
     indices = ([0, 1, 2], [0, 1, 2])
     freqs = np.arange(5, 20)
 
@@ -180,7 +180,7 @@ def test_error_catch_time_resolved(class_type: str) -> None:
     n_epochs = 5
     n_times = 100
     sampling_freq = 50
-    data = _generate_data(n_epochs, n_chans, n_times)
+    data = _generate_data((n_epochs, n_chans, n_times))
     freqs = np.arange(5, 20)
     times = np.arange(n_times) / sampling_freq
 
@@ -235,7 +235,7 @@ def test_pac_runs() -> None:
     n_chans = 3
     n_times = 100
     sampling_freq = 50
-    data = _generate_data(5, n_chans, n_times)
+    data = _generate_data((5, n_chans, n_times))
     default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
     times = default_times + 10  # offset to distinguish from auto-generated ones
     freqs = np.arange(5, 25, 0.5)
@@ -443,7 +443,7 @@ def test_ppc_runs() -> None:
     n_chans = 3
     n_times = 100
     sampling_freq = 50
-    data = _generate_data(5, n_chans, n_times)
+    data = _generate_data((5, n_chans, n_times))
     default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
     times = default_times + 10  # offset to distinguish from auto-generated ones
     freqs = np.arange(5, 25, 0.5)
@@ -532,7 +532,7 @@ def test_aac_runs() -> None:
     n_chans = 3
     n_times = 100
     sampling_freq = 50
-    data = _generate_data(5, n_chans, n_times)
+    data = _generate_data((5, n_chans, n_times))
     default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
     times = default_times + 10  # offset to distinguish from auto-generated ones
     freqs = np.arange(5, 25, 0.5)

@@ -211,9 +211,7 @@ def _create_mne_info(n_chans: int, sampling_freq: float) -> Info:
     return create_info(ch_names, sampling_freq, ch_types, verbose=False)
 
 
-def _generate_data(
-    n_epochs: int, n_chans: int, n_times: int, seed: int = 44
-) -> np.ndarray:
+def _generate_data(shape: tuple[int], seed: int = 44) -> np.ndarray:
     """Generate random data of the specified shape."""
     random = np.random.RandomState(seed)
-    return random.rand(n_epochs, n_chans, n_times).astype(_precision.real)
+    return random.rand(*shape).astype(_precision.real)
