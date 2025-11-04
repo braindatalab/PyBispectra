@@ -88,7 +88,10 @@ sampling_freq = 1000  # Hz
 
 # plot timeseries data
 times = np.linspace(
-    0, (data_sawtooths.shape[2] / sampling_freq), data_sawtooths.shape[2]
+    0,
+    (data_sawtooths.shape[2] / sampling_freq),
+    data_sawtooths.shape[2],
+    endpoint=False,
 )
 fig, axes = plt.subplots(2, 2)
 axes[0, 0].plot(times, data_sawtooths[15, 0])
@@ -137,7 +140,8 @@ fft_coeffs_peaks_troughs, _ = compute_fft(
 # the peak and trough waves consist of a signal where peaks are most dominant, and a
 # signal where troughs are most dominant. After loading the data, we add some noise for
 # numerical stability.
-#
+
+########################################################################################
 # Computing waveshape features
 # ----------------------------
 # To compute waveshape, we start by initialising the
@@ -223,7 +227,7 @@ print(
 # reflected in the phases (~0 or 2 :math:`\pi` for the peak-dominant signal, and
 # :math:`\pi` for the trough-dominant signal).
 #
-# Here, we plotted the real and imaginary parts of the bicoherence without taking the
+# Here, we plot the real and imaginary parts of the bicoherence without taking the
 # absolute value. If the particular direction of asymmetry is not of interest, the
 # absolute values can be plotted instead (by setting ``plot_absolute=True``) to show the
 # overall degree of asymmetry. In any case, the direction of asymmetry can be inferred
