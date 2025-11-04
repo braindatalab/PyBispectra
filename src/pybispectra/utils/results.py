@@ -340,23 +340,25 @@ class ResultsCFC(_ResultsBase):
         super()._sort_times(times)
         super()._check_data_shape()
 
+        self._freqs_times_shape = (self.f1s.size, self.f2s.size)
+        if self.times is not None:
+            self._freqs_times_shape += (self.times.size,)
+
     def _get_compact_results_child(self) -> tuple[np.ndarray, tuple[tuple[int]]]:
         """Return a compacted form of the results.
 
         Returns
         -------
         compact_results : numpy.ndarray of float
-            Results with shape ``[seeds, targets, f1s, f2s]``.
+            Results with shape ``[seeds, targets, f1s, f2s (, times)]``.
 
         indices : tuple of tuple of int, length of 2
             Channel indices of ``compact_results`` for the seeds and targets,
             respectively.
         """
         compact_results = np.full(
-            (self._n_chans, self._n_chans, self.f1s.shape[0], self.f2s.shape[0]),
-            fill_value=np.full(
-                (self.f1s.shape[0], self.f2s.shape[0]), fill_value=np.nan
-            ),
+            (self._n_chans, self._n_chans, *self._freqs_times_shape),
+            fill_value=np.full(self._freqs_times_shape, fill_value=np.nan),
         )
 
         return super()._get_compact_results_parent(compact_results)
@@ -1065,6 +1067,10 @@ class ResultsGeneral(_ResultsBase):
         super()._sort_times(times)
         super()._check_data_shape()
 
+        self._freqs_times_shape = (self.f1s.size, self.f2s.size)
+        if self.times is not None:
+            self._freqs_times_shape += (self.times.size,)
+
     def get_results(
         self, form: str = "raveled", copy=True
     ) -> np.ndarray | tuple[np.ndarray, tuple[tuple[int]]]:
@@ -1100,23 +1106,15 @@ class ResultsGeneral(_ResultsBase):
         Returns
         -------
         compact_results : numpy.ndarray of float
-            Results with shape ``[k, m, n, f1s, f2s]``.
+            Results with shape ``[k, m, n, f1s, f2s (, times)]``.
 
         indices : tuple of tuple of int, length of 3
             Channel indices of ``compact_results`` for the k, m, and n channels,
             respectively.
         """
         compact_results = np.full(
-            (
-                self._n_chans,
-                self._n_chans,
-                self._n_chans,
-                self.f1s.shape[0],
-                self.f2s.shape[0],
-            ),
-            fill_value=np.full(
-                (self.f1s.shape[0], self.f2s.shape[0]), fill_value=np.nan
-            ),
+            (self._n_chans, self._n_chans, self._n_chans, *self._freqs_times_shape),
+            fill_value=np.full(self._freqs_times_shape, fill_value=np.nan),
         )
 
         for con_result, k, m, n in zip(
