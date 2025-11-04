@@ -168,7 +168,7 @@ class WaveShape(_ProcessBispectrum):
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
-            print("Computing bicoherence...\n")
+            print("Computing waveshape...\n")
 
         self._compute_bispectrum()
         if self._return_threenorm:
@@ -177,7 +177,7 @@ class WaveShape(_ProcessBispectrum):
         self._store_results()
 
         if self.verbose:
-            print("    ... Bicoherence computation finished\n")
+            print("    ... Waveshape computation finished\n")
 
     def _reset_attrs(self) -> None:
         """Reset attrs. of the object to prevent interference."""
