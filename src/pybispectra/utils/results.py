@@ -393,7 +393,8 @@ class ResultsCFC(_ResultsBase):
 
         times : tuple of int or float, length of 2 | None (default None)
             Start and end times (in seconds) of the results to plot, respectively. If
-            :obj:`None`, all timepoints are used.
+            :obj:`None`, all timepoints are used. Time-resolved results are aggregated
+            by averaging over the selected timepoints.
 
             .. versionadded:: 1.3
 
@@ -859,7 +860,8 @@ class ResultsWaveShape(_ResultsBase):
 
         times : tuple of int or float, length of 2 | None (default None)
             Start and end times (in seconds) of the results to plot, respectively. If
-            :obj:`None`, all timepoints are used.
+            :obj:`None`, all timepoints are used. Time-resolved results are aggregated
+            by averaging over the selected timepoints.
 
             .. versionadded:: 1.3
 
@@ -1162,7 +1164,8 @@ class ResultsGeneral(_ResultsBase):
 
         times : tuple of int or float, length of 2 | None (default None)
             Start and end times (in seconds) of the results to plot, respectively. If
-            :obj:`None`, all timepoints are used.
+            :obj:`None`, all timepoints are used. Time-resolved results are aggregated
+            by averaging over the selected timepoints.
 
             .. versionadded:: 1.3
 
