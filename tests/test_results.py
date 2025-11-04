@@ -87,14 +87,51 @@ def test_results_cfc_error_catch() -> None:
         results.get_results(copy="True")
 
 
-def test_results_cfc_runs() -> None:
+def test_results_cfc_error_catch_time_resolved() -> None:
+    """Test `ResultsCFC` catches errors for time-resolved data."""
+    n_cons = 9
+    n_f1 = 50
+    n_f2 = 50
+    n_times = 20
+    data = _generate_data((n_cons, n_f1, n_f2, n_times))
+    f1s = np.arange(n_f1)
+    f2s = np.arange(n_f2)
+    times = np.arange(n_times)
+    n_unique_chans = 3
+    indices = (
+        tuple(np.repeat(np.arange(n_unique_chans), n_unique_chans).tolist()),
+        tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
+    )
+
+    with pytest.raises(
+        ValueError, match="`times` must be provided for time-resolved results."
+    ):
+        ResultsCFC(data=data, indices=indices, f1s=f1s, f2s=f2s, times=None)
+    with pytest.raises(TypeError, match="`times` must be a NumPy array."):
+        ResultsCFC(data=data, indices=indices, f1s=f1s, f2s=f2s, times=times.tolist())
+    with pytest.raises(ValueError, match="`times` must be a 1D array."):
+        ResultsCFC(
+            data=data, indices=indices, f1s=f1s, f2s=f2s, times=times[:, np.newaxis]
+        )
+
+
+@pytest.mark.parametrize("time_resolved", [False, True])
+def test_results_cfc_runs(time_resolved: bool) -> None:
     """Test `ResultsCFC` runs with correct inputs."""
     n_cons = 9
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_cons, n_f1, n_f2)
+    n_times = 20
+    data = _generate_data((n_cons, n_f1, n_f2, n_times))
+    if not time_resolved:
+        data = data[..., 0]
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
+    times = None
+    freqs_times_shape = (n_f1, n_f2)
+    if time_resolved:
+        times = np.arange(n_times)
+        freqs_times_shape += (n_times,)
     name = "test"
     n_unique_chans = 3
     indices = (
@@ -102,19 +139,27 @@ def test_results_cfc_runs() -> None:
         tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
-    results = ResultsCFC(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
-
-    assert repr(results) == (
-        f"<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s]>"
+    results = ResultsCFC(
+        data=data, indices=indices, f1s=f1s, f2s=f2s, times=times, name=name
     )
+
+    if not time_resolved:
+        assert repr(results) == (
+            f"<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s]>"
+        )
+    else:
+        assert repr(results) == (
+            f"<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s, "
+            f"{n_times} timepoints]>"
+        )
 
     results_array = results.get_results(form="raveled")
     assert isinstance(results_array, np.ndarray)
-    assert results_array.shape == (n_cons, n_f1, n_f2)
+    assert results_array.shape == (n_cons, *freqs_times_shape)
 
     results_array, array_indices = results.get_results(form="compact")
     assert isinstance(results_array, np.ndarray)
-    assert results_array.shape == (n_unique_chans, n_unique_chans, n_f1, n_f2)
+    assert results_array.shape == (n_unique_chans, n_unique_chans, *freqs_times_shape)
     assert array_indices == indices
 
     # Try also with unordered indices that aren't just [0, ..., n_chans]
@@ -125,7 +170,12 @@ def test_results_cfc_runs() -> None:
         tuple(indices[1][idx] for idx in subset),
     )
     results = ResultsCFC(
-        data=data[subset], indices=indices_subset, f1s=f1s, f2s=f2s, name=name
+        data=data[subset],
+        indices=indices_subset,
+        f1s=f1s,
+        f2s=f2s,
+        times=times,
+        name=name,
     )
     results_array, array_indices = results.get_results(form="compact")
     assert np.max(array_indices) == len(np.unique(indices_subset)) - 1
@@ -375,27 +425,70 @@ def test_results_waveshape_error_catch() -> None:
         results.get_results(copy="True")
 
 
-def test_results_waveshape_runs() -> None:
+def test_results_waveshape_error_catch_time_resolved() -> None:
+    """Test `ResultsWaveShape` catches errors for time-resolved data."""
+    n_chans = 3
+    n_f1 = 50
+    n_f2 = 50
+    n_times = 20
+    data = _generate_data((n_chans, n_f1, n_f2, n_times))
+    f1s = np.arange(n_f1)
+    f2s = np.arange(n_f2)
+    times = np.arange(n_times)
+    indices = tuple(range(n_chans))
+
+    with pytest.raises(
+        ValueError, match="`times` must be provided for time-resolved results."
+    ):
+        ResultsWaveShape(data=data, indices=indices, f1s=f1s, f2s=f2s, times=None)
+    with pytest.raises(TypeError, match="`times` must be a NumPy array."):
+        ResultsWaveShape(
+            data=data, indices=indices, f1s=f1s, f2s=f2s, times=times.tolist()
+        )
+    with pytest.raises(ValueError, match="`times` must be a 1D array."):
+        ResultsWaveShape(
+            data=data, indices=indices, f1s=f1s, f2s=f2s, times=times[:, np.newaxis]
+        )
+
+
+@pytest.mark.parametrize("time_resolved", [False, True])
+def test_results_waveshape_runs(time_resolved: bool) -> None:
     """Test `ResultsWaveShape` runs with correct inputs."""
     n_chans = 3
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    n_times = 20
+    data = _generate_data((n_chans, n_f1, n_f2, n_times))
+    if not time_resolved:
+        data = data[..., 0]
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
+    times = None
+    freqs_times_shape = (n_f1, n_f2)
+    if time_resolved:
+        times = np.arange(n_times)
+        freqs_times_shape += (n_times,)
     name = "test"
     indices = tuple(range(n_chans))
 
-    results = ResultsWaveShape(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
-
-    assert repr(results) == (
-        f"<Result: {name} | [{n_chans} nodes, {n_f1} f1s, {n_f2} f2s]>"
+    results = ResultsWaveShape(
+        data=data, indices=indices, f1s=f1s, f2s=f2s, times=times, name=name
     )
+
+    if not time_resolved:
+        assert repr(results) == (
+            f"<Result: {name} | [{n_chans} nodes, {n_f1} f1s, {n_f2} f2s]>"
+        )
+    else:
+        assert repr(results) == (
+            f"<Result: {name} | [{n_chans} nodes, {n_f1} f1s, {n_f2} f2s, "
+            f"{n_times} timepoints]>"
+        )
 
     results_array = results.get_results(copy=True)
     results_array = results.get_results(copy=False)
     assert isinstance(results_array, np.ndarray)
-    assert results_array.shape == (n_chans, n_f1, n_f2)
+    assert results_array.shape == (n_chans, *freqs_times_shape)
 
 
 def test_results_general_error_catch() -> None:
@@ -403,7 +496,7 @@ def test_results_general_error_catch() -> None:
     n_chans = 27
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    data = _generate_data((n_chans, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     n_unique_chans = 3
@@ -478,14 +571,60 @@ def test_results_general_error_catch() -> None:
         results.get_results(copy="True")
 
 
-def test_results_general_runs() -> None:
+def test_results_general_error_catch_time_resolved() -> None:
+    """Test `ResultsGeneral` catches errors for time-resolved data."""
+    n_chans = 27
+    n_f1 = 50
+    n_f2 = 50
+    n_times = 20
+    data = _generate_data((n_chans, n_f1, n_f2, n_times))
+    f1s = np.arange(n_f1)
+    f2s = np.arange(n_f2)
+    times = np.arange(n_times)
+    n_unique_chans = 3
+    indices = tuple(
+        [
+            tuple(np.tile(range(n_unique_chans), n_unique_chans**2).tolist()),
+            tuple(
+                np.repeat(
+                    np.tile(range(n_unique_chans), n_unique_chans), n_unique_chans
+                ).tolist()
+            ),
+            tuple(np.repeat(range(n_unique_chans), n_unique_chans**2).tolist()),
+        ]
+    )
+
+    with pytest.raises(
+        ValueError, match="`times` must be provided for time-resolved results."
+    ):
+        ResultsGeneral(data=data, indices=indices, f1s=f1s, f2s=f2s, times=None)
+    with pytest.raises(TypeError, match="`times` must be a NumPy array."):
+        ResultsGeneral(
+            data=data, indices=indices, f1s=f1s, f2s=f2s, times=times.tolist()
+        )
+    with pytest.raises(ValueError, match="`times` must be a 1D array."):
+        ResultsGeneral(
+            data=data, indices=indices, f1s=f1s, f2s=f2s, times=times[:, np.newaxis]
+        )
+
+
+@pytest.mark.parametrize("time_resolved", [False, True])
+def test_results_general_runs(time_resolved: bool) -> None:
     """Test `ResultsGeneral` runs with correct inputs."""
     n_cons = 27
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_cons, n_f1, n_f2)
+    n_times = 20
+    data = _generate_data((n_cons, n_f1, n_f2, n_times))
+    if not time_resolved:
+        data = data[..., 0]
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
+    times = None
+    freqs_times_shape = (n_f1, n_f2)
+    if time_resolved:
+        times = np.arange(n_times)
+        freqs_times_shape += (n_times,)
     name = "test"
     n_unique_chans = 3
     indices = tuple(
@@ -500,15 +639,23 @@ def test_results_general_runs() -> None:
         ]
     )
 
-    results = ResultsGeneral(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
-
-    assert repr(results) == (
-        f"<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s]>"
+    results = ResultsGeneral(
+        data=data, indices=indices, f1s=f1s, f2s=f2s, times=times, name=name
     )
+
+    if not time_resolved:
+        assert repr(results) == (
+            f"<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s]>"
+        )
+    else:
+        assert repr(results) == (
+            f"<Result: {name} | [{n_cons} nodes, {n_f1} f1s, {n_f2} f2s, "
+            f"{n_times} timepoints]>"
+        )
 
     results_array = results.get_results(form="raveled")
     assert isinstance(results_array, np.ndarray)
-    assert results_array.shape == (n_cons, n_f1, n_f2)
+    assert results_array.shape == (n_cons, *freqs_times_shape)
 
     results_array, array_indices = results.get_results(form="compact")
     assert isinstance(results_array, np.ndarray)
@@ -516,8 +663,7 @@ def test_results_general_runs() -> None:
         n_unique_chans,
         n_unique_chans,
         n_unique_chans,
-        n_f1,
-        n_f2,
+        *freqs_times_shape,
     )
     assert array_indices == indices
 
@@ -530,7 +676,12 @@ def test_results_general_runs() -> None:
         tuple(indices[2][idx] for idx in subset),
     )
     results = ResultsGeneral(
-        data=data[subset], indices=indices_subset, f1s=f1s, f2s=f2s, name=name
+        data=data[subset],
+        indices=indices_subset,
+        f1s=f1s,
+        f2s=f2s,
+        times=times,
+        name=name,
     )
     results_array, array_indices = results.get_results(form="compact")
     assert np.max(array_indices) == len(np.unique(indices_subset)) - 1
