@@ -95,10 +95,10 @@ class AAC(_ProcessFreqBase):
         :footcite:`Giehl2021`.
 
         AAC is computed between all values of ``f1s`` and ``f2s``.
-        
+
         .. warning::
-            For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
-            Nyquist frequency, a :obj:`numpy.nan` value is returned.
+            For values of ``f1s`` higher than ``f2s``, a :obj:`numpy.nan` value is
+            returned.
 
         References
         ----------
