@@ -4,6 +4,7 @@
 
 ##### Enhancements
 - Added `norm` parameter to `WaveShape.compute()` to control normalisation of waveshape results.
+- Added `output` parameter to `compute_tfr()` to allow complex coefficients to be returned.
 
 <br>
 
