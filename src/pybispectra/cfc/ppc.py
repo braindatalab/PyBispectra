@@ -225,8 +225,8 @@ def _compute_ppc(
                     tfr_f2 = epoch_data[1, f2_fi]
                     amp_f1 = np.real(tfr_f1 * np.conj(tfr_f1))
                     amp_f2 = np.real(tfr_f2 * np.conj(tfr_f2))
-                    phase_f1 = np.angle(tfr_f1, False)
-                    phase_f2 = np.angle(tfr_f2, False)
+                    phase_f1 = np.angle(tfr_f1)
+                    phase_f2 = np.angle(tfr_f2)
                     numerator = np.abs(
                         (
                             amp_f1
