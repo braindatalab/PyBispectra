@@ -240,6 +240,26 @@ def test_waveshape_runs() -> None:
         and waveshape_tr.results.times[-1] == times_sel[-1]
     ), "`times` in results do not match the selection"
 
+    # test that time selection works
+    tmin_idx, tmax_idx = 5, 10
+    waveshape_tr.compute(norm=(False, True), times=(times[tmin_idx], times[tmax_idx]))
+    waveshape_tr_results = waveshape_tr.results
+    waveshape_tr_window = WaveShape(
+        data=tfr[..., tmin_idx : tmax_idx + 1],
+        freqs=freqs,
+        sampling_freq=sampling_freq,
+        times=times[tmin_idx : tmax_idx + 1],
+    )
+    waveshape_tr_window.compute(norm=(False, True))
+    waveshape_tr_window_results = waveshape_tr_window.results
+    for results, window_results in zip(
+        waveshape_tr_results, waveshape_tr_window_results
+    ):
+        assert np.all(results.times == window_results.times)
+        assert np.array_equal(
+            results.get_results(), window_results.get_results(), equal_nan=True
+        )
+
     # test it runs with parallelisation
     waveshape.compute(n_jobs=2)
     waveshape.compute(n_jobs=-1)

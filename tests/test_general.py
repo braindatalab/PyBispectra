@@ -305,6 +305,25 @@ def test_general_runs(class_type: str) -> None:
         and test_class_tr.results.times[-1] == times_sel[-1]
     ), "`times` in results do not match the selection"
 
+    # test that time selection works
+    tmin_idx, tmax_idx = 5, 10
+    test_class_tr.compute(times=(times[tmin_idx], times[tmax_idx]))
+    test_class_tr_results = test_class_tr.results
+    test_class_tr_window = TestClass(
+        data=tfr[..., tmin_idx : tmax_idx + 1],
+        freqs=freqs,
+        sampling_freq=sampling_freq,
+        times=times[tmin_idx : tmax_idx + 1],
+    )
+    test_class_tr_window.compute()
+    test_class_tr_window_results = test_class_tr_window.results
+    assert np.all(test_class_tr_results.times == test_class_tr_window_results.times)
+    assert np.array_equal(
+        test_class_tr_results.get_results(),
+        test_class_tr_window_results.get_results(),
+        equal_nan=True,
+    )
+
     # test it runs with parallelisation
     test_class.compute(n_jobs=2)
     test_class.compute(n_jobs=-1)

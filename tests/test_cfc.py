@@ -349,6 +349,28 @@ def test_pac_runs() -> None:
         and pac_tr.results.times[-1] == times_sel[-1]
     ), "`times` in results do not match the selection"
 
+    # test that time selection works
+    tmin_idx, tmax_idx = 5, 10
+    pac_tr.compute(
+        antisym=(False, True),
+        norm=(False, True),
+        times=(times[tmin_idx], times[tmax_idx]),
+    )
+    pac_tr_results = pac_tr.results
+    pac_tr_window = PAC(
+        data=tfr[..., tmin_idx : tmax_idx + 1],
+        freqs=freqs,
+        sampling_freq=sampling_freq,
+        times=times[tmin_idx : tmax_idx + 1],
+    )
+    pac_tr_window.compute(antisym=(False, True), norm=(False, True))
+    pac_tr_window_results = pac_tr_window.results
+    for results, window_results in zip(pac_tr_results, pac_tr_window_results):
+        assert np.all(results.times == window_results.times)
+        assert np.array_equal(
+            results.get_results(), window_results.get_results(), equal_nan=True
+        )
+
     # test it runs with parallelisation
     pac.compute(n_jobs=2)
     pac.compute(n_jobs=-1)
@@ -492,6 +514,22 @@ def test_ppc_runs() -> None:
     # check it runs with non-exact times
     ppc.compute(times=(10.55, 11.55))
 
+    # test that time selection works
+    tmin_idx, tmax_idx = 5, 10
+    ppc.compute(times=(times[tmin_idx], times[tmax_idx]))
+    ppc_results = ppc.results
+    ppc_window = PPC(
+        data=tfr[..., tmin_idx : tmax_idx + 1],
+        freqs=freqs,
+        sampling_freq=sampling_freq,
+        times=times[tmin_idx : tmax_idx + 1],
+    )
+    ppc_window.compute()
+    ppc_window_results = ppc_window.results
+    assert np.array_equal(
+        ppc_results.get_results(), ppc_window_results.get_results(), equal_nan=True
+    )
+
     # test it runs with parallelisation
     ppc.compute(n_jobs=2)
     ppc.compute(n_jobs=-1)
@@ -556,6 +594,22 @@ def test_aac_runs() -> None:
 
     # check it runs with non-exact times
     aac.compute(times=(10.55, 11.55))
+
+    # test that time selection works
+    tmin_idx, tmax_idx = 5, 10
+    aac.compute(times=(times[tmin_idx], times[tmax_idx]))
+    aac_results = aac.results
+    aac_window = AAC(
+        data=tfr[..., tmin_idx : tmax_idx + 1],
+        freqs=freqs,
+        sampling_freq=sampling_freq,
+        times=times[tmin_idx : tmax_idx + 1],
+    )
+    aac_window.compute()
+    aac_window_results = aac_window.results
+    assert np.array_equal(
+        aac_results.get_results(), aac_window_results.get_results(), equal_nan=True
+    )
 
     # test it runs with parallelisation
     aac.compute(n_jobs=2)
