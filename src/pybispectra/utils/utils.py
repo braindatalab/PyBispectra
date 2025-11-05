@@ -168,7 +168,7 @@ def compute_tfr(
     n_jobs: int = 1,
     verbose: bool = True,
 ) -> tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute the amplitude time-frequency representation (TFR) of data.
+    """Compute the time-frequency representation (TFR) of data.
 
     Parameters
     ----------
