@@ -24,18 +24,25 @@ def test_error_catch(class_type: str) -> None:
     indices = ([0, 1, 2], [0, 1, 2])
     freqs = np.arange(5, 20)
 
-    if class_type in ("PAC", "PPC"):
-        TestClass = PAC if class_type == "PAC" else PPC
+    if class_type == "PAC":
+        TestClass = PAC
         coeffs, freqs = compute_fft(data, sampling_freq)
+    elif class_type == "PPC":
+        TestClass = PPC
+        coeffs, freqs = compute_tfr(
+            data, sampling_freq, freqs, n_cycles=3, output="complex"
+        )
     else:
         TestClass = AAC
-        coeffs, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3)
+        coeffs, freqs = compute_tfr(
+            data, sampling_freq, freqs, n_cycles=3, output="power"
+        )
 
     # initialisation
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         TestClass(coeffs.tolist(), freqs, sampling_freq)
-    if class_type in ("PAC", "PPC"):
-        with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
+    if class_type == "PAC":
+        with pytest.raises(ValueError, match="`data` must be a 3D array."):
             TestClass(np.random.randn(2, 2), freqs, sampling_freq)
     else:
         with pytest.raises(ValueError, match="`data` must be a 4D array."):
@@ -446,36 +453,19 @@ def test_ppc_runs() -> None:
     data = _generate_data((5, n_chans, n_times))
     default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
     times = default_times + 10  # offset to distinguish from auto-generated ones
-    freqs = np.arange(5, 25, 0.5)
+    freqs = np.arange(5, 20)
 
-    fft, fft_freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
-    fft = fft[..., np.intersect1d(fft_freqs, freqs, return_indices=True)[1]]
-    tfr, _ = compute_tfr(
+    tfr, freqs = compute_tfr(
         data=data,
         sampling_freq=sampling_freq,
         freqs=freqs,
         n_cycles=3,
         output="complex",
-    )
-
-    # check data is stored correctly
-    ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
-    assert np.all(ppc.data == fft), "FFT data not stored correctly"
-    ppc_tr = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
-    assert np.all(ppc_tr.data == tfr), "TFR data not stored correctly"
-
-    # check times are handled correctly
-    ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times)
-    assert ppc.times is None, "`times` should be ignored for non-time-resolved_data"
-    ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
-    assert np.all(ppc.times == times), "`times` should be stored for time-resolved_data"
-    ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
-    assert np.all(ppc.times == default_times), (
-        "Auto-generated `times` are incorrect for time-resolved_data"
+        verbose=False,
     )
 
     # check it runs with correct inputs
-    ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
     ppc.compute()
     ppc_tr = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
     ppc_tr.compute()

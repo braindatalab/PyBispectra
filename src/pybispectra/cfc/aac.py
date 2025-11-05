@@ -19,7 +19,7 @@ class AAC(_ProcessFreqBase):
     Parameters
     ----------
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies, times]
-        Amplitude (power) of the time-frequency representation of data.
+        Amplitude (power) of the time-frequency representation (TFR) of data.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in ``data``. Frequencies are expected to be evenly spaced.
@@ -51,7 +51,7 @@ class AAC(_ProcessFreqBase):
         AAC results.
 
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies, times]
-        Amplitude (power) of the time-frequency representation of data.
+        Amplitude (power) of the TFR of data.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in ``data``.
@@ -111,8 +111,8 @@ class AAC(_ProcessFreqBase):
         AAC is computed between all values of ``f1s`` and ``f2s``.
 
         .. warning::
-            For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
-            Nyquist frequency, a :obj:`numpy.nan` value is returned.
+            For values of ``f1s`` higher than ``f2s``, a :obj:`numpy.nan` value is
+            returned.
 
         References
         ----------
@@ -201,9 +201,8 @@ def _compute_aac(
     Parameters
     ----------
     data : numpy.ndarray, shape of [epochs, 2, frequencies, times]
-        Amplitude (power) of the time-frequency representation of data where the second
-        dimension contains the data for the seed and target channel of a single
-        connection, respectively.
+        Amplitude (power) of the TFR of data where the second dimension contains the
+        data for the seed and target channel of a single connection, respectively.
 
     freqs : numpy.ndarray, shape of [frequencies]
         Frequencies in ``data``.

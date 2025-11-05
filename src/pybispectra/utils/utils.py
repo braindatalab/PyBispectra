@@ -168,7 +168,7 @@ def compute_tfr(
     n_jobs: int = 1,
     verbose: bool = True,
 ) -> tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute the amplitude time-frequency representation (TFR) of data.
+    """Compute the time-frequency representation (TFR) of data.
 
     Parameters
     ----------
@@ -205,7 +205,7 @@ def compute_tfr(
         :func:`mne.time_frequency.tfr_array_multitaper` for more information.
 
     output : ``"power"`` | ``"complex"`` (default ``"power"``)
-        Type of output to return.
+        Type of TFR output to return.
 
         .. note::
             If ``output = "complex"`` and ``tfr_mode = "multitaper"``, returning weights
@@ -220,7 +220,7 @@ def compute_tfr(
 
     Returns
     -------
-    tfr : ~numpy.ndarray, shape of [epochs, channels, (tapers,) frequencies, times]
+    tfr : ~numpy.ndarray, shape of [epochs, channels (, tapers), frequencies, times]
         TFR power or complex coefficients of ``data``. The ``tapers`` dimension is only
         present if ``output = "complex"`` and ``tfr_mode = "multitaper"``.
 
