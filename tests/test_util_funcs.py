@@ -1,11 +1,12 @@
 """Tests for toolbox utility functions."""
 
 import os
+from packaging.version import Version
 
 import numpy as np
 import pytest
 import scipy as sp
-from mne import Info
+from mne import Info, __version__ as mne_version
 
 from pybispectra.utils import (
     compute_fft,
@@ -106,9 +107,21 @@ def test_compute_fft(window: str) -> None:
 
 
 @pytest.mark.parametrize("tfr_mode", ["morlet", "multitaper"])
+@pytest.mark.parametrize("output", ["power", "complex"])
 @pytest.mark.parametrize("zero_mean_wavelets", [True, False, None])
-def test_compute_tfr(tfr_mode: str, zero_mean_wavelets: bool | None) -> None:
+def test_compute_tfr(
+    tfr_mode: str, output: str, zero_mean_wavelets: bool | None
+) -> None:
     """Test `compute_tfr`."""
+    if (
+        tfr_mode == "multitaper"
+        and output == "complex"
+        and Version(mne_version) < Version("1.10")
+    ):
+        pytest.skip(
+            "`output='complex'` with `tfr_mode='multitaper'` requires MNE >= 1.10."
+        )
+
     n_epochs = 5
     n_chans = 3
     n_times = 100
@@ -117,24 +130,40 @@ def test_compute_tfr(tfr_mode: str, zero_mean_wavelets: bool | None) -> None:
     freqs_in = np.arange(20, 50)
 
     # check it runs with correct inputs
-    tfr, freqs_out = compute_tfr(
+    out = compute_tfr(
         data=data,
         sampling_freq=sampling_freq,
         freqs=freqs_in,
         tfr_mode=tfr_mode,
         zero_mean_wavelets=zero_mean_wavelets,
+        output=output,
         n_jobs=1,
     )
+    if tfr_mode == "multitaper" and output == "complex":
+        tfr, freqs_out, weights = out
+    else:
+        tfr, freqs_out = out
+        weights = None
+
     assert isinstance(tfr, np.ndarray), "`tfr` should be a NumPy array."
-    assert tfr.ndim == 4, "`tfr` should have 4 dimensions."
-    assert tfr.shape[:3] == (n_epochs, n_chans, len(freqs_in)), (
-        "The first 3 dimensions of `tfr` should have shape [epochs x channels x "
-        "frequencies]."
-    )
+    if tfr_mode == "multitaper" and output == "complex":
+        assert tfr.shape == (n_epochs, n_chans, 3, len(freqs_in), n_times), (
+            "`tfr` should have shape [epochs x channels x tapers x frequencies x times]."
+        )  # unsure how to predict number of tapers, so use known value for this test
+    else:
+        assert tfr.shape == (n_epochs, n_chans, len(freqs_in), n_times), (
+            "`tfr` should have shape [epochs x channels x frequencies x times]."
+        )
     assert isinstance(freqs_out, np.ndarray), "`freqs_out` should be a NumPy array."
     assert np.all(freqs_in == freqs_out), (
         "`freqs_out` and `freqs_in` should be identical"
     )
+
+    if weights is not None:
+        assert isinstance(weights, np.ndarray), "`weights` should be a NumPy array."
+        assert weights.shape == tfr.shape[2:4], (
+            "`weights` should have shape [tapers x frequencies]."
+        )
 
     # check it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
@@ -296,6 +325,25 @@ def test_compute_tfr(tfr_mode: str, zero_mean_wavelets: bool | None) -> None:
                 zero_mean_wavelets=zero_mean_wavelets,
                 multitaper_time_bandwidth=[3],
             )
+
+    with pytest.raises(TypeError, match="`output` must be a str."):
+        compute_tfr(
+            data=data,
+            sampling_freq=sampling_freq,
+            freqs=freqs_in,
+            tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
+            output=[output],
+        )
+    with pytest.raises(ValueError, match="`output` must be one of"):
+        compute_tfr(
+            data=data,
+            sampling_freq=sampling_freq,
+            freqs=freqs_in,
+            tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
+            output="not_an_output",
+        )
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         compute_tfr(
