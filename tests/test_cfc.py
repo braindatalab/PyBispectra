@@ -31,15 +31,18 @@ def test_error_catch(class_type: str) -> None:
     indices = ([0, 1, 2], [0, 1, 2])
     freqs = np.arange(5, 20)
 
-    if class_type in ["PAC", "PPC"]:
+    if class_type == "PAC":
         coeffs, freqs = compute_fft(data, sampling_freq)
     else:
-        coeffs, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3)
+        output = "power" if class_type == "AAC" else "complex"
+        coeffs, freqs = compute_tfr(
+            data, sampling_freq, freqs, n_cycles=3, output=output
+        )
 
     # initialisation
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         TestClass(coeffs.tolist(), freqs, sampling_freq)
-    if class_type in ["PAC", "PPC"]:
+    if class_type == "PAC":
         with pytest.raises(ValueError, match="`data` must be a 3D array."):
             TestClass(np.random.randn(2, 2), freqs, sampling_freq)
     else:
@@ -337,11 +340,19 @@ def test_ppc_runs() -> None:
     n_chans = 3
     sampling_freq = 50
     data = _generate_data(5, n_chans, 100)
+    freqs = np.arange(5, 20)
 
-    fft, freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
+    tfr, freqs = compute_tfr(
+        data=data,
+        sampling_freq=sampling_freq,
+        freqs=freqs,
+        n_cycles=3,
+        output="complex",
+        verbose=False,
+    )
 
     # check it runs with correct inputs
-    ppc = PPC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
     ppc.compute()
 
     # check the returned results have the correct shape

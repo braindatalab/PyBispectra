@@ -14,8 +14,11 @@ class PPC(_ProcessFreqBase):
 
     Parameters
     ----------
-    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        Fourier coefficients.
+    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies, times]
+        Fourier coefficients of the time-frequency representation (TFR) of data.
+
+        .. versionchanged:: 1.3
+           Requires TFR coefficients instead of non-time-resolved coefficients.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in ``data``. Frequencies are expected to be evenly
@@ -40,8 +43,8 @@ class PPC(_ProcessFreqBase):
     results : ~pybispectra.utils.ResultsCFC
         PPC results.
 
-    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
-        Fourier coefficients.
+    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies, times]
+        Fourier coefficients of the TFR of data.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
         Frequencies (in Hz) in ``data``.
@@ -52,6 +55,8 @@ class PPC(_ProcessFreqBase):
     verbose : bool
         Whether or not to report the progress of the processing.
     """
+
+    _data_ndims: int = 4  # [epochs, channels, frequencies, times]
 
     _ppc = None
 
@@ -85,18 +90,19 @@ class PPC(_ProcessFreqBase):
         -----
         PPC is computed as coherence between frequencies :footcite:`Giehl2021`
 
-        :math:`\textrm{PPC}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \frac{|\langle
-        \textbf{a}_x(f_1)\textbf{a}_y(f_2) e^{i(\boldsymbol{\varphi}_x(f_1)\frac{f_2}
-        {f_1}-\boldsymbol{\varphi}_y(f_2))} \rangle|}{\langle\textbf{a}_x(f_1)
-        \textbf{a}_y(f_2) \rangle}` ,
+        :math:`\textrm{PPC}(\textbf{x}_{f_1},\textbf{y}_{f_2})=\Large \langle\frac{|
+        \langle\textbf{a}_x(f_1)\textbf{a}_y(f_2) e^{i(\boldsymbol{\varphi}_x(f_1)
+        \frac{f_2}{f_1}-\boldsymbol{\varphi}_y(f_2))} \rangle_t|}{\langle\textbf{a}_x
+        (f_1)\textbf{a}_y(f_2) \rangle_t}\rangle` ,
 
         where :math:`\textbf{a}(f)` and :math:`\boldsymbol{\varphi}(f)` are the
         amplitude and phase of a signal at a given frequency, respectively; :math:`f_1`
-        and :math:`f_2` correspond to a lower and higher frequency, respectively; and
-        :math:`<>` represents the average value over epochs.
+        and :math:`f_2` correspond to a lower and higher frequency, respectively;
+        :math:`<>_t` represents the average value over timepoints; and :math:`<>`
+        represents the average value over epochs.
 
         PPC is computed between all values of ``f1s`` and ``f2s``.
-        
+
         .. warning::
             For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
             Nyquist frequency, a :obj:`numpy.nan` value is returned.
@@ -181,8 +187,8 @@ def _compute_ppc(
 
     Parameters
     ----------
-    data : numpy.ndarray, shape of [epochs, 2, frequencies]
-        FFT coefficients where the second dimension contains the data for the seed and
+    data : numpy.ndarray, shape of [epochs, 2, frequencies, times]
+        TFR coefficients where the second dimension contains the data for the seed and
         target channel of a single connection, respectively.
 
     freqs : numpy.ndarray, shape of [frequencies]
@@ -203,7 +209,7 @@ def _compute_ppc(
     results : numpy.ndarray, shape of [low frequencies, high frequencies]
         PPC for a single connection.
     """
-    results = np.full((f1s.shape[0], f2s.shape[0]), fill_value=np.nan, dtype=precision)
+    results = np.full((f1s.size, f2s.size), fill_value=np.nan, dtype=precision)
     f1_start = _fast_find_first(freqs, f1s[0], 0)
     f1_end = _fast_find_first(freqs, f1s[-1], f1_start)
     f2_start = _fast_find_first(freqs, f2s[0], 0)
@@ -213,22 +219,22 @@ def _compute_ppc(
         for f2_ri, f2_fi in enumerate(range(f2_start, f2_end + 1)):
             f2 = freqs[f2_fi]
             if f1 < f2 and f1 > 0:
-                fft_f1 = data[:, 0, f1_fi]
-                fft_f2 = data[:, 1, f2_fi]
-                numerator = np.abs(
-                    (
-                        np.abs(fft_f1)
-                        * np.abs(fft_f2)
-                        * np.exp(
-                            1j
-                            * (
-                                np.angle(fft_f1, True) * (f2 / f1)
-                                - np.angle(fft_f2, True)
-                            )
-                        )
-                    ).mean()
-                )
-                denominator = np.mean((np.abs(fft_f1) * np.abs(fft_f2)))
-                results[f1_ri, f2_ri] = numerator / denominator
+                results[f1_ri, f2_ri] = 0
+                for epoch_data in data:
+                    tfr_f1 = epoch_data[0, f1_fi]
+                    tfr_f2 = epoch_data[1, f2_fi]
+                    amp_f1 = np.real(tfr_f1 * np.conj(tfr_f1))
+                    amp_f2 = np.real(tfr_f2 * np.conj(tfr_f2))
+                    phase_f1 = np.angle(tfr_f1, False)
+                    phase_f2 = np.angle(tfr_f2, False)
+                    numerator = np.abs(
+                        (
+                            amp_f1
+                            * amp_f2
+                            * np.exp(1j * (phase_f1 * (f2 / f1) - phase_f2))
+                        ).mean()  # average over times
+                    )
+                    denominator = (amp_f1 * amp_f2).mean()  # average over times
+                    results[f1_ri, f2_ri] += numerator / denominator
 
-    return results
+    return np.divide(results, data.shape[0]).astype(precision)
