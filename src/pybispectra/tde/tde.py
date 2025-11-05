@@ -22,7 +22,7 @@ class TDE(_ProcessBispectrum):
         Fourier coefficients. Must contain a coefficient for the zero frequency.
         Coefficients should be computed with the number of points equal to twice the
         number of timepoints in each epoch of the original data plus one (i.e.
-        ``n_points=2 * n_times + 1`` in :func:`pybispectra.utils.compute_fft`).
+        ``n_points = 2 * n_times + 1`` in :func:`pybispectra.utils.compute_fft`).
 
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in ``data``. Frequencies are expected to be evenly spaced.
@@ -66,9 +66,9 @@ class TDE(_ProcessBispectrum):
     the coefficients corresponding to the zero and positive frequencies should be passed
     to ``data``.
 
-    It is recommended to compute the Fourier coefficients with ``n_points=2 * n_times +
-    1``. Using a smaller number of points than this will reduce the time range in which
-    a delay estimate can be generated below that of the length of the epochs.
+    It is recommended to compute the Fourier coefficients with ``n_points = 2 * n_times
+    + 1``. Using a smaller number of points than this will reduce the time range in
+    which a delay estimate can be generated below that of the length of the epochs.
     Furthermore, a larger number of points than this will only artificially increase the
     time range in which a delay estimate can be generated beyond the length of the
     epochs.

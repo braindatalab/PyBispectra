@@ -4,7 +4,7 @@
 
 ##### Enhancements
 - Added support for computing time-resolved bispectral features for the `PAC`, `WaveShape`, `General`, and `Threenorm` classes.
-- Added `times` parameter to the `compute()` methods of the `PAC`, `WaveShape`, `General`, and `Threenorm` classes to specify time windows for computing time-resolved features over.
+- Added `times` parameter to the `compute()` methods of the `PAC`, `PPC`, `AAC`, `WaveShape`, `General`, and `Threenorm` classes to specify time windows for computing time-resolved features over.
 - Added support for storing and plotting time-resolved results in the `ResultsCFC`, `ResultsWaveShape`, and `ResultsGeneral` classes.
 - Added `norm` parameter to `WaveShape.compute()` to control normalisation of waveshape results.
 - Added `output` parameter to `compute_tfr()` to allow complex coefficients to be returned.

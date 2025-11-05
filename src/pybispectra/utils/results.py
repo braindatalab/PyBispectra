@@ -279,7 +279,8 @@ class ResultsCFC(_ResultsBase):
         of equal length for the seed and target indices, respectively.
 
     shape : tuple of int
-        Shape of the results i.e. ``[nodes, low frequencies, high frequencies]``.
+        Shape of the results i.e. ``[nodes, low frequencies, high frequencies
+        (, times)]``.
 
     n_nodes : int
         Number of connections in the the results.
@@ -741,7 +742,8 @@ class ResultsWaveShape(_ResultsBase):
         Indices of the channels in the results.
 
     shape : tuple of int
-        Shape of the results i.e. ``[nodes, low frequencies, high frequencies]``.
+        Shape of the results i.e. ``[nodes, low frequencies, high frequencies
+        (, times)]``.
 
     n_nodes : int
         Number of channels in the results.
@@ -1003,7 +1005,8 @@ class ResultsGeneral(_ResultsBase):
         tuples of equal length for the k, m, and n channel indices, respectively.
 
     shape : tuple of int
-        Shape of the results i.e. ``[nodes, low frequencies, high frequencies]``.
+        Shape of the results i.e. ``[nodes, low frequencies, high frequencies
+        (, times)]``.
 
     n_nodes : int
         Number of connections in the the results.

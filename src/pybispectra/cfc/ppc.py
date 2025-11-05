@@ -228,7 +228,7 @@ def _compute_ppc(
 
     Returns
     -------
-    results : numpy.ndarray, shape of [low frequencies, high frequencies, times]
+    results : numpy.ndarray, shape of [low frequencies, high frequencies]
         PPC for a single connection.
     """
     results = np.full((f1s.size, f2s.size), fill_value=np.nan, dtype=precision)

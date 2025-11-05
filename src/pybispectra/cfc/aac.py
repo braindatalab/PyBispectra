@@ -179,7 +179,6 @@ class AAC(_ProcessFreqBase):
             indices=self._indices,
             f1s=self._f1s,
             f2s=self._f2s,
-            times=None,
             name="AAC",
         )
 

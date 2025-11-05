@@ -33,6 +33,8 @@ class WaveShape(_ProcessBispectrum):
         ``times = None``, the time of the first sample in ``data`` is assumed to be 0
         seconds.
 
+        .. versionadded:: 1.3
+
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
