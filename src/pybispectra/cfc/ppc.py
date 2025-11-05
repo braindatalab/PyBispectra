@@ -66,7 +66,7 @@ class PPC(_ProcessFreqBase):
         Whether or not to report the progress of the processing.
     """
 
-    _data_ndims: int = 4  # [epochs, channels, frequencies, times]
+    _data_ndims: int = (4,)  # [epochs, channels, frequencies, times]
 
     _ppc = None
 
@@ -167,7 +167,7 @@ class PPC(_ProcessFreqBase):
                 loop_kwargs=loop_kwargs,
                 static_kwargs=static_kwargs,
                 output=np.zeros(
-                    (self._n_cons, self._f1s.size, self._f2s.size, self._times.size),
+                    (self._n_cons, self._f1s.size, self._f2s.size),
                     dtype=_precision.real,
                 ),
                 message="Processing connections...",
@@ -182,9 +182,6 @@ class PPC(_ProcessFreqBase):
                 "computation with `pybispectra.set_precision('single')`."
             ) from error
 
-        if self.times is None:  # remove placeholder time dimension
-            self._ppc = self._ppc[..., 0]
-
     def _store_results(self) -> None:
         """Store computed results in an object."""
         self._results = ResultsCFC(
@@ -192,7 +189,6 @@ class PPC(_ProcessFreqBase):
             indices=self._indices,
             f1s=self._f1s,
             f2s=self._f2s,
-            times=self._times,
             name="PPC",
         )
 

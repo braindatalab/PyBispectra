@@ -42,7 +42,7 @@ def test_error_catch(class_type: str) -> None:
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         TestClass(coeffs.tolist(), freqs, sampling_freq)
     if class_type == "PAC":
-        with pytest.raises(ValueError, match="`data` must be a 3D array."):
+        with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
             TestClass(np.random.randn(2, 2), freqs, sampling_freq)
     else:
         with pytest.raises(ValueError, match="`data` must be a 4D array."):
@@ -202,7 +202,7 @@ def test_error_catch_time_resolved(class_type: str) -> None:
         TestClass = AAC
 
     # initialisation
-    if class_type in ("PAC", "PPC"):
+    if class_type == "PAC":
         with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
             TestClass(np.random.randn(2, 2), freqs, sampling_freq)
     else:
@@ -465,14 +465,11 @@ def test_ppc_runs() -> None:
     )
 
     # check it runs with correct inputs
-    ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
     ppc.compute()
-    ppc_tr = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
-    ppc_tr.compute()
 
     # check the returned results have the correct shape
     assert ppc.results.shape == (n_chans**2, len(freqs), len(freqs))
-    assert ppc_tr.results.shape == (n_chans**2, len(freqs), len(freqs), len(times))
 
     # check the returned results are of the correct type
     assert ppc.results.name == "PPC"
@@ -493,16 +490,7 @@ def test_ppc_runs() -> None:
     ), "`f1s` and `f2s` in results do not match the selection"
 
     # check it runs with non-exact times
-    tmin, tmax = 10.55, 11.55
-    times_sel = times[np.argwhere((times >= tmin) & (times <= tmax)).squeeze()]
-    ppc_tr.compute(times=(tmin, tmax))
-    assert ppc_tr.results.get_results().shape[3] == len(times_sel), (
-        "Number of timepoints in results does not match the selection"
-    )
-    assert (
-        ppc_tr.results.times[0] == times_sel[0]
-        and ppc_tr.results.times[-1] == times_sel[-1]
-    ), "`times` in results do not match the selection"
+    ppc.compute(times=(10.55, 11.55))
 
     # test it runs with parallelisation
     ppc.compute(n_jobs=2)
