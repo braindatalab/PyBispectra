@@ -23,22 +23,21 @@ from pybispectra import WaveShape, get_example_data_paths, compute_tfr
 ########################################################################################
 # Background
 # ----------
-# Properties of signals can change over time within epochs/trials, for instance
+# Properties of signals can change over time within epochs/trials, for instance,
 # according to changes in presented stimuli or task demands. In these cases, standard
-# Fourier coefficients that aggregate frequency information across the entire epoch can
-# be insufficient. In contrast, time-frequency representations (TFRs) offer a
-# time-resolved view of frequency information, allowing us to analyse temporal dynamics
-# of spectral features.
+# Fourier coefficients that aggregate frequency information across the entire duration
+# of the epoch can be insufficient. In contrast, time-frequency representations (TFRs)
+# offer a time-resolved view of frequency information, allowing us to analyse temporal
+# dynamics of spectral features.
 #
 # Just as Fourier coefficients can be used to compute bispectral features, so too can
 # TFR coefficients, allowing for time-resolved bispectral analyses. In PyBispectra,
 # time-resolved features can be computed from TFRs for:
 #
-# - Cross-frequency coupling: :class:`~pybispectra.cfc.PAC` and
-#   :class:`~pybispectra.cfc.PPC`
+# - Cross-frequency coupling: :class:`~pybispectra.cfc.PAC`
 # - Waveshape: :class:`~pybispectra.waveshape.WaveShape`
-# - General analysis: :class:`~pybispectra.General.Bispectrum` and
-#   :class:`~pybispectra.General.Threenorm`
+# - General analysis: :class:`~pybispectra.general.Bispectrum` and
+#   :class:`~pybispectra.general.Threenorm`
 #
 # In this example, we will focus on the time-resolved analysis of waveshape features,
 # however the same concept applies to all classes and analyses listed above.
@@ -48,8 +47,8 @@ from pybispectra import WaveShape, get_example_data_paths, compute_tfr
 # -------------------------------------------
 # We will start by loading some example non-sinusoidal (sawtooth) data, simulated as a
 # bursting oscillator at 10 Hz. We also simulate a corresponding sine wave at 10 Hz.
-# Both signals consist of 1-second-long epochs which we concatenate along the time axis
-# such that the 1st second contains the sawtooth wave, and the 2nd second the sine
+# Both signals consist of 1-second-long epochs which we concatenate along the time axis,
+# such that the first second contains the sawtooth wave, and the final second the sine
 # wave.
 #
 # We compute the TFR coefficients of the concatenated data using the
@@ -126,8 +125,8 @@ print(
 # simulated).
 #
 # We can also specify the time period to compute waveshape on using the ``times``
-# argument. By default, the entire time period is used, which we use here. See below for
-# an example of specifying a subset of timepoints to compute features on.
+# argument. By default, the entire time period is taken, which we use here. See below
+# for an example of specifying a subset of timepoints to compute features on.
 
 # %%
 
@@ -173,13 +172,13 @@ print(
 # To demonstrate the time-resolved nature of the analysis, we will plot the results for
 # two time periods: 0-1 seconds (containing the sawtooth wave); and 1-2 seconds
 # (containing the sine wave). We specify these time periods using the ``times`` argument
-# of the :meth:`~pybispectra.results.WaveShapeResults.plot` method, which aggregates the
+# of the :meth:`~pybispectra.utils.ResultsWaveShape.plot` method, which aggregates the
 # time-resolved results by averaging over the selected timepoints.
 
 # %%
 
 figs, axes = waveshape.results.plot(
-    times=(0, 1),
+    times=(0, 1),  # time period to average over when plotting
     major_tick_intervals=10,
     minor_tick_intervals=2,
     cbar_range_abs=(0, 1),
@@ -194,7 +193,7 @@ figs[0].set_size_inches(6, 6)
 figs[0].show()
 
 figs, axes = waveshape.results.plot(
-    times=(1, 2),
+    times=(1, 2),  # time period to average over when plotting
     major_tick_intervals=10,
     minor_tick_intervals=2,
     cbar_range_abs=(0, 1),
@@ -210,8 +209,8 @@ figs[0].show()
 
 ########################################################################################
 # As expected, strong non-sinusoidal activity at 10 Hz and the harmonics is observed in
-# the first second of the epochs - the time period of the sawtooth wave - with no strong
-# non-sinusoidal activity in the final second - the time period of the sine wave.
+# the first second of the epochs (the time period of the sawtooth wave), with no strong
+# non-sinusoidal activity in the final second (the time period of the sine wave).
 
 ########################################################################################
 # Specifying the time window to compute features on
@@ -219,9 +218,7 @@ figs[0].show()
 # As mentioned above, we can also specify a particular window to compute time-resolved
 # features on. Here, we choose to only compute waveshape features for the first second
 # of each epoch by specifying the ``times`` argument of the
-# :meth:`~pybispectra.waveshape.WaveShape.compute` method. As we can see, the number of
-# timepoints in the results is less than when computing over the entire epoch, and the
-# results visually match those plotted above for the first second of the data.
+# :meth:`~pybispectra.waveshape.WaveShape.compute` method.
 
 # %%
 
@@ -259,6 +256,10 @@ figs, axes = waveshape_0_1.results.plot(
 )
 figs[0].set_size_inches(6, 6)
 figs[0].show()
+
+########################################################################################
+# As we can see, the number of timepoints in the results is reduced accordingly, and the
+# results visually match those plotted above for the first second of the data.
 
 ########################################################################################
 # References
