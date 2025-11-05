@@ -6,6 +6,12 @@
 - Added `norm` parameter to `WaveShape.compute()` to control normalisation of waveshape results.
 - Added `output` parameter to `compute_tfr()` to allow complex coefficients to be returned.
 
+##### Bug Fixes
+- Fixed error where the coupling with `PPC` was not being computed correctly.
+
+##### API
+- Changed the `data` parameter of `PPC` to require time-frequency representations instead of non-time-resolved Fourier coefficients.
+
 <br>
 
 ## [Version 1.2](https://pybispectra.readthedocs.io/1.2/)
@@ -45,6 +51,8 @@
 
 ##### Enhancements
 - Added general `Bispectrum` and `Threenorm` classes for computing with flexible kmn channel combinations.
+- Added the option to control whether a copy is returned from the `get_results()` method of all `Results...` classes and from `SpatioSpectralFilter.get_transformed_data()` (default behaviour returns a copy, like in previous versions).
+- Added new `fit_ssd()`, `fit_hpmax()`, and `transform()` methods to the `SpatioSpectralFilter` class to bring it more in line with `scikit-learn` fit-transform classes.
 
 ##### Bug Fixes
 - Fixed error where the number of subplots exceeding the number of nodes would cause plotting to fail.
@@ -52,8 +60,6 @@
 
 ##### API
 - Changed the default value of `min_ratio` in `SpatioSpectralFilter.get_transformed_data()` from `1.0` to `-inf`.
-- Added the option to control whether a copy is returned from the `get_results()` method of all `Results...` classes and from `SpatioSpectralFilter.get_transformed_data()` (default behaviour returns a copy, like in previous versions).
-- Added new `fit_ssd()`, `fit_hpmax()`, and `transform()` methods to the `SpatioSpectralFilter` class to bring it more in line with `scikit-learn` fit-transform classes.
 
 ##### Documentation
 - Added a new example for computing the bispectrum and threenorm using the general classes.
