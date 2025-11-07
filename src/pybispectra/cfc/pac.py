@@ -19,7 +19,7 @@ class PAC(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies (, times)]
         Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
@@ -27,6 +27,13 @@ class PAC(_ProcessBispectrum):
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
+
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``. If ``data`` has a times dimension and
+        ``times = None``, the time of the first sample in ``data`` is assumed to be 0
+        seconds.
+
+        .. versionadded:: 1.3
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -44,7 +51,7 @@ class PAC(_ProcessBispectrum):
     results : ~pybispectra.utils.ResultsCFC | tuple of ~pybispectra.utils.ResultsCFC
         PAC results for each of the computed metrics.
 
-    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies (, times)]
         Fourier coefficients.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
@@ -52,6 +59,9 @@ class PAC(_ProcessBispectrum):
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
+
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -72,6 +82,7 @@ class PAC(_ProcessBispectrum):
         indices: tuple[tuple[int]] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         antisym: bool | tuple[bool] = False,
         norm: bool | tuple[bool] = False,
         n_jobs: int = 1,
@@ -91,6 +102,12 @@ class PAC(_ProcessBispectrum):
         f2s : tuple of int or float, length of 2 | None (default None)
             Start and end higher frequencies to compute PAC on, respectively. If
             :obj:`None`, all frequencies are used.
+
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) to compute PAC on, respectively. If
+            :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
 
         antisym : bool | tuple of bool (default False)
             Whether to antisymmetrise the PAC results. If a tuple of bool, both forms of
@@ -164,12 +181,13 @@ class PAC(_ProcessBispectrum):
         References
         ----------
         .. footbibliography::
-        """
+        """  # noqa: E501
         self._reset_attrs()
 
         self._sort_metrics(antisym, norm)
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
+        self._sort_tmin_tmax(times)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
@@ -243,7 +261,7 @@ class PAC(_ProcessBispectrum):
             kmn = np.array([np.array([0, 1, 1])])
 
         loop_kwargs = [
-            {"data": self.data[:, (seed, target)]}
+            {"data": self._data[:, (seed, target)][..., self._time_idcs]}
             for seed, target in zip(self._seeds, self._targets)
         ]
         static_kwargs = {
@@ -259,20 +277,29 @@ class PAC(_ProcessBispectrum):
                 loop_kwargs=loop_kwargs,
                 static_kwargs=static_kwargs,
                 output=np.zeros(
-                    (self._n_cons, kmn.shape[0], self._f1s.size, self._f2s.size),
+                    (
+                        self._n_cons,
+                        kmn.shape[0],
+                        self._f1s.size,
+                        self._f2s.size,
+                        self._times.size,
+                    ),
                     dtype=_precision.complex,
                 ),
                 message="Processing connections...",
                 n_jobs=self._n_jobs,
                 verbose=self.verbose,
                 prefer="processes",
-            ).transpose(1, 0, 2, 3)
+            ).transpose(1, 0, 2, 3, 4)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
                 "Memory allocation for the bispectrum computation failed. Try reducing "
                 "the sampling frequency of the data, or reduce the precision of the "
                 "computation with `pybispectra.set_precision('single')`."
             ) from error
+
+        if self.times is None:  # remove placeholder time dimension
+            self._bispectrum = self._bispectrum[..., 0]
 
         if self.verbose:
             print("        ... Bispectrum computation finished\n")
@@ -290,7 +317,7 @@ class PAC(_ProcessBispectrum):
             kmn = np.array([np.array([0, 1, 1])])
 
         loop_kwargs = [
-            {"data": self.data[:, (seed, target)]}
+            {"data": self._data[:, (seed, target)][..., self._time_idcs]}
             for seed, target in zip(self._seeds, self._targets)
         ]
         static_kwargs = {
@@ -306,20 +333,29 @@ class PAC(_ProcessBispectrum):
                 loop_kwargs=loop_kwargs,
                 static_kwargs=static_kwargs,
                 output=np.zeros(
-                    (self._n_cons, kmn.shape[0], self._f1s.size, self._f2s.size),
+                    (
+                        self._n_cons,
+                        kmn.shape[0],
+                        self._f1s.size,
+                        self._f2s.size,
+                        self._times.size,
+                    ),
                     dtype=_precision.real,
                 ),
                 message="Processing connections...",
                 n_jobs=self._n_jobs,
                 verbose=self.verbose,
                 prefer="processes",
-            ).transpose(1, 0, 2, 3)
+            ).transpose(1, 0, 2, 3, 4)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
                 "Memory allocation for the threenorm computation failed. Try reducing "
                 "the sampling frequency of the data, or reduce the precision of the "
                 "computation with `pybispectra.set_precision('single')`."
             ) from error
+
+        if self.times is None:  # remove placeholder time dimension
+            self._threenorm = self._threenorm[..., 0]
 
         if self.verbose:
             print("        ... Threenorm computation finished\n")
@@ -370,44 +406,48 @@ class PAC(_ProcessBispectrum):
         if self._pac_nosym_nonorm is not None:
             results.append(
                 ResultsCFC(
-                    self._pac_nosym_nonorm,
-                    self._indices,
-                    self._f1s,
-                    self._f2s,
-                    "PAC | Bispectrum",
+                    data=self._pac_nosym_nonorm,
+                    indices=self._indices,
+                    f1s=self._f1s,
+                    f2s=self._f2s,
+                    times=self._times,
+                    name="PAC | Bispectrum",
                 )
             )
 
         if self._pac_nosym_threenorm is not None:
             results.append(
                 ResultsCFC(
-                    self._pac_nosym_threenorm,
-                    self._indices,
-                    self._f1s,
-                    self._f2s,
-                    "PAC | Bicoherence",
+                    data=self._pac_nosym_threenorm,
+                    indices=self._indices,
+                    f1s=self._f1s,
+                    f2s=self._f2s,
+                    times=self._times,
+                    name="PAC | Bicoherence",
                 )
             )
 
         if self._pac_antisym_nonorm is not None:
             results.append(
                 ResultsCFC(
-                    self._pac_antisym_nonorm,
-                    self._indices,
-                    self._f1s,
-                    self._f2s,
-                    "PAC (antisymmetrised) | Bispectrum",
+                    data=self._pac_antisym_nonorm,
+                    indices=self._indices,
+                    f1s=self._f1s,
+                    f2s=self._f2s,
+                    times=self._times,
+                    name="PAC (antisymmetrised) | Bispectrum",
                 )
             )
 
         if self._pac_antisym_threenorm is not None:
             results.append(
                 ResultsCFC(
-                    self._pac_antisym_threenorm,
-                    self._indices,
-                    self._f1s,
-                    self._f2s,
-                    "PAC (antisymmetrised) | Bicoherence",
+                    data=self._pac_antisym_threenorm,
+                    indices=self._indices,
+                    f1s=self._f1s,
+                    f2s=self._f2s,
+                    times=self._times,
+                    name="PAC (antisymmetrised) | Bicoherence",
                 )
             )
 

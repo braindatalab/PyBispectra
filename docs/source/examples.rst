@@ -12,4 +12,5 @@ Find out how to get started with PyBispectra using the provided examples.
    auto_examples/plot_compute_tde_fbands
    auto_examples/plot_compute_waveshape
    auto_examples/plot_compute_waveshape_noisy_data
+   auto_examples/plot_compute_time_resolved
    auto_examples/plot_compute_general

@@ -39,7 +39,7 @@ def compute_fft(
     n_points : int | None (default None)
         Number of points to use in the FFT. If :obj:`None`, is equal to the number of
         timepoints in ``data``. For time delay estimation, it is recommended that
-        ``n_points=2 * n_times + 1``, where ``n_times`` is the number of timepoints in
+        ``n_points = 2 * n_times + 1``, where ``n_times`` is the number of timepoints in
         each epoch of ``data``.
 
     window : ``"hanning"`` | ``"hamming"`` (default ``"hanning"``)

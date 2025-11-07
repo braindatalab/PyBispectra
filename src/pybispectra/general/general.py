@@ -71,6 +71,13 @@ class Bispectrum(_General):
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
 
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``. If ``data`` has a times dimension and
+        ``times = None``, the time of the first sample in ``data`` is assumed to be 0
+        seconds.
+
+        .. versionadded:: 1.3
+
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
 
@@ -87,7 +94,7 @@ class Bispectrum(_General):
     results : ~pybispectra.utils.ResultsGeneral
         Bispectrum results.
 
-    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies (, times)]
         Fourier coefficients.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
@@ -95,6 +102,9 @@ class Bispectrum(_General):
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
+
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -110,6 +120,7 @@ class Bispectrum(_General):
         indices: tuple[tuple[int]] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute the bispectrum, averaged over epochs.
@@ -128,6 +139,12 @@ class Bispectrum(_General):
         f2s : tuple of int or float, length of 2 | None (default None)
             Start and end higher frequencies to compute the bispectrum for,
             respectively. If :obj:`None`, all frequencies are used.
+
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) to compute the bispectrum for,
+            respectively. If :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available CPUs are
@@ -150,11 +167,12 @@ class Bispectrum(_General):
         .. warning::
             For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
             Nyquist frequency, a :obj:`numpy.nan` value is returned.
-        """
+        """  # noqa: E501
         self._reset_attrs()
 
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
+        self._sort_tmin_tmax(times)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
@@ -179,7 +197,7 @@ class Bispectrum(_General):
             for (k, m, n) in zip(self._k, self._m, self._n)
         ]
         static_kwargs = {
-            "data": self.data,
+            "data": self._data[..., self._time_idcs],
             "freqs": self.freqs,
             "f1s": self._f1s,
             "f2s": self._f2s,
@@ -192,14 +210,14 @@ class Bispectrum(_General):
                 loop_kwargs=loop_kwargs,
                 static_kwargs=static_kwargs,
                 output=np.zeros(
-                    (self._n_cons, 1, self._f1s.size, self._f2s.size),
+                    (self._n_cons, 1, self._f1s.size, self._f2s.size, self._times.size),
                     dtype=_precision.complex,
                 ),
                 message="Processing combinations...",
                 n_jobs=self._n_jobs,
                 verbose=self.verbose,
                 prefer="processes",
-            ).transpose(1, 0, 2, 3)
+            ).transpose(1, 0, 2, 3, 4)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
                 "Memory allocation for the bispectrum computation failed. Try reducing "
@@ -207,14 +225,18 @@ class Bispectrum(_General):
                 "computation with `pybispectra.set_precision('single')`."
             ) from error
 
+        if self.times is None:  # remove placeholder time dimension
+            self._bispectrum = self._bispectrum[..., 0]
+
     def _store_results(self) -> None:
         """Store computed bispectrum in an object."""
         self._results = ResultsGeneral(
-            self._bispectrum[0],
-            self._indices,
-            self._f1s,
-            self._f2s,
-            "Bispectrum",
+            data=self._bispectrum[0],
+            indices=self._indices,
+            f1s=self._f1s,
+            f2s=self._f2s,
+            times=self._times,
+            name="Bispectrum",
         )
 
     @property
@@ -227,7 +249,7 @@ class Threenorm(_General):
 
     Parameters
     ----------
-    data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies (, times)]
         Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
@@ -235,6 +257,13 @@ class Threenorm(_General):
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
+
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``. If ``data`` has a times dimension and
+        ``times = None``, the time of the first sample in ``data`` is assumed to be 0
+        seconds.
+
+        .. versionadded:: 1.3
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -252,7 +281,7 @@ class Threenorm(_General):
     results : ~pybispectra.utils.ResultsGeneral
         Threenorm results.
 
-    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray of float, shape of [epochs, channels, frequencies (, times)]
         Fourier coefficients.
 
     freqs : ~numpy.ndarray of float, shape of [frequencies]
@@ -260,6 +289,9 @@ class Threenorm(_General):
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
+
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -275,6 +307,7 @@ class Threenorm(_General):
         indices: tuple[tuple[int]] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute the threenorm, averaged over epochs.
@@ -293,6 +326,12 @@ class Threenorm(_General):
         f2s : tuple of int or float, length of 2 | None (default None)
             Start and end higher frequencies to compute the threenorm for, respectively.
             If :obj:`None`, all frequencies are used.
+
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) to compute the threenorm for, respectively.
+            If :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available CPUs are
@@ -325,6 +364,7 @@ class Threenorm(_General):
 
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
+        self._sort_tmin_tmax(times)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
@@ -349,7 +389,7 @@ class Threenorm(_General):
             for (k, m, n) in zip(self._k, self._m, self._n)
         ]
         static_kwargs = {
-            "data": self.data,
+            "data": self._data[..., self._time_idcs],
             "freqs": self.freqs,
             "f1s": self._f1s,
             "f2s": self._f2s,
@@ -362,14 +402,14 @@ class Threenorm(_General):
                 loop_kwargs=loop_kwargs,
                 static_kwargs=static_kwargs,
                 output=np.zeros(
-                    (self._n_cons, 1, self._f1s.size, self._f2s.size),
+                    (self._n_cons, 1, self._f1s.size, self._f2s.size, self._times.size),
                     dtype=_precision.real,
                 ),
                 message="Processing combinations...",
                 n_jobs=self._n_jobs,
                 verbose=self.verbose,
                 prefer="processes",
-            ).transpose(1, 0, 2, 3)
+            ).transpose(1, 0, 2, 3, 4)
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
                 "Memory allocation for the threenorm computation failed. Try reducing "
@@ -377,14 +417,18 @@ class Threenorm(_General):
                 "computation with `pybispectra.set_precision('single')`."
             ) from error
 
+        if self.times is None:  # remove placeholder time dimension
+            self._threenorm = self._threenorm[..., 0]
+
     def _store_results(self) -> None:
         """Store computed threenorm in an object."""
         self._results = ResultsGeneral(
-            self._threenorm[0],
-            self._indices,
-            self._f1s,
-            self._f2s,
-            "Threenorm",
+            data=self._threenorm[0],
+            indices=self._indices,
+            f1s=self._f1s,
+            f2s=self._f2s,
+            times=self._times,
+            name="Threenorm",
         )
 
     @property

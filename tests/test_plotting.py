@@ -18,7 +18,7 @@ def test_plotting_cfc_error_catch() -> None:
     n_cons = 9
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_cons, n_f1, n_f2)
+    data = _generate_data((n_cons, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -136,14 +136,19 @@ def test_plotting_cfc_error_catch() -> None:
     r"ignore:Adding colorbar to a different Figure.*than.*which fig.colorbar is "
     "called on"
 )
-def test_plotting_cfc_runs() -> None:
+@pytest.mark.parametrize("time_resolved", [False, True])
+def test_plotting_cfc_runs(time_resolved: bool) -> None:
     """Test plotting in `ResultsCFC` runs with correct inputs."""
     n_cons = 9
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_cons, n_f1, n_f2)
+    n_times = 20
+    data = _generate_data((n_cons, n_f1, n_f2, n_times))
+    if not time_resolved:
+        data = data[..., 0]
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
+    times = np.arange(n_times) if time_resolved else None
     name = "test"
     n_unique_chans = 3
     indices = (
@@ -151,7 +156,9 @@ def test_plotting_cfc_runs() -> None:
         tuple(np.tile(np.arange(n_unique_chans), n_unique_chans).tolist()),
     )
 
-    results = ResultsCFC(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
+    results = ResultsCFC(
+        data=data, indices=indices, f1s=f1s, f2s=f2s, times=times, name=name
+    )
 
     figs, axes = results.plot(show=False)
     assert len(figs) == n_cons
@@ -172,6 +179,7 @@ def test_plotting_cfc_runs() -> None:
     assert axes[0].size == 3
     plt.close("all")
 
+    # check it works with exact frequencies
     figs, axes = results.plot(f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False)
     plt.close("all")
 
@@ -179,13 +187,22 @@ def test_plotting_cfc_runs() -> None:
     figs, axes = results.plot(f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False)
     plt.close("all")
 
+    if time_resolved:
+        # check it works with exact times
+        figs, axes = results.plot(times=(times[0], times[-1]), show=False)
+        plt.close("all")
+
+        # check it works with non-exact times
+        figs, axes = results.plot(times=(5.5, 14.5), show=False)
+        plt.close("all")
+
 
 def test_plotting_tde_error_catch() -> None:
     """Test plotting in `ResultsTDE` catches errors."""
     n_cons = 9
     n_fbands = 2
     n_times = 51
-    data = _generate_data(n_cons, n_fbands, n_times)
+    data = _generate_data((n_cons, n_fbands, n_times))
     times = np.arange((n_times - 1) * -0.5, n_times * 0.5)
     name = "test"
     n_unique_chans = 3
@@ -234,20 +251,12 @@ def test_plotting_tde_error_catch() -> None:
         results.plot(times=(times[0], times[1], times[2]))
     with pytest.raises(
         ValueError,
-        match=("At least one entry of `times` is outside the range of the results."),
-    ):
-        results.plot(times=(times[0] - 1, times[-1]))
-    with pytest.raises(
-        ValueError,
-        match=("At least one entry of `times` is outside the range of the results."),
-    ):
-        results.plot(times=(times[0], times[-1] + 1))
-    with pytest.raises(
-        ValueError, match=("No times are present in the data for the range in `times`.")
+        match=("No timepoints are present in the data for the range in `times`."),
     ):
         results.plot(times=(times[-1], times[0]))
     with pytest.raises(
-        ValueError, match=("No times are present in the data for the range in `times`.")
+        ValueError,
+        match=("No timepoints are present in the data for the range in `times`."),
     ):
         results.plot(times=(0.1, 0.2))
 
@@ -288,7 +297,7 @@ def test_plotting_tde_runs() -> None:
     n_cons = 9
     n_fbands = 2
     n_times = 51
-    data = _generate_data(n_cons, n_fbands, n_times)
+    data = _generate_data((n_cons, n_fbands, n_times))
     freq_bands = ((5, 10), (15, 20))
     times = np.arange((n_times - 1) * -0.5, n_times * 0.5)
     name = "test"
@@ -344,13 +353,20 @@ def test_plotting_tde_runs() -> None:
     figs, axes = results.plot(times=(times[0] + 1e-5, times[-1] - 1e-5), show=False)
     plt.close("all")
 
+    # check it works with unspecified freq bands
+    results = ResultsTDE(
+        data=data, indices=indices, times=times, freq_bands=None, name=name
+    )
+    figs, axes = results.plot(show=False)
+    plt.close("all")
+
 
 def test_plotting_waveshape_error_catch() -> None:
     """Test plotting in `ResultsWaveShape` catches errors."""
     n_chans = 3
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    data = _generate_data((n_chans, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -478,18 +494,27 @@ def test_plotting_waveshape_error_catch() -> None:
 )
 @pytest.mark.parametrize("plot_absolute", [True, False])
 @pytest.mark.parametrize("mirror_cbar_range", [True, False])
-def test_plotting_waveshape_runs(plot_absolute: bool, mirror_cbar_range: bool) -> None:
+@pytest.mark.parametrize("time_resolved", [False, True])
+def test_plotting_waveshape_runs(
+    plot_absolute: bool, mirror_cbar_range: bool, time_resolved: bool
+) -> None:
     """Test plotting in `ResultsWaveShape` runs with correct inputs."""
     n_chans = 9
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    n_times = 20
+    data = _generate_data((n_chans, n_f1, n_f2, n_times))
+    if not time_resolved:
+        data = data[..., 0]
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
+    times = np.arange(n_times) if time_resolved else None
     name = "test"
     indices = tuple(range(n_chans))
 
-    results = ResultsWaveShape(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
+    results = ResultsWaveShape(
+        data=data, indices=indices, f1s=f1s, f2s=f2s, times=times, name=name
+    )
 
     figs, axes = results.plot(show=False)
     assert len(figs) == n_chans
@@ -510,6 +535,7 @@ def test_plotting_waveshape_runs(plot_absolute: bool, mirror_cbar_range: bool) -
     assert axes[0].shape == (3, 4)
     plt.close("all")
 
+    # check it works with exact frequencies
     figs, axes = results.plot(f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False)
     plt.close("all")
 
@@ -517,7 +543,15 @@ def test_plotting_waveshape_runs(plot_absolute: bool, mirror_cbar_range: bool) -
     figs, axes = results.plot(f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False)
     plt.close("all")
 
-    # check it works with non-exact frequencies
+    if time_resolved:
+        # check it works with exact times
+        figs, axes = results.plot(times=(times[0], times[-1]), show=False)
+        plt.close("all")
+
+        # check it works with non-exact times
+        figs, axes = results.plot(times=(5.5, 14.5), show=False)
+        plt.close("all")
+
     figs, axes = results.plot(
         plot_absolute=plot_absolute,
         mirror_cbar_range=mirror_cbar_range,
@@ -531,7 +565,7 @@ def test_plotting_general_error_catch() -> None:
     n_chans = 27
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    data = _generate_data((n_chans, n_f1, n_f2))
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -674,14 +708,21 @@ def test_plotting_general_error_catch() -> None:
 )
 @pytest.mark.parametrize("plot_absolute", [True, False])
 @pytest.mark.parametrize("mirror_cbar_range", [True, False])
-def test_plotting_general_runs(plot_absolute: bool, mirror_cbar_range: bool) -> None:
+@pytest.mark.parametrize("time_resolved", [False, True])
+def test_plotting_general_runs(
+    plot_absolute: bool, mirror_cbar_range: bool, time_resolved: bool
+) -> None:
     """Test plotting in `ResultsGeneral` runs with correct inputs."""
     n_chans = 27
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data(n_chans, n_f1, n_f2)
+    n_times = 20
+    data = _generate_data((n_chans, n_f1, n_f2, n_times))
+    if not time_resolved:
+        data = data[..., 0]
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
+    times = np.arange(n_times) if time_resolved else None
     name = "test"
     n_unique_chans = 3
     indices = tuple(
@@ -696,7 +737,9 @@ def test_plotting_general_runs(plot_absolute: bool, mirror_cbar_range: bool) -> 
         ]
     )
 
-    results = ResultsGeneral(data=data, indices=indices, f1s=f1s, f2s=f2s, name=name)
+    results = ResultsGeneral(
+        data=data, indices=indices, f1s=f1s, f2s=f2s, times=times, name=name
+    )
 
     figs, axes = results.plot(show=False)
     assert len(figs) == n_chans
@@ -717,6 +760,7 @@ def test_plotting_general_runs(plot_absolute: bool, mirror_cbar_range: bool) -> 
     assert axes[0].shape == (n_chans, 4)
     plt.close("all")
 
+    # check it works with exact frequencies
     figs, axes = results.plot(f1s=(f1s[0], f1s[-1]), f2s=(f2s[0], f2s[-1]), show=False)
     plt.close("all")
 
@@ -724,7 +768,15 @@ def test_plotting_general_runs(plot_absolute: bool, mirror_cbar_range: bool) -> 
     figs, axes = results.plot(f1s=(10.25, 19.75), f2s=(10.25, 19.75), show=False)
     plt.close("all")
 
-    # check it works with non-exact frequencies
+    if time_resolved:
+        # check it works with exact times
+        figs, axes = results.plot(times=(times[0], times[-1]), show=False)
+        plt.close("all")
+
+        # check it works with non-exact times
+        figs, axes = results.plot(times=(5.5, 14.5), show=False)
+        plt.close("all")
+
     figs, axes = results.plot(
         plot_absolute=plot_absolute, mirror_cbar_range=mirror_cbar_range, show=False
     )

@@ -22,7 +22,7 @@ class TDE(_ProcessBispectrum):
         Fourier coefficients. Must contain a coefficient for the zero frequency.
         Coefficients should be computed with the number of points equal to twice the
         number of timepoints in each epoch of the original data plus one (i.e.
-        ``n_points=2 * n_times + 1`` in :func:`pybispectra.utils.compute_fft`).
+        ``n_points = 2 * n_times + 1`` in :func:`pybispectra.utils.compute_fft`).
 
     freqs : ~numpy.ndarray, shape of [frequencies]
         Frequencies (in Hz) in ``data``. Frequencies are expected to be evenly spaced.
@@ -66,20 +66,18 @@ class TDE(_ProcessBispectrum):
     the coefficients corresponding to the zero and positive frequencies should be passed
     to ``data``.
 
-    It is recommended to compute the Fourier coefficients with ``n_points=2 * n_times +
-    1``. Using a smaller number of points than this will reduce the time range in which
-    a delay estimate can be generated below that of the length of the epochs.
+    It is recommended to compute the Fourier coefficients with ``n_points = 2 * n_times
+    + 1``. Using a smaller number of points than this will reduce the time range in
+    which a delay estimate can be generated below that of the length of the epochs.
     Furthermore, a larger number of points than this will only artificially increase the
     time range in which a delay estimate can be generated beyond the length of the
     epochs.
     """
 
-    _data: np.ndarray = None
+    _data_ndims: tuple = (3,)  # [epochs, channels, frequencies]
 
     _freq_masks: np.ndarray = None
     _freq_bands: tuple[tuple[float]] = None
-
-    _times: np.ndarray = None
 
     _return_nosym: bool = False
     _return_antisym: bool = False
@@ -114,7 +112,7 @@ class TDE(_ProcessBispectrum):
         sampling_freq: int | float,
         verbose: bool = True,
     ) -> None:  # noqa: D107
-        super().__init__(data, freqs, sampling_freq, verbose)
+        super().__init__(data, freqs, sampling_freq, times=None, verbose=verbose)
         self._sort_fft_coeffs()
 
     def _sort_fft_coeffs(self) -> None:
@@ -122,12 +120,12 @@ class TDE(_ProcessBispectrum):
         if self.freqs[0] != 0.0:
             raise ValueError("The first entry of `freqs` must be 0.")
 
-        self.data = np.concatenate(
-            (self.data, np.conjugate(self.data[..., 1:][..., ::-1])), axis=2
+        self._data = np.concatenate(
+            (self._data, np.conjugate(self._data[..., 1:][..., ::-1])), axis=2
         )
         self.freqs = np.concatenate((self.freqs, -self.freqs[1:][::-1]), axis=0)
 
-        self._n_unique_freqs = np.unique(np.abs(self.freqs)).shape[0]
+        self._n_unique_freqs = np.unique(np.abs(self.freqs)).size
 
     def compute(
         self,
@@ -426,7 +424,7 @@ class TDE(_ProcessBispectrum):
         )
 
         loop_kwargs = [
-            {"data": self.data[:, (seed, target)]}
+            {"data": self._data[:, (seed, target)]}
             for seed, target in zip(self._seeds, self._targets)
         ]
         static_kwargs = {
@@ -588,82 +586,82 @@ class TDE(_ProcessBispectrum):
         if self._tde_i_nosym is not None:
             results.append(
                 ResultsTDE(
-                    self._tde_i_nosym,
-                    self._indices,
-                    self._times,
-                    self._freq_bands,
-                    "TDE | Method I",
+                    data=self._tde_i_nosym,
+                    indices=self._indices,
+                    times=self._times,
+                    freq_bands=self._freq_bands,
+                    name="TDE | Method I",
                 )
             )
         if self._tde_ii_nosym is not None:
             results.append(
                 ResultsTDE(
-                    self._tde_ii_nosym,
-                    self._indices,
-                    self._times,
-                    self._freq_bands,
-                    "TDE | Method II",
+                    data=self._tde_ii_nosym,
+                    indices=self._indices,
+                    times=self._times,
+                    freq_bands=self._freq_bands,
+                    name="TDE | Method II",
                 )
             )
         if self._tde_iii_nosym is not None:
             results.append(
                 ResultsTDE(
-                    self._tde_iii_nosym,
-                    self._indices,
-                    self._times,
-                    self._freq_bands,
-                    "TDE | Method III",
+                    data=self._tde_iii_nosym,
+                    indices=self._indices,
+                    times=self._times,
+                    freq_bands=self._freq_bands,
+                    name="TDE | Method III",
                 )
             )
         if self._tde_iv_nosym is not None:
             results.append(
                 ResultsTDE(
-                    self._tde_iv_nosym,
-                    self._indices,
-                    self._times,
-                    self._freq_bands,
-                    "TDE | Method IV",
+                    data=self._tde_iv_nosym,
+                    indices=self._indices,
+                    times=self._times,
+                    freq_bands=self._freq_bands,
+                    name="TDE | Method IV",
                 )
             )
 
         if self._tde_i_antisym is not None:
             results.append(
                 ResultsTDE(
-                    self._tde_i_antisym,
-                    self._indices,
-                    self._times,
-                    self._freq_bands,
-                    "TDE (antisymmetrised) | Method I",
+                    data=self._tde_i_antisym,
+                    indices=self._indices,
+                    times=self._times,
+                    freq_bands=self._freq_bands,
+                    name="TDE (antisymmetrised) | Method I",
                 )
             )
         if self._tde_ii_antisym is not None:
             results.append(
                 ResultsTDE(
-                    self._tde_ii_antisym,
-                    self._indices,
-                    self._times,
-                    self._freq_bands,
-                    "TDE (antisymmetrised) | Method II",
+                    data=self._tde_ii_antisym,
+                    indices=self._indices,
+                    times=self._times,
+                    freq_bands=self._freq_bands,
+                    name="TDE (antisymmetrised) | Method II",
                 )
             )
         if self._tde_iii_antisym is not None:
             results.append(
                 ResultsTDE(
-                    self._tde_iii_antisym,
-                    self._indices,
-                    self._times,
-                    self._freq_bands,
-                    "TDE (antisymmetrised) | Method III",
+                    data=self._tde_iii_antisym,
+                    indices=self._indices,
+                    times=self._times,
+                    freq_bands=self._freq_bands,
+                    name="TDE (antisymmetrised) | Method III",
                 )
             )
         if self._tde_iv_antisym is not None:
             results.append(
                 ResultsTDE(
-                    self._tde_iv_antisym,
-                    self._indices,
-                    self._times,
-                    self._freq_bands,
-                    "TDE (antisymmetrised) | Method IV",
+                    data=self._tde_iv_antisym,
+                    indices=self._indices,
+                    times=self._times,
+                    freq_bands=self._freq_bands,
+                    name="TDE (antisymmetrised) | Method IV",
                 )
             )
 

@@ -6,7 +6,12 @@ from numpy.random import RandomState
 
 from pybispectra.cfc import PAC
 from pybispectra.general import Bispectrum, Threenorm
-from pybispectra.utils import ResultsGeneral, compute_fft, get_example_data_paths
+from pybispectra.utils import (
+    ResultsGeneral,
+    compute_fft,
+    compute_tfr,
+    get_example_data_paths,
+)
 from pybispectra.utils._utils import _generate_data
 from pybispectra.waveshape import WaveShape
 
@@ -23,7 +28,7 @@ def test_error_catch(class_type: str) -> None:
     n_epochs = 5
     n_times = 100
     sampling_freq = 50
-    data = _generate_data(n_epochs, n_chans, n_times)
+    data = _generate_data((n_epochs, n_chans, n_times))
     indices = ([0, 1, 2], [0, 1, 2])
     freqs = np.arange(5, 20)
 
@@ -32,7 +37,7 @@ def test_error_catch(class_type: str) -> None:
     # initialisation
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         TestClass(coeffs.tolist(), freqs, sampling_freq)
-    with pytest.raises(ValueError, match="`data` must be a 3D array."):
+    with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
         TestClass(np.random.randn(2, 2), freqs, sampling_freq)
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
@@ -66,7 +71,7 @@ def test_error_catch(class_type: str) -> None:
         TestClass(coeffs, freqs, None)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
-        TestClass(coeffs, freqs, sampling_freq, "verbose")
+        TestClass(coeffs, freqs, sampling_freq, verbose="verbose")
 
     # compute
     test_class = TestClass(coeffs, freqs, sampling_freq)
@@ -150,74 +155,186 @@ def test_error_catch(class_type: str) -> None:
         test_class.compute(n_jobs=0)
 
 
-def test_bispectrum_runs() -> None:
-    """Test that Bispectrum runs correctly."""
-    n_chans = 3
-    sampling_freq = 50
-    data = _generate_data(5, n_chans, 100)
+@pytest.mark.parametrize("class_type", ["Bispectrum", "Threenorm"])
+def test_error_catch_time_resolved(class_type: str) -> None:
+    """Check that General classes catch errors for time-resolved data."""
+    if class_type == "Bispectrum":
+        TestClass = Bispectrum
+    else:
+        TestClass = Threenorm
 
-    fft, freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
+    n_chans = 3
+    n_epochs = 5
+    n_times = 100
+    sampling_freq = 50
+    data = _generate_data((n_epochs, n_chans, n_times))
+    freqs = np.arange(5, 20)
+    times = np.arange(n_times) / sampling_freq
+
+    coeffs, freqs = compute_tfr(
+        data, sampling_freq, freqs, n_cycles=3, output="complex"
+    )
+
+    # initialisation
+    with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
+        TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+
+    with pytest.raises(TypeError, match="`times` must be a NumPy array."):
+        TestClass(coeffs, freqs, sampling_freq, times.tolist())
+    with pytest.raises(ValueError, match="`times` must be a 1D array."):
+        TestClass(coeffs, freqs, sampling_freq, times[:, np.newaxis])
+
+    with pytest.raises(
+        ValueError,
+        match=("`data` and `times` must contain the same number of timepoints."),
+    ):
+        TestClass(coeffs, freqs, sampling_freq, times[:-1])
+
+    # compute
+    test_class = TestClass(coeffs, freqs, sampling_freq, times)
+
+    # test that errors for incorrect inputs are caught
+    with pytest.raises(TypeError, match="`times` must be a tuple or None."):
+        test_class.compute(times=[times[0], times[-1]])
+    with pytest.raises(ValueError, match="`times` must have length of 2."):
+        test_class.compute(times=(times[0], times[1], times[-1]))
+    with pytest.raises(TypeError, match="Entries of `times` must be int or float."):
+        test_class.compute(times=("start", "end"))
+    with pytest.raises(
+        ValueError,
+        match="No timepoints are present in the data for the range in `times`.",
+    ):
+        test_class.compute(times=(-1, -0.1))
+
+
+@pytest.mark.parametrize("class_type", ["Bispectrum", "Threenorm"])
+def test_general_runs(class_type: str) -> None:
+    """Test that General classes run correctly."""
+    if class_type == "Bispectrum":
+        TestClass = Bispectrum
+    else:
+        TestClass = Threenorm
+
+    n_chans = 3
+    n_times = 100
+    sampling_freq = 50
+    data = _generate_data((5, n_chans, n_times))
+    default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
+    times = default_times + 10  # offset to distinguish from auto-generated ones
+    freqs = np.arange(5, 25, 0.5)
+
+    fft, fft_freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
+    fft = fft[..., np.intersect1d(fft_freqs, freqs, return_indices=True)[1]]
+    tfr, _ = compute_tfr(
+        data=data,
+        sampling_freq=sampling_freq,
+        freqs=freqs,
+        n_cycles=3,
+        output="complex",
+    )
+
+    # check data is stored correctly
+    test_class = TestClass(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(test_class.data == fft), "FFT data not stored correctly"
+    test_class_tr = TestClass(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(test_class_tr.data == tfr), "TFR data not stored correctly"
+
+    # check times are handled correctly
+    test_class = TestClass(
+        data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times
+    )
+    assert test_class.times is None, (
+        "`times` should be ignored for non-time-resolved_data"
+    )
+    test_class = TestClass(
+        data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times
+    )
+    assert np.all(test_class.times == times), (
+        "`times` should be stored for time-resolved_data"
+    )
+    test_class = TestClass(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    assert np.all(test_class.times == default_times), (
+        "Auto-generated `times` are incorrect for time-resolved_data"
+    )
 
     # check it runs with correct inputs
-    bs = Bispectrum(data=fft, freqs=freqs, sampling_freq=sampling_freq)
-    bs.compute()
+    test_class = TestClass(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    test_class.compute()
+    test_class_tr = TestClass(
+        data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times
+    )
+    test_class_tr.compute()
 
     # check the returned results have the correct shape
-    assert bs.results.shape == (n_chans**3, len(freqs), len(freqs))
+    assert test_class.results.shape == (n_chans**3, len(freqs), len(freqs))
+    assert test_class_tr.results.shape == (
+        n_chans**3,
+        len(freqs),
+        len(freqs),
+        len(times),
+    )
 
     # check the returned results are of the correct type
-    assert isinstance(bs.results, ResultsGeneral)
-    assert bs.results.name == "Bispectrum"
+    assert isinstance(test_class.results, ResultsGeneral)
+    assert test_class.results.name == class_type
 
     # check it runs with non-exact frequencies
-    bs.compute(f1s=(10.25, 19.75), f2s=(10.25, 19.75))
+    fmin, fmax = 10.25, 19.75
+    freqs_sel = freqs[np.argwhere((freqs >= fmin) & (freqs <= fmax)).squeeze()]
+    test_class.compute(f1s=(fmin, fmax), f2s=(fmin, fmax))
+    assert test_class.results.get_results().shape[1:3] == (
+        len(freqs_sel),
+        len(freqs_sel),
+    ), "Number of frequencies in results does not match the selection"
+    assert (
+        test_class.results.f1s[0] == freqs_sel[0]
+        and test_class.results.f1s[-1] == freqs_sel[-1]
+        and test_class.results.f2s[0] == freqs_sel[0]
+        and test_class.results.f2s[-1] == freqs_sel[-1]
+    ), "`f1s` and `f2s` in results do not match the selection"
+
+    # check it runs with non-exact times
+    tmin, tmax = 10.55, 11.55
+    times_sel = times[np.argwhere((times >= tmin) & (times <= tmax)).squeeze()]
+    test_class_tr.compute(times=(tmin, tmax))
+    assert test_class_tr.results.get_results().shape[3] == len(times_sel), (
+        "Number of timepoints in results does not match the selection"
+    )
+    assert (
+        test_class_tr.results.times[0] == times_sel[0]
+        and test_class_tr.results.times[-1] == times_sel[-1]
+    ), "`times` in results do not match the selection"
+
+    # test that time selection works
+    tmin_idx, tmax_idx = 5, 10
+    test_class_tr.compute(times=(times[tmin_idx], times[tmax_idx]))
+    test_class_tr_results = test_class_tr.results
+    test_class_tr_window = TestClass(
+        data=tfr[..., tmin_idx : tmax_idx + 1],
+        freqs=freqs,
+        sampling_freq=sampling_freq,
+        times=times[tmin_idx : tmax_idx + 1],
+    )
+    test_class_tr_window.compute()
+    test_class_tr_window_results = test_class_tr_window.results
+    assert np.all(test_class_tr_results.times == test_class_tr_window_results.times)
+    assert np.array_equal(
+        test_class_tr_results.get_results(),
+        test_class_tr_window_results.get_results(),
+        equal_nan=True,
+    )
 
     # test it runs with parallelisation
-    bs.compute(n_jobs=2)
-    bs.compute(n_jobs=-1)
+    test_class.compute(n_jobs=2)
+    test_class.compute(n_jobs=-1)
 
     # test copying works
-    bs_copy = bs.copy()
-    attrs = bs.__dict__.keys()
+    test_class_copy = test_class.copy()
+    attrs = test_class.__dict__.keys()
     for attr in attrs:
         if not attr.startswith("_"):
-            assert np.all(getattr(bs, attr) == getattr(bs_copy, attr))
-    assert bs is not bs_copy
-
-
-def test_threenorm_runs() -> None:
-    """Test that Threenorm runs correctly."""
-    n_chans = 3
-    sampling_freq = 50
-    data = _generate_data(5, n_chans, 100)
-
-    fft, freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
-
-    # check it runs with correct inputs
-    norm = Threenorm(data=fft, freqs=freqs, sampling_freq=sampling_freq)
-    norm.compute()
-
-    # check the returned results have the correct shape
-    assert norm.results.shape == (n_chans**3, len(freqs), len(freqs))
-
-    # check the returned results are of the correct type
-    assert isinstance(norm.results, ResultsGeneral)
-    assert norm.results.name == "Threenorm"
-
-    # check it runs with non-exact frequencies
-    norm.compute(f1s=(10.25, 19.75), f2s=(10.25, 19.75))
-
-    # test it runs with parallelisation
-    norm.compute(n_jobs=2)
-    norm.compute(n_jobs=-1)
-
-    # test copying works
-    norm_copy = norm.copy()
-    attrs = norm.__dict__.keys()
-    for attr in attrs:
-        if not attr.startswith("_"):
-            assert np.all(getattr(norm, attr) == getattr(norm_copy, attr))
-    assert norm is not norm_copy
+            assert np.all(getattr(test_class, attr) == getattr(test_class_copy, attr))
+    assert test_class is not test_class_copy
 
 
 def test_pac_results():

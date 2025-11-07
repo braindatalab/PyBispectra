@@ -19,7 +19,7 @@ class WaveShape(_ProcessBispectrum):
 
     Parameters
     ----------
-    data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies (, times)]
         Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
@@ -27,6 +27,13 @@ class WaveShape(_ProcessBispectrum):
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
+
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``. If ``data`` has a times dimension and
+        ``times = None``, the time of the first sample in ``data`` is assumed to be 0
+        seconds.
+
+        .. versionadded:: 1.3
 
     verbose : bool (default True)
         Whether or not to report the progress of the processing.
@@ -44,7 +51,7 @@ class WaveShape(_ProcessBispectrum):
     results : ~pybispectra.utils.ResultsWaveShape | tuple of ~pybispectra.utils.ResultsWaveShape
         Waveshape results for each of the computed metrics.
 
-    data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
+    data : ~numpy.ndarray, shape of [epochs, channels, frequencies (, times)]
         Fourier coefficients.
 
     freqs : ~numpy.ndarray, shape of [frequencies]
@@ -52,6 +59,9 @@ class WaveShape(_ProcessBispectrum):
 
     sampling_freq : int | float
         Sampling frequency (in Hz) of the data from which ``data`` was derived.
+
+    times : ~numpy.ndarray, shape of [times] | None
+        Timepoints (in seconds) in ``data``.
 
     verbose : bool
         Whether or not to report the progress of the processing.
@@ -78,6 +88,7 @@ class WaveShape(_ProcessBispectrum):
         indices: tuple[int] | None = None,
         f1s: tuple[int | float] | None = None,
         f2s: tuple[int | float] | None = None,
+        times: tuple[int | float] | None = None,
         norm: bool | tuple[bool] = True,
         n_jobs: int = 1,
     ) -> None:
@@ -97,9 +108,17 @@ class WaveShape(_ProcessBispectrum):
             Start and end higher frequencies to compute waveshape for, respectively.
             If :obj:`None`, all frequencies are used.
 
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in seconds) to compute waveshape for, respectively. If
+            :obj:`None`, all timepoints are used.
+
+            .. versionadded:: 1.3
+
         norm : bool | tuple of bool (default True)
             Whether to normalise the waveshape results using the threenorm. If a tuple
             of bool, both forms of waveshape are computed in turn.
+
+            .. versionadded:: 1.3
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available CPUs are
@@ -147,10 +166,11 @@ class WaveShape(_ProcessBispectrum):
         self._sort_metrics(norm)
         self._sort_indices(indices)
         self._sort_freqs(f1s, f2s)
+        self._sort_tmin_tmax(times)
         self._sort_parallelisation(n_jobs)
 
         if self.verbose:
-            print("Computing bicoherence...\n")
+            print("Computing waveshape...\n")
 
         self._compute_bispectrum()
         if self._return_threenorm:
@@ -159,7 +179,7 @@ class WaveShape(_ProcessBispectrum):
         self._store_results()
 
         if self.verbose:
-            print("    ... Bicoherence computation finished\n")
+            print("    ... Waveshape computation finished\n")
 
     def _reset_attrs(self) -> None:
         """Reset attrs. of the object to prevent interference."""
@@ -210,7 +230,10 @@ class WaveShape(_ProcessBispectrum):
         if self.verbose:
             print("    Computing bispectrum...")
 
-        loop_kwargs = [{"data": self.data[:, [channel]]} for channel in self._indices]
+        loop_kwargs = [
+            {"data": self._data[:, [channel]][..., self._time_idcs]}
+            for channel in self._indices
+        ]
         static_kwargs = {
             "freqs": self.freqs,
             "f1s": self._f1s,
@@ -224,20 +247,23 @@ class WaveShape(_ProcessBispectrum):
                 loop_kwargs=loop_kwargs,
                 static_kwargs=static_kwargs,
                 output=np.zeros(
-                    (self._n_cons, 1, self._f1s.size, self._f2s.size),
+                    (self._n_cons, 1, self._f1s.size, self._f2s.size, self._times.size),
                     dtype=_precision.complex,
                 ),
                 message="Processing channels...",
                 n_jobs=self._n_jobs,
                 verbose=self.verbose,
                 prefer="processes",
-            ).transpose(1, 0, 2, 3)[0]
+            ).transpose(1, 0, 2, 3, 4)[0]
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
                 "Memory allocation for the bispectrum computation failed. Try reducing "
                 "the sampling frequency of the data, or reduce the precision of the "
                 "computation with `pybispectra.set_precision('single')`."
             ) from error
+
+        if self.times is None:  # remove placeholder time dimension
+            self._bispectrum = self._bispectrum[..., 0]
 
         if self.verbose:
             print("        ... Bispectrum computation finished\n")
@@ -247,7 +273,10 @@ class WaveShape(_ProcessBispectrum):
         if self.verbose:
             print("    Computing threenorm...")
 
-        loop_kwargs = [{"data": self.data[:, [channel]]} for channel in self._indices]
+        loop_kwargs = [
+            {"data": self._data[:, [channel]][..., self._time_idcs]}
+            for channel in self._indices
+        ]
         static_kwargs = {
             "freqs": self.freqs,
             "f1s": self._f1s,
@@ -261,20 +290,23 @@ class WaveShape(_ProcessBispectrum):
                 loop_kwargs=loop_kwargs,
                 static_kwargs=static_kwargs,
                 output=np.zeros(
-                    (self._n_cons, 1, self._f1s.size, self._f2s.size),
+                    (self._n_cons, 1, self._f1s.size, self._f2s.size, self._times.size),
                     dtype=_precision.real,
                 ),
                 message="Processing channels...",
                 n_jobs=self._n_jobs,
                 verbose=self.verbose,
                 prefer="processes",
-            ).transpose(1, 0, 2, 3)[0]
+            ).transpose(1, 0, 2, 3, 4)[0]
         except MemoryError as error:  # pragma: no cover
             raise MemoryError(
                 "Memory allocation for the threenorm computation failed. Try reducing "
                 "the sampling frequency of the data, or reduce the precision of the "
                 "computation with `pybispectra.set_precision('single')`."
             ) from error
+
+        if self.times is None:  # remove placeholder time dimension
+            self._threenorm = self._threenorm[..., 0]
 
         if self.verbose:
             print("        ... Threenorm computation finished\n")
@@ -290,6 +322,7 @@ class WaveShape(_ProcessBispectrum):
                     indices=self._indices,
                     f1s=self._f1s,
                     f2s=self._f2s,
+                    times=self._times,
                     name="Waveshape | Bispectrum",
                 )
             )
@@ -301,6 +334,7 @@ class WaveShape(_ProcessBispectrum):
                     indices=self._indices,
                     f1s=self._f1s,
                     f2s=self._f2s,
+                    times=self._times,
                     name="Waveshape | Bicoherence",
                 )
             )
