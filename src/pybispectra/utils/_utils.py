@@ -211,7 +211,12 @@ def _create_mne_info(n_chans: int, sampling_freq: float) -> Info:
     return create_info(ch_names, sampling_freq, ch_types, verbose=False)
 
 
-def _generate_data(shape: tuple[int], seed: int = 44) -> np.ndarray:
+def _generate_data(
+    shape: tuple[int], seed: int = 44, complexobj: bool = False
+) -> np.ndarray:
     """Generate random data of the specified shape."""
     random = np.random.RandomState(seed)
-    return random.rand(*shape).astype(_precision.real)
+    data = random.rand(*shape).astype(_precision.real)
+    if complexobj:
+        data = data.astype(_precision.complex) + data * 1j
+    return data

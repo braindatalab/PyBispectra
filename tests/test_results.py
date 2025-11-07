@@ -12,7 +12,7 @@ def test_results_cfc_error_catch() -> None:
     n_cons = 9
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data((n_cons, n_f1, n_f2))
+    data = _generate_data((n_cons, n_f1, n_f2), complexobj=False)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     n_unique_chans = 3
@@ -93,7 +93,7 @@ def test_results_cfc_error_catch_time_resolved() -> None:
     n_f1 = 50
     n_f2 = 50
     n_times = 20
-    data = _generate_data((n_cons, n_f1, n_f2, n_times))
+    data = _generate_data((n_cons, n_f1, n_f2, n_times), complexobj=False)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     times = np.arange(n_times)
@@ -122,7 +122,7 @@ def test_results_cfc_runs(time_resolved: bool) -> None:
     n_f1 = 50
     n_f2 = 50
     n_times = 20
-    data = _generate_data((n_cons, n_f1, n_f2, n_times))
+    data = _generate_data((n_cons, n_f1, n_f2, n_times), complexobj=False)
     if not time_resolved:
         data = data[..., 0]
     f1s = np.arange(n_f1)
@@ -156,10 +156,12 @@ def test_results_cfc_runs(time_resolved: bool) -> None:
     results_array = results.get_results(form="raveled")
     assert isinstance(results_array, np.ndarray)
     assert results_array.shape == (n_cons, *freqs_times_shape)
+    assert results_array.dtype == results._data.dtype
 
     results_array, array_indices = results.get_results(form="compact")
     assert isinstance(results_array, np.ndarray)
     assert results_array.shape == (n_unique_chans, n_unique_chans, *freqs_times_shape)
+    assert results_array.dtype == results._data.dtype
     assert array_indices == indices
 
     # Try also with unordered indices that aren't just [0, ..., n_chans]
@@ -191,7 +193,7 @@ def test_results_tde_error_catch() -> None:
     n_cons = 9
     n_fbands = 2
     n_times = 50
-    data = _generate_data((n_cons, n_fbands, n_times))
+    data = _generate_data((n_cons, n_fbands, n_times), complexobj=False)
     times = np.arange(n_times)
     freq_bands = ((5, 10), (20, 30))
     n_unique_chans = 3
@@ -311,7 +313,7 @@ def test_results_tde_runs(freq_bands: tuple) -> None:
     n_cons = 9
     n_fbands = len(freq_bands) if freq_bands is not None else 1
     n_times = 50
-    data = _generate_data((n_cons, n_fbands, n_times))
+    data = _generate_data((n_cons, n_fbands, n_times), complexobj=False)
     times = np.arange(n_times)
     name = "test"
     n_unique_chans = 3
@@ -338,10 +340,12 @@ def test_results_tde_runs(freq_bands: tuple) -> None:
     results_array = results.get_results(form="raveled")
     assert isinstance(results_array, np.ndarray)
     assert results_array.shape == (n_cons, n_fbands, n_times)
+    assert results_array.dtype == results._data.dtype
 
     results_array, array_indices = results.get_results(form="compact")
     assert isinstance(results_array, np.ndarray)
     assert results_array.shape == (n_unique_chans, n_unique_chans, n_fbands, n_times)
+    assert results_array.dtype == results._data.dtype
     assert array_indices == indices
 
     # Try also with unordered indices that aren't just [0, ..., n_chans]
@@ -374,7 +378,7 @@ def test_results_waveshape_error_catch() -> None:
     n_chans = 3
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data((n_chans, n_f1, n_f2))
+    data = _generate_data((n_chans, n_f1, n_f2), complexobj=True)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     indices = tuple(range(n_chans))
@@ -431,7 +435,7 @@ def test_results_waveshape_error_catch_time_resolved() -> None:
     n_f1 = 50
     n_f2 = 50
     n_times = 20
-    data = _generate_data((n_chans, n_f1, n_f2, n_times))
+    data = _generate_data((n_chans, n_f1, n_f2, n_times), complexobj=True)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     times = np.arange(n_times)
@@ -458,7 +462,7 @@ def test_results_waveshape_runs(time_resolved: bool) -> None:
     n_f1 = 50
     n_f2 = 50
     n_times = 20
-    data = _generate_data((n_chans, n_f1, n_f2, n_times))
+    data = _generate_data((n_chans, n_f1, n_f2, n_times), complexobj=True)
     if not time_resolved:
         data = data[..., 0]
     f1s = np.arange(n_f1)
@@ -496,7 +500,7 @@ def test_results_general_error_catch() -> None:
     n_chans = 27
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data((n_chans, n_f1, n_f2))
+    data = _generate_data((n_chans, n_f1, n_f2), complexobj=True)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     n_unique_chans = 3
@@ -577,7 +581,7 @@ def test_results_general_error_catch_time_resolved() -> None:
     n_f1 = 50
     n_f2 = 50
     n_times = 20
-    data = _generate_data((n_chans, n_f1, n_f2, n_times))
+    data = _generate_data((n_chans, n_f1, n_f2, n_times), complexobj=True)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     times = np.arange(n_times)
@@ -608,14 +612,15 @@ def test_results_general_error_catch_time_resolved() -> None:
         )
 
 
+@pytest.mark.parametrize("complexobj", [False, True])
 @pytest.mark.parametrize("time_resolved", [False, True])
-def test_results_general_runs(time_resolved: bool) -> None:
+def test_results_general_runs(complexobj: bool, time_resolved: bool) -> None:
     """Test `ResultsGeneral` runs with correct inputs."""
     n_cons = 27
     n_f1 = 50
     n_f2 = 50
     n_times = 20
-    data = _generate_data((n_cons, n_f1, n_f2, n_times))
+    data = _generate_data((n_cons, n_f1, n_f2, n_times), complexobj=complexobj)
     if not time_resolved:
         data = data[..., 0]
     f1s = np.arange(n_f1)
@@ -656,6 +661,7 @@ def test_results_general_runs(time_resolved: bool) -> None:
     results_array = results.get_results(form="raveled")
     assert isinstance(results_array, np.ndarray)
     assert results_array.shape == (n_cons, *freqs_times_shape)
+    assert results_array.dtype == results._data.dtype
 
     results_array, array_indices = results.get_results(form="compact")
     assert isinstance(results_array, np.ndarray)
@@ -665,6 +671,7 @@ def test_results_general_runs(time_resolved: bool) -> None:
         n_unique_chans,
         *freqs_times_shape,
     )
+    assert results_array.dtype == results._data.dtype
     assert array_indices == indices
 
     # Try also with unordered indices that aren't just [0, ..., n_chans]

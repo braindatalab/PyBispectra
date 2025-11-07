@@ -14,7 +14,7 @@ def test_error_catch(method: str) -> None:
     n_epochs = 5
     n_times = 200
     sampling_freq = 50
-    data = _generate_data((n_epochs, n_chans, n_times))
+    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
     signal_bounds = (10, 15)
     noise_bounds = (8, 17)
 
@@ -244,7 +244,7 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
     n_epochs = 5
     n_times = 500
     sampling_freq = 100
-    data = _generate_data((n_epochs, n_chans, n_times))
+    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
     signal_bounds = (10, 15)
     noise_bounds = (8, 17)
 
@@ -313,7 +313,7 @@ def test_ged_hpmax_runs(csd_method: str, rank: int) -> None:
     n_epochs = 5
     n_times = 100
     sampling_freq = 100
-    data = _generate_data((n_epochs, n_chans, n_times))
+    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
     signal_bounds = (10, 15)
     noise_bounds = (8, 17)
 
