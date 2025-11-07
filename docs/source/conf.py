@@ -8,6 +8,7 @@
 
 import os
 import sys
+from pathlib import Path
 
 import pybispectra
 from pybispectra.utils._docs import linkcode_resolve
@@ -21,6 +22,8 @@ release = "1.3.0dev"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 sys.path.insert(0, os.path.abspath("../../"))
+curpath = Path(__file__).parent.parent.resolve(strict=True)
+sys.path.append(str(curpath / "sphinxext"))
 
 extensions = [
     "sphinx.ext.mathjax",
@@ -33,6 +36,8 @@ extensions = [
     "sphinxcontrib.bibtex",
     "sphinx_gallery.gen_gallery",
     "sphinx_copybutton",
+    ### Custom
+    "directive_formatting",
 ]
 
 source_suffix = [".rst", ".md"]
