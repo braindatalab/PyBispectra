@@ -543,6 +543,57 @@ def test_ppc_runs() -> None:
     assert ppc is not ppc_copy
 
 
+def test_ppc_results():
+    """Test that PPC returns the correct results.
+
+    Simulated data with 10-60 Hz PPC between channels 0 and 1 is used.
+    """
+    # identify interacting and non-interacting frequencies (10-60 Hz PPC)
+    interacting_f1s = np.arange(9, 12)
+    interacting_f2s = np.arange(59, 62)
+    noninteracting_f1s = np.arange(5, 16)
+    noninteracting_f2s = np.arange(55, 66)
+    noninteracting_f1s = noninteracting_f1s[
+        np.invert(np.isin(noninteracting_f1s, interacting_f1s))
+    ]
+    noninteracting_f2s = noninteracting_f2s[
+        np.invert(np.isin(noninteracting_f2s, interacting_f2s))
+    ]
+
+    # test that genuine PPC is detected
+    data = np.load(get_example_data_paths("sim_data_ppc"))
+    sampling_freq = 500  # sampling frequency in Hz
+    freqs = np.arange(1, 100)
+
+    # compute TFR
+    tfr_coeffs, freqs = compute_tfr(
+        data=data,
+        sampling_freq=sampling_freq,
+        freqs=freqs,
+        n_cycles=freqs / 1.25,
+        output="complex",
+    )
+
+    # compute PPC
+    ppc = PPC(data=tfr_coeffs, freqs=freqs, sampling_freq=sampling_freq)
+    ppc.compute(indices=((0, 0, 1), (0, 1, 1)))
+    results = ppc.results.get_results()
+
+    # check that 10-60 Hz PPC is detected for connection 0 → 1 at interacting freqs
+    assert (
+        results[1][np.ix_(interacting_f1s, interacting_f2s)].mean()
+        > results[1][np.ix_(noninteracting_f1s, noninteracting_f2s)].mean()
+    ), "0 → 1 PPC at interacting freqs not greater than at non-interacting freqs"
+    assert (
+        results[1][np.ix_(interacting_f1s, interacting_f2s)].mean()
+        > results[0][np.ix_(interacting_f1s, interacting_f2s)].mean()
+    ), "0 → 1 PPC at interacting freqs not greater than for 0 → 0"
+    assert (
+        results[1][np.ix_(interacting_f1s, interacting_f2s)].mean()
+        > results[2][np.ix_(interacting_f1s, interacting_f2s)].mean()
+    ), "0 → 1 PPC at interacting freqs not greater than for 1 → 1"
+
+
 def test_aac_runs() -> None:
     """Test that AAC runs correctly."""
     n_chans = 3
