@@ -166,7 +166,7 @@ print(
 # explanation, see :doc:`plot_compute_waveshape` and Bartz *et al.*
 # :footcite:`Bartz2019`, but in brief, sawtooth waves are captured in the imaginary
 # part. For our sawtooth wave simulated at 10 Hz, we expect the imaginary bicoherence
-# values at this frequency and the higher harmonics (i.e. 20 and 30 Hz) to be non-zero.
+# values at this frequency and the higher harmonics (i.e., 20 and 30 Hz) to be non-zero.
 # For the simulated sine wave, we do not expect non-zero bicoherence values at the
 # simulated 10 Hz frequency, as the bispectrum selectively captures non-sinusoidal
 # signal characteristics.

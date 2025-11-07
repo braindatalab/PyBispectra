@@ -21,7 +21,7 @@ class TDE(_ProcessBispectrum):
     data : ~numpy.ndarray, shape of [epochs, channels, frequencies]
         Fourier coefficients. Must contain a coefficient for the zero frequency.
         Coefficients should be computed with the number of points equal to twice the
-        number of timepoints in each epoch of the original data plus one (i.e.
+        number of timepoints in each epoch of the original data plus one (i.e.,
         ``n_points = 2 * n_times + 1`` in :func:`pybispectra.utils.compute_fft`).
 
     freqs : ~numpy.ndarray, shape of [frequencies]

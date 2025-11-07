@@ -104,7 +104,7 @@ print(
 # Here, we specify the ``indices`` to compute PAC on. ``indices`` is expected to be a
 # tuple containing two lists for the indices of the seed and target channels,
 # respectively. The indices specified below mean that PAC will only be computed across
-# frequencies between the channels (i.e. 0 → 1). By leaving the frequency arguments
+# frequencies between the channels (i.e., 0 → 1). By leaving the frequency arguments
 # ``f1s`` and ``f2s`` blank, we will look at all possible frequency combinations.
 
 # %%

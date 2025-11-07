@@ -83,7 +83,7 @@ from pybispectra import TDE, compute_fft, get_example_data_paths
 # frequencies are desired, this information can be extracted from the matrix
 # :math:`\textbf{I}`.
 #
-# As a result of volume conduction artefacts (i.e. a common underlying signal that
+# As a result of volume conduction artefacts (i.e., a common underlying signal that
 # propagates instantaneously to :math:`\textbf{x}` and :math:`\textbf{y}`), time delay
 # estimates can become contaminated, resulting in spurious estimates of :math:`\tau=0`.
 # Thankfully, antisymmetrisation of the bispectrum can be used to address these mixing
@@ -101,7 +101,7 @@ from pybispectra import TDE, compute_fft, get_example_data_paths
 #
 # We specify ``n_points`` to be twice the number of time points in the data, plus one.
 # This ensures that the time delay estimate spectrum is returned for the whole epoch
-# length (in both positive and negative delay directions, i.e. where :math:`\textbf{x}`
+# length (in both positive and negative delay directions, i.e., where :math:`\textbf{x}`
 # drives :math:`\textbf{y}`, and :math:`\textbf{y}` drives :math:`\textbf{x}`) with the
 # same temporal resolution as the original data. Using a number of points smaller than
 # this will reduce the window in which time delay estimates can be computed below the
@@ -171,7 +171,7 @@ print(
 ########################################################################################
 # We can see that time delays have been computed for two connections (0 → 1 and 1 → 0)
 # and one frequency band (0-100 Hz), with 401 timepoints, and averaged across our 30
-# epochs. The timepoints correspond to time delay estimates for every 5 ms (i.e. the
+# epochs. The timepoints correspond to time delay estimates for every 5 ms (i.e., the
 # sampling rate of the data), ranging from -1000 ms to +1000 ms.
 
 ########################################################################################
@@ -184,7 +184,7 @@ print(
 # the time delay is identified as 250 ms. Furthermore, comparing the two connections, we
 # see that the direction of information flow is also correctly identified, with the
 # result for connection 0 → 1 being positive and the result for connection 1 → 0 being
-# negative (i.e. information flow from signal 0 to signal 1). Here, we manually find
+# negative (i.e., information flow from signal 0 to signal 1). Here, we manually find
 # :math:`\tau` based on the maximal value of the TDE results, however this information
 # is also precomputed and can be accessed via the ``tau`` attribute.
 #
@@ -227,7 +227,7 @@ fig, axes = tde.results.plot()
 # determined to be 0 ms. In contrast, antisymmetrisation suppresses the spurious peak at
 # time zero, leaving only a clear peak at the genuine time delay and the correct
 # estimation of :math:`\tau`. Accordingly, in instances where there is a risk of
-# correlated noise sources between the signals (e.g. with volume conduction), applying
+# correlated noise sources between the signals (e.g., with volume conduction), applying
 # antisymmetrisation when estimating time delays is recommended.
 
 # %%
