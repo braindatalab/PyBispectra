@@ -7,6 +7,7 @@ from matplotlib.figure import Figure
 
 from pybispectra.utils._plot import _PlotCFC, _PlotGeneral, _PlotTDE, _PlotWaveShape
 from pybispectra.utils._utils import _int_like
+from pybispectra.utils._defaults import _precision
 
 
 class _ResultsBase(ABC):
@@ -1118,9 +1119,18 @@ class ResultsGeneral(_ResultsBase):
             Channel indices of ``compact_results`` for the k, m, and n channels,
             respectively.
         """
+        if np.isrealobj(self._data):
+            fill_value = np.nan
+            dtype = _precision.real
+        else:
+            fill_value = np.nan + np.nan * 1j
+            dtype = _precision.complex
         compact_results = np.full(
             (self._n_chans, self._n_chans, self._n_chans, *self._freqs_times_shape),
-            fill_value=np.full(self._freqs_times_shape, fill_value=np.nan),
+            fill_value=np.full(
+                self._freqs_times_shape, fill_value=fill_value, dtype=dtype
+            ),
+            dtype=dtype,
         )
 
         for con_result, k, m, n in zip(

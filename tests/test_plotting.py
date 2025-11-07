@@ -18,7 +18,7 @@ def test_plotting_cfc_error_catch() -> None:
     n_cons = 9
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data((n_cons, n_f1, n_f2))
+    data = _generate_data((n_cons, n_f1, n_f2), complexobj=False)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -143,7 +143,7 @@ def test_plotting_cfc_runs(time_resolved: bool) -> None:
     n_f1 = 50
     n_f2 = 50
     n_times = 20
-    data = _generate_data((n_cons, n_f1, n_f2, n_times))
+    data = _generate_data((n_cons, n_f1, n_f2, n_times), complexobj=False)
     if not time_resolved:
         data = data[..., 0]
     f1s = np.arange(n_f1)
@@ -202,7 +202,7 @@ def test_plotting_tde_error_catch() -> None:
     n_cons = 9
     n_fbands = 2
     n_times = 51
-    data = _generate_data((n_cons, n_fbands, n_times))
+    data = _generate_data((n_cons, n_fbands, n_times), complexobj=False)
     times = np.arange((n_times - 1) * -0.5, n_times * 0.5)
     name = "test"
     n_unique_chans = 3
@@ -297,7 +297,7 @@ def test_plotting_tde_runs() -> None:
     n_cons = 9
     n_fbands = 2
     n_times = 51
-    data = _generate_data((n_cons, n_fbands, n_times))
+    data = _generate_data((n_cons, n_fbands, n_times), complexobj=False)
     freq_bands = ((5, 10), (15, 20))
     times = np.arange((n_times - 1) * -0.5, n_times * 0.5)
     name = "test"
@@ -366,7 +366,7 @@ def test_plotting_waveshape_error_catch() -> None:
     n_chans = 3
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data((n_chans, n_f1, n_f2))
+    data = _generate_data((n_chans, n_f1, n_f2), complexobj=True)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -503,7 +503,7 @@ def test_plotting_waveshape_runs(
     n_f1 = 50
     n_f2 = 50
     n_times = 20
-    data = _generate_data((n_chans, n_f1, n_f2, n_times))
+    data = _generate_data((n_chans, n_f1, n_f2, n_times), complexobj=True)
     if not time_resolved:
         data = data[..., 0]
     f1s = np.arange(n_f1)
@@ -565,7 +565,7 @@ def test_plotting_general_error_catch() -> None:
     n_chans = 27
     n_f1 = 50
     n_f2 = 50
-    data = _generate_data((n_chans, n_f1, n_f2))
+    data = _generate_data((n_chans, n_f1, n_f2), complexobj=True)
     f1s = np.arange(n_f1)
     f2s = np.arange(n_f2)
     name = "test"
@@ -706,18 +706,19 @@ def test_plotting_general_error_catch() -> None:
     r"ignore:Adding colorbar to a different Figure.*than.*which fig.colorbar is "
     "called on"
 )
+@pytest.mark.parametrize("complexobj", [False, True])
 @pytest.mark.parametrize("plot_absolute", [True, False])
 @pytest.mark.parametrize("mirror_cbar_range", [True, False])
 @pytest.mark.parametrize("time_resolved", [False, True])
 def test_plotting_general_runs(
-    plot_absolute: bool, mirror_cbar_range: bool, time_resolved: bool
+    complexobj: bool, plot_absolute: bool, mirror_cbar_range: bool, time_resolved: bool
 ) -> None:
     """Test plotting in `ResultsGeneral` runs with correct inputs."""
     n_chans = 27
     n_f1 = 50
     n_f2 = 50
     n_times = 20
-    data = _generate_data((n_chans, n_f1, n_f2, n_times))
+    data = _generate_data((n_chans, n_f1, n_f2, n_times), complexobj=complexobj)
     if not time_resolved:
         data = data[..., 0]
     f1s = np.arange(n_f1)

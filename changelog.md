@@ -11,6 +11,7 @@
 
 ##### Bug Fixes
 - Fixed error where the coupling with `PPC` was not being computed correctly.
+- Fixed error where `ResultsGeneral.get_results(form="compact")` returned complex-valued data as real-valued.
 
 ##### API
 - Changed the `data` parameter of `PPC` to require time-frequency representations instead of non-time-resolved Fourier coefficients.

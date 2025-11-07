@@ -34,7 +34,7 @@ def test_compute_fft(window: str) -> None:
     n_epochs = 5
     n_chans = 3
     n_times = 100
-    data = _generate_data((n_epochs, n_chans, n_times))
+    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
     sampling_freq = 50
 
     # check it runs with correct inputs
@@ -125,7 +125,7 @@ def test_compute_tfr(
     n_epochs = 5
     n_chans = 3
     n_times = 100
-    data = _generate_data((n_epochs, n_chans, n_times))
+    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
     sampling_freq = 100
     freqs_in = np.arange(20, 50)
 
@@ -406,7 +406,7 @@ def test_compute_rank() -> None:
     n_epochs = 5
     n_chans = 3
     n_times = 100
-    data = _generate_data((n_epochs, n_chans, n_times))
+    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
 
     # test it works with correct inputs
     rank = compute_rank(data=data)
@@ -454,7 +454,7 @@ def test_compute_pearson_2d() -> None:
     n_epochs = 5
     n_chans = 2
     n_times = 100
-    data = _generate_data((n_epochs, n_chans, n_times))
+    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
 
     # test it works with correct inputs
     pearsonr = _compute_pearsonr_2d(
