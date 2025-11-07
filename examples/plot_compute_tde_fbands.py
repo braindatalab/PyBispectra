@@ -83,7 +83,7 @@ print(
 ########################################################################################
 # We can see that time delays have been computed for one connection (0 → 1) and three
 # frequency bands (0-100 Hz; 20-30 Hz; and 30-40 Hz), with 401 timepoints. The
-# timepoints correspond to time delay estimates for every 5 ms (i.e. the sampling rate
+# timepoints correspond to time delay estimates for every 5 ms (i.e., the sampling rate
 # of the data), ranging from -1000 ms to +1000 ms.
 #
 # Inspecting the results, we see that: the 20-30 Hz bispectrum entries capture the
@@ -92,7 +92,7 @@ print(
 # :math:`\textbf{x}` (represented as a negative time delay from :math:`\textbf{x}` to
 # :math:`\textbf{y}`); and the broadband 0-100 Hz bispectrum captures both frequency
 # band interactions. As an additional note, you can see that computing time delays on
-# smaller frequency bands (i.e. fewer Fourier coefficients) increases the temporal
+# smaller frequency bands (i.e., fewer Fourier coefficients) increases the temporal
 # smoothing of results, something you must keep in mind if you expect your data to
 # contain distinct interactions which are temporally proximal to one another.
 
@@ -103,8 +103,8 @@ fig, axes = tde.results.plot(freq_bands=(1, 2, 0))
 ########################################################################################
 # Altogether, estimating time delays for particular frequency bands is a useful approach
 # to discriminate interactions between signals at distinct frequencies, whether these
-# frequency bands come from an *a priori* knowledge of the system being studied (e.g. as
-# for cortico-subthalamic interactions), or after observing multiple peaks in the
+# frequency bands come from an *a priori* knowledge of the system being studied (e.g.,
+# as for cortico-subthalamic interactions), or after observing multiple peaks in the
 # broadband time delay spectrum.
 
 ########################################################################################

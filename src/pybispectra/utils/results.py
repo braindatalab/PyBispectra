@@ -168,7 +168,7 @@ class _ResultsBase(ABC):
         form : ``"raveled"`` | ``"compact"`` (default ``"raveled"``)
             How the results should be returned: ``"raveled"`` - results have shape
             ``[nodes, ...]``; ``"compact"`` - results have shape ``[seeds, targets,
-            ...]``, where ``...`` represents the data dimensions (e.g. frequencies,
+            ...]``, where ``...`` represents the data dimensions (e.g., frequencies,
             times).
 
         copy : bool (default True)
@@ -216,13 +216,13 @@ class _ResultsBase(ABC):
         ----------
         compact_results : numpy.ndarray
             Empty results array with shape ``[seeds, targets, ...]``, where ``...``
-            represents the data dimensions (e.g. frequencies, times).
+            represents the data dimensions (e.g., frequencies, times).
 
         Returns
         -------
         compact_results : numpy.ndarray
             Results array with shape ``[seeds, targets, ...]``, where ``...`` represents
-            the data dimensions (e.g. frequencies, times).
+            the data dimensions (e.g., frequencies, times).
 
         indices : tuple of tuple of int
             Channel indices of ``compact_results`` for the seeds and targets,
@@ -279,7 +279,7 @@ class ResultsCFC(_ResultsBase):
         of equal length for the seed and target indices, respectively.
 
     shape : tuple of int
-        Shape of the results i.e. ``[nodes, low frequencies, high frequencies
+        Shape of the results i.e., ``[nodes, low frequencies, high frequencies
         (, times)]``.
 
     n_nodes : int
@@ -385,12 +385,12 @@ class ResultsCFC(_ResultsBase):
             Indices of connections to plot. If :obj:`None`, plot all connections.
 
         f1s : tuple of int or float | None (default None)
-            Start and end low frequencies of the results to plot, respectively. If
-            :obj:`None`, all low frequencies are plotted.
+            Start and end low frequencies (in Hz) of the results to plot, respectively.
+            If :obj:`None`, all low frequencies are plotted.
 
         f2s : tuple of int or float | None (default None)
-            Start and end high frequencies of the results to plot, respectively. If
-            :obj:`None`, all high frequencies are plotted.
+            Start and end high frequencies (in Hz) of the results to plot, respectively.
+            If :obj:`None`, all high frequencies are plotted.
 
         times : tuple of int or float, length of 2 | None (default None)
             Start and end times (in seconds) of the results to plot, respectively. If
@@ -494,7 +494,7 @@ class ResultsTDE(_ResultsBase):
         of equal length for the seed and target indices, respectively.
 
     shape : tuple of int
-        Shape of the results i.e. ``[nodes, frequency bands, times]``.
+        Shape of the results i.e., ``[nodes, frequency bands, times]``.
 
     n_nodes : int
         Number of connections in the results.
@@ -638,8 +638,9 @@ class ResultsTDE(_ResultsBase):
             Indices of frequency bands to plot. If :obj:`None`, all frequency bands are
             plotted.
 
-        times : tuple of int or float | None (default None)
-            Start and end times of the results to plot. If :obj:`None`, plot all times.
+        times : tuple of int or float, length of 2 | None (default None)
+            Start and end times (in ms) of the results to plot, respectively. If
+            :obj:`None`, plot all times.
 
         n_rows : int (default ``1``)
             Number of rows of subplots per figure.
@@ -742,7 +743,7 @@ class ResultsWaveShape(_ResultsBase):
         Indices of the channels in the results.
 
     shape : tuple of int
-        Shape of the results i.e. ``[nodes, low frequencies, high frequencies
+        Shape of the results i.e., ``[nodes, low frequencies, high frequencies
         (, times)]``.
 
     n_nodes : int
@@ -852,13 +853,13 @@ class ResultsWaveShape(_ResultsBase):
             Indices of results of channels to plot. If :obj:`None`, plot results of all
             channels.
 
-        f1s : tuple of int or float | None (default None)
-            Start and end low frequencies of the results to plot, respectively. If
-            :obj:`None`, plot all low frequencies.
+        f1s : tuple of int or float, length of 2 | None (default None)
+            Start and end low frequencies (in Hz) of the results to plot, respectively.
+            If :obj:`None`, plot all low frequencies.
 
-        f2s : tuple of int or float | None (default None)
-            Start and end high frequencies of the results to plot, respectively. If
-            :obj:`None`, plot all high frequencies.
+        f2s : tuple of int or float, length of 2 | None (default None)
+            Start and end high frequencies (in Hz) of the results to plot, respectively.
+            If :obj:`None`, plot all high frequencies.
 
         times : tuple of int or float, length of 2 | None (default None)
             Start and end times (in seconds) of the results to plot, respectively. If
@@ -1005,7 +1006,7 @@ class ResultsGeneral(_ResultsBase):
         tuples of equal length for the k, m, and n channel indices, respectively.
 
     shape : tuple of int
-        Shape of the results i.e. ``[nodes, low frequencies, high frequencies
+        Shape of the results i.e., ``[nodes, low frequencies, high frequencies
         (, times)]``.
 
     n_nodes : int
@@ -1086,7 +1087,7 @@ class ResultsGeneral(_ResultsBase):
         form : ``"raveled"`` | ``"compact"`` (default ``"raveled"``)
             How the results should be returned: ``"raveled"`` - results have shape
             ``[nodes, ...]``; ``"compact"`` - results have shape ``[k, m, n, ...]``,
-            where ``...`` represents the data dimensions (e.g. frequencies, times).
+            where ``...`` represents the data dimensions (e.g., frequencies, times).
 
         copy : bool (default True)
             Whether to return a copy of the results.
@@ -1157,13 +1158,13 @@ class ResultsGeneral(_ResultsBase):
             Indices of results of channels to plot. If :obj:`None`, plot results of all
             channels.
 
-        f1s : tuple of int or float | None (default None)
-            Start and end low frequencies of the results to plot, respectively. If
-            :obj:`None`, plot all low frequencies.
+        f1s : tuple of int or float, length of 2 | None (default None)
+            Start and end low frequencies (in Hz) of the results to plot, respectively.
+            If :obj:`None`, plot all low frequencies.
 
-        f2s : tuple of int or float | None (default None)
-            Start and end high frequencies of the results to plot, respectively. If
-            :obj:`None`, plot all high frequencies.
+        f2s : tuple of int or float, length of 2 | None (default None)
+            Start and end high frequencies (in Hz) of the results to plot, respectively.
+            If :obj:`None`, plot all high frequencies.
 
         times : tuple of int or float, length of 2 | None (default None)
             Start and end times (in seconds) of the results to plot, respectively. If

@@ -30,8 +30,8 @@ from pybispectra import (
 # ----------
 # When analysing signals, important information may be gleaned from a variety of
 # features, including their shape. One tool for extracting this information is the
-# bicoherence, capturing information about rise-decay asymmetry (i.e. how much a signal
-# resembles a sawtooth wave) and peak-trough asymmetry (i.e. how 'spiky' a signal is)
+# bicoherence, capturing information about rise-decay asymmetry (i.e., how much a signal
+# resembles a sawtooth wave) and peak-trough asymmetry (i.e., how 'spiky' a signal is)
 # :footcite:`Bartz2019`. The use of the bicoherence for waveshape analysis was discussed
 # in detail in this example: :doc:`plot_compute_waveshape`. In particular, it was
 # mentioned how the signal-to-noise ratio of the signal can affect the ability of the
@@ -56,7 +56,7 @@ from pybispectra import (
 # and the flanking frequencies are designated as the noise. The data is filtered in
 # these signal and noise ranges, and the covariance matrices of the corresponding data
 # are used to generate a set of spatial filters that, when applied to the data, maximise
-# the SNR (i.e. maximise signal power at the desired frequency band). HPMax can be
+# the SNR (i.e., maximise signal power at the desired frequency band). HPMax can be
 # thought of as an extension of SSD, in which the base frequency band and its higher
 # harmonics are designated as the signal, based on the principle that non-sinusoidal
 # signal information is encoded at its base frequency and higher harmonics.
@@ -74,12 +74,12 @@ from pybispectra import (
 # computed using the :meth:`~pybispectra.utils.SpatioSpectralFilter.fit_transform_ssd`
 # method). We specify the 'signal' frequency band of interest to be 18-22 Hz and the
 # flanking 'noise' frequencies to be 15-18 Hz and 22-25 Hz. Additionally, we take
-# information from the two higher harmonics of the 'signal' frequencies (i.e. 36-44 Hz
+# information from the two higher harmonics of the 'signal' frequencies (i.e., 36-44 Hz
 # and 54-66 Hz).
 #
 # After finding the filters, we use them to transform the data. By default, only those
 # filters whose signal vs. noise contributions are greater than 1 are returned, however
-# for simplicity we will take only the first component (i.e. the component with the
+# for simplicity we will take only the first component (i.e., the component with the
 # greatest signal-to-noise ratio).
 
 # %%
@@ -104,12 +104,12 @@ print(
 print(
     f"Transformed timeseries data: [{transformed_data.shape[0]} epochs x "
     f"{transformed_data.shape[1]} channel(s) x {transformed_data.shape[2]} times]\n"
-    f"Signal-to-noise ratio of transformed data's first component: {ssf.ratios[0] :.2f}"
+    f"Signal-to-noise ratio of transformed data's first component: {ssf.ratios[0]:.2f}"
 )
 
 ########################################################################################
 # As SSD and HPMax are based on generalised eigendecomposition, the data for which the
-# filters are being generated must be full rank (i.e. a non-zero determinant). The
+# filters are being generated must be full rank (i.e., a non-zero determinant). The
 # :meth:`~pybispectra.utils.SpatioSpectralFilter.fit_transform_ssd` and
 # :meth:`~pybispectra.utils.SpatioSpectralFilter.fit_transform_hpmax` methods have a
 # ``rank`` argument where the rank of the data can be specified, according to which the

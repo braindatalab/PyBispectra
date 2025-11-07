@@ -199,13 +199,13 @@ print(
 # encoded in different aspects of the complex-valued bicoherence, with peak-trough
 # asymmetry encoded in the real part, and rise-decay asymmetry encoded in the imaginary
 # part. We can therefore additionally examine the absolute value of the bicoherence
-# (i.e. the magnitude) as well as the phase angle to get an overall picture of the
+# (i.e., the magnitude) as well as the phase angle to get an overall picture of the
 # combination of peak-trough and rise-decay asymmetries.
 #
 # For the sawtooth waves, we expect the real part of bicoherence to be ~0 and the
 # imaginary part to be non-zero at the simulated 10 Hz frequency. From the plots, we see
 # that this is indeed the case. However, we also see that the imaginary values at the 10
-# Hz higher harmonics (i.e. 20 and 30 Hz) are also non-zero, a product of the Fourier
+# Hz higher harmonics (i.e., 20 and 30 Hz) are also non-zero, a product of the Fourier
 # transform's application to non-sinusoidal signals. It is also worth noting that the
 # sign of the imaginary values varies for the particular sawtooth type, with a ramp up
 # sawtooth resulting in positive values, and a ramp down sawtooth resulting in negative
@@ -217,7 +217,7 @@ print(
 # counter-clockwise from the positive real axis). Accordingly, a phase of
 # :math:`\frac{1}{2}\pi` is seen at 10 Hz and its higher harmonics for the ramp up
 # sawtooth, with a phase of :math:`\frac{3}{2}\pi` for the ramp down sawtooth. The
-# phases and absolute values (i.e. the magnitude) therefore combine information from
+# phases and absolute values (i.e., the magnitude) therefore combine information from
 # both the real and imaginary components.
 #
 # In contrast, we expect the real part of the bicoherence to be non-zero for signals

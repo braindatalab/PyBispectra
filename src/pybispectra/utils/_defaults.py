@@ -6,7 +6,7 @@ import numpy as np
 class _Precision:
     """Class specifying precision of data/results.
 
-    Double precision (i.e. float64 and complex128) used by default.
+    Double precision (i.e., float64 and complex128) used by default.
     """
 
     def __init__(self) -> None:  # noqa: D107

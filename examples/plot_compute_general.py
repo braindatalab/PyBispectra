@@ -218,7 +218,7 @@ bicoh_pac.plot(f1s=(5, 15), f2s=(55, 65))  # general class
 # The :class:`~pybispectra.general.Bispectrum` and
 # :class:`~pybispectra.general.Threenorm` classes can also be used to compute
 # non-sinusoidal waveshape results (equivalent to
-# :class:`~pybispectra.waveshape.WaveShape`) and antisymmetrised bispectra (e.g. as in
+# :class:`~pybispectra.waveshape.WaveShape`) and antisymmetrised bispectra (e.g., as in
 # :class:`~pybispectra.cfc.PAC`) by following the equations listed in the respective
 # documentation and publications.
 
