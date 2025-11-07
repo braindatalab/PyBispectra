@@ -39,6 +39,8 @@ def test_error_catch(class_type: str) -> None:
         TestClass(coeffs.tolist(), freqs, sampling_freq)
     with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
         TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+    with pytest.raises(TypeError, match="`data` must be a complex-valued object."):
+        TestClass(coeffs.real, freqs, sampling_freq)
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
         TestClass(coeffs, freqs.tolist(), sampling_freq)

@@ -128,6 +128,7 @@ class SpatioSpectralFilter:
     """
 
     data = None
+    _data_precision: type = _precision.real
     _n_epochs = None
     _n_chans = None
     _n_times = None
@@ -173,6 +174,8 @@ class SpatioSpectralFilter:
             raise TypeError("`data` must be a NumPy array.")
         if data.ndim != 3:
             raise ValueError("`data` must be a 3D array.")
+        if not np.isrealobj(data):
+            raise TypeError("`data` must be a real-valued object.")
 
         if not isinstance(sampling_freq, _number_like):
             raise TypeError("`sampling_freq` must be an int or a float.")
@@ -180,7 +183,7 @@ class SpatioSpectralFilter:
 
         self._n_epochs, self._n_chans, self._n_times = data.shape
 
-        self.data = np.asarray(data, dtype=_precision.real)
+        self.data = np.asarray(data, dtype=self._data_precision)
 
     def _sort_freq_bounds(
         self,

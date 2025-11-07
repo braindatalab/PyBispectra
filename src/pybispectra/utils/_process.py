@@ -17,7 +17,6 @@ class _ProcessFreqBase(ABC):
     """Base class for processing frequency-domain results."""
 
     _data_precision: type = _precision.complex
-
     _data_ndims: tuple = (3, 4)  # [epochs, channels, frequencies (, times)]
     _has_time_dim_placeholder: bool = False
 
@@ -66,6 +65,11 @@ class _ProcessFreqBase(ABC):
             "PyBispectra Internal Error: data to process must be 3D or 4D. Please "
             "contact the PyBispectra developers."
         )
+        expect_complex_data = issubclass(self._data_precision, np.complexfloating)
+        if expect_complex_data and not np.iscomplexobj(data):
+            raise TypeError("`data` must be a complex-valued object.")
+        if not expect_complex_data and not np.isrealobj(data):
+            raise TypeError("`data` must be a real-valued object.")
 
         if not isinstance(freqs, np.ndarray):
             raise TypeError("`freqs` must be a NumPy array.")

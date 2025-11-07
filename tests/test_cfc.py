@@ -11,6 +11,7 @@ from pybispectra.utils import (
     get_example_data_paths,
 )
 from pybispectra.utils._utils import _generate_data
+from pybispectra.utils._defaults import _precision
 
 
 @pytest.mark.parametrize("class_type", ["PAC", "PPC", "AAC"])
@@ -47,6 +48,12 @@ def test_error_catch(class_type: str) -> None:
     else:
         with pytest.raises(ValueError, match="`data` must be a 4D array."):
             TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+    if class_type in ("PAC", "PPC"):
+        with pytest.raises(TypeError, match="`data` must be a complex-valued object."):
+            TestClass(coeffs.real, freqs, sampling_freq)
+    else:
+        with pytest.raises(TypeError, match="`data` must be a real-valued object."):
+            TestClass(coeffs.astype(_precision.complex), freqs, sampling_freq)
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
         TestClass(coeffs, freqs.tolist(), sampling_freq)

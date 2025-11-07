@@ -5,6 +5,7 @@ import pytest
 
 from pybispectra.utils import SpatioSpectralFilter
 from pybispectra.utils._utils import _generate_data
+from pybispectra.utils._defaults import _precision
 
 
 @pytest.mark.parametrize("method", ["ssd", "hpmax"])
@@ -23,6 +24,8 @@ def test_error_catch(method: str) -> None:
         SpatioSpectralFilter(data.tolist(), sampling_freq)
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
         SpatioSpectralFilter(data[0], sampling_freq)
+    with pytest.raises(TypeError, match="`data` must be a real-valued object."):
+        SpatioSpectralFilter(data.astype(_precision.complex), sampling_freq)
 
     with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
         SpatioSpectralFilter(data, [sampling_freq])
