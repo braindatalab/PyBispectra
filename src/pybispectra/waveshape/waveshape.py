@@ -118,7 +118,7 @@ class WaveShape(_ProcessBispectrum):
             Whether to normalise the waveshape results using the threenorm. If a tuple
             of bool, both forms of waveshape are computed in turn.
 
-            ..versionadded:: 1.3
+            .. versionadded:: 1.3
 
         n_jobs : int (default ``1``)
             The number of jobs to run in parallel. If ``-1``, all available CPUs are

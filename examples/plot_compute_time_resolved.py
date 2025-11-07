@@ -34,7 +34,7 @@ from pybispectra import WaveShape, get_example_data_paths, compute_tfr
 # TFR coefficients, allowing for time-resolved bispectral analyses. In PyBispectra,
 # time-resolved features can be computed from TFRs for:
 #
-# - Cross-frequency coupling: :class:`~pybispectra.cfc.PAC`
+# - Phase-amplitude coupling: :class:`~pybispectra.cfc.PAC`
 # - Waveshape: :class:`~pybispectra.waveshape.WaveShape`
 # - General analysis: :class:`~pybispectra.general.Bispectrum` and
 #   :class:`~pybispectra.general.Threenorm`
@@ -109,8 +109,9 @@ print(
 )
 
 ########################################################################################
-# As you can see, the TFR coefficients contain information on the frequency content of
-# the data for each timepoint.
+# As you can see, the example epoch shows the sawtooth wave in the first second and the
+# sine wave in the final second, and the TFR coefficients contain information on the
+# frequency content of the data for each timepoint.
 
 ########################################################################################
 # Computing time-resolved bispectral features
@@ -125,8 +126,9 @@ print(
 # simulated).
 #
 # We can also specify the time period to compute waveshape on using the ``times``
-# argument. By default, the entire time period is taken, which we use here. See below
-# for an example of specifying a subset of timepoints to compute features on.
+# argument. By default, the entire time period is taken, which we use here. A
+# demonstration of specifying a subset of timepoints to compute features on is shown at
+# the end of the example.
 
 # %%
 
