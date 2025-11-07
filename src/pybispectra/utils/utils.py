@@ -459,6 +459,12 @@ _DATA_ALIAS_FILE_HASH = [
         "sim_data_pac_bivariate.npy",
         "sha256:8A0EAB4F4AFC676FE6DEDEA6410414376257A18703CCE0DA9C0A5848295BD5A6",
     ),
+    # PPC
+    (
+        "sim_data_ppc",
+        "sim_data_ppc.npy",
+        "sha256:DB3B9FD9AE96F2E96C1E8DA533D36BE9550CCACC81A69CB5DDC8E4ED18D71A8D",
+    ),
     # TDE
     (
         "sim_data_tde_independent_noise",
