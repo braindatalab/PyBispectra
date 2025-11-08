@@ -9,74 +9,68 @@ from pybispectra.general import Bispectrum, Threenorm
 from pybispectra.utils import (
     ResultsGeneral,
     compute_fft,
-    compute_tfr,
     get_example_data_paths,
 )
-from pybispectra.utils._utils import _generate_data
 from pybispectra.waveshape import WaveShape
 
 
 @pytest.mark.parametrize("class_type", ["Bispectrum", "Threenorm"])
-def test_error_catch(class_type: str) -> None:
+def test_error_catch(
+    fft_and_freqs: tuple[np.ndarray, np.ndarray], data_sfreq: float, class_type: str
+) -> None:
     """Check that General classes catch errors."""
+    fft, freqs = fft_and_freqs
+    seeds_targets = np.arange(fft.shape[1]).tolist()
+    indices = (seeds_targets, seeds_targets)
+
     if class_type == "Bispectrum":
         TestClass = Bispectrum
     else:
         TestClass = Threenorm
 
-    n_chans = 3
-    n_epochs = 5
-    n_times = 100
-    sampling_freq = 50
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
-    indices = ([0, 1, 2], [0, 1, 2])
-    freqs = np.arange(5, 20)
-
-    coeffs, freqs = compute_fft(data, sampling_freq)
-
     # initialisation
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        TestClass(coeffs.tolist(), freqs, sampling_freq)
+        TestClass(fft.tolist(), freqs, data_sfreq)
     with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
-        TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+        TestClass(np.random.randn(2, 2), freqs, data_sfreq)
     with pytest.raises(TypeError, match="`data` must be a complex-valued object."):
-        TestClass(coeffs.real, freqs, sampling_freq)
+        TestClass(fft.real, freqs, data_sfreq)
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
-        TestClass(coeffs, freqs.tolist(), sampling_freq)
+        TestClass(fft, freqs.tolist(), data_sfreq)
     with pytest.raises(ValueError, match="`freqs` must be a 1D array."):
-        TestClass(coeffs, np.random.randn(2, 2), sampling_freq)
+        TestClass(fft, np.random.randn(2, 2), data_sfreq)
 
     with pytest.raises(
         ValueError,
         match=("`data` and `freqs` must contain the same number of frequencies."),
     ):
-        TestClass(coeffs, freqs[:-1], sampling_freq)
+        TestClass(fft, freqs[:-1], data_sfreq)
 
     with pytest.raises(ValueError, match="Entries of `freqs` must be >= 0."):
-        TestClass(coeffs, freqs * -1, sampling_freq)
+        TestClass(fft, freqs * -1, data_sfreq)
     with pytest.raises(
         ValueError, match="At least one entry of `freqs` is > the Nyquist frequency."
     ):
-        bad_freqs = np.linspace(0, sampling_freq / 2 + 1, freqs.size)
-        TestClass(coeffs, bad_freqs, sampling_freq)
+        bad_freqs = np.linspace(0, data_sfreq / 2 + 1, freqs.size)
+        TestClass(fft, bad_freqs, data_sfreq)
     with pytest.raises(
         ValueError, match=("Entries of `freqs` must be in ascending order.")
     ):
-        TestClass(coeffs, freqs[::-1], sampling_freq)
+        TestClass(fft, freqs[::-1], data_sfreq)
     with pytest.raises(ValueError, match="Entries of `freqs` must be evenly spaced."):
         bad_freqs = freqs.copy()
         bad_freqs[1] *= 2
-        TestClass(coeffs, bad_freqs, sampling_freq)
+        TestClass(fft, bad_freqs, data_sfreq)
 
     with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
-        TestClass(coeffs, freqs, None)
+        TestClass(fft, freqs, None)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
-        TestClass(coeffs, freqs, sampling_freq, verbose="verbose")
+        TestClass(fft, freqs, data_sfreq, verbose="verbose")
 
     # compute
-    test_class = TestClass(coeffs, freqs, sampling_freq)
+    test_class = TestClass(fft, freqs, data_sfreq)
 
     with pytest.raises(TypeError, match="`indices` must be a tuple."):
         test_class.compute(indices=list(indices))
@@ -117,19 +111,19 @@ def test_error_catch(class_type: str) -> None:
     with pytest.raises(
         ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
-        test_class.compute(f1s=(5, sampling_freq / 2 + 1))
+        test_class.compute(f1s=(5, data_sfreq / 2 + 1))
     with pytest.raises(
         ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
-        test_class.compute(f1s=(sampling_freq / 2 + 1, 10))
+        test_class.compute(f1s=(data_sfreq / 2 + 1, 10))
     with pytest.raises(
         ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
-        test_class.compute(f2s=(5, sampling_freq / 2 + 1))
+        test_class.compute(f2s=(5, data_sfreq / 2 + 1))
     with pytest.raises(
         ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
-        test_class.compute(f2s=(sampling_freq / 2 + 1, 10))
+        test_class.compute(f2s=(data_sfreq / 2 + 1, 10))
     with pytest.raises(
         ValueError,
         match="No frequencies are present in the data for the range in `f1s`.",
@@ -158,42 +152,37 @@ def test_error_catch(class_type: str) -> None:
 
 
 @pytest.mark.parametrize("class_type", ["Bispectrum", "Threenorm"])
-def test_error_catch_time_resolved(class_type: str) -> None:
+def test_error_catch_time_resolved(
+    complex_tfr_and_freqs: tuple[np.ndarray, np.ndarray],
+    data_sfreq: float,
+    class_type: str,
+) -> None:
     """Check that General classes catch errors for time-resolved data."""
+    tfr, freqs = complex_tfr_and_freqs
+    times = np.arange(tfr.shape[3]) / data_sfreq
+
     if class_type == "Bispectrum":
         TestClass = Bispectrum
     else:
         TestClass = Threenorm
 
-    n_chans = 3
-    n_epochs = 5
-    n_times = 100
-    sampling_freq = 50
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
-    freqs = np.arange(5, 20)
-    times = np.arange(n_times) / sampling_freq
-
-    coeffs, freqs = compute_tfr(
-        data, sampling_freq, freqs, n_cycles=3, output="complex"
-    )
-
     # initialisation
     with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
-        TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+        TestClass(np.random.randn(2, 2), freqs, data_sfreq)
 
     with pytest.raises(TypeError, match="`times` must be a NumPy array."):
-        TestClass(coeffs, freqs, sampling_freq, times.tolist())
+        TestClass(tfr, freqs, data_sfreq, times.tolist())
     with pytest.raises(ValueError, match="`times` must be a 1D array."):
-        TestClass(coeffs, freqs, sampling_freq, times[:, np.newaxis])
+        TestClass(tfr, freqs, data_sfreq, times[:, np.newaxis])
 
     with pytest.raises(
         ValueError,
         match=("`data` and `times` must contain the same number of timepoints."),
     ):
-        TestClass(coeffs, freqs, sampling_freq, times[:-1])
+        TestClass(tfr, freqs, data_sfreq, times[:-1])
 
     # compute
-    test_class = TestClass(coeffs, freqs, sampling_freq, times)
+    test_class = TestClass(tfr, freqs, data_sfreq, times)
 
     # test that errors for incorrect inputs are caught
     with pytest.raises(TypeError, match="`times` must be a tuple or None."):
@@ -210,69 +199,63 @@ def test_error_catch_time_resolved(class_type: str) -> None:
 
 
 @pytest.mark.parametrize("class_type", ["Bispectrum", "Threenorm"])
-def test_general_runs(class_type: str) -> None:
+def test_general_runs(
+    fft_and_freqs: tuple[np.ndarray, np.ndarray],
+    complex_tfr_and_freqs: tuple[np.ndarray, np.ndarray],
+    data_sfreq: float,
+    class_type: str,
+) -> None:
     """Test that General classes run correctly."""
+    fft, fft_freqs = fft_and_freqs
+    tfr, tfr_freqs = complex_tfr_and_freqs
+    assert fft.shape[1] == tfr.shape[1], "n_chans in FFT and TFR do not match"
+    _, n_chans, _, n_times = tfr.shape
+    default_times = np.arange(n_times) / data_sfreq  # matches auto-generated times
+    times = default_times + 10  # offset to distinguish from auto-generated ones
+
     if class_type == "Bispectrum":
         TestClass = Bispectrum
     else:
         TestClass = Threenorm
 
-    n_chans = 3
-    n_times = 100
-    sampling_freq = 50
-    data = _generate_data((5, n_chans, n_times), complexobj=False)
-    default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
-    times = default_times + 10  # offset to distinguish from auto-generated ones
-    freqs = np.arange(5, 25, 0.5)
-
-    fft, fft_freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
-    fft = fft[..., np.intersect1d(fft_freqs, freqs, return_indices=True)[1]]
-    tfr, _ = compute_tfr(
-        data=data,
-        sampling_freq=sampling_freq,
-        freqs=freqs,
-        n_cycles=3,
-        output="complex",
-    )
-
     # check data is stored correctly
-    test_class = TestClass(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    test_class = TestClass(data=fft, freqs=fft_freqs, sampling_freq=data_sfreq)
     assert np.all(test_class.data == fft), "FFT data not stored correctly"
-    test_class_tr = TestClass(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    test_class_tr = TestClass(data=tfr, freqs=tfr_freqs, sampling_freq=data_sfreq)
     assert np.all(test_class_tr.data == tfr), "TFR data not stored correctly"
 
     # check times are handled correctly
     test_class = TestClass(
-        data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times
+        data=fft, freqs=fft_freqs, sampling_freq=data_sfreq, times=times
     )
     assert test_class.times is None, (
         "`times` should be ignored for non-time-resolved_data"
     )
     test_class = TestClass(
-        data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times
+        data=tfr, freqs=tfr_freqs, sampling_freq=data_sfreq, times=times
     )
     assert np.all(test_class.times == times), (
         "`times` should be stored for time-resolved_data"
     )
-    test_class = TestClass(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    test_class = TestClass(data=tfr, freqs=tfr_freqs, sampling_freq=data_sfreq)
     assert np.all(test_class.times == default_times), (
         "Auto-generated `times` are incorrect for time-resolved_data"
     )
 
     # check it runs with correct inputs
-    test_class = TestClass(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    test_class = TestClass(data=fft, freqs=fft_freqs, sampling_freq=data_sfreq)
     test_class.compute()
     test_class_tr = TestClass(
-        data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times
+        data=tfr, freqs=tfr_freqs, sampling_freq=data_sfreq, times=times
     )
     test_class_tr.compute()
 
     # check the returned results have the correct shape
-    assert test_class.results.shape == (n_chans**3, len(freqs), len(freqs))
+    assert test_class.results.shape == (n_chans**3, len(fft_freqs), len(fft_freqs))
     assert test_class_tr.results.shape == (
         n_chans**3,
-        len(freqs),
-        len(freqs),
+        len(tfr_freqs),
+        len(tfr_freqs),
         len(times),
     )
 
@@ -282,7 +265,9 @@ def test_general_runs(class_type: str) -> None:
 
     # check it runs with non-exact frequencies
     fmin, fmax = 10.25, 19.75
-    freqs_sel = freqs[np.argwhere((freqs >= fmin) & (freqs <= fmax)).squeeze()]
+    freqs_sel = fft_freqs[
+        np.argwhere((fft_freqs >= fmin) & (fft_freqs <= fmax)).squeeze()
+    ]
     test_class.compute(f1s=(fmin, fmax), f2s=(fmin, fmax))
     assert test_class.results.get_results().shape[1:3] == (
         len(freqs_sel),
@@ -313,8 +298,8 @@ def test_general_runs(class_type: str) -> None:
     test_class_tr_results = test_class_tr.results
     test_class_tr_window = TestClass(
         data=tfr[..., tmin_idx : tmax_idx + 1],
-        freqs=freqs,
-        sampling_freq=sampling_freq,
+        freqs=tfr_freqs,
+        sampling_freq=data_sfreq,
         times=times[tmin_idx : tmax_idx + 1],
     )
     test_class_tr_window.compute()

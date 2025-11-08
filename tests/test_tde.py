@@ -5,73 +5,64 @@ import pytest
 
 from pybispectra.tde import TDE
 from pybispectra.utils import ResultsTDE, compute_fft, get_example_data_paths
-from pybispectra.utils._utils import _generate_data
 
 
-def test_error_catch() -> None:
+def test_error_catch(
+    fft_and_freqs: tuple[np.ndarray, np.ndarray], data_sfreq: float
+) -> None:
     """Check that the TDE class catches errors."""
-    n_chans = 3
-    n_epochs = 5
-    n_times = 100
-    sampling_freq = 50
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
-    indices = ((0, 1, 2), (0, 1, 2))
-
-    coeffs, freqs = compute_fft(
-        data=data,
-        sampling_freq=sampling_freq,
-        n_points=2 * n_times + 1,
-        window="hamming",
-    )
+    fft, freqs = fft_and_freqs
+    seeds_targets = np.arange(fft.shape[1]).tolist()
+    indices = (seeds_targets, seeds_targets)
 
     # initialisation
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        TDE(coeffs.tolist(), freqs, sampling_freq)
+        TDE(fft.tolist(), freqs, data_sfreq)
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
-        TDE(np.random.randn(2, 2), freqs, sampling_freq)
+        TDE(np.random.randn(2, 2), freqs, data_sfreq)
     with pytest.raises(TypeError, match="`data` must be a complex-valued object."):
-        TDE(coeffs.real, freqs, sampling_freq)
+        TDE(fft.real, freqs, data_sfreq)
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
-        TDE(coeffs, freqs.tolist(), sampling_freq)
+        TDE(fft, freqs.tolist(), data_sfreq)
     with pytest.raises(ValueError, match="`freqs` must be a 1D array."):
-        TDE(coeffs, np.random.randn(2, 2), sampling_freq)
+        TDE(fft, np.random.randn(2, 2), data_sfreq)
     with pytest.raises(ValueError, match="The first entry of `freqs` must be 0."):
-        TDE(coeffs[..., 1:], freqs[1:], sampling_freq)
+        TDE(fft[..., 1:], freqs[1:], data_sfreq)
 
     with pytest.raises(
         ValueError,
         match=("`data` and `freqs` must contain the same number of frequencies."),
     ):
-        TDE(coeffs, freqs[:-1], sampling_freq)
+        TDE(fft, freqs[:-1], data_sfreq)
 
     with pytest.raises(
         ValueError, match="At least one entry of `freqs` is > the Nyquist frequency."
     ):
-        bad_freqs = np.linspace(0, sampling_freq / 2 + 1, freqs.size)
-        TDE(coeffs, bad_freqs, sampling_freq)
+        bad_freqs = np.linspace(0, data_sfreq / 2 + 1, freqs.size)
+        TDE(fft, bad_freqs, data_sfreq)
     max_freq_i = np.argwhere(freqs == np.max(freqs))[0][0]
     with pytest.raises(
         ValueError, match="Entries of `freqs` must be in ascending order."
     ):
         TDE(
-            coeffs,
+            fft,
             np.hstack((freqs[: max_freq_i + 1][::-1], freqs[max_freq_i + 1 :])),
-            sampling_freq,
+            data_sfreq,
         )
     with pytest.raises(ValueError, match="Entries of `freqs` must be evenly spaced."):
         bad_freqs = freqs.copy()
         bad_freqs[1] *= 2
-        TDE(coeffs, bad_freqs, sampling_freq)
+        TDE(fft, bad_freqs, data_sfreq)
 
     with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
-        TDE(coeffs, freqs, None)
+        TDE(fft, freqs, None)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
-        TDE(coeffs, freqs, sampling_freq, "verbose")
+        TDE(fft, freqs, data_sfreq, "verbose")
 
     # compute
-    tde = TDE(coeffs, freqs, sampling_freq)
+    tde = TDE(fft, freqs, data_sfreq)
 
     with pytest.raises(TypeError, match="`antisym` must be a bool or tuple of bools."):
         tde.compute(antisym="true")
@@ -126,7 +117,7 @@ def test_error_catch() -> None:
     with pytest.raises(
         ValueError, match="Entries of `fmax` must be <= the Nyquist frequency."
     ):
-        tde.compute(fmax=sampling_freq / 2 + 1)
+        tde.compute(fmax=data_sfreq / 2 + 1)
     with pytest.raises(
         ValueError,
         match=("At least one entry of `fmin` is > the corresponding entry of `fmax`."),
@@ -145,26 +136,19 @@ def test_error_catch() -> None:
 
 
 @pytest.mark.parametrize("freq_bands", [(0, np.inf), (5, 10), ((5, 15), (10, 20))])
-def test_tde_runs(freq_bands: tuple) -> None:
+def test_tde_runs(
+    freq_bands: tuple, fft_and_freqs: tuple[np.ndarray, np.ndarray], data_sfreq: float
+) -> None:
     """Test that TDE runs correctly."""
-    n_chans = 3
-    n_times = 100
-    sampling_freq = 50
-    data = _generate_data((5, n_chans, n_times), complexobj=False)
-
-    fft, freqs = compute_fft(
-        data=data,
-        sampling_freq=sampling_freq,
-        n_points=2 * n_times + 1,
-        window="hamming",
-    )
+    fft, freqs = fft_and_freqs
+    n_chans = fft.shape[1]
 
     # check data is stored correctly
-    tde = TDE(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    tde = TDE(data=fft, freqs=freqs, sampling_freq=data_sfreq)
     assert tde.data.ndim == 3, "TDE data not stored correctly"
 
     # check it runs with correct inputs
-    tde = TDE(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    tde = TDE(data=fft, freqs=freqs, sampling_freq=data_sfreq)
     tde.compute(
         antisym=(False, True),
         method=(1, 2, 3, 4),

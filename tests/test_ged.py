@@ -4,33 +4,29 @@ import numpy as np
 import pytest
 
 from pybispectra.utils import SpatioSpectralFilter
-from pybispectra.utils._utils import _generate_data
 from pybispectra.utils._defaults import _precision
 
 
 @pytest.mark.parametrize("method", ["ssd", "hpmax"])
-def test_error_catch(method: str) -> None:
+def test_error_catch(epochs: np.ndarray, data_sfreq: float, method: str) -> None:
     """Check that SpatioSpectralFilter class catches errors."""
-    n_chans = 3
-    n_epochs = 5
-    n_times = 200
-    sampling_freq = 50
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
+    epochs = np.concatenate((epochs, epochs), axis=2)  # increase n_times
+    n_chans = epochs.shape[1]
     signal_bounds = (10, 15)
     noise_bounds = (8, 17)
 
     # initialisation
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        SpatioSpectralFilter(data.tolist(), sampling_freq)
+        SpatioSpectralFilter(epochs.tolist(), data_sfreq)
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
-        SpatioSpectralFilter(data[0], sampling_freq)
+        SpatioSpectralFilter(epochs[0], data_sfreq)
     with pytest.raises(TypeError, match="`data` must be a real-valued object."):
-        SpatioSpectralFilter(data.astype(_precision.complex), sampling_freq)
+        SpatioSpectralFilter(epochs.astype(_precision.complex), data_sfreq)
 
     with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
-        SpatioSpectralFilter(data, [sampling_freq])
+        SpatioSpectralFilter(epochs, [data_sfreq])
 
-    ssf = SpatioSpectralFilter(data, sampling_freq)
+    ssf = SpatioSpectralFilter(epochs, data_sfreq)
 
     # SSD and HPMax inputs
     with pytest.raises(
@@ -178,7 +174,7 @@ def test_error_catch(method: str) -> None:
                 signal_bounds=signal_bounds,
                 noise_bounds=noise_bounds,
                 n_harmonics=int(
-                    np.ceil(((sampling_freq / 2) + noise_bounds[1]) / signal_bounds[1])
+                    np.ceil(((data_sfreq / 2) + noise_bounds[1]) / signal_bounds[1])
                 ),
             )
 
@@ -210,13 +206,13 @@ def test_error_catch(method: str) -> None:
     fit_method(signal_bounds=signal_bounds, noise_bounds=noise_bounds)
 
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        ssf.transform(data=data.tolist())
+        ssf.transform(data=epochs.tolist())
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
-        ssf.transform(data=data[0])
+        ssf.transform(data=epochs[0])
     with pytest.raises(
         ValueError, match="`data` must have the same number of channels as the filters."
     ):
-        ssf.transform(data=data[:, 1:])
+        ssf.transform(data=epochs[:, 1:])
 
     ssf.transform()
 
@@ -241,17 +237,16 @@ def test_error_catch(method: str) -> None:
 )
 @pytest.mark.parametrize("bandpass_filter", [True, False])
 @pytest.mark.parametrize("rank", [3, 1])
-def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
+def test_ged_ssd_runs(
+    epochs: np.ndarray, data_sfreq: float, bandpass_filter: bool, rank: int
+) -> None:
     """Check that SpatioSpectralFilter class runs SSD."""
-    n_chans = 3
-    n_epochs = 5
-    n_times = 500
-    sampling_freq = 100
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
+    epochs = np.concatenate((epochs, epochs), axis=2)  # increase n_times
+    n_epochs, n_chans, n_times = epochs.shape
     signal_bounds = (10, 15)
     noise_bounds = (8, 17)
 
-    ssf = SpatioSpectralFilter(data, sampling_freq)
+    ssf = SpatioSpectralFilter(epochs, data_sfreq)
 
     transformed_data = ssf.fit_transform_ssd(
         signal_bounds=signal_bounds,
@@ -310,17 +305,16 @@ def test_ged_ssd_runs(bandpass_filter: bool, rank: int) -> None:
 )
 @pytest.mark.parametrize("csd_method", ["fourier", "multitaper"])
 @pytest.mark.parametrize("rank", [3, 1])
-def test_ged_hpmax_runs(csd_method: str, rank: int) -> None:
+def test_ged_hpmax_runs(
+    epochs: np.ndarray, data_sfreq: float, csd_method: str, rank: int
+) -> None:
     """Check that SpatioSpectralFilter class runs HPMax."""
-    n_chans = 3
-    n_epochs = 5
-    n_times = 100
-    sampling_freq = 100
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
+    epochs = np.concatenate((epochs, epochs), axis=2)  # increase n_times
+    n_epochs, n_chans, n_times = epochs.shape
     signal_bounds = (10, 15)
     noise_bounds = (8, 17)
 
-    ssf = SpatioSpectralFilter(data, sampling_freq)
+    ssf = SpatioSpectralFilter(epochs, data_sfreq)
     transformed_data = ssf.fit_transform_hpmax(
         signal_bounds=signal_bounds,
         noise_bounds=noise_bounds,

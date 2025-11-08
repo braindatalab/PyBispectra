@@ -10,88 +10,88 @@ from pybispectra.utils import (
     compute_tfr,
     get_example_data_paths,
 )
-from pybispectra.utils._utils import _generate_data
 from pybispectra.utils._defaults import _precision
 
 
-@pytest.mark.parametrize("class_type", ["PAC", "PPC", "AAC"])
-def test_error_catch(class_type: str) -> None:
+@pytest.mark.parametrize(
+    "coeffs_and_freqs_name,class_type",
+    [
+        ("fft_and_freqs", "PAC"),
+        ("complex_tfr_and_freqs", "PPC"),
+        ("power_tfr_and_freqs", "AAC"),
+    ],
+)
+def test_error_catch(
+    coeffs_and_freqs_name: str,
+    data_sfreq: float,
+    class_type: str,
+    request: pytest.FixtureRequest,
+) -> None:
     """Check that CFC classes catch errors."""
-    n_chans = 3
-    n_epochs = 5
-    n_times = 100
-    sampling_freq = 50
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
-    indices = ([0, 1, 2], [0, 1, 2])
-    freqs = np.arange(5, 20)
+    coeffs, freqs = request.getfixturevalue(coeffs_and_freqs_name)
+    seeds_targets = np.arange(coeffs.shape[1]).tolist()
+    indices = (seeds_targets, seeds_targets)
 
     if class_type == "PAC":
         TestClass = PAC
-        coeffs, freqs = compute_fft(data, sampling_freq)
     elif class_type == "PPC":
         TestClass = PPC
-        coeffs, freqs = compute_tfr(
-            data, sampling_freq, freqs, n_cycles=3, output="complex"
-        )
     else:
         TestClass = AAC
-        coeffs, freqs = compute_tfr(
-            data, sampling_freq, freqs, n_cycles=3, output="power"
-        )
 
     # initialisation
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        TestClass(coeffs.tolist(), freqs, sampling_freq)
+        TestClass(coeffs.tolist(), freqs, data_sfreq)
     if class_type == "PAC":
         with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
-            TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+            TestClass(np.random.randn(2, 2), freqs, data_sfreq)
     else:
         with pytest.raises(ValueError, match="`data` must be a 4D array."):
-            TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+            TestClass(np.random.randn(2, 2), freqs, data_sfreq)
     if class_type in ("PAC", "PPC"):
         with pytest.raises(TypeError, match="`data` must be a complex-valued object."):
-            TestClass(coeffs.real, freqs, sampling_freq)
+            TestClass(coeffs.real, freqs, data_sfreq)
     else:
         with pytest.raises(TypeError, match="`data` must be a real-valued object."):
-            TestClass(coeffs.astype(_precision.complex), freqs, sampling_freq)
+            TestClass(coeffs.astype(_precision.complex), freqs, data_sfreq)
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
-        TestClass(coeffs, freqs.tolist(), sampling_freq)
+        TestClass(coeffs, freqs.tolist(), data_sfreq)
     with pytest.raises(ValueError, match="`freqs` must be a 1D array."):
-        TestClass(coeffs, np.random.randn(2, 2), sampling_freq)
+        TestClass(coeffs, np.random.randn(2, 2), data_sfreq)
 
     with pytest.raises(
         ValueError,
         match=("`data` and `freqs` must contain the same number of frequencies."),
     ):
-        TestClass(coeffs, freqs[:-1], sampling_freq)
+        TestClass(coeffs, freqs[:-1], data_sfreq)
 
     with pytest.raises(ValueError, match="Entries of `freqs` must be >= 0."):
-        TestClass(coeffs, freqs * -1, sampling_freq)
+        TestClass(coeffs, freqs * -1, data_sfreq)
     with pytest.raises(
         ValueError,
         match="At least one entry of `freqs` is > the Nyquist frequency.",
     ):
-        bad_freqs = np.linspace(0, sampling_freq / 2 + 1, freqs.size)
-        TestClass(coeffs, bad_freqs, sampling_freq)
+        bad_freqs = np.linspace(0, data_sfreq / 2 + 1, freqs.size)
+        TestClass(coeffs, bad_freqs, data_sfreq)
     with pytest.raises(
         ValueError,
         match=("Entries of `freqs` must be in ascending order."),
     ):
-        TestClass(coeffs, freqs[::-1], sampling_freq)
+        TestClass(coeffs, freqs[::-1], data_sfreq)
     with pytest.raises(ValueError, match="Entries of `freqs` must be evenly spaced."):
         bad_freqs = freqs.copy()
         bad_freqs[1] *= 2
-        TestClass(coeffs, bad_freqs, sampling_freq)
+        TestClass(coeffs, bad_freqs, data_sfreq)
 
     with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
         TestClass(coeffs, freqs, None)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
-        TestClass(coeffs, freqs, sampling_freq, verbose="verbose")
+        TestClass(coeffs, freqs, data_sfreq, verbose="verbose")
 
     # compute
-    test_class = TestClass(coeffs, freqs, sampling_freq)
+    test_class = TestClass(coeffs, freqs, data_sfreq)
 
     # test that errors for incorrect inputs are caught
     if class_type == "PAC":
@@ -147,19 +147,19 @@ def test_error_catch(class_type: str) -> None:
     with pytest.raises(
         ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
-        test_class.compute(f1s=(5, sampling_freq / 2 + 1))
+        test_class.compute(f1s=(5, data_sfreq / 2 + 1))
     with pytest.raises(
         ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
-        test_class.compute(f1s=(sampling_freq / 2 + 1, 10))
+        test_class.compute(f1s=(data_sfreq / 2 + 1, 10))
     with pytest.raises(
         ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
-        test_class.compute(f2s=(5, sampling_freq / 2 + 1))
+        test_class.compute(f2s=(5, data_sfreq / 2 + 1))
     with pytest.raises(
         ValueError, match="Entries of `f1s` and `f2s` must be <= the Nyquist frequency."
     ):
-        test_class.compute(f2s=(sampling_freq / 2 + 1, 10))
+        test_class.compute(f2s=(data_sfreq / 2 + 1, 10))
     with pytest.raises(
         ValueError,
         match="No frequencies are present in the data for the range in `f1s`.",
@@ -187,19 +187,23 @@ def test_error_catch(class_type: str) -> None:
         test_class.compute(n_jobs=0)
 
 
-@pytest.mark.parametrize("class_type", ["PAC", "PPC", "AAC"])
-def test_error_catch_time_resolved(class_type: str) -> None:
+@pytest.mark.parametrize(
+    "coeffs_and_freqs_name,class_type",
+    [
+        ("complex_tfr_and_freqs", "PAC"),
+        ("complex_tfr_and_freqs", "PPC"),
+        ("power_tfr_and_freqs", "AAC"),
+    ],
+)
+def test_error_catch_time_resolved(
+    coeffs_and_freqs_name: str,
+    data_sfreq: float,
+    class_type: str,
+    request: pytest.FixtureRequest,
+) -> None:
     """Check that CFC classes catch errors for time-resolved data."""
-    n_chans = 3
-    n_epochs = 5
-    n_times = 100
-    sampling_freq = 50
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
-    freqs = np.arange(5, 20)
-    times = np.arange(n_times) / sampling_freq
-
-    output = "power" if class_type == "AAC" else "complex"
-    coeffs, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3, output=output)
+    coeffs, freqs = request.getfixturevalue(coeffs_and_freqs_name)
+    times = np.arange(coeffs.shape[3]) / data_sfreq
 
     if class_type == "PAC":
         TestClass = PAC
@@ -211,24 +215,24 @@ def test_error_catch_time_resolved(class_type: str) -> None:
     # initialisation
     if class_type == "PAC":
         with pytest.raises(ValueError, match="`data` must be a 3D or 4D array."):
-            TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+            TestClass(np.random.randn(2, 2), freqs, data_sfreq)
     else:
         with pytest.raises(ValueError, match="`data` must be a 4D array."):
-            TestClass(np.random.randn(2, 2), freqs, sampling_freq)
+            TestClass(np.random.randn(2, 2), freqs, data_sfreq)
 
     with pytest.raises(TypeError, match="`times` must be a NumPy array."):
-        TestClass(coeffs, freqs, sampling_freq, times.tolist())
+        TestClass(coeffs, freqs, data_sfreq, times.tolist())
     with pytest.raises(ValueError, match="`times` must be a 1D array."):
-        TestClass(coeffs, freqs, sampling_freq, times[:, np.newaxis])
+        TestClass(coeffs, freqs, data_sfreq, times[:, np.newaxis])
 
     with pytest.raises(
         ValueError,
         match=("`data` and `times` must contain the same number of timepoints."),
     ):
-        TestClass(coeffs, freqs, sampling_freq, times[:-1])
+        TestClass(coeffs, freqs, data_sfreq, times[:-1])
 
     # compute
-    test_class = TestClass(coeffs, freqs, sampling_freq, times)
+    test_class = TestClass(coeffs, freqs, data_sfreq, times)
 
     # test that errors for incorrect inputs are caught
     with pytest.raises(TypeError, match="`times` must be a tuple or None."):
@@ -244,53 +248,52 @@ def test_error_catch_time_resolved(class_type: str) -> None:
         test_class.compute(times=(-1, -0.1))
 
 
-def test_pac_runs() -> None:
+def test_pac_runs(
+    fft_and_freqs: tuple[np.ndarray, np.ndarray],
+    complex_tfr_and_freqs: tuple[np.ndarray, np.ndarray],
+    data_sfreq: float,
+) -> None:
     """Test that PAC runs correctly."""
-    n_chans = 3
-    n_times = 100
-    sampling_freq = 50
-    data = _generate_data((5, n_chans, n_times), complexobj=False)
-    default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
+    fft, fft_freqs = fft_and_freqs
+    tfr, tfr_freqs = complex_tfr_and_freqs
+    assert fft.shape[1] == tfr.shape[1], "n_chans in FFT and TFR do not match"
+    _, n_chans, _, n_times = tfr.shape
+    default_times = np.arange(n_times) / data_sfreq  # matches auto-generated times
     times = default_times + 10  # offset to distinguish from auto-generated ones
-    freqs = np.arange(5, 25, 0.5)
-
-    fft, fft_freqs = compute_fft(data=data, sampling_freq=sampling_freq, verbose=False)
-    fft = fft[..., np.intersect1d(fft_freqs, freqs, return_indices=True)[1]]
-    tfr, _ = compute_tfr(
-        data=data,
-        sampling_freq=sampling_freq,
-        freqs=freqs,
-        n_cycles=3,
-        output="complex",
-    )
 
     # check data is stored correctly
-    pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    pac = PAC(data=fft, freqs=fft_freqs, sampling_freq=data_sfreq)
     assert np.all(pac.data == fft), "FFT data not stored correctly"
-    pac_tr = PAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    pac_tr = PAC(data=tfr, freqs=tfr_freqs, sampling_freq=data_sfreq)
     assert np.all(pac_tr.data == tfr), "TFR data not stored correctly"
 
     # check times are handled correctly
-    pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    pac = PAC(data=fft, freqs=fft_freqs, sampling_freq=data_sfreq, times=times)
     assert pac.times is None, "`times` should be ignored for time-resolved_data"
-    pac = PAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    pac = PAC(data=tfr, freqs=tfr_freqs, sampling_freq=data_sfreq, times=times)
     assert np.all(pac.times == times), "`times` should be stored for time-resolved_data"
-    pac = PAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    pac = PAC(data=tfr, freqs=tfr_freqs, sampling_freq=data_sfreq)
     assert np.all(pac.times == default_times), (
         "Auto-generated `times` are incorrect for time-resolved_data"
     )
 
     # check it runs with correct inputs
-    pac = PAC(data=fft, freqs=freqs, sampling_freq=sampling_freq)
+    pac = PAC(data=fft, freqs=fft_freqs, sampling_freq=data_sfreq)
     pac.compute(antisym=(False, True), norm=(False, True))
-    pac_tr = PAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    pac_tr = PAC(data=tfr, freqs=tfr_freqs, sampling_freq=data_sfreq, times=times)
     pac_tr.compute()
 
     # check the returned results have the correct shape
     assert (
-        results.shape == (n_chans**2, len(freqs), len(freqs)) for results in pac.results
+        results.shape == (n_chans**2, len(fft_freqs), len(fft_freqs))
+        for results in pac.results
     )
-    assert pac_tr.results.shape == (n_chans**2, len(freqs), len(freqs), len(times))
+    assert pac_tr.results.shape == (
+        n_chans**2,
+        len(tfr_freqs),
+        len(tfr_freqs),
+        len(times),
+    )
 
     # check the returned results are of the correct type
     result_types = [
@@ -332,7 +335,9 @@ def test_pac_runs() -> None:
 
     # check it runs with non-exact frequencies
     fmin, fmax = 10.25, 19.75
-    freqs_sel = freqs[np.argwhere((freqs >= fmin) & (freqs <= fmax)).squeeze()]
+    freqs_sel = fft_freqs[
+        np.argwhere((fft_freqs >= fmin) & (fft_freqs <= fmax)).squeeze()
+    ]
     pac.compute(f1s=(fmin, fmax), f2s=(fmin, fmax))
     assert pac.results.get_results().shape[1:3] == (len(freqs_sel), len(freqs_sel)), (
         "Number of frequencies in results does not match the selection"
@@ -366,8 +371,8 @@ def test_pac_runs() -> None:
     pac_tr_results = pac_tr.results
     pac_tr_window = PAC(
         data=tfr[..., tmin_idx : tmax_idx + 1],
-        freqs=freqs,
-        sampling_freq=sampling_freq,
+        freqs=tfr_freqs,
+        sampling_freq=data_sfreq,
         times=times[tmin_idx : tmax_idx + 1],
     )
     pac_tr_window.compute(antisym=(False, True), norm=(False, True))
@@ -474,27 +479,17 @@ def test_pac_results():
     )
 
 
-def test_ppc_runs() -> None:
+def test_ppc_runs(
+    complex_tfr_and_freqs: tuple[np.ndarray, np.ndarray], data_sfreq: float
+) -> None:
     """Test that PPC runs correctly."""
-    n_chans = 3
-    n_times = 100
-    sampling_freq = 50
-    data = _generate_data((5, n_chans, n_times), complexobj=False)
-    default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
+    tfr, freqs = complex_tfr_and_freqs
+    _, n_chans, _, n_times = tfr.shape
+    default_times = np.arange(n_times) / data_sfreq  # matches auto-generated times
     times = default_times + 10  # offset to distinguish from auto-generated ones
-    freqs = np.arange(5, 20)
-
-    tfr, freqs = compute_tfr(
-        data=data,
-        sampling_freq=sampling_freq,
-        freqs=freqs,
-        n_cycles=3,
-        output="complex",
-        verbose=False,
-    )
 
     # check it runs with correct inputs
-    ppc = PPC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    ppc = PPC(data=tfr, freqs=freqs, sampling_freq=data_sfreq, times=times)
     ppc.compute()
 
     # check the returned results have the correct shape
@@ -528,7 +523,7 @@ def test_ppc_runs() -> None:
     ppc_window = PPC(
         data=tfr[..., tmin_idx : tmax_idx + 1],
         freqs=freqs,
-        sampling_freq=sampling_freq,
+        sampling_freq=data_sfreq,
         times=times[tmin_idx : tmax_idx + 1],
     )
     ppc_window.compute()
@@ -601,32 +596,29 @@ def test_ppc_results():
     ), "0 → 1 PPC at interacting freqs not greater than for 1 → 1"
 
 
-def test_aac_runs() -> None:
+def test_aac_runs(
+    power_tfr_and_freqs: tuple[np.ndarray, np.ndarray], data_sfreq: float
+) -> None:
     """Test that AAC runs correctly."""
-    n_chans = 3
-    n_times = 100
-    sampling_freq = 50
-    data = _generate_data((5, n_chans, n_times), complexobj=False)
-    default_times = np.arange(n_times) / sampling_freq  # matches auto-generated times
+    tfr, freqs = power_tfr_and_freqs
+    _, n_chans, _, n_times = tfr.shape
+    default_times = np.arange(n_times) / data_sfreq  # matches auto-generated times
     times = default_times + 10  # offset to distinguish from auto-generated ones
-    freqs = np.arange(5, 25, 0.5)
-
-    tfr, freqs = compute_tfr(data, sampling_freq, freqs, n_cycles=3)
 
     # check data is stored correctly
-    aac = AAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    aac = AAC(data=tfr, freqs=freqs, sampling_freq=data_sfreq)
     assert np.all(aac.data == tfr), "TFR data not stored correctly"
 
     # check times are handled correctly
-    aac = AAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    aac = AAC(data=tfr, freqs=freqs, sampling_freq=data_sfreq, times=times)
     assert np.all(aac.times == times), "`times` should be stored for time-resolved_data"
-    aac = AAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq)
+    aac = AAC(data=tfr, freqs=freqs, sampling_freq=data_sfreq)
     assert np.all(aac.times == default_times), (
         "Auto-generated `times` are incorrect for time-resolved_data"
     )
 
     # check it runs with correct inputs
-    aac = AAC(data=tfr, freqs=freqs, sampling_freq=sampling_freq, times=times)
+    aac = AAC(data=tfr, freqs=freqs, sampling_freq=data_sfreq, times=times)
     aac.compute()
 
     # check the returned results have the correct shape
@@ -660,7 +652,7 @@ def test_aac_runs() -> None:
     aac_window = AAC(
         data=tfr[..., tmin_idx : tmax_idx + 1],
         freqs=freqs,
-        sampling_freq=sampling_freq,
+        sampling_freq=data_sfreq,
         times=times[tmin_idx : tmax_idx + 1],
     )
     aac_window.compute()
