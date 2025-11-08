@@ -2,7 +2,6 @@
 
 from multiprocessing import cpu_count
 from typing import Callable
-from warnings import warn
 from packaging.version import Version
 
 import pooch
@@ -122,8 +121,8 @@ def _compute_fft_input_checks(
         raise TypeError("`data` must be a NumPy array.")
     if data.ndim != 3:
         raise ValueError("`data` must be a 3D array.")
-    if not np.isreal(data).all():
-        raise ValueError("`data` must be real-valued.")
+    if not np.isrealobj(data):
+        raise TypeError("`data` must be a real-valued object.")
 
     if not isinstance(sampling_freq, _number_like):
         raise TypeError("`sampling_freq` must be an int or a float.")
@@ -318,6 +317,8 @@ def _compute_tfr_input_checks(
         raise TypeError("`data` must be a NumPy array.")
     if data.ndim != 3:
         raise ValueError("`data` must be a 3D array.")
+    if not np.isrealobj(data):
+        raise TypeError("`data` must be a real-valued object.")
 
     if not isinstance(sampling_freq, _number_like):
         raise TypeError("`sampling_freq` must be an int or a float.")
@@ -389,8 +390,6 @@ def _compute_tfr_input_checks(
 
     if not isinstance(verbose, bool):
         raise TypeError("`verbose` must be a bool.")
-    if verbose and not np.isreal(data).all():
-        warn("`data` is expected to be real-valued.", UserWarning)
 
     return tfr_func, return_weights, n_jobs
 

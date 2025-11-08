@@ -596,8 +596,8 @@ class _PlotGeneral(_PlotBase):
                         cbar_titles,
                         cbar_ranges,
                     ):
-                        if axis_title in ["Imaginary", "Phase"] and np.all(
-                            np.isreal(self._data[node_i])
+                        if axis_title in ["Imaginary", "Phase"] and np.isrealobj(
+                            self._data[node_i]
                         ):
                             # If data is real, np.imag and np.angle return 0, resulting
                             # in coloured panels, so instead set to NaN for empty panels

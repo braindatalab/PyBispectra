@@ -72,9 +72,11 @@ def test_compute_fft(window: str) -> None:
         compute_fft(data=data.tolist(), sampling_freq=sampling_freq, window=window)
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
         compute_fft(data=data[..., 0], sampling_freq=sampling_freq, window=window)
-    with pytest.raises(ValueError, match="`data` must be real-valued."):
+    with pytest.raises(TypeError, match="`data` must be a real-valued object."):
         compute_fft(
-            data=np.array(data, dtype=np.complex128) + 1j, sampling_freq=sampling_freq
+            data=data.astype(_precision.complex),
+            sampling_freq=sampling_freq,
+            window=window,
         )
 
     with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
@@ -177,6 +179,14 @@ def test_compute_tfr(
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
         compute_tfr(
             data=data[..., 0],
+            sampling_freq=sampling_freq,
+            freqs=freqs_in,
+            tfr_mode=tfr_mode,
+            zero_mean_wavelets=zero_mean_wavelets,
+        )
+    with pytest.raises(TypeError, match="`data` must be a real-valued object."):
+        compute_tfr(
+            data=data.astype(_precision.complex),
             sampling_freq=sampling_freq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
@@ -391,14 +401,6 @@ def test_compute_tfr(
         zero_mean_wavelets=zero_mean_wavelets,
         n_jobs=-1,
     )
-
-    with pytest.warns(UserWarning, match="`data` is expected to be real-valued."):
-        compute_tfr(
-            data=np.array(data, dtype=np.complex128) + 1j,
-            sampling_freq=sampling_freq,
-            freqs=freqs_in,
-            tfr_mode=tfr_mode,
-        )
 
 
 def test_compute_rank() -> None:

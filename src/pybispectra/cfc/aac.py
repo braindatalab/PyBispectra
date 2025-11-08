@@ -63,7 +63,7 @@ class AAC(_ProcessFreqBase):
         Whether or not to report the progress of the processing.
     """  # noqa: E501
 
-    _data_precision: type = _precision.real  # TFR real-valued
+    _data_precision: type = _precision.real  # Real-valued TFR power
 
     _data_ndims: int = (4,)  # [epochs, channels, frequencies, times]
 

@@ -29,6 +29,8 @@ def test_error_catch() -> None:
         TDE(coeffs.tolist(), freqs, sampling_freq)
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
         TDE(np.random.randn(2, 2), freqs, sampling_freq)
+    with pytest.raises(TypeError, match="`data` must be a complex-valued object."):
+        TDE(coeffs.real, freqs, sampling_freq)
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
         TDE(coeffs, freqs.tolist(), sampling_freq)

@@ -15,6 +15,7 @@
 
 ##### API
 - Changed the `data` parameter of `PPC` to require time-frequency representations instead of non-time-resolved Fourier coefficients.
+- Increased stringency of data types (real vs. complex) for `data` passed to the `compute_fft()` and `compute_tfr()` functions, and the `PAC`, `PPC`, `AAC`, `WaveShape`, `TDE`, `Bispectrum`, and `Threenorm` classes.
 
 ##### Documentation
 - Added a new example for computing time-resolved bispectral features.
