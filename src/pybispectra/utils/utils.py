@@ -331,7 +331,7 @@ def _compute_tfr_input_checks(
         raise ValueError(
             "Entries of `freqs` must lie in the range [0, Nyquist frequency]."
         )
-    if np.all(np.sort(freqs) != freqs):
+    if np.any(np.sort(freqs) != freqs):
         raise ValueError("Entries of `freqs` must be in ascending order.")
 
     tfr_modes = ["morlet", "multitaper"]

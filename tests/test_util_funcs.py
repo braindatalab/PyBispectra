@@ -21,7 +21,6 @@ from pybispectra.utils._utils import (
     _compute_pearsonr_2d,
     _create_mne_info,
     _fast_find_first,
-    _generate_data,
     _int_like,
 )
 
@@ -29,24 +28,17 @@ set_precision("double")  # make sure precision is as default before testing
 
 
 @pytest.mark.parametrize("window", ["hanning", "hamming"])
-def test_compute_fft(window: str) -> None:
+def test_compute_fft(epochs: np.ndarray, data_sfreq: float, window: str) -> None:
     """Test `compute_fft`."""
-    n_epochs = 5
-    n_chans = 3
-    n_times = 100
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
-    sampling_freq = 50
-
     # check it runs with correct inputs
     fft, freqs = compute_fft(
-        data=data, sampling_freq=sampling_freq, window=window, n_jobs=1
+        data=epochs, sampling_freq=data_sfreq, window=window, n_jobs=1
     )
     assert isinstance(fft, np.ndarray), "`fft` should be a NumPy array."
     assert fft.ndim == 3, "`fft` should have 3 dimensions."
-    assert fft.shape[:2] == (
-        n_epochs,
-        n_chans,
-    ), "The first 2 dimensions of `fft` should have shape [epochs x channels]."
+    assert fft.shape[:2] == epochs.shape[:2], (
+        "The first 2 dimensions of `fft` should have shape [epochs x channels]."
+    )
     assert isinstance(freqs, np.ndarray), "`freqs` should be a NumPy array."
     assert freqs.ndim == 1, "`freqs` should have 1 dimension."
     assert fft.shape[2] == freqs.shape[0], (
@@ -60,59 +52,63 @@ def test_compute_fft(window: str) -> None:
         "Entries of `freqs` corresponding to positive frequencies must be in ascending "
         "order."
     )
-    assert max(freqs) <= sampling_freq / 2, (
+    assert max(freqs) <= data_sfreq / 2, (
         "The maximum of `freqs` should be <= the Nyquist frequency."
     )
-    assert freqs[-1] == sampling_freq / 2, (
+    assert freqs[-1] == data_sfreq / 2, (
         "The last entry of `freqs` should be the Nyquist frequency."
     )
 
     # check it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        compute_fft(data=data.tolist(), sampling_freq=sampling_freq, window=window)
+        compute_fft(data=epochs.tolist(), sampling_freq=data_sfreq, window=window)
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
-        compute_fft(data=data[..., 0], sampling_freq=sampling_freq, window=window)
+        compute_fft(data=epochs[..., 0], sampling_freq=data_sfreq, window=window)
     with pytest.raises(TypeError, match="`data` must be a real-valued object."):
         compute_fft(
-            data=data.astype(_precision.complex),
-            sampling_freq=sampling_freq,
+            data=epochs.astype(_precision.complex),
+            sampling_freq=data_sfreq,
             window=window,
         )
 
     with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
-        compute_fft(data=data, sampling_freq=[sampling_freq], window=window)
+        compute_fft(data=epochs, sampling_freq=[data_sfreq], window=window)
 
     with pytest.raises(TypeError, match="`n_points` must be an integer"):
-        compute_fft(data=data, sampling_freq=sampling_freq, n_points=2.5, window=window)
+        compute_fft(data=epochs, sampling_freq=data_sfreq, n_points=2.5, window=window)
 
     with pytest.raises(TypeError, match="`window` must be a str."):
-        compute_fft(data=data, sampling_freq=sampling_freq, window=True)
+        compute_fft(data=epochs, sampling_freq=data_sfreq, window=True)
 
     with pytest.raises(
         ValueError, match="The requested `window` type is not recognised."
     ):
-        compute_fft(data=data, sampling_freq=sampling_freq, window="not_a_window")
+        compute_fft(data=epochs, sampling_freq=data_sfreq, window="not_a_window")
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
-        compute_fft(data=data, sampling_freq=sampling_freq, window=window, n_jobs=[])
+        compute_fft(data=epochs, sampling_freq=data_sfreq, window=window, n_jobs=[])
     with pytest.raises(ValueError, match="`n_jobs` must be >= 1."):
-        compute_fft(data=data, sampling_freq=sampling_freq, window=window, n_jobs=0)
+        compute_fft(data=epochs, sampling_freq=data_sfreq, window=window, n_jobs=0)
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
         compute_fft(
-            data=data, sampling_freq=sampling_freq, window=window, verbose="true"
+            data=epochs, sampling_freq=data_sfreq, window=window, verbose="true"
         )
 
     # check it works with parallelisation (already tested without)
-    compute_fft(data=data, sampling_freq=sampling_freq, window=window, n_jobs=2)
-    compute_fft(data=data, sampling_freq=sampling_freq, window=window, n_jobs=-1)
+    compute_fft(data=epochs, sampling_freq=data_sfreq, window=window, n_jobs=2)
+    compute_fft(data=epochs, sampling_freq=data_sfreq, window=window, n_jobs=-1)
 
 
 @pytest.mark.parametrize("tfr_mode", ["morlet", "multitaper"])
 @pytest.mark.parametrize("output", ["power", "complex"])
 @pytest.mark.parametrize("zero_mean_wavelets", [True, False, None])
 def test_compute_tfr(
-    tfr_mode: str, output: str, zero_mean_wavelets: bool | None
+    epochs: np.ndarray,
+    data_sfreq: float,
+    tfr_mode: str,
+    output: str,
+    zero_mean_wavelets: bool | None,
 ) -> None:
     """Test `compute_tfr`."""
     if (
@@ -124,17 +120,13 @@ def test_compute_tfr(
             "`output='complex'` with `tfr_mode='multitaper'` requires MNE >= 1.10."
         )
 
-    n_epochs = 5
-    n_chans = 3
-    n_times = 100
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
-    sampling_freq = 100
-    freqs_in = np.arange(20, 50)
+    n_epochs, n_chans, n_times = epochs.shape
+    freqs_in = np.arange(15, 20)
 
     # check it runs with correct inputs
     out = compute_tfr(
-        data=data,
-        sampling_freq=sampling_freq,
+        data=epochs,
+        sampling_freq=data_sfreq,
         freqs=freqs_in,
         tfr_mode=tfr_mode,
         zero_mean_wavelets=zero_mean_wavelets,
@@ -170,24 +162,24 @@ def test_compute_tfr(
     # check it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
         compute_tfr(
-            data=data.tolist(),
-            sampling_freq=sampling_freq,
+            data=epochs.tolist(),
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
         compute_tfr(
-            data=data[..., 0],
-            sampling_freq=sampling_freq,
+            data=epochs[..., 0],
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(TypeError, match="`data` must be a real-valued object."):
         compute_tfr(
-            data=data.astype(_precision.complex),
-            sampling_freq=sampling_freq,
+            data=epochs.astype(_precision.complex),
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
@@ -195,8 +187,8 @@ def test_compute_tfr(
 
     with pytest.raises(TypeError, match="`sampling_freq` must be an int or a float."):
         compute_tfr(
-            data=data,
-            sampling_freq=[sampling_freq],
+            data=epochs,
+            sampling_freq=[data_sfreq],
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
@@ -204,33 +196,33 @@ def test_compute_tfr(
 
     with pytest.raises(TypeError, match="`freqs` must be a NumPy array."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in.tolist(),
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(ValueError, match="`freqs` must be a 1D array."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in[:, np.newaxis],
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(ValueError, match="Entries of `freqs` must lie in the range"):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
-            freqs=np.arange(-1, sampling_freq * 0.5),
+            data=epochs,
+            sampling_freq=data_sfreq,
+            freqs=np.arange(-1, data_sfreq * 0.5),
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(ValueError, match="Entries of `freqs` must lie in the range"):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
-            freqs=np.arange(0, sampling_freq),
+            data=epochs,
+            sampling_freq=data_sfreq,
+            freqs=np.arange(0, data_sfreq),
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
         )
@@ -238,8 +230,8 @@ def test_compute_tfr(
         ValueError, match="Entries of `freqs` must be in ascending order."
     ):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in[::-1],
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
@@ -247,16 +239,16 @@ def test_compute_tfr(
 
     with pytest.raises(TypeError, match="`tfr_mode` must be a str."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=[tfr_mode],
             zero_mean_wavelets=zero_mean_wavelets,
         )
     with pytest.raises(ValueError, match="`tfr_mode` must be one of"):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode="not_a_mode",
             zero_mean_wavelets=zero_mean_wavelets,
@@ -266,8 +258,8 @@ def test_compute_tfr(
         TypeError, match="`n_cycles` must be a NumPy array, an int, or a float."
     ):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             n_cycles=[3],
@@ -278,8 +270,8 @@ def test_compute_tfr(
         match=("If `n_cycles` is an array, it must have the same shape as `freqs`."),
     ):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             n_cycles=np.array([3]),
@@ -287,8 +279,8 @@ def test_compute_tfr(
         )
     with pytest.raises(ValueError, match="`n_cycles` must be > 0."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             n_cycles=0,
@@ -296,8 +288,8 @@ def test_compute_tfr(
         )
     with pytest.raises(ValueError, match="Entries of `n_cycles` must be > 0."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             n_cycles=np.zeros(len(freqs_in)),
@@ -306,8 +298,8 @@ def test_compute_tfr(
 
     with pytest.raises(TypeError, match="`zero_mean_wavelets` must be a bool or None."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets="true",
@@ -315,8 +307,8 @@ def test_compute_tfr(
 
     with pytest.raises(TypeError, match="`use_fft` must be a bool."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
@@ -328,8 +320,8 @@ def test_compute_tfr(
             TypeError, match="`multitaper_time_bandwidth` must be an int or a float."
         ):
             compute_tfr(
-                data=data,
-                sampling_freq=sampling_freq,
+                data=epochs,
+                sampling_freq=data_sfreq,
                 freqs=freqs_in,
                 tfr_mode=tfr_mode,
                 zero_mean_wavelets=zero_mean_wavelets,
@@ -338,8 +330,8 @@ def test_compute_tfr(
 
     with pytest.raises(TypeError, match="`output` must be a str."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
@@ -347,8 +339,8 @@ def test_compute_tfr(
         )
     with pytest.raises(ValueError, match="`output` must be one of"):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
@@ -357,8 +349,8 @@ def test_compute_tfr(
 
     with pytest.raises(TypeError, match="`n_jobs` must be an integer."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
@@ -366,8 +358,8 @@ def test_compute_tfr(
         )
     with pytest.raises(ValueError, match="`n_jobs` must be >= 1."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
@@ -376,8 +368,8 @@ def test_compute_tfr(
 
     with pytest.raises(TypeError, match="`verbose` must be a bool."):
         compute_tfr(
-            data=data,
-            sampling_freq=sampling_freq,
+            data=epochs,
+            sampling_freq=data_sfreq,
             freqs=freqs_in,
             tfr_mode=tfr_mode,
             zero_mean_wavelets=zero_mean_wavelets,
@@ -386,16 +378,16 @@ def test_compute_tfr(
 
     # check it works with parallelisation (already tested without)
     compute_tfr(
-        data=data,
-        sampling_freq=sampling_freq,
+        data=epochs,
+        sampling_freq=data_sfreq,
         freqs=freqs_in,
         tfr_mode=tfr_mode,
         zero_mean_wavelets=zero_mean_wavelets,
         n_jobs=2,
     )
     compute_tfr(
-        data=data,
-        sampling_freq=sampling_freq,
+        data=epochs,
+        sampling_freq=data_sfreq,
         freqs=freqs_in,
         tfr_mode=tfr_mode,
         zero_mean_wavelets=zero_mean_wavelets,
@@ -403,29 +395,24 @@ def test_compute_tfr(
     )
 
 
-def test_compute_rank() -> None:
+def test_compute_rank(epochs: np.ndarray) -> None:
     """Test `compute_rank`."""
-    n_epochs = 5
-    n_chans = 3
-    n_times = 100
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
-
     # test it works with correct inputs
-    rank = compute_rank(data=data)
+    rank = compute_rank(data=epochs)
     assert isinstance(rank, _int_like), "`rank` should be an int."
-    non_full_rank_data = data.copy()
+    non_full_rank_data = epochs.copy()
     non_full_rank_data[:, 1] = non_full_rank_data[:, 0]
     rank = compute_rank(data=non_full_rank_data)
-    assert rank == n_chans - 1, "`rank` should be equal to n_chans - 1."
+    assert rank == epochs.shape[1] - 1, "`rank` should be equal to n_chans - 1."
 
     # test it catches incorrect inputs
     with pytest.raises(TypeError, match="`data` must be a NumPy array."):
-        compute_rank(data=data.tolist())
+        compute_rank(data=epochs.tolist())
     with pytest.raises(ValueError, match="`data` must be a 3D array."):
-        compute_rank(data=data[0])
+        compute_rank(data=epochs[0])
 
     with pytest.raises(TypeError, match="`sv_tol` must be a float or an int."):
-        compute_rank(data=data, sv_tol=None)
+        compute_rank(data=epochs, sv_tol=None)
 
 
 def test_fast_find_first() -> None:
@@ -451,16 +438,13 @@ def test_fast_find_first() -> None:
         _fast_find_first(vector=vector, value=2, start_idx=4)
 
 
-def test_compute_pearson_2d() -> None:
+def test_compute_pearson_2d(epochs: np.ndarray) -> None:
     """Test `_compute_pearsonr_2d`."""
-    n_epochs = 5
-    n_chans = 2
-    n_times = 100
-    data = _generate_data((n_epochs, n_chans, n_times), complexobj=False)
+    n_epochs = epochs.shape[0]
 
     # test it works with correct inputs
     pearsonr = _compute_pearsonr_2d(
-        x=data[:, 0], y=data[:, 1], precision=_precision.real
+        x=epochs[:, 0], y=epochs[:, 1], precision=_precision.real
     )
     assert isinstance(pearsonr, np.ndarray), "`pearsonr` should be a NumPy array."
     assert pearsonr.ndim == 1, "`pearsonr` should be a 1D array."
@@ -468,7 +452,9 @@ def test_compute_pearson_2d() -> None:
     # test it matches the statistic output of SciPy's function
     sp_pearsonr = np.full(n_epochs, fill_value=np.nan)
     for epoch_i in range(n_epochs):
-        sp_pearsonr[epoch_i] = sp.stats.pearsonr(data[epoch_i, 0], data[epoch_i, 1])[0]
+        sp_pearsonr[epoch_i] = sp.stats.pearsonr(
+            epochs[epoch_i, 0], epochs[epoch_i, 1]
+        )[0]
 
     assert np.allclose(pearsonr, sp_pearsonr), (
         "`pearsonr` should match the statistic of SciPy's function."
