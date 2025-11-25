@@ -1,0 +1,8 @@
+# Oldest-supported dependency versions
+joblib==1.0
+matplotlib==3.5
+mne==1.7
+numba==0.55
+numpy==1.21
+scikit-learn==1.0
+scipy==1.7
