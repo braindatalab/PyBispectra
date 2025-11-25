@@ -55,6 +55,11 @@ class SpatioSpectralFilter:
         Spatial filters (eigenvectors of the eigendecomposition). Sorted in descending
         order according to the size of the signal-to-noise ratios of ``ratios``.
 
+        .. note::
+            The `channel` and `rank` dimensions are flipped compared to
+            :class:`mne.decoding.SSD`'s ``filters_`` attribute in MNE version 1.11 and
+            higher.
+
     patterns : ~numpy.ndarray, shape of [rank, channels]
         Spatial patterns for each of the spatial filters.
 
