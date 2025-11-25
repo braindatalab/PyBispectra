@@ -1,6 +1,6 @@
 """Tools for performing generalised eigendecompositions."""
 
-from version import Version
+from packaging import parse
 from multiprocessing import cpu_count
 from warnings import warn
 
@@ -434,7 +434,7 @@ class SpatioSpectralFilter:
         self.patterns = self._ssd.patterns_
         self.ratios = (
             self._ssd.evals_
-            if Version(mne_version) >= Version("1.11")
+            if parse(mne_version) >= parse("1.11")
             else self._ssd.eigvals_
         )
 
