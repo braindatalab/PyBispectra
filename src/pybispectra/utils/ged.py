@@ -760,7 +760,7 @@ class SpatioSpectralFilter:
 
         if self.bandpass_filter and self._fitted_method == "SSD":
             self._transformed_data = self._ssd.transform(data)
-            # TODO: Remove logic when MNE < 1.11 is no longer supported.
+            # TODO: Make fixed when MNE < 1.11 is no longer supported.
             if Version(mne_version) >= Version("1.11"):
                 # Undo squeezing of singleton dims
                 singleton_dims = np.where(
