@@ -6,7 +6,7 @@ from warnings import warn
 
 import numpy as np
 import scipy as sp
-from mne import Info, version as mne_version
+from mne import Info, __version__ as mne_version
 from mne.decoding import SSD
 from mne.time_frequency import csd_array_fourier, csd_array_multitaper
 
@@ -430,13 +430,14 @@ class SpatioSpectralFilter:
         )
         self._ssd.fit(self.data[:, self.indices])
 
-        self.filters = self._ssd.filters_
         self.patterns = self._ssd.patterns_
-        self.ratios = (
-            self._ssd.evals_
-            if Version(mne_version) >= Version("1.11")
-            else self._ssd.eigvals_
-        )
+        # TODO: Remove logic when MNE < 1.11 is no longer supported.
+        if Version(mne_version) >= Version("1.11"):
+            self.filters = self._ssd.filters_.T
+            self.ratios = self._ssd.evals_
+        else:
+            self.filters = self._ssd.filters_
+            self.ratios = self._ssd.eigvals_
 
     def fit_hpmax(
         self,
@@ -754,6 +755,15 @@ class SpatioSpectralFilter:
 
         if self.bandpass_filter and self._fitted_method == "SSD":
             self._transformed_data = self._ssd.transform(data)
+            # TODO: Remove logic when MNE < 1.11 is no longer supported.
+            if Version(mne_version) >= Version("1.11"):
+                # Undo squeezing of singleton dims
+                singleton_dims = np.where(
+                    np.array([data.shape[0], self.rank, data.shape[2]]) == 1
+                )[0]
+                self._transformed_data = np.expand_dims(
+                    self._transformed_data, axis=singleton_dims.tolist()
+                )
         else:
             self._transformed_data = np.einsum(
                 "ijk,jl->ilk",
