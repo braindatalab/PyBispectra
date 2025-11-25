@@ -1,11 +1,12 @@
 """Tools for performing generalised eigendecompositions."""
 
+from version import Version
 from multiprocessing import cpu_count
 from warnings import warn
 
 import numpy as np
 import scipy as sp
-from mne import Info
+from mne import Info, version as mne_version
 from mne.decoding import SSD
 from mne.time_frequency import csd_array_fourier, csd_array_multitaper
 
@@ -431,7 +432,11 @@ class SpatioSpectralFilter:
 
         self.filters = self._ssd.filters_
         self.patterns = self._ssd.patterns_
-        self.ratios = self._ssd.eigvals_
+        self.ratios = (
+            self._ssd.evals_
+            if Version(mne_version) >= Version("1.11")
+            else self._ssd.eigvals_
+        )
 
     def fit_hpmax(
         self,
