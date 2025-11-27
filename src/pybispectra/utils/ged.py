@@ -422,6 +422,11 @@ class SpatioSpectralFilter:
             "PyBispectra Internal Error: channel types in `info` should all be 'eeg'. "
             "Please contact the PyBispectra developers."
         )
+
+        # TODO: Remove logic when MNE < 1.11 is no longer supported.
+        ssd_kwargs = {}
+        if Version(mne_version) >= Version("1.11"):
+            ssd_kwargs["restr_type"] = "restricting"
         self._ssd = SSD(
             info,
             filt_params_signal,
@@ -432,6 +437,7 @@ class SpatioSpectralFilter:
             sort_by_spectral_ratio=False,
             return_filtered=self.bandpass_filter,
             rank={"eeg": self.rank},
+            **ssd_kwargs,
         )
         self._ssd.fit(self.data[:, self.indices])
 
