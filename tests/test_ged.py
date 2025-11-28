@@ -232,6 +232,13 @@ def test_error_catch(epochs: np.ndarray, data_sfreq: float, method: str) -> None
 
 
 @pytest.mark.filterwarnings(
+    (
+        r'ignore:No average EEG reference present in info\["projs"\], covariance may '
+        "be adversely affected. Consider recomputing covariance using with an average "
+        "eeg reference projector added.: RuntimeWarning"
+    )
+)
+@pytest.mark.filterwarnings(
     r"ignore:No signal\-to\-noise ratios are greater than the requested minimum:"
     "UserWarning"
 )

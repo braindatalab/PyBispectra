@@ -1,11 +1,12 @@
 """Tools for performing generalised eigendecompositions."""
 
+from packaging.version import Version
 from multiprocessing import cpu_count
 from warnings import warn
 
 import numpy as np
 import scipy as sp
-from mne import Info
+from mne import Info, __version__ as mne_version
 from mne.decoding import SSD
 from mne.time_frequency import csd_array_fourier, csd_array_multitaper
 
@@ -53,6 +54,11 @@ class SpatioSpectralFilter:
     filters : ~numpy.ndarray, shape of [channels, rank]
         Spatial filters (eigenvectors of the eigendecomposition). Sorted in descending
         order according to the size of the signal-to-noise ratios of ``ratios``.
+
+        .. note::
+            The channel and rank dimensions are flipped compared to
+            :class:`mne.decoding.SSD`'s ``filters_`` attribute in MNE version 1.11 and
+            higher.
 
     patterns : ~numpy.ndarray, shape of [rank, channels]
         Spatial patterns for each of the spatial filters.
@@ -416,6 +422,11 @@ class SpatioSpectralFilter:
             "PyBispectra Internal Error: channel types in `info` should all be 'eeg'. "
             "Please contact the PyBispectra developers."
         )
+
+        # TODO: Remove logic when MNE < 1.11 is no longer supported.
+        ssd_kwargs = {}
+        if Version(mne_version) >= Version("1.11"):
+            ssd_kwargs["restr_type"] = "whitening"  # matches pre-1.11 behaviour
         self._ssd = SSD(
             info,
             filt_params_signal,
@@ -426,12 +437,18 @@ class SpatioSpectralFilter:
             sort_by_spectral_ratio=False,
             return_filtered=self.bandpass_filter,
             rank={"eeg": self.rank},
+            **ssd_kwargs,
         )
         self._ssd.fit(self.data[:, self.indices])
 
-        self.filters = self._ssd.filters_
         self.patterns = self._ssd.patterns_
-        self.ratios = self._ssd.eigvals_
+        # TODO: Remove logic when MNE < 1.11 is no longer supported.
+        if Version(mne_version) >= Version("1.11"):
+            self.filters = self._ssd.filters_.T
+            self.ratios = self._ssd.evals_
+        else:
+            self.filters = self._ssd.filters_
+            self.ratios = self._ssd.eigvals_
 
     def fit_hpmax(
         self,
@@ -749,6 +766,15 @@ class SpatioSpectralFilter:
 
         if self.bandpass_filter and self._fitted_method == "SSD":
             self._transformed_data = self._ssd.transform(data)
+            # TODO: Make fixed when MNE < 1.11 is no longer supported.
+            if Version(mne_version) >= Version("1.11"):
+                # Undo squeezing of singleton dims
+                singleton_dims = np.where(
+                    np.array([data.shape[0], self.rank, data.shape[2]]) == 1
+                )[0]
+                self._transformed_data = np.expand_dims(
+                    self._transformed_data, axis=singleton_dims.tolist()
+                )
         else:
             self._transformed_data = np.einsum(
                 "ijk,jl->ilk",
