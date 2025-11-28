@@ -426,7 +426,7 @@ class SpatioSpectralFilter:
         # TODO: Remove logic when MNE < 1.11 is no longer supported.
         ssd_kwargs = {}
         if Version(mne_version) >= Version("1.11"):
-            ssd_kwargs["restr_type"] = "restricting"
+            ssd_kwargs["restr_type"] = "whitening"  # matches pre-1.11 behaviour
         self._ssd = SSD(
             info,
             filt_params_signal,
