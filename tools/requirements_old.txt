@@ -6,3 +6,7 @@ numba==0.55
 numpy==1.21
 scikit-learn==1.1
 scipy==1.8
+# Test dependencies
+coverage
+pytest
+pooch>=1.3
