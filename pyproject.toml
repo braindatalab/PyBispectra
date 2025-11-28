@@ -16,7 +16,7 @@ dependencies = [
   "numba>=0.55",
   "numpy>=1.21",
   "scikit-learn>=1.1",
-  "scipy>=1.7",
+  "scipy>=1.8",
 ]
 description = "A Python signal processing package for computing spectral-domain and time-domain interactions using the bispectrum."
 name = "pybispectra"
