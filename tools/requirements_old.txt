@@ -4,7 +4,7 @@ matplotlib==3.6
 mne==1.7
 numba==0.56
 numpy==1.22
-scikit-learn==1.1
+scikit-learn==1.5.0
 scipy==1.8
 # Test dependencies
 coverage
