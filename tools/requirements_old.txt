@@ -3,7 +3,7 @@ joblib==1.0
 matplotlib==3.5
 mne==1.7
 numba==0.55
-numpy==1.21
+numpy==1.22
 scikit-learn==1.1
 scipy==1.8
 # Test dependencies
