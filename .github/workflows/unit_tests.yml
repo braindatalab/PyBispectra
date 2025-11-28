@@ -126,7 +126,7 @@ jobs:
           date
           python --version
           which python
-      - run: pip install -e . -r tools/requirements_old.txt
+      - run: pip install -e . --no-deps -r tools/requirements_old.txt
       - run: python -c "import pybispectra; import mne; print(f'PyBispectra {pybispectra.__version__}\n'); mne.sys_info()"
       - name: Download testing data
         run: python -c "from pybispectra.utils import DATASETS, get_example_data_paths; (get_example_data_paths(data) for data in DATASETS.keys())"
