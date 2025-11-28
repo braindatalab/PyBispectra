@@ -1,6 +1,6 @@
 # Oldest-supported dependency versions
 joblib==1.0
-matplotlib==3.5
+matplotlib==3.6
 mne==1.7
 numba==0.56
 numpy==1.22
