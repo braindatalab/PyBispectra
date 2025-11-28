@@ -446,7 +446,7 @@ class SpatioSpectralFilter:
         if Version(mne_version) >= Version("1.11"):
             self.filters = self._ssd.filters_.T
             self.ratios = self._ssd.evals_
-        else:
+        else:  # pragma: no cover
             self.filters = self._ssd.filters_
             self.ratios = self._ssd.eigvals_
 

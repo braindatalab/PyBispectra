@@ -1,0 +1,12 @@
+# Oldest-supported dependency versions
+joblib==1.1
+matplotlib==3.6
+mne==1.7
+numba==0.56
+numpy==1.22
+scikit-learn==1.1
+scipy==1.8
+# Test dependencies
+coverage
+pytest
+pooch>=1.3

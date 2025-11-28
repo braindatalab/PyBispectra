@@ -10,13 +10,13 @@ classifiers = [
   "Programming Language :: Python :: 3",
 ]
 dependencies = [
-  "joblib>=1.0",
-  "matplotlib>=3.5",
+  "joblib>=1.1",
+  "matplotlib>=3.6",
   "mne>=1.7",
-  "numba>=0.55",
-  "numpy>=1.21",
-  "scikit-learn>=1.0",
-  "scipy>=1.7",
+  "numba>=0.56",
+  "numpy>=1.22",
+  "scikit-learn>=1.1",
+  "scipy>=1.8",
 ]
 description = "A Python signal processing package for computing spectral-domain and time-domain interactions using the bispectrum."
 name = "pybispectra"
