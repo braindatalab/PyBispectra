@@ -10,7 +10,7 @@ classifiers = [
   "Programming Language :: Python :: 3",
 ]
 dependencies = [
-  "joblib>=1.0",
+  "joblib>=1.1",
   "matplotlib>=3.6",
   "mne>=1.7",
   "numba>=0.56",
