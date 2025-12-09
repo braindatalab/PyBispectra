@@ -24,13 +24,13 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.10"
           - os: ubuntu-latest
-            python-version: "3.13"
+            python-version: "3.14"
           - os: macos-15-intel  # Intel
-            python-version: "3.13"
+            python-version: "3.14"
           - os: macos-latest  # arm64
-            python-version: "3.13"
+            python-version: "3.14"
           - os: windows-latest
-            python-version: "3.13"
+            python-version: "3.14"
     env:
       TZ: Europe/Berlin
       FORCE_COLOR: true
@@ -72,7 +72,7 @@ jobs:
     env:
       MKL_NUM_THREADS: '1'
       PYTHONUNBUFFERED: '1'
-      PYTHON_VERSION: '3.13'
+      PYTHON_VERSION: '3.14'
     steps:
       - uses: actions/checkout@v6
       - uses: pyvista/setup-headless-display-action@main
