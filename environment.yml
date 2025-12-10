@@ -2,7 +2,7 @@ name: pybispectra
 channels:
   - conda-forge
 dependencies:
-  - python>=3.10
+  - python>=3.10,<3.14
   - joblib>=1.2
   - matplotlib>=3.6
   - mne>=1.7
