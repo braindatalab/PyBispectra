@@ -9,20 +9,10 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
 ]
-dependencies = [
-  "joblib>=1.2",
-  "matplotlib>=3.6",
-  "mne>=1.7",
-  "numba>=0.56, <0.63; platform_system == 'Darwin' and platform_machine == 'x86_64'",
-  "numba>=0.56; platform_system != 'Darwin' or platform_machine != 'x86_64'",
-  "numpy>=1.22",
-  "scikit-learn>=1.1",
-  "scipy>=1.8",
-]
 description = "A Python signal processing package for computing spectral-domain and time-domain interactions using the bispectrum."
+dynamic = ["dependencies", "requires-python"]
 name = "pybispectra"
 readme = "README.md"
-requires-python = ">=3.10"
 version = "1.3.0dev"
 
 [project.optional-dependencies]
@@ -66,8 +56,11 @@ show_missing = true
 
 [tool.coverage.run]
 command_line = "-m pytest -v tests"
-omit = ["__init__.py", "src/pybispectra/utils/_docs.py", "tests/*"]
+omit = ["__init__.py", "src/pybispectra/utils/_docs.py", "tests/*", "tools/*"]
 source = ["pybispectra"]
+
+[tool.hatch.metadata.hooks.custom]
+path = "tools/hatch_build.py"
 
 [tool.isort]
 profile = "black"
