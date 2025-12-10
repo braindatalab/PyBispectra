@@ -46,9 +46,6 @@ jobs:
         with:
           qt: true
           pyvista: false
-      - name: print sys details
-        run: |
-          python -c "import os; import sys; import platform; print(os.name); print(sys.platform); print(platform.release()); print(platform.system()); print(platform.machine()); print(platform.version())"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
