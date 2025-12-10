@@ -72,7 +72,7 @@ jobs:
     env:
       MKL_NUM_THREADS: '1'
       PYTHONUNBUFFERED: '1'
-      PYTHON_VERSION: '3.14'
+      PYTHON_VERSION: '3.13'
     steps:
       - uses: actions/checkout@v6
       - uses: pyvista/setup-headless-display-action@main
