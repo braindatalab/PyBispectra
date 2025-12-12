@@ -1,6 +1,14 @@
 # PyBispectra Changelog
 
-## [Version 1.3.0dev](https://pybispectra.readthedocs.io/latest/)
+## [Development version](https://pybispectra.readthedocs.io/latest/)
+
+No changes.
+
+<br>
+
+## [Version 1.3](https://pybispectra.readthedocs.io/1.3/)
+
+### Version 1.3.0
 
 ##### Enhancements
 - Added support for computing time-resolved bispectral features for the `PAC`, `WaveShape`, `General`, and `Threenorm` classes.
