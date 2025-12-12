@@ -1,6 +1,6 @@
 # PyBispectra Changelog
 
-## [Development version](https://pybispectra.readthedocs.io/latest/)
+## [Development Version](https://pybispectra.readthedocs.io/latest/)
 
 No changes.
 
