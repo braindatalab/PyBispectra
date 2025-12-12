@@ -16,7 +16,7 @@ from pybispectra.utils._docs import linkcode_resolve
 project = "PyBispectra"
 copyright = "2023-2025, Thomas S. Binns"
 author = "Thomas S. Binns"
-release = "1.3.0"
+release = "1.3.1dev"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
