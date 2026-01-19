@@ -14,7 +14,7 @@ import pybispectra
 from pybispectra.utils._docs import linkcode_resolve
 
 project = "PyBispectra"
-copyright = "2023-2025, Thomas S. Binns"
+copyright = "2023-2026, Thomas S. Binns"
 author = "Thomas S. Binns"
 release = "1.3.1dev"
 
