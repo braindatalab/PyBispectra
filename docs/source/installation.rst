@@ -1,37 +1,43 @@
 Installation
 ============
 
-To install PyBispectra, activate the desired environment in which you want the package,
-then install it using `pip <https://pip.pypa.io/en/stable/>`_:
+PyBispectra is available on `PyPI <https://pypi.org/project/pybispectra/>`_, and
+`conda-forge <https://anaconda.org/channels/conda-forge/packages/pybispectra/overview>`_
+for version ≥ 1.2.2.
+
+PyBispectra requires Python ≥ 3.10.
+
+To install PyBispectra, activate the desired environment or project in which you want
+the package, then install it using `pip <https://pip.pypa.io/en/stable/>`_:
 
 .. code-block::
     
     pip install pybispectra
 
-or `conda <https://docs.conda.io/en/latest/>`_ from
-`conda-forge <https://anaconda.org/conda-forge>`_ (for PyBispectra ≥ 1.2.2):
+`uv <https://docs.astral.sh/uv/>`_:
+
+.. code-block::
+    
+    uv pip install pybispectra
+
+`conda <https://docs.conda.io/en/latest/>`_:
 
 .. code-block::
     
     conda install -c conda-forge pybispectra
 
-PyBispectra requires Python ≥ 3.10.
-
-If you need to create an environment in which to install PyBispectra, you can do so
-using `conda <https://docs.conda.io/en/latest/>`_,
-`venv <https://docs.python.org/3/library/venv.html>`_, or
-`uv <https://docs.astral.sh/uv/>`_.
-
-With ``conda``
---------------
-
-In a shell with ``conda`` available, run the following commands:
+or `pixi <https://pixi.prefix.dev/latest/>`_:
 
 .. code-block::
+    
+    pixi add pybispectra
 
-    conda create -n pybispectra_env
-    conda activate pybispectra_env
-    conda install -c conda-forge pybispectra
+|
+
+If you need to create an environment or project in which to install PyBispectra, you can
+do so using `venv <https://docs.python.org/3/library/venv.html>`_,
+`uv <https://docs.astral.sh/uv/>`_, `pixi <https://pixi.prefix.dev/latest/>`_, or
+`conda <https://docs.conda.io/en/latest/>`_.
 
 With ``venv``
 -------------
@@ -68,3 +74,25 @@ then install the package:
 .. code-block::
 
     uv pip install pybispectra
+
+With ``pixi``
+-------------
+
+In a shell with ``pixi`` available, run the following commands:
+
+.. code-block::
+
+    pixi init
+    pixi shell-hook
+    pixi add pybispectra
+
+With ``conda``
+--------------
+
+In a shell with ``conda`` available, run the following commands:
+
+.. code-block::
+
+    conda create -n pybispectra_env
+    conda activate pybispectra_env
+    conda install -c conda-forge pybispectra
