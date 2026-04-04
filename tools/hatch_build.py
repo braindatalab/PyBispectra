@@ -16,6 +16,8 @@ class JSONMetaDataHook(MetadataHookInterface):
         requires_python = ">=3.10"
         if is_macos_intel:
             requires_python += ", <3.14"
+        else:
+            requires_python += ", <3.15"
         metadata["requires-python"] = requires_python
 
         # dependencies
