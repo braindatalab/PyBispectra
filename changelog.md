@@ -2,7 +2,8 @@
 
 ## [Development Version](https://pybispectra.readthedocs.io/latest/)
 
-No changes.
+##### Dependencies
+- Added support for Python 3.14 in the `conda` environment.
 
 <br>
 
