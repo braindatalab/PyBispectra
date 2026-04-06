@@ -30,7 +30,6 @@ class JSONMetaDataHook(MetadataHookInterface):
             "scipy>=1.8",
             "numba>=0.56",
         ]
-        if is_macos_intel:
-            #dependencies[-1] += ", <0.63"
-            dependencies.append("llvmlite")
+        if is_macos_intel and False:
+            dependencies[-1] += ", <0.63"
         metadata["dependencies"] = dependencies
