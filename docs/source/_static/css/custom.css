@@ -5,3 +5,25 @@ div {
 ul {
     text-align: left
 }
+
+@media (max-width: 1199.98px) {
+    .bd-header .navbar-header-items__start {
+        flex-shrink: 1;
+        min-width: 0;
+        max-width: 45%;
+    }
+
+    .bd-header .navbar-header-items__start .navbar-item,
+    .bd-header .navbar-brand {
+        min-width: 0;
+        max-width: 100%;
+        flex-shrink: 1;
+    }
+
+    .bd-header .navbar-brand .logo__title {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
