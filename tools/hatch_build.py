@@ -11,12 +11,11 @@ class JSONMetaDataHook(MetadataHookInterface):
         is_macos_intel = (
             platform.system() == "Darwin" and platform.machine().startswith("x86")
         )
-        is_macos_intel = False
 
         # requires-python
         requires_python = ">=3.10"
         if is_macos_intel:
-            requires_python += ", <3.14"
+            requires_python += ", <3.15"
         else:
             requires_python += ", <3.15"
         metadata["requires-python"] = requires_python
@@ -32,5 +31,6 @@ class JSONMetaDataHook(MetadataHookInterface):
             "numba>=0.56",
         ]
         if is_macos_intel:
-            dependencies[-1] += ", <0.63"
+            #dependencies[-1] += ", <0.63"
+            dependencies.append("llvmlite")
         metadata["dependencies"] = dependencies
