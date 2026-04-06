@@ -15,7 +15,7 @@ class JSONMetaDataHook(MetadataHookInterface):
         # requires-python
         requires_python = ">=3.10"
         if is_macos_intel:
-            requires_python += ", <3.15"
+            requires_python += ", <3.14"
         else:
             requires_python += ", <3.15"
         metadata["requires-python"] = requires_python
@@ -30,6 +30,6 @@ class JSONMetaDataHook(MetadataHookInterface):
             "scipy>=1.8",
             "numba>=0.56",
         ]
-        if is_macos_intel and False:
+        if is_macos_intel:
             dependencies[-1] += ", <0.63"
         metadata["dependencies"] = dependencies
