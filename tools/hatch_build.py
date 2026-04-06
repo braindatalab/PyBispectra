@@ -11,6 +11,7 @@ class JSONMetaDataHook(MetadataHookInterface):
         is_macos_intel = (
             platform.system() == "Darwin" and platform.machine().startswith("x86")
         )
+        is_macos_intel = False
 
         # requires-python
         requires_python = ">=3.10"
