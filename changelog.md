@@ -8,6 +8,13 @@ No changes.
 
 ## [Version 1.3](https://pybispectra.readthedocs.io/1.3/)
 
+### Version 1.3.1
+
+##### Dependencies
+- Added support for Python 3.14 in the `conda` environment.
+
+<br>
+
 ### Version 1.3.0
 
 ##### Enhancements
