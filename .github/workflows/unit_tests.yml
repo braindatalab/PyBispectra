@@ -46,20 +46,16 @@ jobs:
         with:
           qt: true
           pyvista: false
-      - name: Check binary wheel availability (macOS Intel)
-        if: matrix.os == 'macos-15-intel'
-        run: |
-          python -m pip install --upgrade pip
-          pip download --pre --only-binary=:all: --dest /tmp/wheelhouse llvmlite numba
-      - name: Preinstall binary prerelease numba stack (macOS Intel)
-        if: matrix.os == 'macos-15-intel' && matrix.python-version == '3.14'
-        run: |
-          python -m pip install --upgrade pip
-          pip install --pre --only-binary=:all: llvmlite numba
-      - name: Install dependencies
+      - name: Install dependencies (default)
+        if: matrix.os != 'macos-15-intel'
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install --upgrade --upgrade-strategy eager .[test]
+      - name: Install dependencies (macOS Intel, Python 3.14)
+        if: matrix.os == 'macos-15-intel'
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install --pre --only-binary=:all: --upgrade --upgrade-strategy eager .[test]
       - name: Display versions and environment information
         run: |
           echo $TZ
@@ -74,15 +70,22 @@ jobs:
         run: python -m coverage run && coverage report
 
   test_conda:
-    timeout-minutes: 90
+    timeout-minutes: 60
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -el {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.14"
+          - os: macos-15-intel
+            python-version: "3.14"
     env:
       MKL_NUM_THREADS: '1'
       PYTHONUNBUFFERED: '1'
-      PYTHON_VERSION: '3.14'
     steps:
       - uses: actions/checkout@v6
       - uses: pyvista/setup-headless-display-action@main
@@ -93,7 +96,7 @@ jobs:
         with:
           environment-file: environment.yml
           create-args: >- # beware the >- instead of |, we don't split on newlines but on spaces
-            python=${{ env.PYTHON_VERSION }}
+            python=${{ matrix.python-version }}
       - name: Install package and test dependencies
         run: |
           pip install -e .
