@@ -32,10 +32,15 @@ or `pixi <https://pixi.prefix.dev/latest/>`_:
     
     pixi add pybispectra
 
+|
+
 .. dropdown:: Compatibility with Python ≥ 3.14 on macOS Intel systems
 
     Support for macOS Intel systems is limited to Python < 3.14 due to wheel availability limitations for `llvmlite`, which can lead to installation issues using ``pip`` and ``uv``.
+    
     If you have a macOS Intel system and need to use Python ≥ 3.14, consider using ``conda`` or ``pixi`` for installation.
+
+|
 
 If you need to create an environment or project in which to install PyBispectra, you can
 do so using `venv <https://docs.python.org/3/library/venv.html>`_,

@@ -36,6 +36,7 @@ extensions = [
     "sphinxcontrib.bibtex",
     "sphinx_gallery.gen_gallery",
     "sphinx_copybutton",
+    "sphinx_design",
     ### Custom
     "directive_formatting",
 ]

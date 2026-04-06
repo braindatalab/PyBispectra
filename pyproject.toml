@@ -30,6 +30,7 @@ doc = [
   "pydata-sphinx-theme",
   "sphinx",
   "sphinx-copybutton",
+  "sphinx-design",
   "sphinx-gallery>=0.18",
   "sphinxcontrib-bibtex",
 ]
