@@ -2,7 +2,8 @@
 
 ## [Development Version](https://pybispectra.readthedocs.io/latest/)
 
-No changes.
+##### Dependencies
+- Dropped max supported Python version being pinned.
 
 <br>
 
