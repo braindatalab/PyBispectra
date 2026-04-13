@@ -48,15 +48,15 @@ or `pixi <https://pixi.prefix.dev/latest/>`_:
 
     You can find the supported Python versions for ``numba`` in this `table <https://numba.readthedocs.io/en/stable/user/installing.html#numba-support-info>`_.
 
-    If a compatible ``numba`` release is available for your environment's Python version are you are still encountering installation issues, please report this on the `PyBispectra issue page <https://github.com/braindatalab/PyBispectra/issues>`_.
+    If a compatible ``numba`` release is available for your environment's Python version and you are still encountering installation issues, please report this on the `PyBispectra issue page <https://github.com/braindatalab/PyBispectra/issues>`_.
 
 .. dropdown:: Compatibility with Python ≥ 3.14 on macOS Intel systems
     :icon: alert
     :color: info
 
-    Support for macOS Intel systems is limited to Python < 3.14 due to wheel availability limitations for ``llvmlite``, which can lead to installation issues using ``pip`` and ``uv``.
+    Due to wheel availability limitations for ``llvmlite`` on macOS Intel systems with Python ≥ 3.14, installation issues can arise when using ``pip`` and ``uv``. 
     
-    If you have a macOS Intel system and need to use Python ≥ 3.14, consider using ``conda`` or ``pixi`` for installation.
+    If you have a macOS Intel system and need to use Python ≥ 3.14, consider using ``conda`` or ``pixi`` for an easier installation.
 
 
 Creating an environment or project for installation
