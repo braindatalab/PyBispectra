@@ -7,9 +7,9 @@ from pybispectra.utils import ResultsCFC
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import _ProcessFreqBase
 from pybispectra.utils._utils import (
+    _compute_in_parallel,
     _compute_pearsonr_2d,
     _fast_find_first,
-    _compute_in_parallel,
 )
 
 
@@ -61,7 +61,7 @@ class AAC(_ProcessFreqBase):
 
     verbose : bool
         Whether or not to report the progress of the processing.
-    """  # noqa: E501
+    """
 
     _data_precision: type = _precision.real  # Real-valued TFR power
 

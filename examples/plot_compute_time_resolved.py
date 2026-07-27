@@ -18,7 +18,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from numpy.random import RandomState
 
-from pybispectra import WaveShape, get_example_data_paths, compute_tfr
+from pybispectra import WaveShape, compute_tfr, get_example_data_paths
 
 ########################################################################################
 # Background

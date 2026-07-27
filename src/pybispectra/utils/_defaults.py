@@ -9,7 +9,7 @@ class _Precision:
     Double precision (i.e., float64 and complex128) used by default.
     """
 
-    def __init__(self) -> None:  # noqa: D107
+    def __init__(self) -> None:
         self.type = "double"
         self.real = np.float64
         self.complex = np.complex128

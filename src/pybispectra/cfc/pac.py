@@ -181,7 +181,7 @@ class PAC(_ProcessBispectrum):
         References
         ----------
         .. footbibliography::
-        """  # noqa: E501
+        """
         self._reset_attrs()
 
         self._sort_metrics(antisym, norm)

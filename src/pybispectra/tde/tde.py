@@ -1,7 +1,7 @@
 """Tools for handling TDE analysis."""
 
+from collections.abc import Callable
 from copy import deepcopy
-from typing import Callable
 
 import numpy as np
 from numba import njit
@@ -10,7 +10,7 @@ from scipy.linalg import hankel
 from pybispectra.utils import ResultsTDE
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import _ProcessBispectrum
-from pybispectra.utils._utils import _compute_in_parallel, _number_like, _int_like
+from pybispectra.utils._utils import _compute_in_parallel, _int_like, _number_like
 
 
 class TDE(_ProcessBispectrum):
@@ -109,9 +109,9 @@ class TDE(_ProcessBispectrum):
         self,
         data: np.ndarray,
         freqs: np.ndarray,
-        sampling_freq: int | float,
+        sampling_freq: float,
         verbose: bool = True,
-    ) -> None:  # noqa: D107
+    ) -> None:
         super().__init__(data, freqs, sampling_freq, times=None, verbose=verbose)
         self._sort_fft_coeffs()
 
@@ -130,8 +130,8 @@ class TDE(_ProcessBispectrum):
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
-        fmin: int | float | tuple[int | float] = 0.0,
-        fmax: int | float | tuple[int | float] = np.inf,
+        fmin: float | tuple[int | float] = 0.0,
+        fmax: float | tuple[int | float] = np.inf,
         antisym: bool | tuple[bool] = False,
         method: int | tuple[int] = 1,
         n_jobs: int = 1,
@@ -285,8 +285,8 @@ class TDE(_ProcessBispectrum):
 
     def _sort_freq_bands(
         self,
-        fmin: int | float | tuple[int | float],
-        fmax: int | float | tuple[int | float],
+        fmin: float | tuple[int | float],
+        fmax: float | tuple[int | float],
     ) -> None:
         """Sort inputs for the frequency bounds."""
         if not isinstance(fmin, _number_like + (tuple,)):

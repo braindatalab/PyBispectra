@@ -39,7 +39,7 @@ class _ProcessFreqBase(ABC):
         self,
         data: np.ndarray,
         freqs: np.ndarray,
-        sampling_freq: int | float,
+        sampling_freq: float,
         times: np.ndarray | None = None,
         verbose: bool = True,
     ) -> None:
@@ -49,7 +49,7 @@ class _ProcessFreqBase(ABC):
         self,
         data: np.ndarray,
         freqs: np.ndarray,
-        sampling_freq: int | float,
+        sampling_freq: float,
         times: np.ndarray | None,
         verbose: bool,
     ) -> None:

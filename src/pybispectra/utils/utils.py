@@ -1,13 +1,14 @@
 """Public tools for handling data and processing results."""
 
+from collections.abc import Callable
 from multiprocessing import cpu_count
-from typing import Callable
-from packaging.version import Version
 
-import pooch
 import numpy as np
+import pooch
 import scipy as sp
-from mne import time_frequency, __version__ as mne_version
+from mne import __version__ as mne_version
+from mne import time_frequency
+from packaging.version import Version
 
 from pybispectra import __version__ as version
 from pybispectra.utils._defaults import _precision
@@ -16,7 +17,7 @@ from pybispectra.utils._utils import _compute_in_parallel, _int_like, _number_li
 
 def compute_fft(
     data: np.ndarray,
-    sampling_freq: int | float,
+    sampling_freq: float,
     n_points: int | None = None,
     window: str = "hanning",
     n_jobs: int = 1,
@@ -100,7 +101,7 @@ def compute_fft(
 
 def _compute_fft_input_checks(
     data: np.ndarray,
-    sampling_freq: int | float,
+    sampling_freq: float,
     n_points: int | None,
     window: str,
     n_jobs: int,
@@ -156,13 +157,13 @@ def _compute_fft_input_checks(
 
 def compute_tfr(
     data: np.ndarray,
-    sampling_freq: int | float,
+    sampling_freq: float,
     freqs: np.ndarray,
     tfr_mode: str = "morlet",
-    n_cycles: np.ndarray | int | float = 7.0,
+    n_cycles: np.ndarray | float = 7.0,
     zero_mean_wavelets: bool | None = None,
     use_fft: bool = True,
-    multitaper_time_bandwidth: int | float = 4.0,
+    multitaper_time_bandwidth: float = 4.0,
     output: str = "power",
     n_jobs: int = 1,
     verbose: bool = True,
@@ -290,13 +291,13 @@ def compute_tfr(
 
 def _compute_tfr_input_checks(
     data: np.ndarray,
-    sampling_freq: int | float,
+    sampling_freq: float,
     freqs: np.ndarray,
     tfr_mode: str,
-    n_cycles: np.ndarray | int | float,
+    n_cycles: np.ndarray | float,
     zero_mean_wavelets: bool | None,
     use_fft: bool,
-    multitaper_time_bandwidth: int | float,
+    multitaper_time_bandwidth: float,
     output: str,
     n_jobs: int,
     verbose: bool,
@@ -394,7 +395,7 @@ def _compute_tfr_input_checks(
     return tfr_func, return_weights, n_jobs
 
 
-def compute_rank(data: np.ndarray, sv_tol: int | float = 1e-5) -> int:
+def compute_rank(data: np.ndarray, sv_tol: float = 1e-5) -> int:
     """Compute the minimum rank of data from non-zero singular values.
 
     Parameters
@@ -536,7 +537,7 @@ def get_example_data_paths(name: str, verbose: bool = False) -> str:
     If the file is not found in the local cache (see :func:`pooch.os_cache` for the
     location), it will be downloaded automatically.
     """
-    if name not in DATASETS.keys():
+    if name not in DATASETS:
         raise ValueError(f"`name` must be one of: {list(DATASETS.keys())}")
 
     return _pooch.fetch(fname=DATASETS[name], progressbar=verbose)

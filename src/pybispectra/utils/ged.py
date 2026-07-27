@@ -1,14 +1,15 @@
 """Tools for performing generalised eigendecompositions."""
 
-from packaging.version import Version
 from multiprocessing import cpu_count
 from warnings import warn
 
 import numpy as np
 import scipy as sp
-from mne import Info, __version__ as mne_version
+from mne import Info
+from mne import __version__ as mne_version
 from mne.decoding import SSD
 from mne.time_frequency import csd_array_fourier, csd_array_multitaper
+from packaging.version import Version
 
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._utils import _create_mne_info, _int_like, _number_like
@@ -168,9 +169,9 @@ class SpatioSpectralFilter:
     def __init__(
         self,
         data: np.ndarray,
-        sampling_freq: int | float,
+        sampling_freq: float,
         verbose: bool = True,
-    ) -> None:  # noqa: D107
+    ) -> None:
         self.verbose = verbose
         self._sort_init_inputs(data, sampling_freq)
 
@@ -195,7 +196,7 @@ class SpatioSpectralFilter:
         self,
         signal_bounds: tuple[int | float],
         noise_bounds: tuple[int | float],
-        signal_noise_gap: int | float,
+        signal_noise_gap: float,
     ) -> None:
         """Sort frequency bound inputs."""
         if not isinstance(signal_bounds, tuple) or not all(
@@ -309,7 +310,7 @@ class SpatioSpectralFilter:
         self,
         signal_bounds: tuple[int | float],
         noise_bounds: tuple[int | float],
-        signal_noise_gap: int | float = 1.0,
+        signal_noise_gap: float = 1.0,
         bandpass_filter: bool = False,
         indices: tuple[int] | None = None,
         rank: int | None = None,
@@ -375,7 +376,7 @@ class SpatioSpectralFilter:
         self,
         signal_bounds: tuple[int | float],
         noise_bounds: tuple[int | float],
-        signal_noise_gap: int | float,
+        signal_noise_gap: float,
     ) -> tuple[dict, dict]:
         """Create filter parameters for use with MNE's SSD implementation.
 
@@ -459,7 +460,7 @@ class SpatioSpectralFilter:
         rank: int | None = None,
         csd_method: str = "multitaper",
         n_fft: int | None = None,
-        mt_bandwidth: int | float = 5.0,
+        mt_bandwidth: float = 5.0,
         mt_adaptive: bool = True,
         mt_low_bias: bool = True,
         n_jobs: int = 1,
@@ -563,7 +564,7 @@ class SpatioSpectralFilter:
         self,
         csd_method: str,
         n_fft: int | None,
-        mt_bandwidth: int | float,
+        mt_bandwidth: float,
         mt_adaptive: bool,
         mt_low_bias: bool,
         n_jobs: int,
@@ -837,7 +838,7 @@ class SpatioSpectralFilter:
         return self.transform()
 
     def get_transformed_data(
-        self, min_ratio: int | float = -np.inf, copy: bool = True
+        self, min_ratio: float = -np.inf, copy: bool = True
     ) -> np.ndarray:
         """Return the transformed data.
 

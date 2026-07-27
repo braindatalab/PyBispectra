@@ -44,8 +44,8 @@ class _PlotBase(ABC):
         nodes: int | tuple[int] | None,
         n_rows: int,
         n_cols: int,
-        major_tick_intervals: int | float,
-        minor_tick_intervals: int | float,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
     ) -> tuple[int]:
         """Sort the plotting inputs.
 
@@ -234,7 +234,7 @@ class _PlotGeneral(_PlotBase):
         f2s: np.ndarray,
         times: np.ndarray | None,
         name: str,
-    ) -> None:  # noqa: D107
+    ) -> None:
         super().__init__(data, indices, name)
 
         self.f1s = f1s.copy()
@@ -249,8 +249,8 @@ class _PlotGeneral(_PlotBase):
         times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
-        major_tick_intervals: int | float = 5.0,
-        minor_tick_intervals: int | float = 1.0,
+        major_tick_intervals: float = 5.0,
+        minor_tick_intervals: float = 1.0,
         plot_absolute: bool = False,
         mirror_cbar_range: bool = True,
         cbar_range_abs: tuple[float] | list[tuple[float]] | None = None,
@@ -405,8 +405,8 @@ class _PlotGeneral(_PlotBase):
         times: tuple[int | float] | None,
         n_rows: int,
         n_cols: int,
-        major_tick_intervals: int | float,
-        minor_tick_intervals: int | float,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
         plot_absolute: bool,
         mirror_cbar_range: bool,
         cbar_range_abs: tuple[float] | list[tuple[float]] | None,
@@ -555,8 +555,8 @@ class _PlotGeneral(_PlotBase):
         time_idcs: np.ndarray | None,
         n_rows: int,
         n_cols: int,
-        major_tick_intervals: int | float,
-        minor_tick_intervals: int | float,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
         plot_absolute: bool,
         mirror_cbar_range: bool,
         cbar_ranges: list[list[tuple[float | None]]],
@@ -711,8 +711,8 @@ class _PlotGeneral(_PlotBase):
     def _set_axis_ticks(
         self,
         axis: plt.Axes,
-        major_tick_intervals: int | float,
-        minor_tick_intervals: int | float,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
     ) -> None:
         """Set major and minor tick intervals of x- and y-axes."""
         axis.xaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
@@ -757,7 +757,7 @@ class _PlotCFC(_PlotBase):
         f2s: np.ndarray,
         times: np.ndarray | None,
         name: str,
-    ) -> None:  # noqa: D107
+    ) -> None:
         super().__init__(data, indices, name)
 
         self.f1s = f1s.copy()
@@ -772,8 +772,8 @@ class _PlotCFC(_PlotBase):
         times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
-        major_tick_intervals: int | float = 5.0,
-        minor_tick_intervals: int | float = 1.0,
+        major_tick_intervals: float = 5.0,
+        minor_tick_intervals: float = 1.0,
         cbar_range: tuple[float] | list[tuple[float]] | None = None,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
@@ -836,7 +836,7 @@ class _PlotCFC(_PlotBase):
         -----
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node on a new
         figure.
-        """  # noqa: E501
+        """
         nodes, f1s, f2s, f1_idcs, f2_idcs, times, time_idcs, cbar_range = (
             self._sort_plot_inputs(
                 nodes,
@@ -881,8 +881,8 @@ class _PlotCFC(_PlotBase):
         times: tuple[int | float] | None,
         n_rows: int,
         n_cols: int,
-        major_tick_intervals: int | float,
-        minor_tick_intervals: int | float,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
         cbar_range: tuple[float] | list[tuple[float]] | None,
     ) -> tuple[
         tuple[int],
@@ -956,8 +956,8 @@ class _PlotCFC(_PlotBase):
         time_idcs: np.ndarray | None,
         n_rows: int,
         n_cols: int,
-        major_tick_intervals: int | float,
-        minor_tick_intervals: int | float,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
         cbar_range: list[tuple[float | None]],
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot results on the relevant figures/subplots."""
@@ -1043,8 +1043,8 @@ class _PlotCFC(_PlotBase):
     def _set_axis_ticks(
         self,
         axis: plt.Axes,
-        major_tick_intervals: int | float,
-        minor_tick_intervals: int | float,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
     ) -> None:
         """Set major and minor tick intervals of x- and y-axes."""
         axis.xaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))
@@ -1086,7 +1086,7 @@ class _PlotTDE(_PlotBase):
         freq_bands: tuple[tuple[float]] | None,
         times: np.ndarray,
         name: str,
-    ) -> None:  # noqa: D107
+    ) -> None:
         super().__init__(data, indices, name)
 
         self.tau = tau
@@ -1105,8 +1105,8 @@ class _PlotTDE(_PlotBase):
         times: tuple[int | float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
-        major_tick_intervals: int | float = 500.0,
-        minor_tick_intervals: int | float = 100.0,
+        major_tick_intervals: float = 500.0,
+        minor_tick_intervals: float = 100.0,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
@@ -1290,8 +1290,8 @@ class _PlotTDE(_PlotBase):
         time_idcs: np.ndarray,
         n_rows: int,
         n_cols: int,
-        major_tick_intervals: int | float,
-        minor_tick_intervals: int | float,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot results on the relevant figures/subplots."""
         fig_i = 0
@@ -1385,8 +1385,8 @@ class _PlotTDE(_PlotBase):
     def _set_axis_ticks(
         self,
         axis: plt.Axes,
-        major_tick_intervals: int | float,
-        minor_tick_intervals: int | float,
+        major_tick_intervals: float,
+        minor_tick_intervals: float,
     ) -> None:
         """Set major and minor tick intervals of the x-axis."""
         axis.xaxis.set_major_locator(plt.MultipleLocator(major_tick_intervals))

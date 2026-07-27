@@ -8,8 +8,8 @@ from pybispectra.utils._process import (
     _compute_threenorm,
     _ProcessBispectrum,
 )
-from pybispectra.utils.results import ResultsWaveShape
 from pybispectra.utils._utils import _compute_in_parallel, _int_like
+from pybispectra.utils.results import ResultsWaveShape
 
 np.seterr(divide="ignore", invalid="ignore")  # no warning for NaN division
 
@@ -78,7 +78,7 @@ class WaveShape(_ProcessBispectrum):
     References
     ----------
     .. footbibliography::
-    """  # noqa: E501
+    """
 
     _return_nonorm = False
     _return_threenorm = False

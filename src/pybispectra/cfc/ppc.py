@@ -6,7 +6,7 @@ from numba import njit
 from pybispectra.utils import ResultsCFC
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import _ProcessFreqBase
-from pybispectra.utils._utils import _fast_find_first, _compute_in_parallel
+from pybispectra.utils._utils import _compute_in_parallel, _fast_find_first
 
 
 class PPC(_ProcessFreqBase):
