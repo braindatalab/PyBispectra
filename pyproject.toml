@@ -126,7 +126,11 @@ ignore_roles = [
 report_level = "WARNING"
 
 [tool.ruff]
-extend-exclude = ["docs", "examples/compute_*.py"]
+extend-exclude = [
+  "docs",
+  "examples/compute_*.py",
+  "src/pybispectra/utils/_docs.py",
+]
 line-length = 88
 
 [tool.ruff.lint.per-file-ignores]

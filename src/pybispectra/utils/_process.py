@@ -135,11 +135,9 @@ class _ProcessFreqBase(ABC):
     def _sort_indices(self, indices: tuple[tuple[int]] | None) -> None:
         """Sort seed-target indices inputs."""
         if indices is None:
-            indices = tuple(
-                [
-                    tuple(np.tile(range(self._n_chans), self._n_chans).tolist()),
-                    tuple(np.repeat(range(self._n_chans), self._n_chans).tolist()),
-                ]
+            indices = (
+                tuple(np.tile(range(self._n_chans), self._n_chans).tolist()),
+                tuple(np.repeat(range(self._n_chans), self._n_chans).tolist()),
             )
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
@@ -208,13 +206,12 @@ class _ProcessFreqBase(ABC):
                 )
             self._f2s = self.freqs[f2_idcs]
 
-        if self.verbose:
-            if self._f1s.max() >= self._f2s.min():
-                warn(
-                    "At least one value in `f1s` is >= a value in `f2s`. The "
-                    "corresponding result(s) will have a value of NaN.",
-                    UserWarning,
-                )
+        if self.verbose and self._f1s.max() >= self._f2s.min():
+            warn(
+                "At least one value in `f1s` is >= a value in `f2s`. The corresponding "
+                "result(s) will have a value of NaN.",
+                UserWarning,
+            )
 
     def _sort_tmin_tmax(self, times: tuple[int | float] | None) -> None:
         """Sort time range inputs."""
@@ -308,16 +305,18 @@ class _ProcessBispectrum(_ProcessFreqBase):
         """Sort seed-target indices inputs."""
         super()._sort_indices(indices)
 
-        if self.verbose:
-            if self._return_antisym and (
+        if (
+            self.verbose
+            and self._return_antisym
+            and (
                 any(seed == target for seed, target in zip(self._seeds, self._targets))
-            ):
-                warn(
-                    "The seed and target for at least one connection is the same "
-                    "channel. The corresponding antisymmetrised result(s) will be "
-                    "NaN-valued.",
-                    UserWarning,
-                )
+            )
+        ):
+            warn(
+                "The seed and target for at least one connection is the same channel. "
+                "The corresponding antisymmetrised result(s) will be NaN-valued.",
+                UserWarning,
+            )
 
     def _sort_freqs(
         self, f1s: tuple[int | float] | None, f2s: tuple[int | float] | None
@@ -325,17 +324,16 @@ class _ProcessBispectrum(_ProcessFreqBase):
         """Sort frequency inputs."""
         super()._sort_freqs(f1s, f2s)
 
-        if self.verbose:
-            if any(
-                hfreq + lfreq not in self.freqs
-                for hfreq in self._f2s
-                for lfreq in self._f1s
-            ):
-                warn(
-                    "At least one value of `f2s` + `f1s` is not present in the "
-                    "frequencies. The corresponding result(s) will be NaN-valued.",
-                    UserWarning,
-                )
+        if self.verbose and any(
+            hfreq + lfreq not in self.freqs
+            for hfreq in self._f2s
+            for lfreq in self._f1s
+        ):
+            warn(
+                "At least one value of `f2s` + `f1s` is not present in the "
+                "frequencies. The corresponding result(s) will be NaN-valued.",
+                UserWarning,
+            )
 
 
 @njit

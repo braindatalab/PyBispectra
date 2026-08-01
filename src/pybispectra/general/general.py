@@ -22,16 +22,14 @@ class _General(_ProcessBispectrum):
     def _sort_indices(self, indices: tuple[tuple[int]] | None) -> None:
         """Sort kmn channel indices inputs."""
         if indices is None:
-            indices = tuple(
-                [
-                    tuple(np.tile(range(self._n_chans), self._n_chans**2).tolist()),
-                    tuple(
-                        np.repeat(
-                            np.tile(range(self._n_chans), self._n_chans), self._n_chans
-                        ).tolist()
-                    ),
-                    tuple(np.repeat(range(self._n_chans), self._n_chans**2).tolist()),
-                ]
+            indices = (
+                tuple(np.tile(range(self._n_chans), self._n_chans**2).tolist()),
+                tuple(
+                    np.repeat(
+                        np.tile(range(self._n_chans), self._n_chans), self._n_chans
+                    ).tolist()
+                ),
+                tuple(np.repeat(range(self._n_chans), self._n_chans**2).tolist()),
             )
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")

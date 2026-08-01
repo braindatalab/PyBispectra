@@ -469,8 +469,9 @@ class _PlotGeneral(_PlotBase):
             cbar_range_phase,
         ]
         cbar_names = ["abs", "real", "imag", "phase"]
-        cbar_idx = 0
-        for cbar_range, cbar_name in zip(cbar_ranges, cbar_names):
+        for cbar_idx, (cbar_range, cbar_name) in enumerate(
+            zip(cbar_ranges, cbar_names)
+        ):
             if not isinstance(cbar_range, (list, tuple, type(None))):
                 raise TypeError(
                     f"`cbar_range_{cbar_name}` must be a list, tuple, or None."
@@ -490,7 +491,6 @@ class _PlotGeneral(_PlotBase):
                         f"Limits in `cbar_range_{cbar_name}` must have length of 2."
                     )
             cbar_ranges[cbar_idx] = cbar_range
-            cbar_idx += 1
 
         return (nodes, f1s, f2s, f1_idcs, f2_idcs, times, time_idcs, cbar_ranges)
 

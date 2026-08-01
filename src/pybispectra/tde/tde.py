@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from copy import deepcopy
+from typing import ClassVar
 
 import numpy as np
 from numba import njit
@@ -97,7 +98,7 @@ class TDE(_ProcessBispectrum):
     _tde_iv_nosym: np.ndarray = None
     _tde_iv_antisym: np.ndarray = None
 
-    _kmn: dict = {
+    _kmn: ClassVar[dict] = {
         "xxx": (0, 0, 0),
         "yyy": (1, 1, 1),
         "xyx": (0, 1, 0),

@@ -363,9 +363,10 @@ def _compute_tfr_input_checks(
     if not isinstance(use_fft, bool):
         raise TypeError("`use_fft` must be a bool.")
 
-    if tfr_mode == "multitaper":
-        if not isinstance(multitaper_time_bandwidth, _number_like):
-            raise TypeError("`multitaper_time_bandwidth` must be an int or a float.")
+    if tfr_mode == "multitaper" and not isinstance(
+        multitaper_time_bandwidth, _number_like
+    ):
+        raise TypeError("`multitaper_time_bandwidth` must be an int or a float.")
 
     outputs = ["power", "complex"]
     if not isinstance(output, str):
