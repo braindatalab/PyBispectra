@@ -8,7 +8,6 @@ from numba import njit
 
 from pybispectra.utils._defaults import _precision
 
-
 # Aliases for type checking
 _int_like = (int, np.integer)
 _float_like = (float, np.floating)
@@ -109,7 +108,7 @@ def _get_block_indices(block_i: int, limit: int, n_jobs: int) -> np.ndarray:
 
 @njit
 def _fast_find_first(
-    vector: np.ndarray, value: int | float, start_idx: int = 0
+    vector: np.ndarray, value: float, start_idx: int = 0
 ) -> int:  # pragma: no cover
     """Quickly find the first index of a value in a 1D array using Numba.
 

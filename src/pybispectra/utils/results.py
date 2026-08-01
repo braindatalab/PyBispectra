@@ -5,9 +5,9 @@ from abc import ABC, abstractmethod
 import numpy as np
 from matplotlib.figure import Figure
 
+from pybispectra.utils._defaults import _precision
 from pybispectra.utils._plot import _PlotCFC, _PlotGeneral, _PlotTDE, _PlotWaveShape
 from pybispectra.utils._utils import _int_like
-from pybispectra.utils._defaults import _precision
 
 
 class _ResultsBase(ABC):
@@ -316,7 +316,7 @@ class ResultsCFC(_ResultsBase):
         f2s: np.ndarray,
         times: np.ndarray | None = None,
         name: str = "CFC",
-    ) -> None:  # noqa: D107
+    ) -> None:
         super().__init__(data, (3, 4), name)
         self._sort_init_inputs(indices, f1s, f2s, times)
 
@@ -368,13 +368,13 @@ class ResultsCFC(_ResultsBase):
     def plot(
         self,
         nodes: int | tuple[int] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
-        major_tick_intervals: int | float = 5.0,
-        minor_tick_intervals: int | float = 1.0,
+        major_tick_intervals: float = 5.0,
+        minor_tick_intervals: float = 1.0,
         cbar_range: tuple[float] | list[tuple[float]] | None = None,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
@@ -509,9 +509,9 @@ class ResultsTDE(_ResultsBase):
 
     tau : ~numpy.ndarray, shape of [nodes, frequency_bands]
         Estimated time delay (in ms) for each connection and frequency band.
-    """  # noqa: E501
+    """
 
-    freq_bands: tuple[tuple[int | float]] = None
+    freq_bands: tuple[tuple[float]] = None
     _n_fbands: int = None
 
     def __repr__(self) -> str:
@@ -535,9 +535,9 @@ class ResultsTDE(_ResultsBase):
         data: np.ndarray,
         indices: tuple[tuple[int]],
         times: np.ndarray,
-        freq_bands: tuple[tuple[int | float]] | None = None,
+        freq_bands: tuple[tuple[float]] | None = None,
         name: str = "TDE",
-    ) -> None:  # noqa: D107
+    ) -> None:
         super().__init__(data, (3,), name)
         self._sort_init_inputs(indices, times, freq_bands)
 
@@ -553,10 +553,7 @@ class ResultsTDE(_ResultsBase):
         )
 
     def _sort_init_inputs(
-        self,
-        indices: tuple[tuple[int]],
-        times: np.ndarray,
-        freq_bands: tuple[int | float],
+        self, indices: tuple[tuple[int]], times: np.ndarray, freq_bands: tuple[float]
     ) -> None:
         """Sort inputs to the object."""
         super()._sort_indices_seeds_targets(indices)
@@ -575,7 +572,7 @@ class ResultsTDE(_ResultsBase):
 
         self.times = times
 
-    def _sort_freq_bands(self, freq_bands: tuple[tuple[int | float]]) -> None:
+    def _sort_freq_bands(self, freq_bands: tuple[tuple[float]]) -> None:
         """Sort ``freq_bands`` input."""
         if freq_bands is not None:
             if not isinstance(freq_bands, tuple):
@@ -621,11 +618,11 @@ class ResultsTDE(_ResultsBase):
         self,
         nodes: int | tuple[int] | None = None,
         freq_bands: int | tuple[int] | None = None,
-        times: tuple[int | float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
-        major_tick_intervals: int | float = 500.0,
-        minor_tick_intervals: int | float = 100.0,
+        major_tick_intervals: float = 500.0,
+        minor_tick_intervals: float = 100.0,
         show: bool = True,
     ) -> tuple[list[Figure], list[np.ndarray]]:
         """Plot the results.
@@ -780,7 +777,7 @@ class ResultsWaveShape(_ResultsBase):
         f2s: np.ndarray,
         times: np.ndarray | None = None,
         name: str = "Waveshape",
-    ) -> None:  # noqa: D107
+    ) -> None:
         super().__init__(data, (3, 4), name)
         self._sort_init_inputs(indices, f1s, f2s, times)
 
@@ -831,13 +828,13 @@ class ResultsWaveShape(_ResultsBase):
     def plot(
         self,
         nodes: int | tuple[int] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
-        major_tick_intervals: int | float = 5.0,
-        minor_tick_intervals: int | float = 1.0,
+        major_tick_intervals: float = 5.0,
+        minor_tick_intervals: float = 1.0,
         plot_absolute: bool = False,
         mirror_cbar_range: bool = True,
         cbar_range_abs: tuple[float] | list[tuple[float]] | None = None,
@@ -1048,7 +1045,7 @@ class ResultsGeneral(_ResultsBase):
         f2s: np.ndarray,
         times: np.ndarray | None = None,
         name: str = "General",
-    ) -> None:  # noqa: D107
+    ) -> None:
         super().__init__(data, (3, 4), name)
         self._sort_init_inputs(indices, f1s, f2s, times)
 
@@ -1145,13 +1142,13 @@ class ResultsGeneral(_ResultsBase):
     def plot(
         self,
         nodes: int | tuple[int] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
-        major_tick_intervals: int | float = 5.0,
-        minor_tick_intervals: int | float = 1.0,
+        major_tick_intervals: float = 5.0,
+        minor_tick_intervals: float = 1.0,
         plot_absolute: bool = False,
         mirror_cbar_range: bool = True,
         cbar_range_abs: tuple[float] | list[tuple[float]] | None = None,
@@ -1254,7 +1251,7 @@ class ResultsGeneral(_ResultsBase):
         -----
         ``n_rows`` and ``n_cols`` of ``1`` will plot the results for each node on a new
         figure.
-        """  # noqa: E501
+        """
         figures, axes = self._plotting.plot(
             nodes=nodes,
             f1s=f1s,

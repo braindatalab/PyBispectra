@@ -22,16 +22,14 @@ class _General(_ProcessBispectrum):
     def _sort_indices(self, indices: tuple[tuple[int]] | None) -> None:
         """Sort kmn channel indices inputs."""
         if indices is None:
-            indices = tuple(
-                [
-                    tuple(np.tile(range(self._n_chans), self._n_chans**2).tolist()),
-                    tuple(
-                        np.repeat(
-                            np.tile(range(self._n_chans), self._n_chans), self._n_chans
-                        ).tolist()
-                    ),
-                    tuple(np.repeat(range(self._n_chans), self._n_chans**2).tolist()),
-                ]
+            indices = (
+                tuple(np.tile(range(self._n_chans), self._n_chans**2).tolist()),
+                tuple(
+                    np.repeat(
+                        np.tile(range(self._n_chans), self._n_chans), self._n_chans
+                    ).tolist()
+                ),
+                tuple(np.repeat(range(self._n_chans), self._n_chans**2).tolist()),
             )
         if not isinstance(indices, tuple):
             raise TypeError("`indices` must be a tuple.")
@@ -118,9 +116,9 @@ class Bispectrum(_General):
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute the bispectrum, averaged over epochs.
@@ -167,7 +165,7 @@ class Bispectrum(_General):
         .. warning::
             For values of ``f1s`` higher than ``f2s`` or where ``f2s + f1s`` exceeds the
             Nyquist frequency, a :obj:`numpy.nan` value is returned.
-        """  # noqa: E501
+        """
         self._reset_attrs()
 
         self._sort_indices(indices)
@@ -305,9 +303,9 @@ class Threenorm(_General):
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute the threenorm, averaged over epochs.
