@@ -72,9 +72,9 @@ class AAC(_ProcessFreqBase):
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute AAC, averaged over epochs.

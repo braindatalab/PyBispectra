@@ -165,9 +165,7 @@ class _ProcessFreqBase(ABC):
 
         self._n_cons = len(seeds)
 
-    def _sort_freqs(
-        self, f1s: tuple[int | float] | None, f2s: tuple[int | float] | None
-    ) -> None:
+    def _sort_freqs(self, f1s: tuple[float] | None, f2s: tuple[float] | None) -> None:
         """Sort frequency inputs."""
         check_f1s = True
         check_f2s = True
@@ -213,7 +211,7 @@ class _ProcessFreqBase(ABC):
                 UserWarning,
             )
 
-    def _sort_tmin_tmax(self, times: tuple[int | float] | None) -> None:
+    def _sort_tmin_tmax(self, times: tuple[float] | None) -> None:
         """Sort time range inputs."""
         if times is None:
             times = (-np.inf, np.inf)
@@ -318,9 +316,7 @@ class _ProcessBispectrum(_ProcessFreqBase):
                 UserWarning,
             )
 
-    def _sort_freqs(
-        self, f1s: tuple[int | float] | None, f2s: tuple[int | float] | None
-    ) -> None:
+    def _sort_freqs(self, f1s: tuple[float] | None, f2s: tuple[float] | None) -> None:
         """Sort frequency inputs."""
         super()._sort_freqs(f1s, f2s)
 

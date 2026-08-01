@@ -142,7 +142,7 @@ class _PlotBase(ABC):
         return f1s, f2s, f1_idcs, f2_idcs
 
     def _sort_time_inputs(
-        self, times: tuple[int | float] | None
+        self, times: tuple[float] | None
     ) -> tuple[np.ndarray | None, np.ndarray | None]:
         """Sort `times` input.
 
@@ -244,9 +244,9 @@ class _PlotGeneral(_PlotBase):
     def plot(
         self,
         nodes: int | tuple[int] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: float = 5.0,
@@ -400,9 +400,9 @@ class _PlotGeneral(_PlotBase):
     def _sort_plot_inputs(
         self,
         nodes: int | tuple[int] | None,
-        f1s: tuple[int | float] | None,
-        f2s: tuple[int | float] | None,
-        times: tuple[int | float] | None,
+        f1s: tuple[float] | None,
+        f2s: tuple[float] | None,
+        times: tuple[float] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,
@@ -767,9 +767,9 @@ class _PlotCFC(_PlotBase):
     def plot(
         self,
         nodes: int | tuple[int] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: float = 5.0,
@@ -876,9 +876,9 @@ class _PlotCFC(_PlotBase):
     def _sort_plot_inputs(
         self,
         nodes: int | tuple[int] | None,
-        f1s: tuple[int | float] | None,
-        f2s: tuple[int | float] | None,
-        times: tuple[int | float] | None,
+        f1s: tuple[float] | None,
+        f2s: tuple[float] | None,
+        times: tuple[float] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,
@@ -1102,7 +1102,7 @@ class _PlotTDE(_PlotBase):
         self,
         nodes: int | tuple[int] | None = None,
         freq_bands: int | tuple[int] | None = None,
-        times: tuple[int | float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: float = 500.0,
@@ -1189,7 +1189,7 @@ class _PlotTDE(_PlotBase):
         self,
         nodes: int | tuple[int] | None,
         freq_bands: int | tuple[int] | None,
-        times: tuple[int | float] | None,
+        times: tuple[float] | None,
         n_rows: int,
         n_cols: int,
         major_tick_intervals: float,

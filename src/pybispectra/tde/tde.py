@@ -131,8 +131,8 @@ class TDE(_ProcessBispectrum):
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
-        fmin: float | tuple[int | float] = 0.0,
-        fmax: float | tuple[int | float] = np.inf,
+        fmin: float | tuple[float] = 0.0,
+        fmax: float | tuple[float] = np.inf,
         antisym: bool | tuple[bool] = False,
         method: int | tuple[int] = 1,
         n_jobs: int = 1,
@@ -285,9 +285,7 @@ class TDE(_ProcessBispectrum):
         self._xyz = None
 
     def _sort_freq_bands(
-        self,
-        fmin: float | tuple[int | float],
-        fmax: float | tuple[int | float],
+        self, fmin: float | tuple[float], fmax: float | tuple[float]
     ) -> None:
         """Sort inputs for the frequency bounds."""
         if not isinstance(fmin, _number_like + (tuple,)):

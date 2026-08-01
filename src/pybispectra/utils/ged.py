@@ -194,8 +194,8 @@ class SpatioSpectralFilter:
 
     def _sort_freq_bounds(
         self,
-        signal_bounds: tuple[int | float],
-        noise_bounds: tuple[int | float],
+        signal_bounds: tuple[float],
+        noise_bounds: tuple[float],
         signal_noise_gap: float,
     ) -> None:
         """Sort frequency bound inputs."""
@@ -308,8 +308,8 @@ class SpatioSpectralFilter:
 
     def fit_ssd(
         self,
-        signal_bounds: tuple[int | float],
-        noise_bounds: tuple[int | float],
+        signal_bounds: tuple[float],
+        noise_bounds: tuple[float],
         signal_noise_gap: float = 1.0,
         bandpass_filter: bool = False,
         indices: tuple[int] | None = None,
@@ -374,8 +374,8 @@ class SpatioSpectralFilter:
 
     def _create_mne_filt_params(
         self,
-        signal_bounds: tuple[int | float],
-        noise_bounds: tuple[int | float],
+        signal_bounds: tuple[float],
+        noise_bounds: tuple[float],
         signal_noise_gap: float,
     ) -> tuple[dict, dict]:
         """Create filter parameters for use with MNE's SSD implementation.
@@ -453,8 +453,8 @@ class SpatioSpectralFilter:
 
     def fit_hpmax(
         self,
-        signal_bounds: tuple[int | float],
-        noise_bounds: tuple[int | float],
+        signal_bounds: tuple[float],
+        noise_bounds: tuple[float],
         n_harmonics: int = -1,
         indices: tuple[int] | None = None,
         rank: int | None = None,

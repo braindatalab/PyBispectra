@@ -368,9 +368,9 @@ class ResultsCFC(_ResultsBase):
     def plot(
         self,
         nodes: int | tuple[int] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: float = 5.0,
@@ -511,7 +511,7 @@ class ResultsTDE(_ResultsBase):
         Estimated time delay (in ms) for each connection and frequency band.
     """
 
-    freq_bands: tuple[tuple[int | float]] = None
+    freq_bands: tuple[tuple[float]] = None
     _n_fbands: int = None
 
     def __repr__(self) -> str:
@@ -535,7 +535,7 @@ class ResultsTDE(_ResultsBase):
         data: np.ndarray,
         indices: tuple[tuple[int]],
         times: np.ndarray,
-        freq_bands: tuple[tuple[int | float]] | None = None,
+        freq_bands: tuple[tuple[float]] | None = None,
         name: str = "TDE",
     ) -> None:
         super().__init__(data, (3,), name)
@@ -553,10 +553,7 @@ class ResultsTDE(_ResultsBase):
         )
 
     def _sort_init_inputs(
-        self,
-        indices: tuple[tuple[int]],
-        times: np.ndarray,
-        freq_bands: tuple[int | float],
+        self, indices: tuple[tuple[int]], times: np.ndarray, freq_bands: tuple[float]
     ) -> None:
         """Sort inputs to the object."""
         super()._sort_indices_seeds_targets(indices)
@@ -575,7 +572,7 @@ class ResultsTDE(_ResultsBase):
 
         self.times = times
 
-    def _sort_freq_bands(self, freq_bands: tuple[tuple[int | float]]) -> None:
+    def _sort_freq_bands(self, freq_bands: tuple[tuple[float]]) -> None:
         """Sort ``freq_bands`` input."""
         if freq_bands is not None:
             if not isinstance(freq_bands, tuple):
@@ -621,7 +618,7 @@ class ResultsTDE(_ResultsBase):
         self,
         nodes: int | tuple[int] | None = None,
         freq_bands: int | tuple[int] | None = None,
-        times: tuple[int | float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: float = 500.0,
@@ -831,9 +828,9 @@ class ResultsWaveShape(_ResultsBase):
     def plot(
         self,
         nodes: int | tuple[int] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: float = 5.0,
@@ -1145,9 +1142,9 @@ class ResultsGeneral(_ResultsBase):
     def plot(
         self,
         nodes: int | tuple[int] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_rows: int = 1,
         n_cols: int = 1,
         major_tick_intervals: float = 5.0,
