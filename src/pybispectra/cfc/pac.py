@@ -80,9 +80,9 @@ class PAC(_ProcessBispectrum):
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         antisym: bool | tuple[bool] = False,
         norm: bool | tuple[bool] = False,
         n_jobs: int = 1,
@@ -181,7 +181,7 @@ class PAC(_ProcessBispectrum):
         References
         ----------
         .. footbibliography::
-        """  # noqa: E501
+        """
         self._reset_attrs()
 
         self._sort_metrics(antisym, norm)

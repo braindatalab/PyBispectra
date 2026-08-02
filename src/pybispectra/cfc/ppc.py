@@ -6,7 +6,7 @@ from numba import njit
 from pybispectra.utils import ResultsCFC
 from pybispectra.utils._defaults import _precision
 from pybispectra.utils._process import _ProcessFreqBase
-from pybispectra.utils._utils import _fast_find_first, _compute_in_parallel
+from pybispectra.utils._utils import _compute_in_parallel, _fast_find_first
 
 
 class PPC(_ProcessFreqBase):
@@ -73,9 +73,9 @@ class PPC(_ProcessFreqBase):
     def compute(
         self,
         indices: tuple[tuple[int]] | None = None,
-        f1s: tuple[int | float] | None = None,
-        f2s: tuple[int | float] | None = None,
-        times: tuple[int | float] | None = None,
+        f1s: tuple[float] | None = None,
+        f2s: tuple[float] | None = None,
+        times: tuple[float] | None = None,
         n_jobs: int = 1,
     ) -> None:
         r"""Compute PPC, averaged over epochs.
