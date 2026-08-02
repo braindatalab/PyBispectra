@@ -207,10 +207,10 @@ def compute_tfr(
     output : ``"power"`` | ``"complex"`` (default ``"power"``)
         Type of TFR output to return.
 
+        .. versionadded:: 1.3
         .. note::
             If ``output = "complex"`` and ``tfr_mode = "multitaper"``, returning weights
             for each taper requires MNE version 1.10 or higher.
-        .. versionadded:: 1.3
 
     n_jobs : int (default ``1``)
         Number of jobs to run in parallel. If ``-1``, all available CPUs are used.
