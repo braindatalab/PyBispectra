@@ -6,6 +6,29 @@ ul {
     text-align: left
 }
 
+/* widen main content area */
+.bd-page-width {
+    max-width: 100rem;
+}
+
+/* make versionadded smaller and inline with param name */
+/* don't do for deprecated / versionchanged; they have extra info (too long to fit) */
+div.versionadded>p {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+div.versionadded {
+    margin: 0;
+    margin-left: 0.5rem;
+    display: inline-block;
+}
+
+/* when FF supports :has(), change to →  dd > p:has(+div.versionadded) */
+dd>p {
+    display: inline;
+}
+
 @media (max-width: 1199.98px) {
     .bd-header .navbar-header-items__start {
         flex-shrink: 1;
