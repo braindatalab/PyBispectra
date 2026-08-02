@@ -11,10 +11,10 @@ Analysis of phase-amplitude coupling, time delays, and non-sinusoidal waveshape 
 ## Installation & Requirements:
 Install the package into the desired environment using pip: `pip install pybispectra`<br/>
 or conda: `conda install -c conda-forge pybispectra`<br/>
-More information on the [installation](https://pybispectra.readthedocs.io/latest/installation.html) page.
+More information on the [installation](https://pybispectra.readthedocs.io/1.3/installation.html) page.
 
 ## Use:
-To get started with the toolbox, check out the [documentation](https://pybispectra.readthedocs.io/latest/) and [examples](https://pybispectra.readthedocs.io/latest/examples.html).
+To get started with the toolbox, check out the [documentation](https://pybispectra.readthedocs.io/1.3/) and [examples](https://pybispectra.readthedocs.io/1.3/examples.html).
 
 For instance, given some epoched time series, `data`, phase-amplitude coupling can be computed as:
 
@@ -29,7 +29,7 @@ pac_results.plot()  # plot results
 ```
 
 ## Contributing & Development:
-If you encounter issues with the package, want to suggest improvements, or have made any changes which you would like to see officially supported, please refer to the [development](https://pybispectra.readthedocs.io/latest/development.html) page. A unit test suite is included and must be expanded where necessary to validate any changes.
+If you encounter issues with the package, want to suggest improvements, or have made any changes which you would like to see officially supported, please refer to the [development](https://pybispectra.readthedocs.io/1.3/development.html) page. A unit test suite is included and must be expanded where necessary to validate any changes.
 
 ## Citing:
 If you use this toolbox in your work, please include the following citation:<br/>
