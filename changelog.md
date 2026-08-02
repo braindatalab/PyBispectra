@@ -2,12 +2,18 @@
 
 ## [Development Version](https://pybispectra.readthedocs.io/latest/)
 
-##### Dependencies
-- Dropped max supported Python version being pinned.
+No changes.
 
 <br>
 
 ## [Version 1.3](https://pybispectra.readthedocs.io/1.3/)
+
+### Version 1.3.2
+
+##### Dependencies
+- Dropped max supported Python version being pinned.
+
+<br>
 
 ### Version 1.3.1
 
