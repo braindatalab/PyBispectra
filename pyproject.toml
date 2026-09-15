@@ -3,7 +3,7 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [project]
-authors = [{email = "t.s.binns@outlook.com", name = "Thomas S. Binns"}]
+authors = [{ email = "t.s.binns@outlook.com", name = "Thomas S. Binns" }]
 classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
@@ -75,9 +75,9 @@ match-dir = "^(?!(examples|docs|tests)).*"
 [tool.pytest.ini_options]
 # use '', not "" for escaping characters in regex
 filterwarnings = [
-  "ignore:The seed and target for at least one connection is the same channel:UserWarning",
   'ignore:At least one value in \`f1s\` is \>\= a value in \`f2s\`:UserWarning',
   'ignore:At least one value of \`f2s\` \+ \`f1s\` is not present in the frequencies:UserWarning',
+  "ignore:The seed and target for at least one connection is the same channel:UserWarning",
 ]
 
 [tool.rstcheck]
