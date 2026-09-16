@@ -29,10 +29,14 @@ def test_error_catch(
         TDE(fft, np.random.randn(2, 2), data_sfreq)
     with pytest.raises(ValueError, match="The first entry of `freqs` must be 0."):
         TDE(fft[..., 1:], freqs[1:], data_sfreq)
+    with pytest.warns(
+        UserWarning, match="The last entry of `freqs` should be the Nyquist frequency."
+    ):
+        TDE(fft[..., :-1], freqs[:-1], data_sfreq)
 
     with pytest.raises(
         ValueError,
-        match=("`data` and `freqs` must contain the same number of frequencies."),
+        match="`data` and `freqs` must contain the same number of frequencies.",
     ):
         TDE(fft, freqs[:-1], data_sfreq)
 

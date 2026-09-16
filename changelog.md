@@ -2,7 +2,8 @@
 
 ## [Development Version](https://pybispectra.readthedocs.io/latest/)
 
-No changes.
+##### Documentation
+- Clarify the expected frequency range of the `data` parameter in the `TDE` class.
 
 <br>
 
