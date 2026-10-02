@@ -24,11 +24,11 @@ div.versionadded {
     display: inline-block;
 }
 
-/* when FF supports :has(), change to →  dd > p:has(+div.versionadded) */
-dd>p {
+dd>p:has(+div.versionadded) {
     display: inline;
 }
 
+/* Clip overflowing package/dev version name */
 @media (max-width: 1199.98px) {
     .bd-header .navbar-header-items__start {
         flex-shrink: 1;
