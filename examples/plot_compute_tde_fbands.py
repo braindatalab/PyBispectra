@@ -51,7 +51,10 @@ from pybispectra import TDE, compute_fft, get_example_data_paths
 # from :math:`\textbf{x}` to :math:`\textbf{y}` in the 20-30 Hz range, and a delay of
 # 200 ms from :math:`\textbf{y}` to :math:`\textbf{x}` in the 30-40 Hz range. As before,
 # we compute the Fourier coefficients of the data, setting ``n_points`` to be twice the
-# number of time points in each epoch of the data, plus one.
+# number of time points in each epoch of the data, plus one. Note that even when you are
+# interested in computing time delays for particular frequency bands, it is still
+# necessary to pass in the full set of Fourier coefficients spanning the 0-to-Nyquist
+# frequency range.
 #
 # When computing time delay estimation, we extract information for the broadband
 # spectrum, 20-30 Hz band, and 30-40 Hz band, using the ``fmin`` and ``fmax`` arguments.

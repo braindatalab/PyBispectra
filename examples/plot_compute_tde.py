@@ -132,7 +132,7 @@ fft_coeffs, freqs = compute_fft(
 print(
     f"FFT coeffs.: [{fft_coeffs.shape[0]} epochs x {fft_coeffs.shape[1]} channels x "
     f"{fft_coeffs.shape[2]} frequencies]\nFreq. range: {freqs[0]:.0f} - "
-    f"{freqs[1]:.0f} Hz"
+    f"{freqs[-1]:.0f} Hz"
 )
 
 ########################################################################################
